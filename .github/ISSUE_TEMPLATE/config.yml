@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Material Design 3 guidelines
+    url: https://m3.material.io/
+    about: The official design system this library reproduces.
+  - name: Coverage matrix
+    url: https://github.com/sorrowfeng/qt-md3/blob/dev/docs/md3-coverage.md
+    about: Stage 1 progress across all 36 MD3 component families.
+  - name: Releases
+    url: https://github.com/sorrowfeng/qt-md3/releases
+    about: Check the latest published versions and release notes.

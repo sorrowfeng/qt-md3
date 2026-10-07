@@ -1,0 +1,37 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# qt-md3 requires the same minimum Qt version it was built against. Enforce it on
+# the consumer side too, mirroring the configure-time check in the top-level
+# CMakeLists.txt.
+set(_qt_md3_min_qt6 6.5.0)
+set(_qt_md3_min_qt5 5.15.2)
+
+if(NOT DEFINED QT_MD3_QT_MAJOR_VERSION)
+    set(QT_MD3_QT_MAJOR_VERSION @QT_MD3_QT_MAJOR_VERSION@)
+endif()
+
+find_dependency(QT NAMES Qt6 Qt5 COMPONENTS Core Widgets Svg)
+find_dependency(Qt${QT_MD3_QT_MAJOR_VERSION} COMPONENTS Core Widgets Svg)
+
+set(_qt_md3_detected_qt_version "${Qt${QT_MD3_QT_MAJOR_VERSION}_VERSION}")
+if(NOT _qt_md3_detected_qt_version)
+    set(_qt_md3_detected_qt_version "${QT_VERSION}")
+endif()
+if(QT_MD3_QT_MAJOR_VERSION EQUAL 6)
+    set(_qt_md3_min_qt_version "${_qt_md3_min_qt6}")
+else()
+    set(_qt_md3_min_qt_version "${_qt_md3_min_qt5}")
+endif()
+if(_qt_md3_detected_qt_version VERSION_LESS _qt_md3_min_qt_version)
+    set(qt-md3_FOUND FALSE)
+    set(qt-md3_NOT_FOUND_MESSAGE
+        "qt-md3 requires Qt ${_qt_md3_min_qt_version} or newer; found ${_qt_md3_detected_qt_version}"
+    )
+    return()
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/qt-md3-targets.cmake")
+
+check_required_components(qt-md3)

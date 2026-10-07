@@ -1,0 +1,45 @@
+name: Feature request
+description: Suggest a component, API, behavior, or documentation improvement.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to build, and what is missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the desired API, behavior, or visual result.
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Stage
+      description: Stage 2 requests are gated until Stage 1 is complete (see docs/md3-coverage.md).
+      options:
+        - Stage 1 — MD3 official component / token
+        - Stage 2 — Qt extension component
+        - Build system / tooling
+        - Documentation
+    validations:
+      required: true
+  - type: input
+    id: md3-reference
+    attributes:
+      label: MD3 reference
+      description: Link to an official m3.material.io page or a material-web component doc, if applicable.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

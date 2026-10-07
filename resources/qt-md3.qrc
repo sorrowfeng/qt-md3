@@ -1,0 +1,11 @@
+<!--
+  qt-md3 resource bundle.
+
+  Icon fonts, classic icon SVGs, and bundled fonts are added here as the
+  Stage 1 base modules land (see src/core/MdIcon.* and src/core/MdFont.*).
+  The manifest lives in docs/resources-manifest.md.
+-->
+<RCC>
+    <qresource prefix="/qt-md3">
+    </qresource>
+</RCC>
