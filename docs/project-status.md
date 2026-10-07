@@ -15,7 +15,7 @@ Last updated: 2026-10-07
 | Example pages | `7` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `9` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`) |
+| CTest entries | `11` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -52,7 +52,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 
 - CMake auto-detects Qt 6 / Qt 5, enforces the minimum, installs an exportable
   package (`find_package(qt-md3 CONFIG REQUIRED)`), and registers the `.qrc`.
-- Nine CTest entries, all green. One binary per module, each with its own
+- Eleven CTest entries, all green. One binary per module, each with its own
   `QTEST_MAIN` — a single binary hosting several `QObject` classes driven by
   `QTest::qExec` in a loop cannot honour `-o` or per-class selection, so
   `ctest -R TestMd3Icon` would silently run the wrong suite.
@@ -65,6 +65,11 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
     so a style that silently paints nothing cannot pass.
   - `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding` — the three
     policy gates.
+  - `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample` — run a unit-test
+    binary and the example with `PATH` reduced to the Windows directories and
+    `QT_PLUGIN_PATH` / `QT_QPA_PLATFORM` cleared, which is the environment a
+    double-click produces. They fail if the Qt runtime deployment is incomplete,
+    the one failure mode no other test can see.
   - `TestMd3Version` — the library links, loads and reports its version.
 - The example is a seven-page gallery under `examples/gallery/`, built into
   `build/` and never committed. `--screenshot <dir>` renders every page to PNG

@@ -1,4 +1,9 @@
 # qt-md3 tests.
+#
+# As in the example directory, the Qt runtime is deployed next to the binaries
+# so `ctest` works from a plain shell rather than only from one that happens to
+# have the Qt bin directory on PATH. Every test target shares this directory, so
+# only the first deployment copies anything.
 
 # --- Unit tests -------------------------------------------------------------
 add_executable(TestMd3Version
@@ -13,6 +18,8 @@ target_link_libraries(TestMd3Version
 )
 
 add_test(NAME TestMd3Version COMMAND TestMd3Version)
+
+qt_md3_deploy_runtime(TestMd3Version)
 
 # Token audit: every foundation numeric value is compared against its
 # authoritative source (material-web v0.192 / Compose Material3). This is the
@@ -31,6 +38,8 @@ target_link_libraries(TestMd3Tokens
 )
 
 add_test(NAME TestMd3Tokens COMMAND TestMd3Tokens)
+
+qt_md3_deploy_runtime(TestMd3Tokens)
 
 # The interaction primitives every component depends on: ripple geometry and
 # timing, the focus indicator, the icon back ends, and the Pattern A paint hub.
@@ -61,6 +70,7 @@ foreach(primitive IN LISTS QT_MD3_PRIMITIVE_TESTS)
     set_tests_properties(${primitive} PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
     )
+    qt_md3_deploy_runtime(${primitive})
 endforeach()
 
 # --- Policy gates -----------------------------------------------------------
@@ -95,3 +105,48 @@ set_tests_properties(TestMd3NoQss TestMd3CoveragePolicy TestMd3SourceEncoding
     PROPERTIES
     LABELS "policy"
 )
+
+# --- Windows runtime deployment ---------------------------------------------
+# A dynamically linked executable starts only when every DLL it imports sits
+# beside it. Nothing in the source, in the compiler or in the rest of this file
+# notices a missing one — the first version of cmake/QtMd3Deploy.cmake deployed
+# the modules the gallery links and left out Qt6Test.dll, at which point five of
+# the six suites above could not launch, and the only reason it was caught at
+# all was that CTest ran them with an empty PATH by accident.
+#
+# These entries reproduce the double-click environment deliberately: PATH
+# reduced to the Windows directories, and QT_PLUGIN_PATH / QT_QPA_PLATFORM
+# cleared so that a Qt-aware shell cannot mask an incomplete deployment. They
+# cover both a unit-test binary and the example application because the two
+# resolve different Qt module sets — the example does not link Qt6::Test, so a
+# gate on either one alone would miss half the failure.
+if(WIN32 AND QT_MD3_DEPLOY_EXAMPLE)
+    # A quoted argument keeps the `;` inside PATH from being read as a list
+    # separator.
+    file(TO_CMAKE_PATH "$ENV{SystemRoot}" _qt_md3_system_root)
+    set(_qt_md3_sanitized_path "${_qt_md3_system_root}/System32;${_qt_md3_system_root}")
+
+    add_test(NAME TestMd3DeploymentTestBinary
+        COMMAND ${CMAKE_COMMAND} -E env
+            --unset=QT_PLUGIN_PATH
+            --unset=QT_QPA_PLATFORM
+            "PATH=${_qt_md3_sanitized_path}"
+            $<TARGET_FILE:TestMd3Version>
+    )
+    set_tests_properties(TestMd3DeploymentTestBinary PROPERTIES
+        LABELS "deployment"
+    )
+
+    if(TARGET qt-md3-example)
+        add_test(NAME TestMd3DeploymentExample
+            COMMAND ${CMAKE_COMMAND} -E env
+                --unset=QT_PLUGIN_PATH
+                --unset=QT_QPA_PLATFORM
+                "PATH=${_qt_md3_sanitized_path}"
+                $<TARGET_FILE:qt-md3-example> --smoke-exit-ms 800
+        )
+        set_tests_properties(TestMd3DeploymentExample PROPERTIES
+            LABELS "deployment"
+        )
+    endif()
+endif()

@@ -109,6 +109,10 @@ unset(_qt_md3_default_examples)
 unset(_qt_md3_default_tests)
 unset(_qt_md3_default_deploy_example)
 
+# Windows: put the Qt runtime next to every executable we produce, so the build
+# tree is runnable by double-click instead of only from a Qt-aware shell.
+include(cmake/QtMd3Deploy.cmake)
+
 # Library
 add_subdirectory(src)
 

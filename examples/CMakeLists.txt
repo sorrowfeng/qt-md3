@@ -37,3 +37,8 @@ if(MSVC)
         RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
     )
 endif()
+
+# Windows links Qt dynamically, so the executable is unrunnable until the Qt
+# modules, the C++ runtime and the platform plugin sit beside it. See
+# cmake/QtMd3Deploy.cmake for why this does not just call windeployqt.
+qt_md3_deploy_runtime(qt-md3-example)

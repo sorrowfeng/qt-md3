@@ -189,10 +189,12 @@ configured without one of those two fails with "unable to find a build program"
 or "CMAKE_CXX_COMPILER not set", which looks alarming and means neither more
 nor less than that.
 
-The gallery binary lands at `build/examples/qt-md3-example.exe`. On Windows the
-Qt DLLs must be on `PATH`, so run it from a shell that has
-`C:/Qt/6.9.1/mingw_64/bin` in front of `PATH` — or just use
-`tools/run-gallery.sh`, which recovers the kit from `CMakeCache.txt` itself.
+The gallery binary lands at `build/examples/qt-md3-example.exe`. The build
+copies the Qt modules, the C++ runtime, the `platforms/` + `styles/` plugins and
+a `qt.conf` next to it (see `cmake/QtMd3Deploy.cmake`), so it runs by
+double-click and needs no Qt-aware `PATH`. `tools/run-gallery.sh` is a
+convenience wrapper around the same binary; it only touches `PATH` for builds
+made with `-DQT_MD3_DEPLOY_EXAMPLE=OFF`.
 
 ```bash
 tools/run-gallery.sh                        # open the gallery
