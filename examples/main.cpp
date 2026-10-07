@@ -38,6 +38,16 @@ QString slugify(const QString &title)
 /// This is a verification hook, not a feature of the gallery. A page whose
 /// paintEvent silently draws nothing still exits 0, so "the window opened" is
 /// not evidence that anything rendered; a PNG per page is.
+///
+/// Two images per page:
+///
+///   * `<nn>-<slug>.png`       the whole window, i.e. what a user sees on
+///                             opening the page — nav, header and all.
+///   * `<nn>-<slug>-full.png`  the page widget alone, grown to its own
+///                             heightForWidth(). A page is routinely taller
+///                             than the viewport, so the window shot can only
+///                             ever prove that the *top* of a page draws. This
+///                             one proves the whole page does.
 int writeScreenshots(gallery::GalleryWindow &window, const QString &directory)
 {
     QDir dir(directory);
@@ -53,15 +63,32 @@ int writeScreenshots(gallery::GalleryWindow &window, const QString &directory)
         // Let the stack swap and the scroll area relayout before grabbing.
         QCoreApplication::processEvents();
 
-        const QString name = QStringLiteral("%1-%2.png")
+        const QString stem = QStringLiteral("%1-%2")
                                  .arg(index + 1, 2, 10, QLatin1Char('0'))
                                  .arg(slugify(window.pageTitle(index)));
-        const QString path = dir.filePath(name);
+
         const QPixmap shot = window.grab();
-        if (!shot.isNull() && shot.save(path)) {
-            ++written;
-        } else {
-            qWarning("qt-md3: could not write %s", qPrintable(path));
+        if (shot.isNull() || !shot.save(dir.filePath(stem + QStringLiteral(".png")))) {
+            qWarning("qt-md3: could not write the window shot for page %d", index + 1);
+            continue;
+        }
+        ++written;
+
+        // Grow the page to its full height and grab it directly. No
+        // processEvents() in between: the scroll area would immediately shrink
+        // it back to the viewport, and resize() has already delivered the
+        // QResizeEvent that repositions the page's children.
+        QWidget *page = window.pageWidget(index);
+        if (page != nullptr) {
+            const int full = page->heightForWidth(page->width());
+            if (full > page->height()) {
+                page->resize(page->width(), full);
+            }
+            const QPixmap fullShot = page->grab();
+            const QString fullPath = dir.filePath(stem + QStringLiteral("-full.png"));
+            if (fullShot.isNull() || !fullShot.save(fullPath)) {
+                qWarning("qt-md3: could not write the full-page shot for page %d", index + 1);
+            }
         }
     }
     return written;

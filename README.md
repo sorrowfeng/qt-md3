@@ -27,14 +27,14 @@ system:
 
 > **This repository is in the bootstrap phase.** Version `0.1.0`. The build
 > system, the token layer, the interaction primitives, an example gallery and the
-> policy gates exist; no components have landed yet.
+> policy gates exist, and the first component has landed.
 
 | Metric | Value |
 | --- | --- |
-| Stage 1 MD3 families complete | `0 / 36` |
-| Foundation modules | `19` |
-| Public components | `0` |
-| CTest entries | `11` (all green) |
+| Stage 1 MD3 families complete | `1 / 36` (Buttons) |
+| Foundation modules | `21` |
+| Public components | `1` (`MdButton`) |
+| CTest entries | `14` (all green) |
 | Stage 2 (Qt extensions) | Not started — gated until Stage 1 is green |
 
 Progress is tracked in [docs/md3-coverage.md](docs/md3-coverage.md), the single

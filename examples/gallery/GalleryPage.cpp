@@ -12,8 +12,6 @@ namespace gallery {
 
 namespace {
 
-/// Content gutter inside a page.
-constexpr qreal kGutter = 32.0;
 /// Space between a section heading and the block under it.
 constexpr qreal kHeadingGap = 12.0;
 
@@ -116,6 +114,16 @@ void GalleryContext::chip(const QString &text, const QColor &background, const Q
 GalleryPage::GalleryPage(QWidget *parent)
     : QWidget(parent)
 {
+    // Declare height-for-width in the *size policy*, not just by overriding the
+    // virtual. QScrollArea asks sizePolicy().hasHeightForWidth() to decide
+    // whether to give a widgetResizable() widget its heightForWidth() height;
+    // overriding QWidget::hasHeightForWidth() alone is invisible to it. Without
+    // this every page stays exactly one viewport tall, nothing scrolls, and the
+    // only symptom is that the bottom of a long page cannot be reached.
+    QSizePolicy policy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    policy.setHeightForWidth(true);
+    setSizePolicy(policy);
+
     // React to the theme the sanctioned way: subscribe, do not scan.
     md::MdStyleBase::connectThemeUpdate(this, &GalleryPage::update);
     connect(&md::MdTheme::instance(), &md::MdTheme::themeModeChanged, this, [this] {
@@ -126,13 +134,16 @@ GalleryPage::GalleryPage(QWidget *parent)
 
 int GalleryPage::heightForWidth(int width) const
 {
-    return int(std::ceil(measure(qreal(width))));
+    // Consistent with sizeHint() and with what paintEvent actually draws: the
+    // content is the widget minus the gutter on both sides, so asking for the
+    // height at the *widget* width would under-report it and clip the page.
+    return int(std::ceil(measure(qMax<qreal>(qreal(width) - 2.0 * contentGutter(), 100.0))));
 }
 
 QSize GalleryPage::sizeHint() const
 {
-    const qreal width = qMax<qreal>(qreal(this->width()) - 2.0 * kGutter, 320.0);
-    return QSize(int(width + 2.0 * kGutter), int(std::ceil(measure(width))));
+    const qreal width = qMax<qreal>(qreal(this->width()) - 2.0 * contentGutter(), 320.0);
+    return QSize(int(width + 2.0 * contentGutter()), int(std::ceil(measure(width))));
 }
 
 QSize GalleryPage::minimumSizeHint() const
@@ -142,10 +153,44 @@ QSize GalleryPage::minimumSizeHint() const
 
 qreal GalleryPage::measure(qreal width) const
 {
-    GalleryContext context(nullptr, qMax<qreal>(width, 100.0), kGutter);
+    // The cursor starts at buildOriginY(), not at the gutter: that is where
+    // paintEvent hands build() its first coordinate, because the title and the
+    // subtitle occupy the top of the content rect. Measuring from the gutter
+    // instead would report a page one title-block shorter than the one
+    // paintEvent draws, and the bottom of every page would be unreachable.
+    GalleryContext context(nullptr, qMax<qreal>(width, 100.0), buildOriginY());
     // build() is const-correct in spirit; the context owns the cursor.
     const_cast<GalleryPage *>(this)->build(context);
-    return context.y() + kGutter;
+    // Both gutters, because the cursor is content-local while the value asked
+    // for is the *widget* height: paintEvent translates by one gutter before
+    // running build(). Returning only one gutter leaves the page 32 px short
+    // and paintEvent's clip rect then cuts the last line in half.
+    return context.y() + 2.0 * contentGutter();
+}
+
+QRectF GalleryPage::contentRectForCurrentSize() const
+{
+    return QRectF(contentGutter(), contentGutter(),
+                  qMax<qreal>(width() - 2.0 * contentGutter(), 100.0),
+                  qMax<qreal>(height() - 2.0 * contentGutter(), 0.0));
+}
+
+qreal GalleryPage::buildOriginY() const
+{
+    const QFontMetricsF titleMetrics(fontFor(md::TypeStyle::HeadlineMedium));
+    qreal y = titleMetrics.height() + 4.0;
+    const QString sub = subtitle();
+    if (!sub.isEmpty()) {
+        y += QFontMetricsF(fontFor(md::TypeStyle::BodyLarge)).height() + 12.0;
+    }
+    return y + 8.0;
+}
+
+void GalleryPage::remeasure()
+{
+    const QRectF content = contentRectForCurrentSize();
+    GalleryContext context(nullptr, content.width(), buildOriginY());
+    build(context);
 }
 
 void GalleryPage::paintEvent(QPaintEvent *event)
@@ -158,8 +203,7 @@ void GalleryPage::paintEvent(QPaintEvent *event)
     // Page background.
     painter.fillRect(rect(), role(md::ColorRole::Surface));
 
-    const QRectF content(kGutter, kGutter, qMax<qreal>(width() - 2.0 * kGutter, 100.0),
-                         qMax<qreal>(height() - 2.0 * kGutter, 0.0));
+    const QRectF content = contentRectForCurrentSize();
     m_contentRect = content;
 
     painter.save();
@@ -184,7 +228,10 @@ void GalleryPage::paintEvent(QPaintEvent *event)
         y += subMetrics.height() + 12.0;
     }
 
-    GalleryContext context(&painter, content.width(), y + 8.0);
+    // buildOriginY() is the single source for the cursor the page body starts
+    // at, so a page that places child widgets from it cannot drift from the
+    // painted layout.
+    GalleryContext context(&painter, content.width(), buildOriginY());
     build(context);
     painter.restore();
 }

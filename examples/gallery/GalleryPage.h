@@ -101,6 +101,31 @@ public:
     /// what the base paintEvent does. Used by overlay drawing.
     void beginOverlay(QPainter &painter) const;
 
+    // --- geometry for pages that own child widgets ------------------------
+    //
+    // A page made of token swatches only ever draws. A page made of *components*
+    // owns real child widgets, and those have to be positioned before Qt paints
+    // them — which is before the parent's paintEvent, so contentRect() is still
+    // empty at that point. These three give such a page the same numbers the
+    // base uses, so it can place its children from resizeEvent() and never have
+    // to guess.
+
+    /// Content gutter on every side of a page.
+    static constexpr qreal contentGutter() { return 32.0; }
+
+    /// The content rect for the widget's current size. Identical to the one
+    /// paintEvent installs.
+    QRectF contentRectForCurrentSize() const;
+
+    /// Y at which build()'s coordinate system starts, in widget coordinates:
+    /// below the page title and subtitle. `build()` is handed this as its
+    /// starting cursor.
+    qreal buildOriginY() const;
+
+    /// Run build() against a null painter to refresh whatever a page records
+    /// during layout, without drawing. Safe to call at any time.
+    void remeasure();
+
     // --- shared painting helpers (all theme driven) -----------------------
     // Public because GalleryContext draws with them too.
     static QFont fontFor(md::TypeStyle style,

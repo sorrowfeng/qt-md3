@@ -7,15 +7,15 @@ Last updated: 2026-10-07
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
-| Stage | Stage 1 — Batch 0 (foundation modules) present, colour pipeline complete |
-| Stage 1 families complete | `0 / 36` |
+| Stage | Stage 1 — Batch 0 closed; §1.2 Actions under way |
+| Stage 1 families complete | `1 / 36` (Buttons) |
 | Base modules | `21 / 21` |
-| Public components | `0` |
-| Style classes | `1` (`MdStyleBase`) |
-| Example pages | `7` |
+| Public components | `1` (`MdButton`) |
+| Style classes | `2` (`MdStyleBase`, `MdButtonStyle`) |
+| Example pages | `8` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `13` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `14` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -86,11 +86,21 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
     double-click produces. They fail if the Qt runtime deployment is incomplete,
     the one failure mode no other test can see.
   - `TestMd3Version` — the library links, loads and reports its version.
-- The example is a seven-page gallery under `examples/gallery/`, built into
+- The example is an eight-page gallery under `examples/gallery/`, built into
   `build/` and never committed. `--screenshot <dir>` renders every page to PNG
   and quits, which is how the pages are checked for a non-blank result: a page
   whose `paintEvent` draws nothing still exits 0, so "the window opened" proves
-  nothing.
+  nothing. It writes two images per page — the window, and the page widget
+  grown to its own `heightForWidth()` — because the window shot can only ever
+  prove that the *top* of a page draws.
+
+### Stage 1 §1.2 — the first component
+
+| Component | Covers |
+| --- | --- |
+| `MdButton` | `QPushButton` subclass, 5 colour styles (elevated / filled / tonal / outlined / text) × 5 Expressive sizes (xsmall 32 → xlarge 136 px) × 2 container shapes, leading / trailing icons, mnemonic text, soft-disabled. Six `Q_PROPERTY`s with NOTIFY. |
+| `MdButtonTokens` | the `md.comp.button.*` value layer: size-driven metrics, both shape slots, the pressed-shape spring, and the per-variant, per-state colour slots including the disabled opacities. Read from `tokens/versions/latest/sass` (34.0.21) — see [porting-todo.md](porting-todo.md) for why this one component uses a different export than `MdTokens`. |
+| `MdButtonStyle` | Pattern A style: layout and painting, registered in the paint hub so one style serves the whole family. Also owns `focusRingInset()`, which derives the 7.5 px focus margin from the focus-indicator tokens instead of hard-coding it. |
 
 ## Known gaps, recorded rather than hidden
 
@@ -168,18 +178,50 @@ symptoms, and it is worth recording because of how quiet it was.
    different thing entirely. Working out which of those was the real signal is
    what narrowed it to this module.
 
+## Fixed while building the first component
+
+The button page is the first gallery page with real child widgets, and that is
+what found these. None of them is button-specific; all three were sitting in the
+gallery scaffolding, unreachable from the seven token-only pages.
+
+5. **`build()` allocated its widgets.** `build()` is called from `measure()`,
+   `remeasure()` and `paintEvent()` — many times, at changing widths, because
+   that is how one code path serves both measurement and painting. A page that
+   created its children inside it therefore produced a fresh generation on every
+   layout pass, each parked at (0, 0) and each visible, while the layout code
+   only ever moved the newest one. The screen showed buttons at the right
+   positions *and* several dozen more underneath them. Component pages now keep
+   a widget bank and reuse the same widgets across every rebuild.
+6. **`QScrollArea` never gave a page its height.** `GalleryPage` overrode
+   `hasHeightForWidth()` — but `QScrollArea` asks
+   `sizePolicy().hasHeightForWidth()`, not the virtual, so every page was
+   pinned to exactly one viewport tall and no page ever scrolled. It looked
+   correct, because the first screenful always renders; the only symptom was
+   that the bottom of a long page could not be reached. Fixed by declaring
+   height-for-width in the size policy, where the scroll area can see it.
+7. **`measure()` and `paintEvent()` disagreed about where the body starts.**
+   `paintEvent` hands `build()` its first coordinate at `buildOriginY()`,
+   *below* the title and subtitle; `measure()` handed it the bare gutter.
+   Measurement also returned one gutter where the value wanted is a *widget*
+   height and needs two. Every page therefore reported itself one title-block
+   plus 32 px too short, and `paintEvent`'s clip rect then cut the last line of
+   text in half. Both now use one source, which is what the file's own "same
+   code path" claim requires.
+
 ## What is next
 
-Batch 0 is closed. The next step is Stage 1 § 1.2, in official order:
+Stage 1 §1.2, in official order — Buttons is complete:
 
-**Buttons** — 5 colour styles × 5 sizes × 3 shapes, with all eight interaction
-states, then icon buttons, FABs, extended FABs, FAB menu, button groups, split
-buttons and segmented buttons.
+**Button groups, icon buttons, FABs, extended FABs, FAB menu, split buttons,
+segmented buttons.** Then on to §1.3 Communication.
 
 Each component lands as its own commit and must satisfy all twelve Definition of
 Done items before the next one starts, including an independent gallery page, a
 side-by-side visual audit in [visual-audit.md](visual-audit.md), and the
-corresponding row in [md3-coverage.md](md3-coverage.md).
+corresponding row in [md3-coverage.md](md3-coverage.md). Buttons is the first
+row with cells still in progress: `主题` (seed / contrast / density / font
+switch not yet exercised against the page) and `视觉审计` (rendered and read in
+both modes, reference comparison not yet recorded).
 
 See [`md3-qt-porting-prompts.md`](md3-qt-porting-prompts.md) for the full brief,
 the component order, and the Definition of Done.

@@ -288,6 +288,47 @@ enum class MotionSpring {
 };
 
 // ---------------------------------------------------------------------------
+// Components — button family
+// ---------------------------------------------------------------------------
+
+/// The five MD3 common button types. Each one is a separate published token
+/// set named `md.comp.button.<style>`.
+enum class ButtonVariant {
+    Elevated,
+    Filled,
+    Tonal,
+    Outlined,
+    Text,
+    Count,
+};
+
+/// The M3 Expressive button size scale, `md.comp.button.<size>`.
+///
+/// The scale is Expressive-only: material-web's pinned v0_192 export knows a
+/// single 40 px button and publishes no size sets at all, so these five come
+/// from the current token export. See docs/porting-todo.md.
+enum class ButtonSize {
+    XSmall, ///< 32 px
+    Small,  ///< 40 px
+    Medium, ///< 56 px
+    Large,  ///< 96 px
+    XLarge, ///< 136 px
+    Count,
+};
+
+/// The two container shapes every button publishes a resting corner for:
+/// `container.shape.round` and `container.shape.square`.
+///
+/// The names describe the *design intent*, not the literal corner count — both
+/// are still fully rounded rectangles, and the square form's radius grows with
+/// the size (12 / 12 / 16 / 28 / 28 px).
+enum class ButtonShape {
+    Round,
+    Square,
+    Count,
+};
+
+// ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
 
@@ -330,6 +371,9 @@ QT_MD3_EXPORT QString scriptCategoryName(ScriptCategory category);
 QT_MD3_EXPORT QString stateLayerKindName(StateLayerKind kind);
 QT_MD3_EXPORT QString elevationLevelName(ElevationLevel level);
 QT_MD3_EXPORT QString densityName(Density density);
+QT_MD3_EXPORT QString buttonVariantName(ButtonVariant variant);
+QT_MD3_EXPORT QString buttonSizeName(ButtonSize size);
+QT_MD3_EXPORT QString buttonShapeName(ButtonShape shape);
 
 } // namespace md
 
@@ -348,5 +392,8 @@ Q_DECLARE_METATYPE(md::Density)
 Q_DECLARE_METATYPE(md::TextDirection)
 Q_DECLARE_METATYPE(md::MdIconFamily)
 Q_DECLARE_METATYPE(md::MdIconSet)
+Q_DECLARE_METATYPE(md::ButtonVariant)
+Q_DECLARE_METATYPE(md::ButtonSize)
+Q_DECLARE_METATYPE(md::ButtonShape)
 
 #endif // MD_TYPES_H

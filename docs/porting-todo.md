@@ -114,9 +114,87 @@ is still outstanding.
 
 ## Stage 1 — components
 
-Not started. Track progress in [md3-coverage.md](md3-coverage.md). Order follows
-the official categories: Actions → Communication → Containment → Navigation →
-Selection → Text inputs, then the M3 Expressive cross-cutting pass.
+Track progress in [md3-coverage.md](md3-coverage.md). Order follows the official
+categories: Actions → Communication → Containment → Navigation → Selection →
+Text inputs, then the M3 Expressive cross-cutting pass.
+
+### Actions 1.2 — Buttons
+
+- [x] **`MdButton`** — 5 colour styles × 5 Expressive sizes × 2 container
+      shapes, leading/trailing icons, soft-disabled, live hover / focus / press.
+      `MdButtonTokens` holds the value layer, `MdButtonStyle` the painting,
+      `MdButton` the widget. `TestMd3Button` pins all 50 size × style
+      combinations field by field, and the gallery has an eighth page
+      (`08-buttons`) covering every one of them.
+
+      It is also the first component, which forced three base-module questions:
+
+      * **Which token export is authoritative for component tokens?**
+        The repo pins `material-web` `tokens/versions/v0_192` for `MdTokens`
+        (the `_md-sys-*.scss` SVG exports). The button component tokens do not
+        exist there in usable form: the five-step size scale
+        (`xsmall`/`small`/`medium`/`large`/`xlarge`) is Expressive-only, and the
+        legacy `md.comp.filled-button` / `md.comp.filled-tonal-button` family
+        names were replaced by a base file plus five style files plus five size
+        files. Buttons therefore read
+        `tokens/versions/latest/sass/_md-comp-button{,-<style>,-<size>}.scss`
+        (**34.0.21**). The record of which export each table came from lives in
+        the header comment of `MdButtonTokens.h`, and is a per-component
+        decision rather than a new global pin.
+      * **The two exports disagree on `md.sys.state.*`.** v0_192 publishes
+        focus 0.12 / pressed 0.12 / hover 0.08 / dragged 0.16; latest publishes
+        focus 0.10 / pressed 0.10 with the same hover and dragged values.
+        `MdTokens` keeps 0.12 because it is faithful to *its* pin. Recorded here
+        so that nobody "fixes" it into 0.10 without also moving the pin — and so
+        that nobody assumes the button's state layers and the base module's
+        numbers are meant to be the same number.
+      * **A focus indicator needs room the widget does not have.** Qt clips a
+        child to its own rectangle, and `md.comp.button.focus.indicator` is an
+        *outward* indicator: 3 px stroke at a 2 px gap, animated out to the
+        8 px active width, so its outer edge sits at
+        `offset + activeWidth/2 + width/2` = 7.5 px outside the container.
+        `MdButton` therefore insets its container by that amount on every side
+        and derives the inset from the token spec
+        (`MdButtonStyle::focusRingInset`) rather than hard-coding 7.5.
+
+      Two upstream inconsistencies are preserved, not reconciled — §九 says
+      record the difference instead of quietly picking a winner:
+
+      * `md.comp.button.leading-space` says 24 px and
+        `md.comp.button.small.leading-space` says 16 px, for the same 40 px
+        height. The resolver lets the size-qualified key win, and
+        `theSizeSpecificPaddingWinsOverTheBaseToken` pins that.
+      * `md.comp.button.<style>.hovered.container.elevation` is still published
+        while carrying `@deprecated No longer part of the design spec`. It is
+        kept in the table (so the table stays a faithful transcription) and not
+        painted (so the widget follows the spec).
+
+- [ ] Button groups, Icon buttons, FABs, Extended FABs, FAB menu, Split buttons,
+      Segmented buttons — the rest of §1.2.
+
+### Gallery scaffolding fixes found while building the first component
+
+The button page is the first page with real child widgets, which exposed three
+defects in `GalleryPage` that no token-only page could reach. All three are
+fixed:
+
+* `build()` is called from `measure()`, `remeasure()` and `paintEvent()` — many
+  times, at changing widths. A page that allocated its widgets *inside* `build()`
+  therefore created a fresh generation of children on every layout pass, all
+  parked at (0, 0) and all visible. Component pages must keep a widget bank.
+* `GalleryPage` overrode `hasHeightForWidth()` but never declared
+  height-for-width in its **size policy**, and `QScrollArea` consults the size
+  policy, not the virtual. Every page was silently pinned to exactly one
+  viewport tall and nothing scrolls; the only symptom was that the bottom of a
+  long page could not be reached.
+* `measure()` started its cursor at the gutter while `paintEvent()` started it
+  at `buildOriginY()`, and returned one gutter instead of two. Pages were
+  reported a title-block short and 32 px short, and `paintEvent`'s clip rect
+  then cut the last line in half.
+
+`--screenshot` now also writes a `-full.png` per page: the page widget grown to
+its own `heightForWidth()`. The window shot can only ever prove that the *top*
+of a page draws, which is not enough once pages are taller than the viewport.
 
 ## Stage 2 — Qt extensions
 

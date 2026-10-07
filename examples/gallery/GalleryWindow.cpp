@@ -414,7 +414,8 @@ GalleryWindow::GalleryWindow(QWidget *parent)
 
     setCentralWidget(central);
 
-    // Pages, in navigation order.
+    // Pages, in navigation order: the foundation modules first, then one page
+    // per Stage 1 component family in the order the families land.
     const QVector<GalleryPage *> pages = {
         new OverviewPage,
         new ColourPage,
@@ -423,6 +424,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         new MotionPage,
         new InteractionPage,
         new IconPage,
+        createButtonPage(),
     };
 
     QStringList titles;
@@ -506,6 +508,14 @@ QString GalleryWindow::pageTitle(int index) const
         return QString();
     }
     return m_pages.at(index)->title();
+}
+
+QWidget *GalleryWindow::pageWidget(int index) const
+{
+    if (index < 0 || index >= m_pages.size()) {
+        return nullptr;
+    }
+    return m_pages.at(index);
 }
 
 void GalleryWindow::setCurrentPage(int index)

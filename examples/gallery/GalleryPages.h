@@ -151,6 +151,18 @@ private:
     md::MdIconSet m_set = md::MdIconSet::Auto;
 };
 
+// ---------------------------------------------------------------------------
+// Component pages
+// ---------------------------------------------------------------------------
+//
+// One per Stage 1 component family, added in the order the families land.
+// Declared as factories rather than classes so the page header does not have to
+// grow a class per component: the page's own type stays private to its
+// translation unit, which is where its bespoke state belongs.
+
+/// Actions — Buttons (all five styles x five sizes x two shapes).
+GalleryPage *createButtonPage();
+
 } // namespace gallery
 
 #endif // GALLERY_PAGES_H

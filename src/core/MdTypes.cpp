@@ -269,6 +269,46 @@ QString densityName(Density density)
     return QStringLiteral("unknown");
 }
 
+QString buttonVariantName(ButtonVariant variant)
+{
+    // These are the `md.comp.button.<name>` segments, not the legacy
+    // `md.comp.<name>-button` family names. The two spell "tonal" differently
+    // (`md.comp.filled-tonal-button` versus `md.comp.button.tonal`), and the
+    // component token keys follow the newer form.
+    switch (variant) {
+    case ButtonVariant::Elevated: return QStringLiteral("elevated");
+    case ButtonVariant::Filled: return QStringLiteral("filled");
+    case ButtonVariant::Tonal: return QStringLiteral("tonal");
+    case ButtonVariant::Outlined: return QStringLiteral("outlined");
+    case ButtonVariant::Text: return QStringLiteral("text");
+    case ButtonVariant::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
+QString buttonSizeName(ButtonSize size)
+{
+    switch (size) {
+    case ButtonSize::XSmall: return QStringLiteral("xsmall");
+    case ButtonSize::Small: return QStringLiteral("small");
+    case ButtonSize::Medium: return QStringLiteral("medium");
+    case ButtonSize::Large: return QStringLiteral("large");
+    case ButtonSize::XLarge: return QStringLiteral("xlarge");
+    case ButtonSize::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
+QString buttonShapeName(ButtonShape shape)
+{
+    switch (shape) {
+    case ButtonShape::Round: return QStringLiteral("round");
+    case ButtonShape::Square: return QStringLiteral("square");
+    case ButtonShape::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {

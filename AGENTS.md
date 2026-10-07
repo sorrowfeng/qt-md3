@@ -60,6 +60,14 @@ the M3 Expressive cross-cutting pass.
     colours, fonts, radii and durations from the theme at paint time; there is
     no QSS, no `QWidget::setPalette` and no `QWidget::setFont` anywhere in it.
   - One page per component plus an Overview home.
+  - A page that owns real child widgets must keep them in a **bank** and only
+    record their content-local rects in `build()`. `build()` is called from
+    `measure()`, `remeasure()` and `paintEvent()` — many times, at changing
+    widths — so allocating widgets inside it creates a new generation of visible
+    children on every layout pass, all parked at (0, 0).
+  - `GalleryPage::contentRectForCurrentSize()` / `buildOriginY()` / `remeasure()`
+    give such a page the same numbers `paintEvent` uses, so its children can be
+    placed from `resizeEvent()` and `showEvent()` rather than guessed at.
 - `tests/` — QTest + CTest, including the policy gates.
 - `resources/` — icons, fonts, `.qrc`.
 - `docs/` — status, audit, specs, TODOs.
@@ -135,11 +143,15 @@ Rules:
 
 ## Current status
 
-Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is implemented** —
-eighteen modules, none of them widgets. No components yet; 0 / 36 families
-complete. One Batch 0 behaviour gap is outstanding and documented rather than
-stubbed: `ContrastLevel` is stored but the tone curves are not yet applied, so
-medium and high currently match standard.
+Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is closed** — all
+twenty-one modules are implemented, and `ContrastLevel` is applied rather than
+stored, so reduced / standard / medium / high genuinely move the tones.
+
+Stage 1 components have started: **`MdButton` is complete** (5 colour styles ×
+5 Expressive sizes × 2 shapes, leading/trailing icons, soft-disabled, live
+states), which is `1 / 36` families. The next families are the rest of §1.2 —
+button groups, icon buttons, FABs, extended FABs, FAB menu, split buttons,
+segmented buttons.
 
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and
@@ -204,7 +216,13 @@ tools/run-gallery.sh --screenshot build/shots   # render every page to PNG, then
 
 `--screenshot` exits non-zero if any page fails to write, so it doubles as a
 render check: a page whose `paintEvent` draws nothing still starts and quits
-cleanly, and only the PNG proves otherwise. Note that a screenshot taken under
-`QT_QPA_PLATFORM=offscreen` renders every glyph as a tofu box on Windows — that
-is the offscreen platform having no font database, not a library fault. Capture
-from the native platform when the text matters.
+cleanly, and only the PNG proves otherwise. It writes two images per page:
+`<nn>-<slug>.png` is the window, and `<nn>-<slug>-full.png` is the page widget
+grown to its own `heightForWidth()`. Use the `-full` one — the window shot can
+only ever show the first screenful, and most pages are taller than the viewport.
+
+Note that a screenshot taken under `QT_QPA_PLATFORM=offscreen` renders every
+glyph as a tofu box on Windows — that is the offscreen platform having no font
+database, not a library fault. Capture from the native platform when the text
+matters. In a GUI-subsystem build `qWarning`/`qInfo` also go to the debugger
+rather than the terminal; set `QT_ASSUME_STDERR_HAS_CONSOLE=1` to see them.

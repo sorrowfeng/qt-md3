@@ -124,6 +124,32 @@ foreach(primitive IN LISTS QT_MD3_PRIMITIVE_TESTS)
     qt_md3_deploy_runtime(${primitive})
 endforeach()
 
+# --- Component tests --------------------------------------------------------
+
+# MdButton, the first Stage 1 component. Covers the md.comp.button token table
+# (field by field, against the published size and variant sets), the widget
+# contract, and a render smoke check over all 5 x 5 x 2 combinations.
+add_executable(TestMd3Button
+    TestMd3Button.cpp
+)
+
+target_link_libraries(TestMd3Button
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Button COMMAND TestMd3Button)
+set_tests_properties(TestMd3Button PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Button)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

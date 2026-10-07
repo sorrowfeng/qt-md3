@@ -25,6 +25,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdStateLayer.h
     core/MdRipple.h
     core/MdFocusRing.h
+    core/MdButtonTokens.h
     core/MdIcon.h
     core/MdResources.h
     core/MdTheme.h
@@ -34,9 +35,11 @@ set(QT_MD3_CORE_HEADERS
 
 set(QT_MD3_STYLE_HEADERS
     styles/MdStyleBase.h
+    styles/MdButtonStyle.h
 )
 
 set(QT_MD3_WIDGET_HEADERS
+    widgets/MdButton.h
 )
 
 set(QT_MD3_SOURCES
@@ -55,12 +58,15 @@ set(QT_MD3_SOURCES
     core/MdStateLayer.cpp
     core/MdRipple.cpp
     core/MdFocusRing.cpp
+    core/MdButtonTokens.cpp
     core/MdIcon.cpp
     core/MdResources.cpp
     core/MdTheme.cpp
     core/MdFont.cpp
     core/MdDesign.cpp
     styles/MdStyleBase.cpp
+    styles/MdButtonStyle.cpp
+    widgets/MdButton.cpp
 )
 
 set(QT_MD3_RESOURCES
