@@ -15,7 +15,9 @@ set(QT_MD3_CORE_HEADERS
     core/MdTokens.h
     core/MdColorMath.h
     core/MdColorScheme.h
+    core/MdColorSpec.h
     core/MdDynamicColor.h
+    core/MdTemperatureCache.h
     core/MdShape.h
     core/MdMotion.h
     core/MdTypeScale.h
@@ -43,7 +45,9 @@ set(QT_MD3_SOURCES
     core/MdTokens.cpp
     core/MdColorMath.cpp
     core/MdColorScheme.cpp
+    core/MdColorSpec.cpp
     core/MdDynamicColor.cpp
+    core/MdTemperatureCache.cpp
     core/MdShape.cpp
     core/MdMotion.cpp
     core/MdTypeScale.cpp

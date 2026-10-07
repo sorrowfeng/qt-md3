@@ -42,11 +42,19 @@ enum class SchemeVariant {
     Count,
 };
 
-/// Contrast levels defined by MD3 (standard / medium / high).
+/// Contrast levels defined by MD3 (standard / medium / high), plus the
+/// material-color-utilities level below standard.
+///
+/// `Reduced` is not a published `md.sys.*` token: MD3 names three levels.
+/// material-color-utilities nevertheless defines a fourth at -1.0 and its own
+/// test suite covers it, and Android ships a "reduce contrast" accessibility
+/// setting that maps onto it, so the machinery is exposed rather than hidden.
+/// See `contrastLevelValue()`.
 enum class ContrastLevel {
     Standard,
     Medium,
     High,
+    Reduced,
     Count,
 };
 

@@ -47,11 +47,23 @@ public:
     const MdTonalPalette &errorPalette() const { return m_error; }
 
     /// Resolved colour for an MD3 colour role.
+    ///
+    /// This runs the full ColorSpec2021 solve, so the contrast level recorded in
+    /// the scheme is applied: medium, high and reduced genuinely move the tones,
+    /// each role against its own ContrastCurve.
     Argb color(ColorRole role) const;
 
-    /// The tone this scheme maps `role` to (0..100). Exposed so the token
-    /// audit test can check the mapping without reverse-engineering colours.
-    static double toneFor(ColorRole role, bool isDark);
+    /// The tone this scheme resolves `role` to (0..100), after the contrast
+    /// level has been applied.
+    ///
+    /// Note there is deliberately no accessor for "the published
+    /// `md.sys.color` tone" here. That table is the *static baseline*
+    /// (`MdColorScheme::baseline`), an authored token set that is not the
+    /// solver's output — for the default purple its primary sits at #6750a4
+    /// while tonal-spot solves to #65558f. Exposing it as a tone of *this*
+    /// scheme invited exactly the wrong comparison, so it lives only in
+    /// MdColorScheme now.
+    double resolvedTone(ColorRole role) const;
 
 private:
     Argb m_sourceColor = 0xFF6750A4u;

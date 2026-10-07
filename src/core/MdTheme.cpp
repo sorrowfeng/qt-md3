@@ -13,7 +13,7 @@ MdTheme &MdTheme::instance()
 MdTheme::MdTheme(QObject *parent)
     : QObject(parent)
 {
-    m_scheme = MdColorScheme::baseline(m_mode);
+    m_scheme = MdColorScheme::baseline(m_mode, m_contrast);
     m_schemeDirty = false;
 }
 
@@ -31,7 +31,9 @@ void MdTheme::rebuildScheme()
     if (m_dynamicColor) {
         m_scheme = MdColorScheme::dynamic(m_seedColor, m_mode, m_variant, m_contrast);
     } else {
-        m_scheme = MdColorScheme::baseline(m_mode);
+        // The static baseline honours the contrast level too: material-web
+        // publishes six sets, one per (mode, level) pair.
+        m_scheme = MdColorScheme::baseline(m_mode, m_contrast);
     }
     m_schemeDirty = false;
 }

@@ -399,7 +399,14 @@ void TestMd3Tokens::baselineLightSchemeMatchesSource()
     QCOMPARE(roleHex(scheme, ColorRole::Primary), QStringLiteral("#6750a4"));
     QCOMPARE(roleHex(scheme, ColorRole::OnPrimary), QStringLiteral("#ffffff"));
     QCOMPARE(roleHex(scheme, ColorRole::PrimaryContainer), QStringLiteral("#eaddff"));
-    QCOMPARE(roleHex(scheme, ColorRole::OnPrimaryContainer), QStringLiteral("#21005d"));
+    // The current published set names on-primary-container as primary30
+    // (#4f378b). tokens/versions/v0_192 named it primary10 (#21005d), which is
+    // the value earlier revisions of this test pinned. The v0_192 value is
+    // stale: material-color-utilities' own solver also lands on tone 30, so the
+    // new value agrees with both the published set and the algorithm.
+    QCOMPARE(roleHex(scheme, ColorRole::OnPrimaryContainer), QStringLiteral("#4f378b"));
+    // The v0_192 tone is still reachable - it is the *fixed* variant's tone.
+    QCOMPARE(roleHex(scheme, ColorRole::OnPrimaryFixed), QStringLiteral("#21005d"));
     QCOMPARE(roleHex(scheme, ColorRole::Surface), QStringLiteral("#fef7ff"));
     QCOMPARE(roleHex(scheme, ColorRole::SurfaceContainerLowest), QStringLiteral("#ffffff"));
     QCOMPARE(roleHex(scheme, ColorRole::SurfaceContainer), QStringLiteral("#f3edf7"));
@@ -413,6 +420,10 @@ void TestMd3Tokens::baselineLightSchemeMatchesSource()
     QCOMPARE(roleHex(scheme, ColorRole::InverseSurface), QStringLiteral("#322f35"));
     QCOMPARE(roleHex(scheme, ColorRole::InverseOnSurface), QStringLiteral("#f5eff7"));
     QCOMPARE(roleHex(scheme, ColorRole::Scrim), QStringLiteral("#000000"));
+    // surface-tint is an alias for primary in the published source
+    // (`$surface-tint: $primary`), and the alias is resolved by tone, so it
+    // tracks primary through every contrast level: 40 / 30 / 20 in medium.
+    QCOMPARE(roleHex(scheme, ColorRole::SurfaceTint), QStringLiteral("#6750a4"));
     QCOMPARE(roleHex(scheme, ColorRole::PrimaryFixed), QStringLiteral("#eaddff"));
     QCOMPARE(roleHex(scheme, ColorRole::PrimaryFixedDim), QStringLiteral("#d0bcff"));
     QCOMPARE(roleHex(scheme, ColorRole::OnPrimaryFixedVariant), QStringLiteral("#4f378b"));
@@ -482,10 +493,33 @@ void TestMd3Tokens::monochromeSchemeDropsChroma()
     QCOMPARE(qRed(QRgb(primary)), qGreen(QRgb(primary)));
     QCOMPARE(qGreen(QRgb(primary)), qBlue(QRgb(primary)));
 
-    // primary is tone 40 of a chroma-0 palette, which is the plain L*=40 grey.
-    QCOMPARE(primary, MdColorMath::intFromLstar(40.0));
-    // ...and so are the other scheme families: no hue survives anywhere.
-    QCOMPARE(scheme.color(ColorRole::Tertiary), scheme.color(ColorRole::Secondary));
+    // The nominal tone is what ColorSpec2021 prescribes for the monochrome
+    // variant, and it is deliberately the end of the scale rather than the
+    // usual T40/T80: a monochrome scheme is meant to read as pure black on
+    // white, so `primary()` returns tone 0 in light and tone 100 in dark.
+    // (This used to be pinned to the T40 grey, which was the published tone
+    // table's answer before the ColorSpec2021 solver replaced it.)
+    QCOMPARE(primary, MdColorMath::intFromLstar(0.0));
+
+    const MdColorScheme dark = MdColorScheme::dynamic(QColor(QStringLiteral("#0061a4")),
+                                                      ThemeMode::Dark,
+                                                      SchemeVariant::Monochrome);
+    QCOMPARE(dark.hex(ColorRole::Primary), QStringLiteral("#ffffff"));
+
+    // ...and no hue survives anywhere: every role is a neutral grey, because a
+    // chroma-0 palette has nothing else to offer. The roles do not all land on
+    // the *same* grey though - ColorSpec2021 gives monochrome its own nominal
+    // tones, and tertiary is deliberately one step off secondary
+    // (`isMonochrome ? (isDark ? 90 : 25) : (isDark ? 80 : 40)`) so that a
+    // monochrome scheme still has a tertiary that reads as distinct.
+    const auto isNeutral = [](const QColor &color) {
+        return color.red() == color.green() && color.green() == color.blue();
+    };
+    QVERIFY(isNeutral(scheme.color(ColorRole::Secondary)));
+    QVERIFY(isNeutral(scheme.color(ColorRole::Tertiary)));
+    QVERIFY(isNeutral(scheme.color(ColorRole::Primary)));
+    QCOMPARE(scheme.hex(ColorRole::Secondary), QStringLiteral("#5e5e5e")); // T40
+    QCOMPARE(scheme.hex(ColorRole::Tertiary), QStringLiteral("#3b3b3b"));  // T25
 
     // The error palette is deliberately exempt: ColorSpec2021::getErrorPalette
     // returns empty for every variant, so MD3's error red (hue 25 / chroma 84)

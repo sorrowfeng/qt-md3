@@ -33,19 +33,52 @@ inside them, recorded with the question that has to be answered before it can be
 
 ### Gaps still open inside Batch 0
 
-- [ ] **`ContrastLevel` is stored but not applied.**
-      `MdDynamicScheme::create()` takes standard / medium / high and records it,
-      but every role is still resolved from the single published tone table, so
-      medium and high currently produce the same output as standard.
-      What is needed: a port of `ColorSpec2021`'s `ContrastCurve` and
-      `ToneDeltaPair` machinery plus `Contrast.lighter()` / `darker()`, and a
-      per-role tone function that takes the contrast level as an input instead
-      of reading a constant table. This is the largest remaining piece of Batch
-      0 and it is deliberately not stubbed — a half-applied contrast level is
-      worse than an honest one.
-      Source of truth: `material-color-utilities`
-      `java/dynamiccolor/ContrastCurve.java`, `ToneDeltaPair.java`,
-      `ColorSpec2021.java`, `java/utils/Contrast.java`.
+- [x] **`ContrastLevel` is applied.**
+      `MdDynamicScheme::create()` takes reduced / standard / medium / high and
+      `MdColorSpec2021` solves every role against its own `ContrastCurve` and
+      `ToneDeltaPair`, so the levels genuinely move the tones.
+      Source of truth: `material-color-utilities` `ColorSpec2021.java`,
+      `dynamiccolor/ContrastCurve.java`, `ToneDeltaPair.java`,
+      `utils/Contrast.java`, verified by `TestMd3Contrast`.
+
+      Two things had to be separated to get here, and the separation is the
+      interesting part of the change:
+
+      * **The published `md.sys.color` sets are not the solver's output.**
+        They are authored static data on the M3 reference palette, where the
+        primary family carries the seed's own chroma. The dynamic solver
+        rebuilds the family at the chroma `ColorSpec2021` prescribes per
+        variant, so tonal-spot's primary for the default purple is `#65558f`
+        while the published baseline primary is `#6750a4`. Both are correct in
+        their own layer. `MdColorScheme::baseline()` now returns the published
+        sets verbatim — all six of them, light/dark × standard/medium/high —
+        and the solver is verified against Google's own scheme assertions
+        instead. They are pinned so that `dynamicTonalSpotIsNotTheStaticBaseline`
+        fails if anyone "reconciles" them.
+      * **`ContrastLevel::Reduced` exists.** It is material-color-utilities'
+        contrast level `-1.0`. No `md.sys.*` token names it because it only
+        exists in the dynamic pipeline, so `baseline()` falls back to the
+        standard set for it rather than inventing tones.
+
+### Verification fixtures for the colour pipeline
+
+The colour modules are checked against two vendored reference sets rather than
+against the implementation's own output, because a self-referential check
+cannot detect a shared misunderstanding:
+
+- `resources/tokens/md-sys-color-*.txt` — the six published token sets, from
+  material-web `tokens/versions/latest/sass`. Regenerate with
+  `tools/update-sys-color-fixtures.py`, which also takes `--emit-cpp` to
+  regenerate `MdColorScheme.cpp`'s role tables so the 288 rows are never
+  hand-typed.
+- `resources/tokens/mcu-scheme-expectations.txt` — 367 assertions lifted from
+  material-color-utilities' own Swift tests, covering nine variants, both modes
+  and three contrast levels. Regenerate with
+  `tools/update-mcu-scheme-fixtures.py`.
+
+Both generators are checked in, and both need a checkout of the upstream source
+to run. Vendoring a pinned copy under `docs/reference/` so they can run offline
+is still outstanding.
 
 - [ ] **35 Expressive decorative shape paths.**
       `MdShape::decorativeShapeCount()` returns `0`. The shape scale and shape

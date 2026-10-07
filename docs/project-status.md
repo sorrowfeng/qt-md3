@@ -7,15 +7,15 @@ Last updated: 2026-10-07
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
-| Stage | Stage 1 — Batch 0 (foundation modules) present, one behaviour gap outstanding |
+| Stage | Stage 1 — Batch 0 (foundation modules) present, colour pipeline complete |
 | Stage 1 families complete | `0 / 36` |
-| Base modules | `19 / 19` |
+| Base modules | `21 / 21` |
 | Public components | `0` |
 | Style classes | `1` (`MdStyleBase`) |
 | Example pages | `7` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `11` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `13` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -23,7 +23,7 @@ Last updated: 2026-10-07
 ### Batch 0 — the foundation
 
 Nothing in this list is a widget. It is the layer every component will be
-measured against. All eighteen modules are implemented and compiled in; the
+measured against. All twenty-one modules are implemented and compiled in; the
 outstanding behaviour gaps are listed separately below rather than glossed over.
 
 | Module | Covers |
@@ -32,8 +32,10 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdTypes` | every shared enum, each with a `Count` sentinel, plus name helpers |
 | `MdTokens` | three layers: `md.ref.*` (tones 0–100 for all six palettes), `md.sys.*` (colour, type, shape, elevation, motion, state), `md.comp.*` (global + per-instance override) |
 | `MdColorMath` | CAM16 (J, C, h, M, s, Q, J\*, a\*, b\*), HCT with the 255 critical-plane solver, TonalPalette, CorePalette, CIELAB — ported from `material-color-utilities` |
-| `MdColorScheme` | 49 colour roles, light and dark, including the fixed families |
-| `MdDynamicColor` | all nine variants, `harmonize`, `hctHue`, disliking-aware temperature cache |
+| `MdColorScheme` | 49 colour roles, light and dark, including the fixed families; `baseline()` returns all six published sets (light/dark × standard/medium/high) verbatim |
+| `MdColorSpec` | `ColorSpec2021`: the per-role tone solver — `ContrastCurve` (four corners at −1.0 / 0.0 / 0.5 / 1.0), `ToneDeltaPair`, the awkward-zone rule, dual backgrounds, and `MdContrast` (`ratioOfTones`, `lighter`/`darker`, `foregroundTone`) |
+| `MdTemperatureCache` | Lab-temperature utilities: `rawTemperature`, `complement`, `analogous`. Feeds the `content` and `fidelity` tertiary palettes and nothing else |
+| `MdDynamicColor` | all nine variants, `harmonize`, `hctHue`; every role resolved through the `ColorSpec2021` solver so all four contrast levels take effect |
 | `MdTheme` | singleton with `themeAboutToChange` / `themeChanged` / `themeModeChanged` |
 | `MdTypeScale` | 15 baseline + 15 emphasized styles, script-category line height |
 | `MdShape` | the full corner scale, radius interpolation, path morphing |
@@ -52,13 +54,26 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 
 - CMake auto-detects Qt 6 / Qt 5, enforces the minimum, installs an exportable
   package (`find_package(qt-md3 CONFIG REQUIRED)`), and registers the `.qrc`.
-- Eleven CTest entries, all green. One binary per module, each with its own
+- Thirteen CTest entries, all green. One binary per module, each with its own
   `QTEST_MAIN` — a single binary hosting several `QObject` classes driven by
   `QTest::qExec` in a loop cannot honour `-o` or per-class selection, so
   `ctest -R TestMd3Icon` would silently run the wrong suite.
   - `TestMd3Tokens` — 22 assertions pinning every published number against its
     source, including the CAM16 reference values from `material-color-utilities`
-    and the 49-role light/dark scheme against `material-web` v0.192.
+    and the 49-role light/dark scheme against the current `material-web` token
+    sets.
+  - `TestMd3Contrast` — the colour pipeline's two references, kept apart on
+    purpose. `resources/tokens/md-sys-color-*.txt` (six sets, from material-web)
+    pins the *static baseline*; `resources/tokens/mcu-scheme-expectations.txt`
+    (367 assertions lifted from material-color-utilities' own Swift tests) pins
+    the *dynamic solver* across nine variants, both modes and three contrast
+    levels. A third check pins the fact that the two are *supposed* to differ,
+    because "reconciling" them is the mistake this suite exists to catch.
+  - `TestMd3TemperatureCache` — `rawTemperature`, `complement` and `analogous`
+    against the exact values in material-color-utilities'
+    `temperature_cache_test.cc`. This module feeds `content` and `fidelity`
+    tertiary and nothing else, so a defect in it is invisible from every other
+    variant; it had one, and this is what catches the next.
   - `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase` —
     the interaction primitives and the Pattern A paint hub: geometry, timing,
     lifecycle, signals, meta-property lookup, and a render smoke check for each
@@ -88,9 +103,13 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 3. **Variable font axes need Qt 6.7+.**
    On Qt 6.5/6.6 `MdIcon::axesSupported()` returns false and only the named
    weights are honoured.
-4. **`ContrastLevel` is stored but not yet applied.**
-   The scheme records standard / medium / high, but tone deltas are not yet
-   adjusted per level.
+
+`ContrastLevel` used to head this list. It is closed: `MdColorSpec` solves every
+role against its own `ContrastCurve` and `ToneDeltaPair`, and all four levels
+(reduced / standard / medium / high) take effect. See
+[porting-todo.md](porting-todo.md) for what that required, including the
+distinction between the published static baseline and the dynamic solver that
+had to be drawn before the numbers could be verified at all.
 
 Everything above is in [`porting-todo.md`](porting-todo.md) with its source
 question attached.
@@ -118,6 +137,36 @@ review.
    mojibake. Fixed at the call site and gated: `TestMd3SourceEncoding` now
    rejects the Latin-1 decoders outright and validates that every source file is
    well-formed UTF-8.
+
+## Fixed while closing the contrast levels
+
+The `ContrastLevel` work surfaced a defect that had been sitting under two other
+symptoms, and it is worth recording because of how quiet it was.
+
+4. **`MdTemperatureCache` read the three Lab components out of order.**
+   `MdTonalPalette::labFromArgb` returns `{L*, a*, b*}` — but through a generic
+   `MdVec3{a, b, c}`. `rawTemperature` then read `.a` where a\* was meant (it got
+   L\*) and `.b` where b\* was meant (it got a\*). Every number still looked like
+   a plausible temperature and stayed inside its documented range; the whole
+   warm/cool axis was simply rotated by about a quadrant. The only visible
+   symptom was that the `content` and `fidelity` variants produced strange
+   tertiary hues — 24 of material-color-utilities' 367 scheme assertions failed,
+   all of them on `tertiary` / `tertiary-container` for those two variants and
+   nothing else, which is exactly the fingerprint of this module.
+
+   Two things came out of it. `MdVec3` is fine as a generic triple but not as a
+   colour-space result, so `labFromArgb` now returns a named `MdLab{l, a, b}`
+   and the mistake cannot be repeated. And the module moved out of an anonymous
+   namespace inside `MdDynamicColor.cpp` into `MdTemperatureCache`, with
+   `TestMd3TemperatureCache` pinning it against the exact values in
+   `temperature_cache_test.cc`. It had no test before, which is why a fully
+   rotated colour-temperature axis went unnoticed.
+
+   Worth noting how it was found: not by reading the code, but by comparing two
+   upstream references against each other. The MCU fixture said the solver was
+   wrong for two variants; the published token sets said the baseline was a
+   different thing entirely. Working out which of those was the real signal is
+   what narrowed it to this module.
 
 ## What is next
 

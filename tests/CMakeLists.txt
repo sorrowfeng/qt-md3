@@ -41,6 +41,57 @@ add_test(NAME TestMd3Tokens COMMAND TestMd3Tokens)
 
 qt_md3_deploy_runtime(TestMd3Tokens)
 
+# Contrast levels, and the ColorSpec2021 tone solver underneath them.
+#
+# Two independent references are involved and they verify different things:
+# the vendored md.sys.color sets pin the *static baseline*
+# (MdColorScheme::baseline), and resources/tokens/mcu-scheme-expectations.txt —
+# flattened from material-color-utilities' own Swift tests — pins the *dynamic
+# solver* across nine variants, both modes and three contrast levels.
+add_executable(TestMd3Contrast
+    TestMd3Contrast.cpp
+)
+
+target_link_libraries(TestMd3Contrast
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Contrast COMMAND TestMd3Contrast)
+
+# The vendored md.sys.color token sets are read from the source tree rather than
+# from the Qt resource bundle: they are reference data for the audit, not
+# assets the library installs.
+target_compile_definitions(TestMd3Contrast
+    PRIVATE
+        QT_MD3_TOKEN_FIXTURES="${CMAKE_SOURCE_DIR}/resources/tokens"
+)
+
+qt_md3_deploy_runtime(TestMd3Contrast)
+
+# MdTemperatureCache feeds the `content` and `fidelity` tertiary palettes and
+# nothing else, so a defect in it is invisible from every other variant's
+# numbers. Its expectations come straight from material-color-utilities'
+# cpp/temperature/temperature_cache_test.cc.
+add_executable(TestMd3TemperatureCache
+    TestMd3TemperatureCache.cpp
+)
+
+target_link_libraries(TestMd3TemperatureCache
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3TemperatureCache COMMAND TestMd3TemperatureCache)
+
+qt_md3_deploy_runtime(TestMd3TemperatureCache)
+
 # The interaction primitives every component depends on: ripple geometry and
 # timing, the focus indicator, the icon back ends, and the Pattern A paint hub.
 #

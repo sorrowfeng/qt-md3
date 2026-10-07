@@ -919,7 +919,7 @@ MdTonalPalette::MdTonalPalette(const MdHct &hct)
 {
 }
 
-MdVec3 MdTonalPalette::labFromArgb(Argb argb)
+MdLab MdTonalPalette::labFromArgb(Argb argb)
 {
     // lab.cc LabFromInt.
     const double redL = MdColorMath::linearized(MdColorMath::redFromArgb(argb));

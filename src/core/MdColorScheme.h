@@ -5,12 +5,17 @@
 //
 // Two ways to obtain one:
 //   * baseline()  — the static mapping published in material-web's
-//                   _md-sys-color.scss (seed = the default purple).
+//                   _md-sys-color*.scss: six authored token sets, one per
+//                   (mode, contrast level) pair.
 //   * dynamic()   — generated from a seed colour via MdDynamicColor, which
 //                   ports material-color-utilities' HCT pipeline.
 //
-// Light and dark are the same scheme evaluated at different tone mappings;
-// they are not two hand-authored palettes.
+// These are two different layers and deliberately do not agree. The published
+// sets are authored on the M3 reference palette, where the primary family
+// carries the seed's own chroma; the dynamic solver rebuilds the family at the
+// chroma ColorSpec2021 prescribes for the variant. For the default purple that
+// is #6750a4 (baseline) versus #65558f (tonal-spot). Neither is the "right"
+// answer — pick the layer you want and stay in it.
 
 #include "MdTypes.h"
 #include "QtMd3Export.h"
@@ -26,7 +31,13 @@ public:
     MdColorScheme();
 
     /// Static baseline scheme from the published reference palette.
-    static MdColorScheme baseline(ThemeMode mode);
+    ///
+    /// Six token sets are published — light/dark × standard/medium/high — and
+    /// each is returned verbatim. `ContrastLevel::Reduced` has no published
+    /// counterpart because it only exists in the dynamic pipeline, so it
+    /// resolves to the standard set.
+    static MdColorScheme baseline(ThemeMode mode,
+                                  ContrastLevel level = ContrastLevel::Standard);
 
     /// Scheme generated from a seed colour (dynamic colour).
     static MdColorScheme dynamic(const QColor &seed,

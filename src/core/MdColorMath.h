@@ -30,6 +30,19 @@ struct MdVec3
     double c = 0.0;
 };
 
+/// CIELAB, three named components.
+///
+/// Separate from MdVec3 on purpose. `labFromArgb` returns {L*, a*, b*}, and a
+/// generic {a, b, c} triple let a caller read `vec.b` expecting b* while
+/// actually getting a* — an error that is silent, plausible-looking, and shifts
+/// every derived value. Naming the components makes the mistake impossible.
+struct MdLab
+{
+    double l = 0.0;
+    double a = 0.0;
+    double b = 0.0;
+};
+
 /// CAM16 colour appearance model result.
 struct MdCam16
 {
@@ -153,8 +166,11 @@ public:
     /// TonalPalette(Hct)).
     explicit MdTonalPalette(const MdHct &hct);
 
-    /// Converts a colour from lab.h in material-color-utilities.
-    static MdVec3 labFromArgb(Argb argb);
+    /// CIE L*a*b*, from material-color-utilities' `quantize/lab.cc` (`LabFromInt`).
+    ///
+    /// Lives here rather than in a quantize module because MdTemperatureCache,
+    /// which the `content` and `fidelity` variants need, is its only consumer.
+    static MdLab labFromArgb(Argb argb);
 
     /// Colour at the given tone. Matches MCU's TonalPalette::get().
     Argb tone(double tone) const;

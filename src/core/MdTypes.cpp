@@ -204,6 +204,7 @@ QString contrastLevelName(ContrastLevel level)
     case ContrastLevel::Standard: return QStringLiteral("standard");
     case ContrastLevel::Medium: return QStringLiteral("medium");
     case ContrastLevel::High: return QStringLiteral("high");
+    case ContrastLevel::Reduced: return QStringLiteral("reduced");
     case ContrastLevel::Count: break;
     }
     return QStringLiteral("unknown");
