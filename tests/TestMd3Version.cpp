@@ -13,7 +13,7 @@ class TestMd3Version : public QObject
 private slots:
     void versionStringIsSemantic()
     {
-        const QString version = QString::fromLatin1(md::libraryVersion());
+        const QString version = QString::fromUtf8(md::libraryVersion());
         QVERIFY2(!version.isEmpty(), "libraryVersion() must not be empty");
 
         const QRegularExpression re(QStringLiteral("^\\d+\\.\\d+\\.\\d+$"));
@@ -27,7 +27,7 @@ private slots:
                                      .arg(md::libraryVersionMajor())
                                      .arg(md::libraryVersionMinor())
                                      .arg(md::libraryVersionPatch());
-        QCOMPARE(QString::fromLatin1(md::libraryVersion()), expected);
+        QCOMPARE(QString::fromUtf8(md::libraryVersion()), expected);
     }
 };
 

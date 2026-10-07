@@ -1,16 +1,27 @@
 # qt-md3 example application: the component gallery.
 #
-# This is intentionally a thin shell for now. Each public component gets its own
-# page plus a left-nav entry as it lands (see CONTRIBUTING.md, DoD item 7).
+# The gallery is the inspection surface for the library and is built into the
+# project's build/ directory. Each public component gets its own page plus a
+# left-nav entry as it lands (see CONTRIBUTING.md, DoD item 7).
+#
+# The shell and the pages are example code, not library code: they are named
+# `Gallery*` rather than `Md*` and live outside src/ so they can never be
+# mistaken for a Stage 1 component or picked up by the coverage gate.
 
 add_executable(qt-md3-example
     main.cpp
+    gallery/GalleryPage.cpp
+    gallery/GalleryPages.cpp
+    gallery/GalleryPages2.cpp
+    gallery/GalleryPages3.cpp
+    gallery/GalleryWindow.cpp
 )
 
 target_link_libraries(qt-md3-example
     PRIVATE
         qt-md3
         Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Svg
 )

@@ -1,20 +1,62 @@
 # qt-md3 library target.
 #
 # Layer map:
-#   core/    — tokens, theme, color algorithms, type scale, shape, motion,
+#   core/    — tokens, theme, colour algorithms, type scale, shape, motion,
 #              icons, utilities, export macro
 #   styles/  — every Md*Style painting class
 #   widgets/ — every public component (Md*.h)
 #
 # Every source file is listed explicitly. Do not switch to GLOB.
 
-set(QT_MD3_PUBLIC_HEADERS
+set(QT_MD3_CORE_HEADERS
     core/QtMd3Export.h
     core/MdCore.h
+    core/MdTypes.h
+    core/MdTokens.h
+    core/MdColorMath.h
+    core/MdColorScheme.h
+    core/MdDynamicColor.h
+    core/MdShape.h
+    core/MdMotion.h
+    core/MdTypeScale.h
+    core/MdElevation.h
+    core/MdStateLayer.h
+    core/MdRipple.h
+    core/MdFocusRing.h
+    core/MdIcon.h
+    core/MdResources.h
+    core/MdTheme.h
+    core/MdFont.h
+    core/MdDesign.h
+)
+
+set(QT_MD3_STYLE_HEADERS
+    styles/MdStyleBase.h
+)
+
+set(QT_MD3_WIDGET_HEADERS
 )
 
 set(QT_MD3_SOURCES
     core/MdCore.cpp
+    core/MdTypes.cpp
+    core/MdTokens.cpp
+    core/MdColorMath.cpp
+    core/MdColorScheme.cpp
+    core/MdDynamicColor.cpp
+    core/MdShape.cpp
+    core/MdMotion.cpp
+    core/MdTypeScale.cpp
+    core/MdElevation.cpp
+    core/MdStateLayer.cpp
+    core/MdRipple.cpp
+    core/MdFocusRing.cpp
+    core/MdIcon.cpp
+    core/MdResources.cpp
+    core/MdTheme.cpp
+    core/MdFont.cpp
+    core/MdDesign.cpp
+    styles/MdStyleBase.cpp
 )
 
 set(QT_MD3_RESOURCES
@@ -23,7 +65,9 @@ set(QT_MD3_RESOURCES
 
 add_library(qt-md3
     ${QT_MD3_SOURCES}
-    ${QT_MD3_PUBLIC_HEADERS}
+    ${QT_MD3_CORE_HEADERS}
+    ${QT_MD3_STYLE_HEADERS}
+    ${QT_MD3_WIDGET_HEADERS}
     ${QT_MD3_RESOURCES}
 )
 add_library(qt-md3::qt-md3 ALIAS qt-md3)
@@ -40,6 +84,7 @@ target_include_directories(qt-md3
 target_link_libraries(qt-md3
     PUBLIC
         Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Svg
 )
@@ -76,10 +121,19 @@ if(QT_MD3_ENABLE_UNDEFINED_SANITIZER AND NOT MSVC)
     target_link_options(qt-md3 PUBLIC -fsanitize=undefined)
 endif()
 
-# Installed headers: public headers from core/ plus the generated version header.
-install(FILES ${QT_MD3_PUBLIC_HEADERS}
+# Installed headers: public headers keep their layer subdirectory, plus the
+# generated version header.
+install(FILES ${QT_MD3_CORE_HEADERS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qt-md3/core
 )
+install(FILES ${QT_MD3_STYLE_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qt-md3/styles
+)
+if(QT_MD3_WIDGET_HEADERS)
+    install(FILES ${QT_MD3_WIDGET_HEADERS}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qt-md3/widgets
+    )
+endif()
 install(FILES ${QT_MD3_VERSION_HEADER}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qt-md3/core
 )

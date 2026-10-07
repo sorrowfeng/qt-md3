@@ -53,7 +53,13 @@ the M3 Expressive cross-cutting pass.
 - `src/styles/` — every `Md*Style` painting class.
 - `src/widgets/` — every public component (`Md*.h`).
 - `src/private/` — internal helpers (not exported).
-- `examples/` — the gallery app; one page per component plus a Showcase home.
+- `examples/` — the gallery app.
+  - `examples/gallery/` — the shell and the pages. Example code, deliberately
+    named `Gallery*` rather than `Md*` so it can never be mistaken for a
+    library component or picked up by the coverage gate. Every page reads its
+    colours, fonts, radii and durations from the theme at paint time; there is
+    no QSS, no `QWidget::setPalette` and no `QWidget::setFont` anywhere in it.
+  - One page per component plus an Overview home.
 - `tests/` — QTest + CTest, including the policy gates.
 - `resources/` — icons, fonts, `.qrc`.
 - `docs/` — status, audit, specs, TODOs.
@@ -129,14 +135,74 @@ Rules:
 
 ## Current status
 
-Bootstrap. Version `0.1.0`. No components yet; 0 / 36 families complete. See
-[`docs/project-status.md`](docs/project-status.md) for the snapshot and
-[`docs/porting-todo.md`](docs/porting-todo.md) for the work queue.
+Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is implemented** —
+eighteen modules, none of them widgets. No components yet; 0 / 36 families
+complete. One Batch 0 behaviour gap is outstanding and documented rather than
+stubbed: `ContrastLevel` is stored but the tone curves are not yet applied, so
+medium and high currently match standard.
+
+Before starting a component, read
+[`docs/project-status.md`](docs/project-status.md) for the module inventory and
+[`docs/porting-todo.md`](docs/porting-todo.md) for the open gaps with the
+question attached to each.
+
+### Base modules (all in `src/core/`, plus `MdStyleBase` in `src/styles/`)
+
+`MdCore` · `MdTypes` · `MdTokens` · `MdColorMath` · `MdColorScheme` ·
+`MdDynamicColor` · `MdTheme` · `MdTypeScale` · `MdShape` · `MdMotion` ·
+`MdElevation` · `MdStateLayer` · `MdRipple` · `MdFocusRing` · `MdIcon` ·
+`MdFont` · `MdDesign` · `MdStyleBase`
+
+Two invariants worth knowing:
+
+- Every enum in `MdTypes.h` ends with a `Count` sentinel. Keep it that way so
+  callers can enumerate a set without hard-coding its size.
+- Every published number is transcribed from an authoritative source and cited
+  in a comment. If a value cannot be sourced, leave it out and record it in
+  `porting-todo.md` — do not estimate it.
 
 ## Build
+
+The build directory is `build/` and is gitignored. Build output is never
+committed; only sources, resources and docs are.
 
 ```bash
 cmake --preset windows-msvc-qt6-debug
 cmake --build --preset qt6-debug
 ctest --preset qt6-debug
 ```
+
+With the Qt 6 MinGW kit (this is what the reference checkouts use):
+
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_CXX_COMPILER=C:/Qt/Tools/mingw1310_64/bin/g++.exe \
+  -DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64 \
+  -DQT_MD3_BUILD_EXAMPLES=ON -DQT_MD3_BUILD_TESTS=ON
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+`-G Ninja` needs `ninja` on `PATH` at configure time; `-DCMAKE_CXX_COMPILER`
+removes the need to put the MinGW bin directory on `PATH` at all. A fresh tree
+configured without one of those two fails with "unable to find a build program"
+or "CMAKE_CXX_COMPILER not set", which looks alarming and means neither more
+nor less than that.
+
+The gallery binary lands at `build/examples/qt-md3-example.exe`. On Windows the
+Qt DLLs must be on `PATH`, so run it from a shell that has
+`C:/Qt/6.9.1/mingw_64/bin` in front of `PATH` — or just use
+`tools/run-gallery.sh`, which recovers the kit from `CMakeCache.txt` itself.
+
+```bash
+tools/run-gallery.sh                        # open the gallery
+tools/run-gallery.sh --theme dark --dynamic # other startup modes
+tools/run-gallery.sh --screenshot build/shots   # render every page to PNG, then quit
+```
+
+`--screenshot` exits non-zero if any page fails to write, so it doubles as a
+render check: a page whose `paintEvent` draws nothing still starts and quits
+cleanly, and only the PNG proves otherwise. Note that a screenshot taken under
+`QT_QPA_PLATFORM=offscreen` renders every glyph as a tofu box on Windows — that
+is the offscreen platform having no font database, not a library fault. Capture
+from the native platform when the text matters.

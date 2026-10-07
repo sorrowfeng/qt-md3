@@ -1,26 +1,90 @@
+#include "gallery/GalleryWindow.h"
+
 #include "core/MdCore.h"
+#include "core/MdDesign.h"
+#include "core/MdIcon.h"
+#include "core/MdTheme.h"
 
 #include <QtCore/QCommandLineOption>
 #include <QtCore/QCommandLineParser>
+#include <QtCore/QDebug>
+#include <QtCore/QDir>
 #include <QtCore/QTimer>
+#include <QtGui/QPixmap>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QWidget>
 
-// qt-md3 example application.
+namespace {
+
+/// Turns a page title into a file-name-safe slug: "Colour & type" -> "colour-type".
+QString slugify(const QString &title)
+{
+    QString slug;
+    slug.reserve(title.size());
+    for (const QChar &character : title) {
+        if (character.isLetterOrNumber()) {
+            slug.append(character.toLower());
+        } else if (!slug.endsWith(QLatin1Char('-')) && !slug.isEmpty()) {
+            slug.append(QLatin1Char('-'));
+        }
+    }
+    while (slug.endsWith(QLatin1Char('-'))) {
+        slug.chop(1);
+    }
+    return slug.isEmpty() ? QStringLiteral("page") : slug;
+}
+
+/// Renders every page to `directory` and returns the number written.
+///
+/// This is a verification hook, not a feature of the gallery. A page whose
+/// paintEvent silently draws nothing still exits 0, so "the window opened" is
+/// not evidence that anything rendered; a PNG per page is.
+int writeScreenshots(gallery::GalleryWindow &window, const QString &directory)
+{
+    QDir dir(directory);
+    if (!dir.exists() && !dir.mkpath(QStringLiteral("."))) {
+        qWarning("qt-md3: cannot create screenshot directory %s", qPrintable(directory));
+        return 0;
+    }
+
+    int written = 0;
+    const int count = window.pageCount();
+    for (int index = 0; index < count; ++index) {
+        window.setCurrentPage(index);
+        // Let the stack swap and the scroll area relayout before grabbing.
+        QCoreApplication::processEvents();
+
+        const QString name = QStringLiteral("%1-%2.png")
+                                 .arg(index + 1, 2, 10, QLatin1Char('0'))
+                                 .arg(slugify(window.pageTitle(index)));
+        const QString path = dir.filePath(name);
+        const QPixmap shot = window.grab();
+        if (!shot.isNull() && shot.save(path)) {
+            ++written;
+        } else {
+            qWarning("qt-md3: could not write %s", qPrintable(path));
+        }
+    }
+    return written;
+}
+
+} // namespace
+
+// qt-md3 example application: the component gallery.
 //
-// The component gallery grows here one page at a time. This shell exists so the
-// library links into a real GUI target from day one, and so CI can smoke-test an
-// installed binary. It performs no styling of its own: every visual value will
-// come from the theme once the Stage 1 base modules land.
+// The gallery is the inspection surface for the library. It is built into the
+// project's build/ directory and is never committed. It performs no styling of
+// its own — every colour, font, radius and duration comes from the theme — so
+// if something looks wrong here, the fault is in the tokens or the base
+// modules rather than in the example.
 
 int main(int argc, char *argv[])
 {
+    // High-DPI policy first, before QApplication exists.
+    md::MdDesign::configureHighDpi();
+
     QApplication app(argc, argv);
-    QApplication::setApplicationName(QStringLiteral("qt-md3-example"));
-    QApplication::setApplicationVersion(QString::fromLatin1(md::libraryVersion()));
+    QApplication::setApplicationName(QStringLiteral("qt-md3-gallery"));
+    QApplication::setApplicationVersion(QString::fromUtf8(md::libraryVersion()));
     QApplication::setOrganizationName(QStringLiteral("qt-md3"));
 
     QCommandLineParser parser;
@@ -28,32 +92,60 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addVersionOption();
 
-    // CI smoke hook: quit automatically after N milliseconds.
+    // Smoke hook for CI: quit automatically after N milliseconds.
     QCommandLineOption smokeOption(
         QStringLiteral("smoke-exit-ms"),
         QStringLiteral("Quit after the given number of milliseconds (0 disables)."),
-        QStringLiteral("ms"),
-        QStringLiteral("0"));
+        QStringLiteral("ms"), QStringLiteral("0"));
     parser.addOption(smokeOption);
+    QCommandLineOption themeOption(QStringLiteral("theme"),
+                                   QStringLiteral("Start in light or dark mode."),
+                                   QStringLiteral("mode"));
+    parser.addOption(themeOption);
+    parser.addOption(QCommandLineOption(QStringLiteral("dynamic"),
+                                        QStringLiteral("Start with dynamic colour enabled.")));
+    QCommandLineOption screenshotOption(
+        QStringLiteral("screenshot"),
+        QStringLiteral("Render every page to PNG in <dir>, then quit."),
+        QStringLiteral("dir"));
+    parser.addOption(screenshotOption);
     parser.process(app);
 
-    QMainWindow window;
-    window.setWindowTitle(
-        QStringLiteral("qt-md3 Example %1").arg(QString::fromLatin1(md::libraryVersion())));
+    // Registers bundled fonts, sets the language and the base font, applies
+    // the layout direction. This is the one entry point every consumer calls.
+    const QString languageTag = QStringLiteral("en");
+    md::MdDesign::initialize(&app, languageTag);
 
-    auto *central = new QWidget(&window);
-    auto *layout = new QVBoxLayout(central);
-    auto *placeholder = new QLabel(
-        QStringLiteral("qt-md3 component gallery\n\n"
-                       "The Stage 1 base modules and the first MD3 components\n"
-                       "will appear here, one page per component."),
-        central);
-    placeholder->setAlignment(Qt::AlignCenter);
-    layout->addWidget(placeholder);
-    window.setCentralWidget(central);
+    // The icon system works with or without the Material Symbols font, but it
+    // is worth knowing which one this build resolved to.
+    if (!md::MdIcon::isFontAvailable(md::MdIconFamily::Outlined)) {
+        qInfo("qt-md3: Material Symbols is not installed; icons fall back to the bundled "
+              "classic Material Icons SVG baseline.");
+    }
 
-    window.resize(1180, 760);
+    if (parser.isSet(themeOption)
+        && parser.value(themeOption).compare(QStringLiteral("dark"), Qt::CaseInsensitive) == 0) {
+        md::MdTheme::instance().setThemeMode(md::ThemeMode::Dark);
+    }
+    if (parser.isSet(QStringLiteral("dynamic"))) {
+        md::MdTheme::instance().setDynamicColor(true);
+    }
+
+    gallery::GalleryWindow window;
     window.show();
+
+    if (parser.isSet(screenshotOption)) {
+        // Deliberately after show(): the pages size themselves from the real
+        // viewport, so grabbing before the window is mapped would capture a
+        // layout that never existed.
+        QCoreApplication::processEvents();
+        const int written = writeScreenshots(window, parser.value(screenshotOption));
+        if (written != window.pageCount()) {
+            qWarning("qt-md3: wrote %d of %d pages", written, window.pageCount());
+            return 1;
+        }
+        return 0;
+    }
 
     const int smokeMs = parser.value(smokeOption).toInt();
     if (smokeMs > 0) {

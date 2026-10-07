@@ -1,11 +1,70 @@
 <!--
   qt-md3 resource bundle.
 
-  Icon fonts, classic icon SVGs, and bundled fonts are added here as the
-  Stage 1 base modules land (see src/core/MdIcon.* and src/core/MdFont.*).
-  The manifest lives in docs/resources-manifest.md.
+  Contents:
+    icons/material-symbols-codepoints.txt  the complete Material Symbols name ->
+        codepoint table (4299 entries), taken verbatim from
+        google/material-design-icons/variablefont/. Regenerate with
+        tools/update-icons.sh (see docs/resources-manifest.md).
+    icons/classic/24px/*.svg               the classic Material Icons SVG
+        baseline, used when the Material Symbols variable font is not
+        installed. Also fetched by tools/update-icons.sh.
+
+  The variable fonts themselves are NOT committed: the smallest is 3.4 MB
+  and the largest 15 MB. See docs/resources-manifest.md for the two
+  supported ways to provide them.
 -->
 <RCC>
     <qresource prefix="/qt-md3">
+        <file alias="icons/material-symbols-codepoints.txt">icons/material-symbols-codepoints.txt</file>
+        <file alias="icons/classic/24px/add.svg">icons/classic/24px/add.svg</file>
+        <file alias="icons/classic/24px/animation.svg">icons/classic/24px/animation.svg</file>
+        <file alias="icons/classic/24px/apps.svg">icons/classic/24px/apps.svg</file>
+        <file alias="icons/classic/24px/arrow_back.svg">icons/classic/24px/arrow_back.svg</file>
+        <file alias="icons/classic/24px/arrow_forward.svg">icons/classic/24px/arrow_forward.svg</file>
+        <file alias="icons/classic/24px/bluetooth.svg">icons/classic/24px/bluetooth.svg</file>
+        <file alias="icons/classic/24px/calendar_today.svg">icons/classic/24px/calendar_today.svg</file>
+        <file alias="icons/classic/24px/chat.svg">icons/classic/24px/chat.svg</file>
+        <file alias="icons/classic/24px/check.svg">icons/classic/24px/check.svg</file>
+        <file alias="icons/classic/24px/close.svg">icons/classic/24px/close.svg</file>
+        <file alias="icons/classic/24px/color_lens.svg">icons/classic/24px/color_lens.svg</file>
+        <file alias="icons/classic/24px/content_copy.svg">icons/classic/24px/content_copy.svg</file>
+        <file alias="icons/classic/24px/dark_mode.svg">icons/classic/24px/dark_mode.svg</file>
+        <file alias="icons/classic/24px/dashboard.svg">icons/classic/24px/dashboard.svg</file>
+        <file alias="icons/classic/24px/delete.svg">icons/classic/24px/delete.svg</file>
+        <file alias="icons/classic/24px/download.svg">icons/classic/24px/download.svg</file>
+        <file alias="icons/classic/24px/edit.svg">icons/classic/24px/edit.svg</file>
+        <file alias="icons/classic/24px/error.svg">icons/classic/24px/error.svg</file>
+        <file alias="icons/classic/24px/expand_less.svg">icons/classic/24px/expand_less.svg</file>
+        <file alias="icons/classic/24px/expand_more.svg">icons/classic/24px/expand_more.svg</file>
+        <file alias="icons/classic/24px/favorite.svg">icons/classic/24px/favorite.svg</file>
+        <file alias="icons/classic/24px/home.svg">icons/classic/24px/home.svg</file>
+        <file alias="icons/classic/24px/info.svg">icons/classic/24px/info.svg</file>
+        <file alias="icons/classic/24px/layers.svg">icons/classic/24px/layers.svg</file>
+        <file alias="icons/classic/24px/light_mode.svg">icons/classic/24px/light_mode.svg</file>
+        <file alias="icons/classic/24px/list.svg">icons/classic/24px/list.svg</file>
+        <file alias="icons/classic/24px/location_on.svg">icons/classic/24px/location_on.svg</file>
+        <file alias="icons/classic/24px/lock.svg">icons/classic/24px/lock.svg</file>
+        <file alias="icons/classic/24px/mail.svg">icons/classic/24px/mail.svg</file>
+        <file alias="icons/classic/24px/menu.svg">icons/classic/24px/menu.svg</file>
+        <file alias="icons/classic/24px/more_vert.svg">icons/classic/24px/more_vert.svg</file>
+        <file alias="icons/classic/24px/notifications.svg">icons/classic/24px/notifications.svg</file>
+        <file alias="icons/classic/24px/palette.svg">icons/classic/24px/palette.svg</file>
+        <file alias="icons/classic/24px/pause.svg">icons/classic/24px/pause.svg</file>
+        <file alias="icons/classic/24px/person.svg">icons/classic/24px/person.svg</file>
+        <file alias="icons/classic/24px/phone.svg">icons/classic/24px/phone.svg</file>
+        <file alias="icons/classic/24px/play_arrow.svg">icons/classic/24px/play_arrow.svg</file>
+        <file alias="icons/classic/24px/refresh.svg">icons/classic/24px/refresh.svg</file>
+        <file alias="icons/classic/24px/search.svg">icons/classic/24px/search.svg</file>
+        <file alias="icons/classic/24px/settings.svg">icons/classic/24px/settings.svg</file>
+        <file alias="icons/classic/24px/share.svg">icons/classic/24px/share.svg</file>
+        <file alias="icons/classic/24px/shopping_cart.svg">icons/classic/24px/shopping_cart.svg</file>
+        <file alias="icons/classic/24px/star.svg">icons/classic/24px/star.svg</file>
+        <file alias="icons/classic/24px/straighten.svg">icons/classic/24px/straighten.svg</file>
+        <file alias="icons/classic/24px/text_fields.svg">icons/classic/24px/text_fields.svg</file>
+        <file alias="icons/classic/24px/visibility.svg">icons/classic/24px/visibility.svg</file>
+        <file alias="icons/classic/24px/volume_up.svg">icons/classic/24px/volume_up.svg</file>
+        <file alias="icons/classic/24px/warning.svg">icons/classic/24px/warning.svg</file>
+        <file alias="icons/classic/24px/wifi.svg">icons/classic/24px/wifi.svg</file>
     </qresource>
 </RCC>
