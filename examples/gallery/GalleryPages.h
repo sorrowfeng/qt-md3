@@ -200,6 +200,7 @@ GalleryPage *createProgressIndicatorPage();
 GalleryPage *createLoadingIndicatorPage();
 GalleryPage *createSnackbarPage();
 GalleryPage *createTooltipPage();
+GalleryPage *createCardPage();
 
 } // namespace gallery
 

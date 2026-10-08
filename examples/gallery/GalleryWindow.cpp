@@ -440,6 +440,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createLoadingIndicatorPage(),
         createSnackbarPage(),
         createTooltipPage(),
+        createCardPage(),
     };
 
     QStringList titles;

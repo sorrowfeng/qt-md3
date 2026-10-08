@@ -449,6 +449,7 @@ is `SelectedContainerColor`.
 
 - [x] §1.3 Communication — **Badges, Progress indicators, Loading indicator,
       Snackbar and Tooltips ported** (the family is closed).
+- [ ] §1.4 Containment — **Cards ported**; dialogs and bottom sheets remain.
 
 #### Badges (ported)
 
@@ -646,6 +647,41 @@ shape it:
   false (Compose `rememberTooltipState`); an actionable rich tooltip is the
   documented case for setting it true. Outside-click dismissal of a
   persistent tooltip is not ported yet.
+
+#### Card (ported)
+
+`MdCard` + `MdCardStyle` + `MdCardTokens`, locked by `TestMd3Card`. The
+Containment family's opening surface — four facts shape it:
+
+* **material-web ships no card web component** (token export only), so the
+  visuals come from the three `_md-comp-<variant>-card.scss` sets (34.0.21)
+  and the behaviour from Compose M3's `Card.kt`. Compose publishes exactly
+  two shapes per variant — a plain surface and a clickable one — modelled
+  here as one widget with a `clickable` switch.
+* **Press never raises.** The 34.0.21 export's "Pressed (ripple)" rows
+  repeat the resting elevation (filled level0, elevated level1); the press
+  response is the ripple alone, the same rule the button families follow.
+  Dragged climbs highest (filled/outlined level3, elevated level4) and
+  paints its own on-surface state layer at the dragged opacity; the state
+  is driven by an explicit setter for external drag frameworks.
+* **The elevation ladder animates.** Compose animates elevation through the
+  theme's motion scheme; this port runs the same transition as a 200 ms
+  standard-easing tween (registered divergence — the scheme's spring spec
+  is not published in the static export) and snaps when the card becomes
+  disabled, as Compose does. `MdElevation::drawShadowDp` was added so the
+  paint can follow the interpolated dp.
+* **Disabled compositing is Compose arithmetic.** The export publishes
+  disabled container rows (filled → surface-variant, elevated → surface,
+  outlined unchanged); the paint composites each at 0.38 *over the enabled
+  container colour*, content drops to 0.38, and the outlined stroke fades
+  to 0.12. Recorded divergence: Compose composites the disabled outline
+  over the *elevated* card's container colour (an over-eager copy); this
+  port composites over the card's own container.
+
+Also of note: contents margins always match the painted container (the
+focus margin for a clickable card, zero otherwise), so a layout installed
+on the card fills the container exactly; Compose publishes no default
+content padding and neither does this class.
 
 ### Gallery scaffolding fixes found while building the first component
 

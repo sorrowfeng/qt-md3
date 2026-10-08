@@ -27,6 +27,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdFocusRing.h
     core/MdBadgeTokens.h
     core/MdButtonTokens.h
+    core/MdCardTokens.h
     core/MdButtonGroupTokens.h
     core/MdIconButtonTokens.h
     core/MdFabTokens.h
@@ -51,6 +52,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdStyleBase.h
     styles/MdBadgeStyle.h
     styles/MdButtonStyle.h
+    styles/MdCardStyle.h
     styles/MdButtonGroupStyle.h
     styles/MdIconButtonStyle.h
     styles/MdFabStyle.h
@@ -68,6 +70,7 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdBadge.h
     widgets/MdBadgedBox.h
     widgets/MdButton.h
+    widgets/MdCard.h
     widgets/MdButtonGroup.h
     widgets/MdIconButton.h
     widgets/MdFab.h
@@ -102,6 +105,7 @@ set(QT_MD3_SOURCES
     core/MdFocusRing.cpp
     core/MdBadgeTokens.cpp
     core/MdButtonTokens.cpp
+    core/MdCardTokens.cpp
     core/MdButtonGroupTokens.cpp
     core/MdIconButtonTokens.cpp
     core/MdFabTokens.cpp
@@ -122,6 +126,7 @@ set(QT_MD3_SOURCES
     styles/MdStyleBase.cpp
     styles/MdBadgeStyle.cpp
     styles/MdButtonStyle.cpp
+    styles/MdCardStyle.cpp
     styles/MdButtonGroupStyle.cpp
     styles/MdIconButtonStyle.cpp
     styles/MdFabStyle.cpp
@@ -136,6 +141,7 @@ set(QT_MD3_SOURCES
     widgets/MdBadge.cpp
     widgets/MdBadgedBox.cpp
     widgets/MdButton.cpp
+    widgets/MdCard.cpp
     widgets/MdButtonGroup.cpp
     widgets/MdIconButton.cpp
     widgets/MdFab.cpp

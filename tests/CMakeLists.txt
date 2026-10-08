@@ -432,6 +432,31 @@ set_tests_properties(TestMd3Tooltip PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Tooltip)
 
+# MdCard, the Containment family's opening surface: all three variants' state
+# row tables, the Compose disabled compositing constants, the override
+# parsing, the layout geometry, the state priority, the pointer/keyboard
+# contract and the elevation animation/snap.
+add_executable(TestMd3Card
+    TestMd3Card.cpp
+)
+
+target_link_libraries(TestMd3Card
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Card COMMAND TestMd3Card)
+set_tests_properties(TestMd3Card PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Card)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

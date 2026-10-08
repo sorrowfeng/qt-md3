@@ -43,14 +43,18 @@ void MdElevation::drawShadow(QPainter *painter,
                              ElevationLevel level,
                              const QColor &shadowColor)
 {
-    if (!painter) {
-        return;
-    }
-    const qreal dp = shadowDp(level);
-    if (dp <= 0.0) {
-        return;
-    }
+    drawShadowDp(painter, rect, cornerRadius, shadowDp(level), shadowColor);
+}
 
+void MdElevation::drawShadowDp(QPainter *painter,
+                               const QRectF &rect,
+                               qreal cornerRadius,
+                               qreal dp,
+                               const QColor &shadowColor)
+{
+    if (!painter || dp <= 0.0) {
+        return;
+    }
     painter->save();
     painter->setPen(Qt::NoPen);
 

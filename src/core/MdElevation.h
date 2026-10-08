@@ -45,6 +45,16 @@ public:
                            qreal cornerRadius,
                            ElevationLevel level,
                            const QColor &shadowColor);
+
+    /// The same shadow, at an explicit dp height. Components whose
+    /// elevation *animates* between a ladder's levels (the card family) call
+    /// this with the current interpolated value; the level overload above
+    /// simply converts and forwards.
+    static void drawShadowDp(QPainter *painter,
+                             const QRectF &rect,
+                             qreal cornerRadius,
+                             qreal dp,
+                             const QColor &shadowColor);
 };
 
 } // namespace md

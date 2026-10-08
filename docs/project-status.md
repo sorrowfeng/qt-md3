@@ -7,15 +7,15 @@ Last updated: 2026-10-09
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
-| Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication under way |
-| Stage 1 families complete | `13 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips) |
+| Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication closed; §1.4 Containment under way |
+| Stage 1 families complete | `14 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards) |
 | Base modules | `21 / 21` |
-| Public components | `17` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`) |
-| Style classes | `14` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`) |
-| Example pages | `20` |
+| Public components | `18` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`) |
+| Style classes | `15` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`) |
+| Example pages | `21` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `26` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `27` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges, Progress indicators, Loading indicator, Snackbar and Tooltips
+### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges, Progress indicators, Loading indicator, Snackbar and Tooltips + §1.4 Cards
 
 | Component | Covers |
 | --- | --- |
@@ -133,6 +133,9 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdTooltipHost` | the `TooltipBox` half on Qt's widget tree: wraps an anchor widget, shows a top-level tooltip popup on hover (Compose's UserInput priority — never self-dismisses, pointer leaving hides it), on keyboard focus / touch long-press / programmatically (1500 ms auto-hide unless persistent, `BasicTooltipDefaults.TooltipDuration`), Escape dismisses, the GlobalMutatorMutex keeps exactly one tooltip on screen, and the enter/exit is the same fade + scale pair. Above / Below placement with the plain `Above` provider (centre→start→end, above→below, coerced) and the rich start-aligned provider. |
 | `MdTooltipTokens` | the `md.comp.plain-tooltip.*` + `md.comp.rich-tooltip.*` sets verbatim, the rich action's three state rows, and the Compose-port layout constants (min 40×24, plain max 200, rich max 320, content 8/4, rich horizontal 16, subhead baseline 28, text 24/16, action 36/8, anchor spacing 4, caret 16×8, duration 1500 ms). |
 | `MdTooltipStyle` | Pattern A style with the plain / rich measure logic and the two popup-position providers as pure functions, the caret triangle painting, and `paintTooltip` shared with the host's fade/scale transform; the rich container keeps the shadow-margin idiom for the level-2 rings. |
+| `MdCard` | `QWidget` container for the three exports with Compose's clickability split: non-clickable cards paint the enabled row edge-to-edge (no interaction source, no focus), clickable cards add the hover / keyboard-focus state layers, the press ripple (press never raises — the "Pressed (ripple)" row repeats the resting elevation), the `:focus-visible` ring with its reserved contents margin, Space/Enter activation and the `clicked()` signal. Children fill the painted container through the contents margins. The elevation ladder *animates* (standard easing 200 ms; disabled snaps), and an explicit `dragged` setter paints the dragged row for external drag frameworks. Three `Q_PROPERTY`s with NOTIFY. |
+| `MdCardTokens` | the three `md.comp.<variant>-card.*` sets verbatim — per-state container / state-layer / outline roles and the elevation ladders (filled L0→L1→L3, elevated L1→L2→L4, outlined L0→L1→L3), the exported disabled rows (filled → surface-variant, elevated → surface, outlined container unchanged) and Compose's disabled constants (0.38 container / 0.38 content / 0.12 outline). |
+| `MdCardStyle` | Pattern A style: the layout as a pure function (container = widget rect minus the focus margin for clickable cards, zero for plain surfaces), shadow via the elevation ladder's animated dp, the disabled compositing exactly as Compose does it (disabled colour over the enabled container), and `paintCard` shared with the test suite. |
 
 ## Known gaps, recorded rather than hidden
 
@@ -248,10 +251,9 @@ gallery scaffolding, unreachable from the seven token-only pages.
 
 ## What is next
 
-Stage 1 §1.3 Communication, in official order — Badges, Progress indicators
-and the Loading indicator are complete:
+Stage 1 §1.4 Containment, in official order — Cards is complete:
 
-**Tooltips.** Then on to §1.4 Containment.
+**Dialogs.** Then bottom sheets.
 
 Each component lands as its own commit and must satisfy all twelve Definition of
 Done items before the next one starts, including an independent gallery page, a

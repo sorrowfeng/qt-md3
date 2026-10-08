@@ -59,6 +59,7 @@ captured official screenshot.
 | Loading indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Snackbars | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Tooltips | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Cards | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -368,6 +369,24 @@ No side-by-side official reference exists (material-web ships only the token
 exports for this family; the layout and behaviour sources are Compose M3's
 Tooltip.kt / BasicTooltip.kt), so this stays `Needs visual QA` like the other
 Compose-sourced families.
+
+### Cards
+
+Page 21 (`Cards`) places three cards with sample content (a bold title and
+wrapping supporting text, laid out by the card's own layout through the
+contents margins). Checked against the page render:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Filled container | surface-container-highest, corner-medium, level0 — tone groups, no shadow | Yes |
+| Elevated container | surface-container-low at level1, shadow ring visible below | Yes |
+| Outlined container | surface with the 1 px outline-variant stroke, zero shadow | Yes |
+| Clickable state rows | hover lifts filled to level1 + on-surface 0.08 layer; press ripples without lifting; Tab draws the secondary outer ring | Yes (live) |
+| Contents margins | clickable cards inset the sample layout by the focus margin; non-clickable edge-to-edge | Yes |
+
+No side-by-side official reference exists (material-web ships only the token
+exports for this family; the behaviour source is Compose M3's Card.kt), so
+this stays `Needs visual QA` like the other Compose-sourced families.
 
 ## 2026-10 comparison re-check (official vs ported)
 
