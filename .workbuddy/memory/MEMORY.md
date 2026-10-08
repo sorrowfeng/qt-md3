@@ -11,6 +11,9 @@ Qt Widgets 手绘复刻 Material Design 3（含 M3 Expressive）的 C++ 组件�
 - **切换唯一依据：`docs/md3-coverage.md` 九列全绿。** 门禁
   `TestMd3CoveragePolicy` 会在阶段一未全绿时拦截 `src/widgets/` 中的阶段二组件。
 
+## 移植参考来源（用户明确要求）
+每个组件移植时参考两处：① 官方规范 m3.material.io/components/<component>（结构/行为，JS 渲染需浏览器抓取）；② material-web 仓库（tokens/versions/latest/sass 的全部数值 + docs/components 行为说明，maintenance mode 未实现 Expressive，Expressive 行为以 Compose M3 为准）。两者冲突时记录分歧并说明取舍，不默默选一个。已固化为 AGENTS.md 与 docs/porting-todo.md 的守则。
+
 ## 关键约定
 - 目录：`src/core`（token/主题/颜色算法/字体/形状/动效/图标）、`src/styles`
   （`Md*Style`）、`src/widgets`（`Md*` 公开组件）、`examples`、`tests`、`resources`、`docs`。
