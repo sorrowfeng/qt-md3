@@ -442,6 +442,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createTooltipPage(),
         createCardPage(),
         createDialogPage(),
+        createBottomSheetPage(),
     };
 
     QStringList titles;

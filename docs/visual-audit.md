@@ -61,6 +61,7 @@ captured official screenshot.
 | Tooltips | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Cards | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Dialogs | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Bottom sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -406,6 +407,25 @@ render:
 No side-by-side official reference exists (material-web ships only the token
 export; the behaviour source is Compose M3's AlertDialog.kt), so this stays
 `Needs visual QA` like the other Compose-sourced families.
+
+### Bottom sheets
+
+Page 23 (`Bottom sheets`) places three static sheet snapshots and one live
+demo (a real `MdBottomSheetHost` raised over the page). Checked against the
+page render:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Container | surface-container-low, extra-large radius on the TOP pair only, bottom edge flush, level-1 shadow | Yes |
+| Drag handle | 32 x 4 centred pill in on-surface-variant, 22 px touch padding above and below | Yes |
+| Handle-less | the modal snapshot without the handle — the content area starts at the container top | Yes |
+| Partial vs expanded | standard snapshots at 164 px and 240 px content heights — same surface, only the anchor differs | Yes |
+| Live host | the demo button raises the scrim (black 0.32) + bottom-anchored sheet; drag / Escape / scrim click settle the anchors | Yes (live) |
+
+No side-by-side official reference exists (material-web ships only the token
+export; the behaviour source is Compose M3's BottomSheet.kt and
+SheetDefaults.kt), so this stays `Needs visual QA` like the other
+Compose-sourced families.
 
 ## 2026-10 comparison re-check (official vs ported)
 

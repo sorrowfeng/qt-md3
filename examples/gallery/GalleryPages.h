@@ -202,6 +202,7 @@ GalleryPage *createSnackbarPage();
 GalleryPage *createTooltipPage();
 GalleryPage *createCardPage();
 GalleryPage *createDialogPage();
+GalleryPage *createBottomSheetPage();
 
 } // namespace gallery
 

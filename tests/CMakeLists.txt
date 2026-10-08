@@ -555,3 +555,26 @@ if(WIN32 AND QT_MD3_DEPLOY_EXAMPLE)
         )
     endif()
 endif()
+# MdBottomSheet + MdBottomSheetHost, the Containment family's closing pair:
+# the sheet surface (standard + modal kinds, the anchor math and the drag
+# settle) and the modal presentation (scrim, Escape / scrim click).
+add_executable(TestMd3BottomSheet
+    TestMd3BottomSheet.cpp
+)
+
+target_link_libraries(TestMd3BottomSheet
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3BottomSheet COMMAND TestMd3BottomSheet)
+set_tests_properties(TestMd3BottomSheet PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3BottomSheet)

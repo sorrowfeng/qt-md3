@@ -449,7 +449,8 @@ is `SelectedContainerColor`.
 
 - [x] §1.3 Communication — **Badges, Progress indicators, Loading indicator,
       Snackbar and Tooltips ported** (the family is closed).
-- [ ] §1.4 Containment — **Cards and Dialogs ported**; bottom sheets remain.
+- [ ] §1.4 Containment — **Cards, Dialogs and Bottom sheets ported**; side
+      sheets, carousel, divider and lists remain.
 
 #### Badges (ported)
 
@@ -716,6 +717,51 @@ content padding and neither does this class.
   so the overlay swallows interaction within its parent only. Compose's
   flag-gated "precision pointer" sizing (20/16 paddings, 20 sp title) is
   not ported.
+
+#### Bottom sheets (ported)
+
+`MdBottomSheet` + `MdBottomSheetHost` + `MdBottomSheetStyle` +
+`MdBottomSheetTokens`, locked by `TestMd3BottomSheet`. Four facts shape it:
+
+* **material-web ships no sheet web component** (token export only), so the
+  visuals come from `_md-comp-sheet-bottom.scss` (34.0.21) and the behaviour
+  from Compose M3's `BottomSheet.kt` / `BottomSheetScaffold.kt` /
+  `ModalBottomSheet.kt` / `SheetDefaults.kt`. One token set covers both
+  presentations — the export's modal and standard elevation rows both resolve
+  to level 1 — and the port keeps Compose's split: the sheet surface carries
+  the anchors and the drag, the host is the `ModalBottomSheet` wrapper (scrim,
+  Escape / scrim click, `onDismissRequest`).
+* **The anchor math is the port**, verbatim: Hidden at the parent's bottom;
+  PartiallyExpanded at the peek height (standard) or
+  `fullHeight - min(fullHeight/2, sheetHeight/2)` (modal — Compose's
+  deterministic rule, flag-on by default); Expanded at
+  `max(0, fullHeight - sheetHeight)`. The standard kind skips Hidden by
+  default (`skipHiddenState = true`), the modal kind always has it. Show
+  animations run the spatial-default spring, hide the fast-effects spring,
+  exactly the `showMotionSpec` / `hideMotionSpec` assignment.
+* **Recorded divergences**: (1) no velocity fling — Compose's
+  `anchoredDraggable` weighs the 125 dp/s velocity threshold and dampens
+  inside the 125 dp boundary zone; the Qt port settles drags positionally
+  against the 56 px threshold and clamps (both constants are transcribed into
+  the token struct as the record). (2) The export's drag-handle opacity row
+  (0.4, deprecated per b/278783477) is transcribed but NOT applied — Compose's
+  `BottomSheetDefaults.DragHandle` paints the full colour. (3) The published
+  Hidden-state shape (`minimized.container.shape` = corner-none) is recorded
+  only — Compose publishes `HiddenShape` but `BottomSheetImpl` keeps the
+  expanded shape constantly, so the paint follows the implementation. (4) The
+  focus-indicator rows are recorded, not painted — Compose's drag handle is a
+  clickable Box with no focus ring. (5) The Expressive standalone drag handle
+  (`_md-comp-drag-handle.scss`: a 48 px handle growing to 52 x 12 when
+  pressed) is a separate token set, not a sheet row — recorded, not ported.
+  (6) Modality stops at the host's parent, the shared child-widget caveat.
+* **Geometry management is opt-in.** A statically-placed sheet (a gallery
+  snapshot, a fixed scaffold slot) never jumps to its anchors when the parent
+  resizes — the host calls `setGeometryManaged(true)` to take over
+  anchoring/centring/the hidden slide. The widget rect carries the level-1
+  shadow margin on the top/left/right with a FLUSH bottom edge (a sheet is
+  edge-to-edge with the parent's bottom), and `dismissed()` fires when the
+  slide-down settles — Compose's `invokeOnCompletion` timing, not at request
+  time.
 
 ### Gallery scaffolding fixes found while building the first component
 
