@@ -323,15 +323,26 @@ void TestMd3Badge::renderSmokeBothForms()
     const QColor pillEdge = pixelColorAt(*m_count, QPointF(1, h / 2));
     QCOMPARE(pillEdge, error);
 
-    bool sawTextColour = false;
+    // Scan a band with a colour tolerance rather than one pixel-exact row:
+    // glyph placement and AA coverage differ per platform font stack (freetype
+    // + fontconfig substitution on CI versus GDI locally), so an 11 px digit
+    // may not leave a single pixel of the pure on-error colour.
     const QColor onError = MdTheme::instance().color(ColorRole::OnError);
-    for (int x = 0; x < m_count->width(); ++x) {
-        if (pixelColorAt(*m_count, QPointF(x, h / 2)) == onError) {
-            sawTextColour = true;
-            break;
+    int bestDistance = 3 * 255;
+    for (int y = 2; y < m_count->height() - 2 && bestDistance >= 200; ++y) {
+        for (int x = 0; x < m_count->width(); ++x) {
+            const QColor c = pixelColorAt(*m_count, QPointF(x, y));
+            const int distance = qAbs(c.red() - onError.red())
+                                 + qAbs(c.green() - onError.green())
+                                 + qAbs(c.blue() - onError.blue());
+            bestDistance = qMin(bestDistance, distance);
         }
     }
-    QVERIFY(sawTextColour);
+    // Pure background sits around 500+ away from on-error; any glyph pixel at
+    // half coverage or better lands under ~150.
+    QVERIFY2(bestDistance < 200,
+             qPrintable(QStringLiteral("no on-error text pixel; best colour distance %1")
+                            .arg(bestDistance)));
 }
 
 QTEST_MAIN(TestMd3Badge)

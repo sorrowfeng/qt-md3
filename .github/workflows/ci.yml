@@ -86,7 +86,12 @@ jobs:
 
       - name: Run tests
         shell: pwsh
-        run: ctest --test-dir build -C ${{ matrix.qt.config }} --output-on-failure --timeout 180
+        run: |
+          # Shared Qt builds resolve Qt DLLs at load time; the runner's PATH
+          # does not include the Qt bin directory, which made every test
+          # executable die with STATUS_DLL_NOT_FOUND (0xc0000135).
+          if ($env:QT_ROOT_DIR) { $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH" }
+          ctest --test-dir build -C ${{ matrix.qt.config }} --output-on-failure --timeout 180
 
   linux:
     name: Linux ${{ matrix.qt.label }}
