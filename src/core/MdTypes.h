@@ -329,6 +329,52 @@ enum class ButtonShape {
 };
 
 // ---------------------------------------------------------------------------
+// Components — button group family
+// ---------------------------------------------------------------------------
+
+/// The two M3 Expressive button-group forms, `md.comp.button-group.<form>`.
+///
+/// The two differ in *what happens to the neighbours* when an item is
+/// selected or pressed, and that is the whole of the difference:
+///
+///   Standard   one item's press changes its own width, shape and padding,
+///              which pushes the items either side of it.
+///   Connected  one item's press changes only that item's shape. The rest of
+///              the group does not move.
+///
+/// Both are invisible containers: a button group has no colour, radius or
+/// surface of its own. It contributes spacing and shape overrides to the
+/// buttons inside it. See MdButtonGroup.
+enum class ButtonGroupVariant {
+    Standard,
+    Connected,
+    Count,
+};
+
+/// The axis a button group stacks its items along. M3 documents the
+/// horizontal form; the vertical form is the same rules rotated, and the
+/// tokens are axis-free.
+enum class ButtonGroupOrientation {
+    Horizontal,
+    Vertical,
+    Count,
+};
+
+/// How many items a button group lets be selected at once.
+enum class ButtonGroupSelection {
+    /// No selection model: the group is an evenly spaced row of actions.
+    None,
+    /// At most one item selected, and it can be deselected by clicking it.
+    Single,
+    /// Any number of items selected, each toggled independently.
+    Multiple,
+    /// Exactly one item selected: clicking the selected item is a no-op.
+    /// The "selection-required" configuration in the spec.
+    Required,
+    Count,
+};
+
+// ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
 
@@ -374,6 +420,9 @@ QT_MD3_EXPORT QString densityName(Density density);
 QT_MD3_EXPORT QString buttonVariantName(ButtonVariant variant);
 QT_MD3_EXPORT QString buttonSizeName(ButtonSize size);
 QT_MD3_EXPORT QString buttonShapeName(ButtonShape shape);
+QT_MD3_EXPORT QString buttonGroupVariantName(ButtonGroupVariant variant);
+QT_MD3_EXPORT QString buttonGroupOrientationName(ButtonGroupOrientation orientation);
+QT_MD3_EXPORT QString buttonGroupSelectionName(ButtonGroupSelection selection);
 
 } // namespace md
 
@@ -395,5 +444,8 @@ Q_DECLARE_METATYPE(md::MdIconSet)
 Q_DECLARE_METATYPE(md::ButtonVariant)
 Q_DECLARE_METATYPE(md::ButtonSize)
 Q_DECLARE_METATYPE(md::ButtonShape)
+Q_DECLARE_METATYPE(md::ButtonGroupVariant)
+Q_DECLARE_METATYPE(md::ButtonGroupOrientation)
+Q_DECLARE_METATYPE(md::ButtonGroupSelection)
 
 #endif // MD_TYPES_H

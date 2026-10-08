@@ -141,6 +141,25 @@ bool MdButton::isEffectivelyDisabled() const
     return !isEnabled() || m_softDisabled;
 }
 
+void MdButton::setCornerRadii(const QList<qreal> &resting, const QList<qreal> &pressed)
+{
+    if (m_restingRadii == resting && m_pressedRadii == pressed) {
+        return;
+    }
+    m_restingRadii = resting;
+    m_pressedRadii = pressed;
+    // No updateGeometry(): the radii change the container's *corners*, not the
+    // container's size, so the widget's sizeHint is unaffected. A button group
+    // calls this on every relayout and a redundant geometry pass there would be
+    // quadratic.
+    update();
+}
+
+QList<qreal> MdButton::currentCornerRadii() const
+{
+    return MdButtonStyle::layoutFor(*this, tokens()).radii;
+}
+
 MdButtonState MdButton::paintState() const
 {
     return MdButtonStyle::stateFor(*this);

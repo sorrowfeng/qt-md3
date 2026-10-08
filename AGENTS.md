@@ -147,11 +147,13 @@ Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is closed** — all
 twenty-one modules are implemented, and `ContrastLevel` is applied rather than
 stored, so reduced / standard / medium / high genuinely move the tones.
 
-Stage 1 components have started: **`MdButton` is complete** (5 colour styles ×
-5 Expressive sizes × 2 shapes, leading/trailing icons, soft-disabled, live
-states), which is `1 / 36` families. The next families are the rest of §1.2 —
-button groups, icon buttons, FABs, extended FABs, FAB menu, split buttons,
-segmented buttons.
+Stage 1 components have started: **`MdButton` and `MdButtonGroup` are
+complete** — Buttons (5 colour styles × 5 Expressive sizes × 2 shapes,
+leading/trailing icons, soft-disabled, live states) and Button groups
+(standard / connected, five sizes, four selection modes, round / square,
+horizontal / vertical, arrow-key navigation), which is `2 / 36` families. The
+next families are the rest of §1.2 — icon buttons, FABs, extended FABs, FAB
+menu, split buttons, segmented buttons.
 
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and

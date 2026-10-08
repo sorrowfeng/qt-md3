@@ -47,6 +47,31 @@ captured official screenshot.
 | 组件族 | Light | Dark | 状态 | Notes |
 | --- | --- | --- | --- | --- |
 | Buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Button groups | `Needs visual QA` | `Needs visual QA` | All | See below. |
+
+### Button groups
+
+Rendered via `qt-md3-example --screenshot` in light mode (page `09-button-groups`)
+and read against `tokens/versions/latest/sass/_md-comp-button-group-{standard,
+connected}-<size>.scss` plus the spec page captured at `build/ref/bg-specs.txt`.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Container heights | 32 / 40 / 56 / 96 / 136 px | Yes |
+| Standard between-space | 18 / 12 / 8 / 8 / 8 px | Yes |
+| Connected between-space | 2 px at every size | Yes |
+| Connected outer corners | full at every size | Yes |
+| Connected inner corners | small / extra-small / small / large / large-increased | Yes |
+| Selected inner corner (connected) | 50 % of the cross extent — the segment ends read as a pill | Yes |
+| Press growth (standard) | item width +15 %, neighbours shifted, spring not easing | Yes (live) |
+| Selection modes | none keeps nothing, single wraps, multiple toggles independently, required refuses to empty | Yes (live) |
+| Vertical orientation | column with a uniform cross extent that grows past the token height when a label needs it | Yes |
+| Item colours | none of the group's own — every colour belongs to the items | Yes (no paint filter exists) |
+
+Same standing as Buttons: the official reference screenshots have not been
+captured side by side, so this stays `Needs visual QA` rather than `Pass`.
 
 ### Buttons
 

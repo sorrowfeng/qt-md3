@@ -191,11 +191,20 @@ MdButtonStyle::Layout MdButtonStyle::layoutFor(const MdButton &button, const MdB
 
     // Corner radii, morphed for the press. Both ends are resolved through the
     // shape scale so `corner-full` becomes a real pill for this box rather than
-    // the -1 sentinel.
-    const QList<qreal> resting =
-        MdShape::resolvedRadii(tokens.restingShape, layout.container.size());
-    const QList<qreal> pressed =
-        MdShape::resolvedRadii(tokens.pressedShape, layout.container.size());
+    // the -1 sentinel — unless the button carries a per-corner override, which
+    // a button group sets so an item can show a different corner towards each
+    // neighbour. An override is already a list of concrete radii in the same
+    // order, so it bypasses the shape tokens entirely rather than blending with
+    // them: the group computed it from the group's own tokens.
+    const QSizeF containerSize = layout.container.size();
+    const QList<qreal> restingOverride = button.restingCornerRadii();
+    const QList<qreal> pressedOverride = button.pressedCornerRadii();
+    const QList<qreal> resting = restingOverride.size() == 4
+                                     ? restingOverride
+                                     : MdShape::resolvedRadii(tokens.restingShape, containerSize);
+    const QList<qreal> pressed = pressedOverride.size() == 4
+                                     ? pressedOverride
+                                     : MdShape::resolvedRadii(tokens.pressedShape, containerSize);
     layout.radii = MdShape::lerpRadii(resting, pressed, button.pressMorph());
 
     // The content group is centred in the container, so a stretched button
@@ -315,14 +324,12 @@ void MdButtonStyle::paintButton(QPainter &painter,
 
     // 3. Ripple, clipped to the morphing inner shape. The controller works in
     //    container-local coordinates, so the painter moves to the container
-    //    origin first and the clip path is built in that space too.
+    //    origin first and the clip path is built in that space too. The radii
+    //    come straight from the layout, so a per-corner override is followed
+    //    rather than recomputed from the shape tokens.
     if (MdRippleController *ripple = button.rippleController()) {
         const QRectF localRect(QPointF(0.0, 0.0), layout.container.size());
-        const QPainterPath localPath = MdShape::roundedRect(
-            localRect, MdShape::lerpRadii(
-                           MdShape::resolvedRadii(tokens.restingShape, layout.container.size()),
-                           MdShape::resolvedRadii(tokens.pressedShape, layout.container.size()),
-                           button.pressMorph()));
+        const QPainterPath localPath = MdShape::roundedRect(localRect, layout.radii);
         ripple->setBounds(layout.container.size());
         ripple->setClipPath(localPath);
         ripple->setContentColor(theme.color(ColorRole::OnSurface));

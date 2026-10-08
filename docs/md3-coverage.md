@@ -34,7 +34,7 @@ Column meaning (nine check columns):
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Buttons | MdButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ Button groups | MdButtonGroup | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| ★ Button groups | MdButtonGroup | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Icon buttons | MdIconButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | FABs | MdFab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Extended FABs | MdExtendedFab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
@@ -62,6 +62,28 @@ and are pinned by `TestMd3Button` so they cannot drift silently:
 
 See `porting-todo.md` for the `v0_192` versus `latest` export differences this
 component had to resolve.
+
+### Button groups — the two rows that are still `🚧`
+
+Same standing as Buttons: light/dark and RTL are handled and verified, while
+seed change, contrast level, density and font switch have not yet been exercised
+*against the button-group page*, and the side-by-side reference comparison that
+`visual-audit.md` asks for has not been recorded. Neither is a known defect;
+both are unfinished evidence.
+
+One upstream inconsistency is preserved rather than reconciled, pinned by
+`TestMd3ButtonGroup`:
+
+* `md.comp.button-group.connected.xsmall.inner-corner.corner-size` resolves to
+  `corner-small` (8 px) in the `latest` export, while the spec page
+  (`m3.material.io/components/button-groups/specs`) lists 4 px for extra small.
+  The export wins, because tokens are the source the resolver reads; the
+  disagreement is recorded here and in the `MdButtonGroupTokens.h` header
+  comment rather than smoothed over.
+* The square *connected outer* corner is a spec-page-only fact (the export
+  publishes `container.shape: corner-full` for every connected size), so
+  `ButtonGroupShape::Square` keeps the round outer corner and squares only the
+  items' own shape tokens. Recorded; not silently merged.
 
 ## 1.3 Communication
 

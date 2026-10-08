@@ -309,6 +309,42 @@ QString buttonShapeName(ButtonShape shape)
     return QStringLiteral("unknown");
 }
 
+QString buttonGroupVariantName(ButtonGroupVariant variant)
+{
+    // The `md.comp.button-group.<name>` segments. The spec calls the two forms
+    // "standard button group" and "connected button group"; the token keys use
+    // the single word.
+    switch (variant) {
+    case ButtonGroupVariant::Standard: return QStringLiteral("standard");
+    case ButtonGroupVariant::Connected: return QStringLiteral("connected");
+    case ButtonGroupVariant::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
+QString buttonGroupOrientationName(ButtonGroupOrientation orientation)
+{
+    switch (orientation) {
+    case ButtonGroupOrientation::Horizontal: return QStringLiteral("horizontal");
+    case ButtonGroupOrientation::Vertical: return QStringLiteral("vertical");
+    case ButtonGroupOrientation::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
+QString buttonGroupSelectionName(ButtonGroupSelection selection)
+{
+    // Worded as the spec's "Configurations" table words them.
+    switch (selection) {
+    case ButtonGroupSelection::None: return QStringLiteral("none");
+    case ButtonGroupSelection::Single: return QStringLiteral("single-select");
+    case ButtonGroupSelection::Multiple: return QStringLiteral("multi-select");
+    case ButtonGroupSelection::Required: return QStringLiteral("selection-required");
+    case ButtonGroupSelection::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {

@@ -35,6 +35,7 @@
 #include "core/QtMd3Export.h"
 
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QList>
 #include <QtCore/QPointF>
 #include <QtCore/QString>
 #include <QtWidgets/QPushButton>
@@ -102,6 +103,31 @@ public:
     /// which is not dependable before the first enter event and is never set
     /// under the offscreen platform plugin the tests run on.
     bool isHovered() const { return m_hovered; }
+
+    // --- per-corner shape override ----------------------------------------
+    /// Corner radii in TL / TR / BR / BL order, in logical px.
+    ///
+    /// Empty — the default — means "use the shape tokens", which is every
+    /// button that stands on its own. A *button group* sets these instead: an
+    /// item shows a different corner towards each neighbour, and that is the
+    /// only thing a connected button group contributes, because the spec gives
+    /// groups no colours at all ("Button groups have no color properties").
+    ///
+    /// The values are absolute radii, not shape-token names, because the
+    /// corner a group needs is a function of the item's position *and* of the
+    /// group's cross-axis extent (the selected inner corner is the literal
+    /// `50%`), so it cannot be expressed as a `ShapeCorner`.
+    ///
+    /// Passing an empty `resting` clears the override. A `pressed` list that is
+    /// empty while `resting` is not means "keep the resting radii while
+    /// pressed", which is a legitimate state and not a fallback to the tokens.
+    void setCornerRadii(const QList<qreal> &resting, const QList<qreal> &pressed = QList<qreal>());
+    QList<qreal> restingCornerRadii() const { return m_restingRadii; }
+    QList<qreal> pressedCornerRadii() const { return m_pressedRadii; }
+
+    /// The radii the container is painted with right now, override or token.
+    /// Exposed so a host (the button group) can compare and skip a no-op set.
+    QList<qreal> currentCornerRadii() const;
 
     /// 0 = resting shape, 1 = fully pressed shape. Exposed because the paint
     /// path interpolates the container's corner radii with it.
@@ -187,6 +213,10 @@ private:
     bool m_softDisabled = false;
 
     bool m_hovered = false;
+
+    /// Per-corner radius override; see setCornerRadii().
+    QList<qreal> m_restingRadii;
+    QList<qreal> m_pressedRadii;
 
     /// Press shape morph: 0 = resting corner, 1 = fully pressed corner. Driven
     /// by the spring the resolved tokens carry, so a token override changes

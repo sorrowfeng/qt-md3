@@ -169,7 +169,51 @@ Text inputs, then the M3 Expressive cross-cutting pass.
         kept in the table (so the table stays a faithful transcription) and not
         painted (so the widget follows the spec).
 
-- [ ] Button groups, Icon buttons, FABs, Extended FABs, FAB menu, Split buttons,
+- [x] **`MdButtonGroup`** — standard and connected variants, all five Expressive
+      sizes, four selection modes (none / single / multiple / required), round
+      and square shapes, horizontal and vertical orientation, live arrow-key
+      navigation and focus-follows-current. The group is an *invisible
+      container* — the spec gives it no colour attributes, so there is no paint
+      filter for it at all; `MdButtonGroupStyle` owns geometry and corner
+      shapes and `MdButtonGroup` owns the items and the selection model.
+      `TestMd3ButtonGroup` (30 checks) pins the token table, the selection
+      semantics, the layout arithmetic and the keyboard model.
+
+      Three facts this component had to establish, recorded so the next
+      container does not re-derive them:
+
+      * **Neighbouring item rects overlap.** Qt clips a child to its own
+        rectangle, and each item is an `MdButton` that insets itself by the
+        7.5 px focus-ring margin — so two items whose *containers* are the
+        token `between-space` apart have widget rects that overlap by
+        `2 * 7.5 - betweenSpace`. The group places widget rects, not container
+        rects, and `MdButtonGroupStyle::layoutFor` does that arithmetic.
+      * **Press growth is a shared-width problem.** `pressed.item.width.
+        multiplier` (15 %) grows the pressed item about its own centre; the
+        items before it shift left by half the total growth and the items after
+        it shift right by half. The widget's `sizeHint` carries one
+        multiplier's worth of reserve so the growth never needs a resize (a
+        group whose hint grew mid-press would jump), and the main-axis origin
+        is measured against the *rest* preferred size so the pressed item
+        swells instead of sliding.
+      * **Selected inner corners are a fraction, not a shape.**
+        `selected.inner-corner.corner-size: 50%` is a literal half of the cross
+        extent, which no `ShapeCorner` spelling can express — so `MdButton`
+        grew a per-corner override (`setCornerRadii`) that the group resolves
+        per state, pressed winning over selected because no
+        `selected.pressed.inner-corner` token exists.
+
+      Upstream gaps preserved and pinned, detailed in
+      [md3-coverage.md](md3-coverage.md): `connected.xsmall.inner-corner`
+      (export 8 px vs spec page 4 px — export wins) and the square connected
+      outer corner (spec-page-only).
+
+      One behavioural note that is ours, not the spec's: arrow keys that are
+      *not* the group's axis are consumed as no-ops. `QAbstractButton`'s
+      fallback for an unhandled arrow is `focusNextPrevChild()`, which would
+      silently wrap focus to the first item — worse than swallowing the key.
+
+- [ ] Icon buttons, FABs, Extended FABs, FAB menu, Split buttons,
       Segmented buttons — the rest of §1.2.
 
 ### Gallery scaffolding fixes found while building the first component

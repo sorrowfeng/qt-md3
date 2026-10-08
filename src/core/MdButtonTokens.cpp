@@ -1,113 +1,15 @@
 #include "MdButtonTokens.h"
 
-#include <QtCore/QStringList>
+#include "MdCompTokenParse.h"
 
 namespace md {
 
 namespace {
 
-// ---------------------------------------------------------------------------
-// Small parsing helpers for the md.comp.* override namespace
-// ---------------------------------------------------------------------------
-
-/// `md.comp.button.<size>.x` wins over `md.comp.button.x`.
-///
-/// `bag` may be null, in which case only the application-wide store is
-/// consulted — which is what makes a per-instance override optional rather
-/// than mandatory, matching the brief's two-level override requirement.
-QString overrideFor(const MdComponentTokens *bag, const QStringList &keys)
-{
-    const MdComponentTokens &global = MdComponentTokens::global();
-    for (const QString &key : keys) {
-        if (bag) {
-            // resolve() already walks instance-then-global, so an instance bag
-            // never shadows the application-wide store by accident.
-            const QString value = bag->resolve(key);
-            if (!value.isEmpty()) {
-                return value;
-            }
-        } else {
-            const QString value = global.value(key);
-            if (!value.isEmpty()) {
-                return value;
-            }
-        }
-    }
-    return QString();
-}
-
-/// A length in logical px. Accepts a bare number and the `12px` form the SCSS
-/// export uses, so a value can be pasted straight out of the token file.
-bool parseLength(const QString &text, qreal *out)
-{
-    QString trimmed = text.trimmed();
-    if (trimmed.endsWith(QLatin1String("px"), Qt::CaseInsensitive)) {
-        trimmed.chop(2);
-    }
-    bool ok = false;
-    const qreal value = trimmed.trimmed().toDouble(&ok);
-    if (!ok) {
-        return false;
-    }
-    *out = value;
-    return true;
-}
-
-qreal lengthOverride(const MdComponentTokens *bag, const QStringList &keys, qreal fallback)
-{
-    qreal value = 0.0;
-    if (parseLength(overrideFor(bag, keys), &value)) {
-        return value;
-    }
-    return fallback;
-}
-
-/// Inverse of `shapeCornerName()`. Returns false for an unrecognised name so
-/// a typo'd override falls back to the published value instead of silently
-/// becoming `None`.
-bool parseShapeCorner(const QString &text, ShapeCorner *out)
-{
-    QString name = text.trimmed().toLower();
-    // Published token names are `md.sys.shape.corner.<name>`, but the override
-    // key already ends in `.shape.round` / `.shape.square`, so repeating the
-    // word is noise. Both "full" and "corner-full" are accepted.
-    if (name.startsWith(QLatin1String("corner-"))) {
-        name = name.mid(7);
-    }
-
-    for (int i = 0; i < int(ShapeCorner::Count); ++i) {
-        const auto corner = ShapeCorner(i);
-        QString candidate = shapeCornerName(corner);
-        if (candidate.startsWith(QLatin1String("corner-"))) {
-            candidate = candidate.mid(7);
-        }
-        if (candidate == name) {
-            *out = corner;
-            return true;
-        }
-    }
-    return false;
-}
-
-ShapeCorner shapeOverride(const MdComponentTokens *bag, const QStringList &keys, ShapeCorner fallback)
-{
-    ShapeCorner corner = fallback;
-    if (parseShapeCorner(overrideFor(bag, keys), &corner)) {
-        return corner;
-    }
-    return fallback;
-}
-
-QStringList sizeKeys(const char *size, const char *token)
-{
-    return {QStringLiteral("md.comp.button.%1.%2").arg(QLatin1String(size), QLatin1String(token)),
-            QStringLiteral("md.comp.button.%1").arg(QLatin1String(token))};
-}
-
-QStringList plainKeys(const char *token)
-{
-    return {QStringLiteral("md.comp.button.%1").arg(QLatin1String(token))};
-}
+// The `md.comp.*` override parsing itself lives in MdCompTokenParse.h, shared
+// with the other component resolvers so a length or a shape name can only be
+// parsed one way across the whole library.
+using namespace comptoken;
 
 // ---------------------------------------------------------------------------
 // md.comp.button.<size>
@@ -244,48 +146,48 @@ MdButtonTokens MdButtonTokens::resolve(ButtonVariant variant,
 
     // --- metrics: md.comp.button.<size>.<token> --------------------------
     tokens.containerHeight =
-        lengthOverride(overrides, sizeKeys(row.token, "container.height"), row.height);
-    tokens.iconSize = lengthOverride(overrides, sizeKeys(row.token, "icon.size"), row.iconSize);
+        lengthOverride(overrides, sizeKeys("button", row.token, "container.height"), row.height);
+    tokens.iconSize = lengthOverride(overrides, sizeKeys("button", row.token, "icon.size"), row.iconSize);
     tokens.iconLabelSpace =
-        lengthOverride(overrides, sizeKeys(row.token, "icon-label-space"), row.iconLabelSpace);
+        lengthOverride(overrides, sizeKeys("button", row.token, "icon-label-space"), row.iconLabelSpace);
     tokens.leadingSpace =
-        lengthOverride(overrides, sizeKeys(row.token, "leading-space"), row.leadingSpace);
+        lengthOverride(overrides, sizeKeys("button", row.token, "leading-space"), row.leadingSpace);
     tokens.trailingSpace =
-        lengthOverride(overrides, sizeKeys(row.token, "trailing-space"), row.trailingSpace);
-    tokens.outlineWidth = lengthOverride(overrides, sizeKeys(row.token, "outlined.outline.width"),
+        lengthOverride(overrides, sizeKeys("button", row.token, "trailing-space"), row.trailingSpace);
+    tokens.outlineWidth = lengthOverride(overrides, sizeKeys("button", row.token, "outlined.outline.width"),
                                          row.outlineWidth);
     tokens.labelStyle = row.labelStyle;
 
     // --- shape: container.shape.round | .square, then pressed.shape ------
     const ShapeCorner resting = shape == ButtonShape::Square ? row.squareResting : row.roundResting;
     tokens.restingShape = shapeOverride(overrides,
-                                        sizeKeys(row.token,
+                                        sizeKeys("button", row.token,
                                                  shape == ButtonShape::Square
                                                      ? "container.shape.square"
                                                      : "container.shape.round"),
                                         resting);
     tokens.pressedShape =
-        shapeOverride(overrides, sizeKeys(row.token, "pressed.container.shape"), row.pressed);
+        shapeOverride(overrides, sizeKeys("button", row.token, "pressed.container.shape"), row.pressed);
 
     // --- press morph spring: the whole size scale shares spring-fast-spatial
     tokens.springStiffness = lengthOverride(
-        overrides, plainKeys("pressed.container.corner-size.motion.spring.stiffness"), 1400.0);
+        overrides, plainKeys("button", "pressed.container.corner-size.motion.spring.stiffness"), 1400.0);
     tokens.springDampingRatio = lengthOverride(
-        overrides, plainKeys("pressed.container.corner-size.motion.spring.damping"), 0.9);
+        overrides, plainKeys("button", "pressed.container.corner-size.motion.spring.damping"), 0.9);
 
     // --- disabled opacities ----------------------------------------------
     tokens.disabledContainerOpacity =
-        lengthOverride(overrides, plainKeys("disabled.container.opacity"), 0.10);
-    tokens.disabledIconOpacity = lengthOverride(overrides, plainKeys("disabled.icon.opacity"), 0.38);
+        lengthOverride(overrides, plainKeys("button", "disabled.container.opacity"), 0.10);
+    tokens.disabledIconOpacity = lengthOverride(overrides, plainKeys("button", "disabled.icon.opacity"), 0.38);
     tokens.disabledLabelOpacity =
-        lengthOverride(overrides, plainKeys("disabled.label-text.opacity"), 0.38);
+        lengthOverride(overrides, plainKeys("button", "disabled.label-text.opacity"), 0.38);
 
     // --- focus indicator --------------------------------------------------
     tokens.focusIndicator = ColorRole::Secondary;
     tokens.focusIndicatorThickness =
-        lengthOverride(overrides, plainKeys("focus.indicator.thickness"), 3.0);
+        lengthOverride(overrides, plainKeys("button", "focus.indicator.thickness"), 3.0);
     tokens.focusIndicatorOffset =
-        lengthOverride(overrides, plainKeys("focus.indicator.outline.offset"), 2.0);
+        lengthOverride(overrides, plainKeys("button", "focus.indicator.outline.offset"), 2.0);
 
     // --- colours ----------------------------------------------------------
     const MdButtonColourSlot container{style.container, 1.0};

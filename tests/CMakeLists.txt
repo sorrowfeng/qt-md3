@@ -150,6 +150,32 @@ set_tests_properties(TestMd3Button PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Button)
 
+# MdButtonGroup, the second Stage 1 component. A group publishes no colour at
+# all — everything it contributes is spacing, shape and a selection model — so
+# the checks here are the token table, the geometry measured on real widgets,
+# and the four selection modes that differ from each other by one behaviour
+# each.
+add_executable(TestMd3ButtonGroup
+    TestMd3ButtonGroup.cpp
+)
+
+target_link_libraries(TestMd3ButtonGroup
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3ButtonGroup COMMAND TestMd3ButtonGroup)
+set_tests_properties(TestMd3ButtonGroup PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3ButtonGroup)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

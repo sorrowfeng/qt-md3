@@ -163,6 +163,9 @@ private:
 /// Actions — Buttons (all five styles x five sizes x two shapes).
 GalleryPage *createButtonPage();
 
+/// Actions — Button groups (two variants x five sizes x four selection modes).
+GalleryPage *createButtonGroupPage();
+
 } // namespace gallery
 
 #endif // GALLERY_PAGES_H
