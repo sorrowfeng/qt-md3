@@ -407,6 +407,31 @@ set_tests_properties(TestMd3Snackbar PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Snackbar)
 
+# MdTooltip, the Communication family's closing pair: both exports (plain +
+# rich), the rich action's state rows, the Compose-port layout geometry and
+# popup positioning, the caret, the pointer/keyboard contract and the host's
+# trigger / mutex / auto-hide rules.
+add_executable(TestMd3Tooltip
+    TestMd3Tooltip.cpp
+)
+
+target_link_libraries(TestMd3Tooltip
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Tooltip COMMAND TestMd3Tooltip)
+set_tests_properties(TestMd3Tooltip PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Tooltip)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

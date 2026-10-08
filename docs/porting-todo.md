@@ -447,8 +447,8 @@ A disabled selected segment keeps its secondary-container fill: the export
 has no disabled-container row and Compose's `disabledActiveContainerColor`
 is `SelectedContainerColor`.
 
-- [ ] §1.3 Communication — **Badges, Progress indicators, Loading indicator and
-      Snackbar ported**; tooltips remain.
+- [x] §1.3 Communication — **Badges, Progress indicators, Loading indicator,
+      Snackbar and Tooltips ported** (the family is closed).
 
 #### Badges (ported)
 
@@ -604,6 +604,48 @@ locked by `TestMd3Snackbar`. Four facts shape the implementation:
   margin (`kShadowMargin`); the container sits inset and every layout runs
   on it. The host positions the widget rect, so the shadow survives the
   overlay.
+
+#### Tooltip (ported)
+
+`MdTooltip` + `MdTooltipHost` + `MdTooltipStyle` + `MdTooltipTokens`, locked
+by `TestMd3Tooltip`. The Communication family's closing pair — four facts
+shape it:
+
+* **material-web ships only the token exports; Compose is the source for
+  everything else.** There is no tooltip component in the current
+  material-web repository — `_md-comp-plain-tooltip.scss` and
+  `_md-comp-rich-tooltip.scss` (34.0.21) are the whole web story. The
+  layouts port Compose M3's `Tooltip.kt` measure logic (min 40×24, plain
+  max 200 with 8/4 content padding, rich max 320 with 16 px horizontal
+  padding, the paddingFromBaseline rows 28 / 24 / 16, the action box 36 + 8,
+  the plain 4 px vertical fallback when neither subhead nor action exists)
+  and the behaviour ports `BasicTooltip.kt`.
+* **The trigger rules are Compose's priority system, ported literally.**
+  Mouse hover shows immediately at `UserInput` priority — no timeout; the
+  pointer leaving dismisses (unless persistent). Keyboard focus and touch
+  long-press (`QStyleHints::mousePressAndHoldInterval` stands in for
+  `viewConfiguration.longPressTimeoutMillis`) show at the lower priority,
+  which self-dismisses a non-persistent tooltip after
+  `BasicTooltipDefaults.TooltipDuration` = 1500 ms. Escape dismisses; a Tab
+  from a visible action-bearing anchor moves focus into the tooltip. The
+  GlobalMutatorMutex is a static host pointer: a new show cancels the
+  previous tooltip instantly, without its exit animation.
+* **Two recorded divergences.** (1) The caret: Compose draws it OUTSIDE the
+  surface into the 4 px anchor gap — overlapping the anchor by
+  caret − spacing — while this port reserves an 8 px caret margin in the
+  widget rect and keeps the tip exactly `kAnchorSpacing` from the anchor.
+  (2) Left / right / start / end popup positioning is not ported; the host
+  offers Above (the modern `Above` provider: centre→start→end, above→below,
+  coerced) and Below with the rich start-aligned provider Compose still
+  ships.
+* **A top-level popup plus platform quirks.** The popup is a
+  `Qt::ToolTip`-flagged translucent top-level; the host repositions the
+  anchor to fill itself on resize (the gallery relies on it), and the Enter
+  handler gates on the cursor actually being inside the anchor because some
+  platforms synthesise an Enter when a window shows. Persistent default
+  false (Compose `rememberTooltipState`); an actionable rich tooltip is the
+  documented case for setting it true. Outside-click dismissal of a
+  persistent tooltip is not ported yet.
 
 ### Gallery scaffolding fixes found while building the first component
 

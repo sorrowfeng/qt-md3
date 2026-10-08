@@ -439,6 +439,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createProgressIndicatorPage(),
         createLoadingIndicatorPage(),
         createSnackbarPage(),
+        createTooltipPage(),
     };
 
     QStringList titles;

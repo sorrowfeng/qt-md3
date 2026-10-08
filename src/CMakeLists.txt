@@ -35,6 +35,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdProgressIndicatorTokens.h
     core/MdLoadingIndicatorTokens.h
     core/MdSnackbarTokens.h
+    core/MdTooltipTokens.h
     core/MdMaterialShapes.h
     core/MdSegmentedButtonTokens.h
     core/MdSplitButtonTokens.h
@@ -58,6 +59,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdProgressIndicatorStyle.h
     styles/MdLoadingIndicatorStyle.h
     styles/MdSnackbarStyle.h
+    styles/MdTooltipStyle.h
     styles/MdSegmentedButtonStyle.h
     styles/MdSplitButtonStyle.h
 )
@@ -76,6 +78,8 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdLoadingIndicator.h
     widgets/MdSnackbar.h
     widgets/MdSnackbarHost.h
+    widgets/MdTooltip.h
+    widgets/MdTooltipHost.h
     widgets/MdSegmentedButton.h
     widgets/MdSplitButton.h
 )
@@ -106,6 +110,7 @@ set(QT_MD3_SOURCES
     core/MdProgressIndicatorTokens.cpp
     core/MdLoadingIndicatorTokens.cpp
     core/MdSnackbarTokens.cpp
+    core/MdTooltipTokens.cpp
     core/MdMaterialShapes.cpp
     core/MdSegmentedButtonTokens.cpp
     core/MdSplitButtonTokens.cpp
@@ -125,6 +130,7 @@ set(QT_MD3_SOURCES
     styles/MdProgressIndicatorStyle.cpp
     styles/MdLoadingIndicatorStyle.cpp
     styles/MdSnackbarStyle.cpp
+    styles/MdTooltipStyle.cpp
     styles/MdSegmentedButtonStyle.cpp
     styles/MdSplitButtonStyle.cpp
     widgets/MdBadge.cpp
@@ -140,6 +146,8 @@ set(QT_MD3_SOURCES
     widgets/MdLoadingIndicator.cpp
     widgets/MdSnackbar.cpp
     widgets/MdSnackbarHost.cpp
+    widgets/MdTooltip.cpp
+    widgets/MdTooltipHost.cpp
     widgets/MdSegmentedButton.cpp
     widgets/MdSplitButton.cpp
 )

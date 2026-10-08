@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-10-08
+Last updated: 2026-10-09
 
 ## Snapshot
 
@@ -8,14 +8,14 @@ Last updated: 2026-10-08
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
 | Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication under way |
-| Stage 1 families complete | `12 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar) |
+| Stage 1 families complete | `13 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips) |
 | Base modules | `21 / 21` |
-| Public components | `15` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`) |
-| Style classes | `13` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`) |
-| Example pages | `19` |
+| Public components | `17` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`) |
+| Style classes | `14` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`) |
+| Example pages | `20` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `25` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `26` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges, Progress indicators, Loading indicator and Snackbar
+### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges, Progress indicators, Loading indicator, Snackbar and Tooltips
 
 | Component | Covers |
 | --- | --- |
@@ -125,6 +125,14 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdLoadingIndicator` | `QWidget` (non-interactive by contract), the Expressive shape-morphing family: plain and contained variants, the seven-shape indeterminate loop (650 ms morph grid, closed-form spring with the bounce kept, quarter-turn steps over the 4666 ms linear spin) and the determinate circle→soft-burst walk with the −180° sweep. Backed by the `MdMaterialShapes` engine (a faithful graphics-shapes port) and the radial morph — the one registered divergence. Four `Q_PROPERTY`s with NOTIFY. |
 | `MdProgressIndicatorTokens` | the merged `md.comp.progress-indicator.*` value layer verbatim — base + linear + circular rows, the deprecated base metrics, the deprecated `thick.*` rows (transcribed, never exposed as an API) and the four-color roles from the deprecated per-shape sets. The Expressive wave rows are carried but not rendered (the family's registered gap). |
 | `MdProgressIndicatorStyle` | Pattern A style plus the indeterminate math as *pure functions of elapsed time* (`linearIndeterminateFrame`, `circularIndeterminateFrame`, `fourColorAt`) so the tests pin the keyframes field by field without an event loop. Owns a hand-rolled cubic-bezier solver — `QEasingCurve` has no public per-t evaluation. |
+| `MdSnackbar` | `QWidget`, the inverse-surface one-row / new-line layouts ported from Compose's measure policies: single-line height max(48, content), wrapped first line at 30 px, two-line minimum 68; the action and the dismiss icon are internal regions painting this export's own hover / focus / pressed rows with hit-region-first geometry. Visuals only — placement and durations are the host's. Five `Q_PROPERTY`s with NOTIFY. |
+| `MdSnackbarHost` | the `SnackbarHostState` half: queue, Auto/Short 4000 / Long 10000 / Indefinite durations (Auto pins Indefinite when an action exists), bottom-centre placement inside the 12 px margin and the FadeInFadeOutWithScale enter/exit (opacity on the effects-fast spring, scale 0.8→1 on the spatial-fast spring). |
+| `MdSnackbarTokens` | the single `md.comp.snackbar.*` set verbatim: inverse-surface container (level 3, corner-extra-small), body-medium inverse-on-surface text, label-large inverse-primary action, 24 px inverse-on-surface dismiss icon, and the hover / focus / pressed rows for BOTH interactive elements. |
+| `MdSnackbarStyle` | Pattern A style with the one-row / new-line measure policies as pure functions (every rect pinned by tests) and `paintSnackbar` shared with the host's fade/scale transform; `kShadowMargin` keeps the level-3 shadow inside a child widget's clip. |
+| `MdTooltip` | `QWidget` for both exports: plain (inverse-surface, corner-extra-small, no elevation, body-small inverse-on-surface) and rich (surface-container at level 2, corner-medium, title-small subhead + body-medium text in on-surface-variant, label-large primary action) plus the opt-in 16×8 Expressive caret. The rich action is an internal region painting the export's own hover / focus / pressed rows; `:focus-visible` semantics like the button families. Five `Q_PROPERTY`s with NOTIFY. |
+| `MdTooltipHost` | the `TooltipBox` half on Qt's widget tree: wraps an anchor widget, shows a top-level tooltip popup on hover (Compose's UserInput priority — never self-dismisses, pointer leaving hides it), on keyboard focus / touch long-press / programmatically (1500 ms auto-hide unless persistent, `BasicTooltipDefaults.TooltipDuration`), Escape dismisses, the GlobalMutatorMutex keeps exactly one tooltip on screen, and the enter/exit is the same fade + scale pair. Above / Below placement with the plain `Above` provider (centre→start→end, above→below, coerced) and the rich start-aligned provider. |
+| `MdTooltipTokens` | the `md.comp.plain-tooltip.*` + `md.comp.rich-tooltip.*` sets verbatim, the rich action's three state rows, and the Compose-port layout constants (min 40×24, plain max 200, rich max 320, content 8/4, rich horizontal 16, subhead baseline 28, text 24/16, action 36/8, anchor spacing 4, caret 16×8, duration 1500 ms). |
+| `MdTooltipStyle` | Pattern A style with the plain / rich measure logic and the two popup-position providers as pure functions, the caret triangle painting, and `paintTooltip` shared with the host's fade/scale transform; the rich container keeps the shadow-margin idiom for the level-2 rings. |
 
 ## Known gaps, recorded rather than hidden
 

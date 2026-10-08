@@ -58,6 +58,7 @@ captured official screenshot.
 | Progress indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Loading indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Snackbars | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Tooltips | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -343,6 +344,30 @@ new-line action layout. Checked against the page render:
 No side-by-side official reference exists (material-web ships no snackbar
 web component; the behaviour source is Compose), so this stays
 `Needs visual QA` like the other Compose-sourced families.
+
+### Tooltips
+
+Page 20 (`Tooltips`) places static snapshots: a short plain tooltip, a
+wrapped plain at 160 px, a rich tooltip with subhead + text + action, the
+same rich tooltip with the caret enabled, and a live hover demo host.
+Checked against the page render:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Plain container | inverse-surface, corner-extra-small, NO shadow | Yes |
+| Plain text | body-small, inverse-on-surface, 8/4 padding, min 40×24, wraps at 200 max | Yes |
+| Rich container | surface-container, corner-medium, level-2 shadow visible around the 8 px margin | Yes |
+| Subhead | title-small on-surface-variant, first baseline 28 px from the top | Yes |
+| Rich text | body-medium on-surface-variant, baseline 24 px below the subhead box, 16 px bottom inset | Yes |
+| Action | label-large primary label centred in its button-chrome hit region, 36 px box + 8 px bottom; hover/pressed state layers + ripple | Yes (live) |
+| Text-only rich | falls back to the plain 4 px vertical padding | Yes |
+| Caret | 16×8 triangle protruding 8 px past the container edge, container-coloured | Yes |
+| Host transition | fade + scale (0.8→1) on enter/exit, springs; global mutex | Yes (exercise) |
+
+No side-by-side official reference exists (material-web ships only the token
+exports for this family; the layout and behaviour sources are Compose M3's
+Tooltip.kt / BasicTooltip.kt), so this stays `Needs visual QA` like the other
+Compose-sourced families.
 
 ## 2026-10 comparison re-check (official vs ported)
 

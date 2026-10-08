@@ -199,6 +199,7 @@ GalleryPage *createBadgePage();
 GalleryPage *createProgressIndicatorPage();
 GalleryPage *createLoadingIndicatorPage();
 GalleryPage *createSnackbarPage();
+GalleryPage *createTooltipPage();
 
 } // namespace gallery
 

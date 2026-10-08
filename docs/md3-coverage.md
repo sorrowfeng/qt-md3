@@ -235,7 +235,7 @@ smoothed:
 | Progress indicators | MdProgressIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ Loading indicator | MdLoadingIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Snackbar | MdSnackbar + MdSnackbarHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Tooltips | MdTooltip | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Tooltips | MdTooltip + MdTooltipHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 
 ### Badges — the two rows that are still `🚧`
 
