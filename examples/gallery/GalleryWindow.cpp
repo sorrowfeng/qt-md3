@@ -444,6 +444,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createDialogPage(),
         createBottomSheetPage(),
         createSideSheetPage(),
+        createCarouselPage(),
     };
 
     QStringList titles;

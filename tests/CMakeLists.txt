@@ -602,3 +602,26 @@ set_tests_properties(TestMd3SideSheet PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3SideSheet)
+
+# MdCarousel, the Containment family's scrolling item row: the keyline math
+# (arrangement fit, slot interpolation) and the drag/snap widget.
+add_executable(TestMd3Carousel
+    TestMd3Carousel.cpp
+)
+
+target_link_libraries(TestMd3Carousel
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Carousel COMMAND TestMd3Carousel)
+set_tests_properties(TestMd3Carousel PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Carousel)

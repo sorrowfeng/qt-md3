@@ -28,6 +28,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdBadgeTokens.h
     core/MdButtonTokens.h
     core/MdBottomSheetTokens.h
+    core/MdCarouselTokens.h
     core/MdCardTokens.h
     core/MdDialogTokens.h
     core/MdButtonGroupTokens.h
@@ -56,6 +57,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdBadgeStyle.h
     styles/MdButtonStyle.h
     styles/MdBottomSheetStyle.h
+    styles/MdCarouselStyle.h
     styles/MdSideSheetStyle.h
     styles/MdCardStyle.h
     styles/MdDialogStyle.h
@@ -77,6 +79,7 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdBadgedBox.h
     widgets/MdButton.h
     widgets/MdBottomSheet.h
+    widgets/MdCarousel.h
     widgets/MdBottomSheetHost.h
     widgets/MdSideSheet.h
     widgets/MdSideSheetHost.h
@@ -119,6 +122,7 @@ set(QT_MD3_SOURCES
     core/MdBadgeTokens.cpp
     core/MdButtonTokens.cpp
     core/MdBottomSheetTokens.cpp
+    core/MdCarouselTokens.cpp
     core/MdSideSheetTokens.cpp
     core/MdCardTokens.cpp
     core/MdDialogTokens.cpp
@@ -143,6 +147,7 @@ set(QT_MD3_SOURCES
     styles/MdBadgeStyle.cpp
     styles/MdButtonStyle.cpp
     styles/MdBottomSheetStyle.cpp
+    styles/MdCarouselStyle.cpp
     styles/MdSideSheetStyle.cpp
     styles/MdCardStyle.cpp
     styles/MdDialogStyle.cpp
@@ -161,6 +166,7 @@ set(QT_MD3_SOURCES
     widgets/MdBadgedBox.cpp
     widgets/MdButton.cpp
     widgets/MdBottomSheet.cpp
+    widgets/MdCarousel.cpp
     widgets/MdBottomSheetHost.cpp
     widgets/MdSideSheet.cpp
     widgets/MdSideSheetHost.cpp

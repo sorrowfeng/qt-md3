@@ -63,6 +63,7 @@ captured official screenshot.
 | Dialogs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Bottom sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Side sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Carousel | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -445,6 +446,22 @@ No side-by-side official reference exists (material-web ships only the token
 export and Compose ships no side sheet; the behaviour source is MDC-Android's
 sidesheet package), so this stays `Needs visual QA` like the other
 MDC-sourced families.
+
+### Carousel
+
+Page 25 (`Carousel`) places two static carousel snapshots at different scroll
+offsets. Checked against the page render:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Rest snapshot | the large item flush with the container start, the extra-large (28) corners, the small item riding the trailing anchor partially cut off | Yes |
+| Mid-scroll snapshot | the large item shrunk along the keyline curve, the next item grown toward it — the resize-as-it-scrolls deformation visible between the two shots | Yes |
+| Container colour | surface at level 0 (no shadow at rest) with the colour-block contents clipped to the rounded mask | Yes |
+
+No side-by-side official reference exists (material-web ships only the token
+export; the behaviour source is the Compose M3 carousel package, verified
+against Compose's own MultiBrowseTest expectations), so this stays
+`Needs visual QA` like the other Compose-sourced families.
 
 ## 2026-10 comparison re-check (official vs ported)
 

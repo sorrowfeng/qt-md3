@@ -449,8 +449,8 @@ is `SelectedContainerColor`.
 
 - [x] §1.3 Communication — **Badges, Progress indicators, Loading indicator,
       Snackbar and Tooltips ported** (the family is closed).
-- [ ] §1.4 Containment — **Cards, Dialogs, Bottom sheets and Side sheets
-      ported**; carousel, divider and lists remain.
+- [ ] §1.4 Containment — **Cards, Dialogs, Bottom sheets, Side sheets and
+      the Carousel ported**; divider and lists remain.
 
 #### Badges (ported)
 
@@ -812,6 +812,47 @@ content padding and neither does this class.
   carries the level-1 shadow margin on the top/bottom/inner edges with a
   FLUSH docked edge, and `dismissed()` fires when the slide-out settles —
   MDC's `SideSheetDialog` cancel timing (the behavior reports HIDDEN).
+
+#### Carousel (ported)
+
+`MdCarousel` + `MdCarouselStyle` + `MdCarouselTokens`, locked by
+`TestMd3Carousel`. The heaviest math port of Stage 1 so far:
+
+* **The behaviour source is the whole Compose M3 carousel package** —
+  `Carousel.kt` / `Strategy.kt` / `Keylines.kt` / `KeylineList.kt` /
+  `Arrangement.kt` (~2,600 lines), material-web again shipping only the token
+  export (`_md-comp-carousel-item.scss`, 34.0.21) and no web component. The
+  port transcribes the model verbatim: an *arrangement* (the
+  `findLowestCostArrangement` / `fit` / `calculateLargeSize` trio, the medium
+  size solved as `(large + small) / 2` and the ±10% medium flex), the
+  *keylines* (offsets accumulating by each slot's own size, unadjusted
+  offsets by the focal size — the end-to-end scroll model), the *steps* (one
+  per non-anchor slot, each moving that slot across the focal range), and
+  the per-item interpolation (the item's visible width and position lerp
+  from its two surrounding keylines — the resize-as-it-scrolls signature).
+  The multi-browse counts, the tiny-container small relaxation, the surplus
+  trimming against the real item count and the 10 px anchors all follow
+  `multiBrowseKeylineList`.
+* **The port is pinned against Compose's own unit tests** — the
+  380/186/8 case reproduces `MultiBrowseTest.adjustsForItemSpacing`
+  exactly (five keylines, unadjusted offsets −101 / 93 / 287 / 481 / 675,
+  the large item unresized, the trailing small at the 56 px cap), and the
+  100/200 and 512/3 cases reproduce the other two test bodies.
+* **Recorded divergences**: (1) item spacing — Compose defaults
+  `CarouselDefaults.ItemSpacing` to 0.dp while the specs page publishes
+  "Padding between elements 8dp"; the port takes the spec value and records
+  the conflict. (2) The specs page's leading/trailing 16 px padding is the
+  caller's margin — Compose's contentPadding shift path
+  (`createShiftedKeylineListForContentPadding`) is recorded, not ported.
+  (3) Only the multi-browse strategy is ported; hero, center-aligned hero,
+  uncontained and full-screen are separate keyline functions in Compose and
+  are recorded, not ported. (4) The snap settle runs the effects-default
+  spring against the nearest item boundary (Compose Pager's page snap); the
+  velocity-weighted fling is not ported. (5) The focus-indicator rows and
+  the item-z-order (Compose's `zIndex = 1 / (1 + distance)`, approximated
+  by raise order) are recorded. (6) Item content is mouse-transparent — the
+  carousel owns the drag; per-item interaction (Compose's clickable items)
+  is the caller's business, recorded.
 
 ### Gallery scaffolding fixes found while building the first component
 

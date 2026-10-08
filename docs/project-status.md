@@ -8,14 +8,14 @@ Last updated: 2026-10-09
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
 | Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication closed; §1.4 Containment under way |
-| Stage 1 families complete | `17 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets) |
+| Stage 1 families complete | `18 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets, Carousel) |
 | Base modules | `21 / 21` |
-| Public components | `24` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`, `MdDialog`, `MdDialogHost`, `MdBottomSheet`, `MdBottomSheetHost`, `MdSideSheet`, `MdSideSheetHost`) |
-| Style classes | `18` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`, `MdDialogStyle`, `MdBottomSheetStyle`, `MdSideSheetStyle`) |
-| Example pages | `24` |
+| Public components | `25` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`, `MdDialog`, `MdDialogHost`, `MdBottomSheet`, `MdBottomSheetHost`, `MdSideSheet`, `MdSideSheetHost`, `MdCarousel`) |
+| Style classes | `19` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`, `MdDialogStyle`, `MdBottomSheetStyle`, `MdSideSheetStyle`, `MdCarouselStyle`) |
+| Example pages | `25` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `30` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3Dialog`, `TestMd3BottomSheet`, `TestMd3SideSheet`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `31` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3Dialog`, `TestMd3BottomSheet`, `TestMd3SideSheet`, `TestMd3Carousel`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
