@@ -48,6 +48,31 @@ captured official screenshot.
 | --- | --- | --- | --- | --- |
 | Buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Button groups | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Icon buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
+
+### Icon buttons
+
+Rendered via `qt-md3-example --screenshot` in light mode (page
+`10-icon-buttons`) and read against `tokens/versions/latest/sass/
+_md-comp-icon-button{,-<style>,-<size>}.scss`.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Container heights | 32 / 40 / 56 / 96 / 136 px | Yes |
+| Icon sizes | 20 / 24 / 24 / 32 / 40 px | Yes |
+| Square default track | leading + icon + trailing == height at every size | Yes |
+| Styles | standard bare glyph · filled primary chip · tonal secondary-container chip · outlined outline-variant stroke | Yes |
+| Selected toggle (filled) | surface-container chip unchecked, primary checked | Yes |
+| Selected corners | the knobs swap — selected round is the square-ish corner | Yes |
+| Selected outlined | inverse-surface chip, stroke dropped | Yes |
+| Padding tracks | default square · narrow · wide, same height | Yes |
+| Disabled | container @ 0.1, icon @ 0.38, outlined keeps its stroke | Yes |
+| Press morph | corners to the pressed shape on spring-fast-spatial | Yes (live) |
+
+Same standing as the other families: no side-by-side official reference yet,
+so this stays `Needs visual QA` rather than `Pass`.
 
 ### Button groups
 

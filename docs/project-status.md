@@ -8,14 +8,14 @@ Last updated: 2026-10-08
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
 | Stage | Stage 1 — Batch 0 closed; §1.2 Actions under way |
-| Stage 1 families complete | `2 / 36` (Buttons, Button groups) |
+| Stage 1 families complete | `3 / 36` (Buttons, Button groups, Icon buttons) |
 | Base modules | `21 / 21` |
-| Public components | `2` (`MdButton`, `MdButtonGroup`) |
-| Style classes | `3` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`) |
-| Example pages | `9` |
+| Public components | `3` (`MdButton`, `MdButtonGroup`, `MdIconButton`) |
+| Style classes | `4` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`) |
+| Example pages | `10` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `15` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `16` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -54,7 +54,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 
 - CMake auto-detects Qt 6 / Qt 5, enforces the minimum, installs an exportable
   package (`find_package(qt-md3 CONFIG REQUIRED)`), and registers the `.qrc`.
-- Fifteen CTest entries, all green. One binary per module, each with its own
+- Sixteen CTest entries, all green. One binary per module, each with its own
   `QTEST_MAIN` — a single binary hosting several `QObject` classes driven by
   `QTest::qExec` in a loop cannot honour `-o` or per-class selection, so
   `ctest -R TestMd3Icon` would silently run the wrong suite.
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 — the first two components
+### Stage 1 §1.2 — the first three components
 
 | Component | Covers |
 | --- | --- |
@@ -104,6 +104,8 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdButtonGroup` | `QWidget` container for 2–n `MdButton` items — standard (press grows an item 15 % on `spring-fast-spatial` and shifts the neighbours) and connected (2 px gap, per-side corners) variants, five Expressive sizes, four selection modes (none / single / multiple / required), round / square shapes, horizontal / vertical orientation, arrow-key navigation with focus-follows-current. Eight `Q_PROPERTY`s with NOTIFY. |
 | `MdButtonGroupTokens` | the `md.comp.button-group.{standard,connected}.<size>` value layer: heights, between-space, the 15 % press multiplier, the spring constants, the connected corner ladder and the literal 50 % selected inner corner. |
 | `MdButtonGroupStyle` | a style with a deliberately *empty* `drawWidget()` — the spec calls the group an invisible container with no colour attributes, so it owns geometry (`layoutFor`), per-item corner radii (`itemRadii`) and margins only. |
+| `MdIconButton` | `QPushButton` subclass, 4 colour styles (standard / filled / tonal / outlined) × 5 Expressive sizes × 2 shapes × 3 published padding tracks, icon-only by token arithmetic, toggle form backed by Qt's checkable state with the `selected-*` / `unselected-*` colour families and the swapped selected corner shapes. Nine `Q_PROPERTY`s with NOTIFY. |
+| `MdIconButtonTokens` | the `md.comp.icon-button.*` value layer: three colour families (plain / selected / unselected) over five states, the five-size metric table, the five shape slots and the press spring. |
 
 ## Known gaps, recorded rather than hidden
 

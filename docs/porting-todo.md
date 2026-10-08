@@ -213,7 +213,30 @@ Text inputs, then the M3 Expressive cross-cutting pass.
       fallback for an unhandled arrow is `focusNextPrevChild()`, which would
       silently wrap focus to the first item — worse than swallowing the key.
 
-- [ ] Icon buttons, FABs, Extended FABs, FAB menu, Split buttons,
+- [x] **`MdIconButton`** — 4 colour styles (standard / filled / tonal /
+      outlined) × 5 Expressive sizes × 2 container shapes × 3 published
+      padding tracks, icon-only by token arithmetic, toggle ("selected") form
+      backed by Qt's checkable state. `TestMd3IconButton` pins the size table
+      and all three colour families field by field.
+
+      Two facts this component adds to the record:
+
+      * **The colour matrix is three families, published incompletely on
+        purpose.** plain (`<state>-*`), selected (`selected-<state>-*`) and
+        unselected (`unselected-<state>-*`), where a missing selected slot
+        means "same as the plain one" and a missing plain slot means "this
+        style does not paint this part". Conflating the two absences would
+        make standard grow a container, so the resolver keeps them apart and
+        the test pins both.
+      * **Setters must invalidate the token cache.** `tokens()` caches its
+        resolved table, and a `setVariant()` / `setButtonSize()` /
+        `setSpaceTrack()` that only called `update()` would repaint with the
+        *previous* variant's colours and metrics — the first gallery render
+        showed every icon button as standard-sized because of exactly this.
+        The common button already did this right; the icon button initially
+        did not, which is why it is written down here.
+
+- [ ] FABs, Extended FABs, FAB menu, Split buttons,
       Segmented buttons — the rest of §1.2.
 
 ### Gallery scaffolding fixes found while building the first component

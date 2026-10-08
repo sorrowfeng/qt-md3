@@ -35,7 +35,7 @@ Column meaning (nine check columns):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Buttons | MdButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ Button groups | MdButtonGroup | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Icon buttons | MdIconButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Icon buttons | MdIconButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | FABs | MdFab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Extended FABs | MdExtendedFab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | ★ FAB menu | MdFabMenu | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
@@ -70,6 +70,24 @@ seed change, contrast level, density and font switch have not yet been exercised
 *against the button-group page*, and the side-by-side reference comparison that
 `visual-audit.md` asks for has not been recorded. Neither is a known defect;
 both are unfinished evidence.
+
+### Icon buttons — the two rows that are still `🚧`
+
+Same standing as the first two families: light/dark and RTL are handled, while
+seed change, contrast level, density and font switch have not yet been
+exercised *against the icon-button page*, and the side-by-side reference
+comparison has not been recorded. Neither is a known defect; both are
+unfinished evidence.
+
+Two transcription notes are pinned by `TestMd3IconButton` rather than smoothed:
+
+* the selected colour families fall back to the plain family where the export
+  publishes no `selected-*` slot (standard has no container in either state;
+  outlined has no `selected.outline.color`, so the checked toggle is a filled
+  inverse-surface chip and not a stroked one);
+* the selected *shapes* are the published other knob — `selected-container.
+  shape.round` is the square-ish corner and `.square` is full — which is the
+  token form of the spec's "selected shape changes between square and round".
 
 One upstream inconsistency is preserved rather than reconciled, pinned by
 `TestMd3ButtonGroup`:

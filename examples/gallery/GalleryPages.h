@@ -166,6 +166,9 @@ GalleryPage *createButtonPage();
 /// Actions — Button groups (two variants x five sizes x four selection modes).
 GalleryPage *createButtonGroupPage();
 
+/// Actions — Icon buttons (four styles x five sizes x three tracks x toggle).
+GalleryPage *createIconButtonPage();
+
 } // namespace gallery
 
 #endif // GALLERY_PAGES_H

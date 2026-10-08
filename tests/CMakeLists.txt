@@ -174,6 +174,26 @@ set_tests_properties(TestMd3ButtonGroup PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
 )
 
+add_executable(TestMd3IconButton
+    TestMd3IconButton.cpp
+)
+
+target_link_libraries(TestMd3IconButton
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3IconButton COMMAND TestMd3IconButton)
+set_tests_properties(TestMd3IconButton PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3IconButton)
 qt_md3_deploy_runtime(TestMd3ButtonGroup)
 
 # --- Policy gates -----------------------------------------------------------

@@ -374,6 +374,34 @@ enum class ButtonGroupSelection {
     Count,
 };
 
+/// The four colour styles of an MD3 icon button,
+/// `md.comp.icon-button.<style>`.
+///
+/// The names follow the export, not the common button's: there is no
+/// *elevated* icon button, and the plain style is *standard* rather than
+/// *text* — a standard icon button has no container the way a text button
+/// has no container, but the token family is named for the style it is the
+/// baseline of, so it is recorded here under its own name.
+enum class IconButtonVariant {
+    Standard,
+    Filled,
+    Tonal,
+    Outlined,
+    Count,
+};
+
+/// Which of the three published padding tracks an icon button sizes its
+/// container with: `md.comp.icon-button.<track>-leading-space` and
+/// `-trailing-space`. The default track makes the container exactly square at
+/// every size; the narrow and wide tracks are published sets with their own
+/// numbers, so they are a real axis here rather than a comment.
+enum class IconButtonSpaceTrack {
+    Default,
+    Narrow,
+    Wide,
+    Count,
+};
+
 // ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
@@ -421,6 +449,8 @@ QT_MD3_EXPORT QString buttonVariantName(ButtonVariant variant);
 QT_MD3_EXPORT QString buttonSizeName(ButtonSize size);
 QT_MD3_EXPORT QString buttonShapeName(ButtonShape shape);
 QT_MD3_EXPORT QString buttonGroupVariantName(ButtonGroupVariant variant);
+QT_MD3_EXPORT QString iconButtonVariantName(IconButtonVariant variant);
+QT_MD3_EXPORT QString iconButtonSpaceTrackName(IconButtonSpaceTrack track);
 QT_MD3_EXPORT QString buttonGroupOrientationName(ButtonGroupOrientation orientation);
 QT_MD3_EXPORT QString buttonGroupSelectionName(ButtonGroupSelection selection);
 
@@ -447,5 +477,7 @@ Q_DECLARE_METATYPE(md::ButtonShape)
 Q_DECLARE_METATYPE(md::ButtonGroupVariant)
 Q_DECLARE_METATYPE(md::ButtonGroupOrientation)
 Q_DECLARE_METATYPE(md::ButtonGroupSelection)
+Q_DECLARE_METATYPE(md::IconButtonVariant)
+Q_DECLARE_METATYPE(md::IconButtonSpaceTrack)
 
 #endif // MD_TYPES_H

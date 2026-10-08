@@ -345,6 +345,32 @@ QString buttonGroupSelectionName(ButtonGroupSelection selection)
     return QStringLiteral("unknown");
 }
 
+QString iconButtonVariantName(IconButtonVariant variant)
+{
+    // The `md.comp.icon-button.<name>` style segment.
+    switch (variant) {
+    case IconButtonVariant::Standard: return QStringLiteral("standard");
+    case IconButtonVariant::Filled: return QStringLiteral("filled");
+    case IconButtonVariant::Tonal: return QStringLiteral("tonal");
+    case IconButtonVariant::Outlined: return QStringLiteral("outlined");
+    case IconButtonVariant::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
+QString iconButtonSpaceTrackName(IconButtonSpaceTrack track)
+{
+    // The `md.comp.icon-button.<name>-leading-space` / `-trailing-space`
+    // track prefix.
+    switch (track) {
+    case IconButtonSpaceTrack::Default: return QStringLiteral("default");
+    case IconButtonSpaceTrack::Narrow: return QStringLiteral("narrow");
+    case IconButtonSpaceTrack::Wide: return QStringLiteral("wide");
+    case IconButtonSpaceTrack::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {
