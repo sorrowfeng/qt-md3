@@ -125,7 +125,10 @@ GalleryPage::GalleryPage(QWidget *parent)
     setSizePolicy(policy);
 
     // React to the theme the sanctioned way: subscribe, do not scan.
-    md::MdStyleBase::connectThemeUpdate(this, &GalleryPage::update);
+    // (static_cast: update() is overloaded and MSVC will not deduce the
+    // no-argument one from the member-function pointer parameter.)
+    md::MdStyleBase::connectThemeUpdate(
+        this, static_cast<void (GalleryPage::*)()>(&GalleryPage::update));
     connect(&md::MdTheme::instance(), &md::MdTheme::themeModeChanged, this, [this] {
         updateGeometry();
         update();
