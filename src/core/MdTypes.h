@@ -478,6 +478,17 @@ enum class SplitButtonSize {
     Count,
 };
 
+/// The two progress-indicator shapes, `md.comp.progress-indicator.<shape>.*`.
+/// The merged 34.0.21 export folds what used to be two separate token sets
+/// (linear-progress-indicator / circular-progress-indicator, both deprecated)
+/// into one `md.comp.progress-indicator.*` family with a linear and a circular
+/// segment.
+enum class ProgressIndicatorShape {
+    Linear,
+    Circular,
+    Count,
+};
+
 // ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
@@ -533,6 +544,7 @@ QT_MD3_EXPORT QString extendedFabVariantName(ExtendedFabVariant variant);
 QT_MD3_EXPORT QString extendedFabSizeName(ExtendedFabSize size);
 QT_MD3_EXPORT QString fabMenuVariantName(FabMenuVariant variant);
 QT_MD3_EXPORT QString splitButtonSizeName(SplitButtonSize size);
+QT_MD3_EXPORT QString progressIndicatorShapeName(ProgressIndicatorShape shape);
 QT_MD3_EXPORT QString buttonGroupOrientationName(ButtonGroupOrientation orientation);
 QT_MD3_EXPORT QString buttonGroupSelectionName(ButtonGroupSelection selection);
 
@@ -553,6 +565,7 @@ Q_DECLARE_METATYPE(md::Density)
 Q_DECLARE_METATYPE(md::TextDirection)
 Q_DECLARE_METATYPE(md::MdIconFamily)
 Q_DECLARE_METATYPE(md::MdIconSet)
+Q_DECLARE_METATYPE(md::ProgressIndicatorShape)
 Q_DECLARE_METATYPE(md::ButtonVariant)
 Q_DECLARE_METATYPE(md::ButtonSize)
 Q_DECLARE_METATYPE(md::ButtonShape)

@@ -194,6 +194,9 @@ GalleryPage *createSegmentedButtonPage();
 /// Communication — Badges (dot and content forms, anchored over icon buttons).
 GalleryPage *createBadgePage();
 
+/// Communication — Progress indicators (linear + circular, determinate/indeterminate/four-color).
+GalleryPage *createProgressIndicatorPage();
+
 } // namespace gallery
 
 #endif // GALLERY_PAGES_H

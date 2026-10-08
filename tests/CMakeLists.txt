@@ -331,6 +331,32 @@ set_tests_properties(TestMd3Badge PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Badge)
 
+# MdProgressIndicator, the second Communication family: the merged export's
+# rows (base + linear + circular, the deprecated thick metrics and the
+# deprecated-set four-color roles), the MDC-heritage animation keyframes as
+# pure functions, the determinate transitions, the buffer dots contract and
+# the non-interactivity contract.
+add_executable(TestMd3ProgressIndicator
+    TestMd3ProgressIndicator.cpp
+)
+
+target_link_libraries(TestMd3ProgressIndicator
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3ProgressIndicator COMMAND TestMd3ProgressIndicator)
+set_tests_properties(TestMd3ProgressIndicator PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3ProgressIndicator)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

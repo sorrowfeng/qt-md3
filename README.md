@@ -31,10 +31,10 @@ system:
 
 | Metric | Value |
 | --- | --- |
-| Stage 1 MD3 families complete | `9 / 36` — **all of §1.2 Actions**, plus Badges (the first §1.3 Communication family) |
+| Stage 1 MD3 families complete | `10 / 36` — **all of §1.2 Actions**, plus Badges and Progress indicators (§1.3 Communication) |
 | Foundation modules | `21` |
-| Public components | `11` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`) |
-| CTest entries | `22` (all green) |
+| Public components | `12` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`) |
+| CTest entries | `23` (all green) |
 | Stage 2 (Qt extensions) | Not started — gated until Stage 1 is green |
 
 Progress is tracked in [docs/md3-coverage.md](docs/md3-coverage.md), the single

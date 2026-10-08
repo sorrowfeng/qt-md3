@@ -447,7 +447,7 @@ A disabled selected segment keeps its secondary-container fill: the export
 has no disabled-container row and Compose's `disabledActiveContainerColor`
 is `SelectedContainerColor`.
 
-- [ ] §1.3 Communication — **Badges ported**; progress indicators, loading
+- [ ] §1.3 Communication — **Badges and Progress indicators ported**; loading
       indicator, snackbars and tooltips remain.
 
 #### Badges (ported)
@@ -477,6 +477,51 @@ is `SelectedContainerColor`.
   parent. `MdBadgedBox` therefore reserves the overhang (pill width − 12 /
   height − 14) in its own geometry — the painted result is identical to
   Compose's, only the surrounding layout sees a slightly larger box.
+
+#### Progress indicators (ported)
+
+`MdProgressIndicator` + `MdProgressIndicatorStyle` + `MdProgressIndicatorTokens`,
+locked by `TestMd3ProgressIndicator`. Five facts shape the implementation:
+
+* **The export is one merged family.** `md.comp.progress-indicator.*` (base +
+  linear + circular) supersedes the two per-shape sets, deprecated as of
+  34.0.21. The deprecated sets survive as the *only* source of the four-color
+  rows (primary / primary-container / tertiary / tertiary-container, identical
+  in both) — carried for the `fourColor` API with that provenance. The base
+  set's four metric rows are also individually `@deprecated`; transcribed,
+  not read by the painter.
+* **The `thick.*` rows are deprecated as a variant** — "no longer tokenized
+  as a variant, but rather a sample configuration in code". Transcribed into
+  the token struct for completeness, never exposed as an API.
+* **The indeterminate animations are the MDC-heritage keyframes** the
+  material-web internal SCSS ships (cited to
+  `mdc-linear-progress/_linear-progress.scss`): the linear two-bar 2 s cycle
+  (translate 0→200.611 %, scale 0.08→0.661479→0.08, each segment its own
+  bezier) and the circular three composed rotations — expand-arc 1333 ms
+  (265°↔130°), the eased 135° group steps over 4× that period, and a linear
+  spin of ARCTIME×360/306 ms, the right half delayed half a period. All
+  pinned as pure functions of elapsed time, which required a hand-rolled
+  cubic-bezier solver (`QEasingCurve` has no public per-t evaluation).
+* **The four-color cycle interpolates colours, not indices** — CSS animates
+  the background/border colour smoothly between keyframe marks
+  (0/15/25/40/50/65/75/90 %), linear-timed for the linear shape and riding
+  the indeterminate easing per segment for the circular one.
+* **The registered gap: the wave rows.** The export publishes non-deprecated
+  Expressive wave tokens — linear amplitude 3 px / wavelength 40 px,
+  indeterminate wavelength 20 px, with-wave height 10 px; circular amplitude
+  1.6 px / wavelength 15 px, with-wave size 48 px. Neither material-web
+  (which predates Expressive) nor this port renders them. **Open question:
+  port the wave rendering from Compose's `WavyLinearProgressIndicator` /
+  `WavyCircularProgressIndicator`** (amplitude animation on indeterminate,
+  wave phase shift, the with-wave container sizes). Until then the token
+  struct carries every value and the painter draws the non-wave baseline.
+
+Two smaller divergences, both recorded: the circular geometry follows
+Compose (stroke centred so the ring spans exactly `size`; material-web's
+percentage-stroke CSS resolves differently) and the circular determinate
+track is painted (the merged export's `track.color`; material-web's legacy
+`.track` stroke is transparent). RTL mirrors the linear indicator, the CSS
+`scale(-1)` contract.
 
 ### Gallery scaffolding fixes found while building the first component
 

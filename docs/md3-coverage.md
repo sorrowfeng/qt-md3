@@ -232,7 +232,7 @@ smoothed:
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Badges | MdBadge + MdBadgedBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Progress indicators | MdProgressIndicator | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Progress indicators | MdProgressIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ Loading indicator | MdLoadingIndicator | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Snackbar | MdSnackbar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Tooltips | MdTooltip | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
@@ -266,6 +266,45 @@ Four transcription notes are pinned by `TestMd3Badge` rather than smoothed:
   parent, so `MdBadgedBox` reserves the overhang (pill width − 12 /
   height − 14) in its own geometry — the painted result is identical, only
   the surrounding layout sees a slightly larger box.
+
+### Progress indicators — the two rows that are still `🚧`
+
+Same standing as the other families: light/dark and RTL are handled (the
+linear indicator mirrors itself under RTL, the CSS `scale(-1)` contract),
+while seed change, contrast level, density and font switch have not yet been
+exercised *against the progress-indicator page*, and the side-by-side
+reference comparison has not been recorded. Neither is a known defect; both
+are unfinished evidence.
+
+Five transcription notes are pinned by `TestMd3ProgressIndicator` rather than
+smoothed:
+
+* **the export is one merged family** — `md.comp.progress-indicator.*` with
+  linear and circular segments; the two per-shape sets
+  (`_md-comp-linear-progress-indicator` / `_md-comp-circular-progress-
+  indicator`) are deprecated as of 34.0.21 and survive only as the source of
+  the four-color rows (identical in both: primary, primary-container,
+  tertiary, tertiary-container);
+* **the `thick.*` rows are deprecated as a variant** ("no longer tokenized
+  as a variant, but rather a sample configuration in code") — transcribed
+  into the token struct for completeness, never exposed as an API;
+* **the indeterminate animations are the MDC-heritage keyframes** the
+  material-web internal SCSS ships: the linear two-bar 2 s cycle (translate
+  0→200.611 %, scale 0.08→0.661479→0.08, per-segment beziers) and the
+  circular three composed rotations (expand-arc 1333 ms, 265°↔130°;
+  group-arc 8×135° over 5332 ms; a linear spin of ARCTIME×360/306 ms, right
+  half delayed half a period) — pinned as *pure functions of elapsed time*;
+* **the four-color cycle interpolates colours, not indices** — CSS animates
+  `background`/`border-color` smoothly between keyframe marks (0/15/25/40/
+  50/65/75/90 %), linear-timed for the linear shape and riding the
+  indeterminate easing per segment for the circular one;
+* **the registered gap: the wave rows.** The export publishes non-deprecated
+  Expressive wave tokens (linear amplitude 3 / wavelength 40, indeterminate
+  wavelength 20, with-wave height 10; circular amplitude 1.6 / wavelength
+  15, with-wave size 48). Neither material-web (which predates Expressive)
+  nor this port renders them; the token struct carries every value, and
+  Compose's `WavyLinearProgressIndicator` / `WavyCircularProgressIndicator`
+  are the porting source recorded in porting-todo.md.
 
 ## 1.4 Containment
 

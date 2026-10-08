@@ -55,6 +55,7 @@ captured official screenshot.
 | Split buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Segmented buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Badges | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Progress indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -268,3 +269,29 @@ That is `md.comp.button.focus.indicator`'s outward geometry, which Qt would clip
 at the widget edge otherwise. It is a containment difference, not a component
 difference, and it is why a raw widget-size comparison against the official
 component will always show +15 px in both axes.
+
+### Progress indicators
+
+Rendered via `qt-md3-example --screenshot` in light and dark modes (page
+`17-progress-indicators`) and read against
+`_md-comp-progress-indicator{,-linear,-circular}.scss` plus the
+MDC-heritage keyframes in the material-web internal SCSS.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Linear determinate | 4 px, primary bar on a secondary-container track, both corner-full | Yes |
+| Gap + stop indicator | 4 px gap then the 4 px round dot, trailing-space 0; both vanish at value 1 | Yes |
+| Linear buffer | track scaled to the buffer fraction, scrolling 2 px dots beyond it | Yes |
+| Linear indeterminate | full track + the two-bar MDC 2 s keyframes (screenshot catches one frame; bars sweep 0→200.611 %) | Yes |
+| Circular determinate | 40 px, 4 px stroke, arc from 12 o'clock clockwise, track full circle | Yes |
+| Circular indeterminate | the three composed rotations — two half-plane arcs expanding/rotating | Yes (frame-checked against the pure functions) |
+| Four-color | primary → primary-container → tertiary → tertiary-container, interpolated | Yes (both shapes) |
+| Non-interactivity | no state layer, no ripple, no focus ring | Yes (live) |
+| Both modes | colours track the scheme | Yes |
+
+Same standing as the other families: no side-by-side official reference yet,
+so this stays `Needs visual QA` rather than `Pass`. The Expressive wave
+rendering is the family's registered gap (see porting-todo.md) and is called
+out on the page itself.

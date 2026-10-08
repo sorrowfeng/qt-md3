@@ -449,6 +449,17 @@ QString splitButtonSizeName(SplitButtonSize size)
     return QStringLiteral("unknown");
 }
 
+QString progressIndicatorShapeName(ProgressIndicatorShape shape)
+{
+    // The `md.comp.progress-indicator.<name>.*` shape segment.
+    switch (shape) {
+    case ProgressIndicatorShape::Linear: return QStringLiteral("linear");
+    case ProgressIndicatorShape::Circular: return QStringLiteral("circular");
+    case ProgressIndicatorShape::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {

@@ -154,7 +154,7 @@ Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is closed** — all
 twenty-one modules are implemented, and `ContrastLevel` is applied rather than
 stored, so reduced / standard / medium / high genuinely move the tones.
 
-Stage 1 §1.2 Actions is complete and §1.3 Communication has started:
+Stage 1 §1.2 Actions is complete and §1.3 Communication is under way:
 **`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`,
 `MdFabMenu`, `MdSplitButton` and `MdSegmentedButton` are done** —
 Buttons (5 colour styles × 5 Expressive sizes × 2 shapes, leading/trailing
@@ -171,10 +171,13 @@ inner-corner morph with the trailing-selected 50%) and segmented buttons (one
 outlined set, segments overlapping by the outline width, itemShape ends, the
 check scale-in on a reserved icon slot) — as is **`MdBadge` + `MdBadgedBox`**
 (one token set, two forms decided by content, no state rows at all, Compose-
-sourced anchoring with the overhang reserved for Qt clipping) — which is
-`9 / 36` families: **all of §1.2** plus the first §1.3 Communication family.
-The remaining §1.3 families are progress indicators, the loading indicator,
-snackbars and tooltips.
+sourced anchoring with the overhang reserved for Qt clipping) and
+**`MdProgressIndicator`** (the merged linear+circular family, determinate
+gap/stop-indicator/buffer geometry, the MDC-heritage indeterminate keyframes
+pinned as pure functions, four-color riding the deprecated sets; wave rows
+carried but not rendered — the registered gap) — which is `10 / 36` families:
+**all of §1.2** plus two §1.3 Communication families. The remaining §1.3
+families are the loading indicator, snackbars and tooltips.
 
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and
