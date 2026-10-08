@@ -115,6 +115,9 @@ public:
     int pageCount() const;
     /// Title of page `index`, or an empty string when out of range.
     QString pageTitle(int index) const;
+    /// Language-stable slug of page `index` (used for screenshot file names),
+    /// or an empty string when out of range.
+    QString pageSlug(int index) const;
     /// The page widget itself, or nullptr when `index` is out of range. The
     /// screenshot hook uses it to grab a page taller than the viewport, which
     /// is the only way to see every section of a long page at once.

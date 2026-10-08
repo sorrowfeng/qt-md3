@@ -81,6 +81,13 @@ public:
 
     virtual QString title() const = 0;
     virtual QString subtitle() const = 0;
+    /// Language-stable title used for screenshot file names. Titles are
+    /// bilingual and follow the theme language, but the `--screenshot` hook
+    /// (and anything downstream, like the gh_page links) needs one fixed name
+    /// per page, so pages whose title() is translated must override this with
+    /// the original English title. The default assumes title() is already
+    /// language-stable.
+    virtual QString slug() const { return title(); }
     /// Describe the page into `context`, top to bottom.
     virtual void build(GalleryContext &context) = 0;
 

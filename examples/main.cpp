@@ -65,7 +65,7 @@ int writeScreenshots(gallery::GalleryWindow &window, const QString &directory)
 
         const QString stem = QStringLiteral("%1-%2")
                                  .arg(index + 1, 2, 10, QLatin1Char('0'))
-                                 .arg(slugify(window.pageTitle(index)));
+                                 .arg(slugify(window.pageSlug(index)));
 
         const QPixmap shot = window.grab();
         if (shot.isNull() || !shot.save(dir.filePath(stem + QStringLiteral(".png")))) {
@@ -140,7 +140,9 @@ int main(int argc, char *argv[])
 
     // Registers bundled fonts, sets the language and the base font, applies
     // the layout direction. This is the one entry point every consumer calls.
-    const QString languageTag = QStringLiteral("en");
+    // The gallery defaults to Simplified Chinese; the header's language button
+    // toggles between zh-Hans and en.
+    const QString languageTag = QStringLiteral("zh-Hans");
     md::MdDesign::initialize(&app, languageTag);
 
     // The icon system works with or without the Material Symbols font, but it

@@ -4,6 +4,8 @@
 
 #include "core/MdMotion.h"
 
+#include "I18n.h"
+
 #include <QtCore/QTimer>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QFontMetricsF>
@@ -31,12 +33,18 @@ SurfacePage::SurfacePage(QWidget *parent)
 
 QString SurfacePage::title() const
 {
+    return L("形状与海拔", "Shape & elevation");
+}
+
+QString SurfacePage::slug() const
+{
     return QStringLiteral("Shape & elevation");
 }
 
 QString SurfacePage::subtitle() const
 {
-    return QStringLiteral("The corner scale, shape morphing, and containment expressed as tone.");
+    return L("圆角刻度、形状形变，以及以色调表达的容器感。",
+             "The corner scale, shape morphing, and containment expressed as tone.");
 }
 
 void SurfacePage::build(GalleryContext &context)
@@ -44,8 +52,11 @@ void SurfacePage::build(GalleryContext &context)
     QPainter *painter = context.painter();
     m_sliderTracks.clear();
 
-    context.section(QStringLiteral("Corner scale"));
-    context.paragraph(QStringLiteral(
+    context.section(L("圆角刻度", "Corner scale"));
+    context.paragraph(L(
+        "MD3 中的每个圆角都是令牌。库中没有任何硬编码的半径，这正是形状形变得以实现的"
+        "原因：组件在两组半径之间做动画，而不是直接跳变。四个 M3 Expressive 新增档位——"
+        "large-increased、extra-large-increased 与 extra-extra-large——均已包含。",
         "Every corner in MD3 is a token. Nothing in the library hard-codes a radius, which is "
         "what makes shape morphing possible: a component animates between two radius sets "
         "instead of snapping. The four M3 Expressive additions — large-increased, "
@@ -82,8 +93,10 @@ void SurfacePage::build(GalleryContext &context)
     }
     context.space(16.0);
 
-    context.section(QStringLiteral("Shape morph"));
-    context.paragraph(QStringLiteral(
+    context.section(L("形状形变", "Shape morph"));
+    context.paragraph(L(
+        "形状形变对路径做插值，而不是对 border-radius 做 CSS 过渡，因此形状可以经过中间"
+        "形态——方形到胶囊、圆形到方圆——同时始终保持单一清晰的轮廓。拖动下方的滑轨试试。",
         "Shape morphing interpolates the path, not a CSS transition on border-radius, so a "
         "shape can pass through intermediate forms — square to pill, circle to squircle — "
         "while keeping a single crisp outline. Drag the track below."));
@@ -129,8 +142,12 @@ void SurfacePage::build(GalleryContext &context)
     }
     context.space(20.0);
 
-    context.section(QStringLiteral("Elevation"));
-    context.paragraph(QStringLiteral(
+    context.section(L("海拔", "Elevation"));
+    context.paragraph(L(
+        "MD3 用色调表面而不是阴影来表达容器感。每个海拔级别映射到一个 surface-container "
+        "角色，其色调在浅色模式中逐级升高、在深色模式中逐级降低，因此抬升的元素在两种"
+        "模式下看起来都是抬升的。阴影存在于 API 中，但按组件规格可选启用，因为大多数 "
+        "MD3 表面不应有阴影。",
         "MD3 expresses containment with tonal surface, not with shadow. Each elevation level "
         "maps to a surface-container role whose tone steps up in light mode and down in dark "
         "mode, so a raised element reads as raised in both. Shadows exist in the API but are "
@@ -217,20 +234,30 @@ MotionPage::MotionPage(QWidget *parent)
 
 QString MotionPage::title() const
 {
+    return L("动效", "Motion");
+}
+
+QString MotionPage::slug() const
+{
     return QStringLiteral("Motion");
 }
 
 QString MotionPage::subtitle() const
 {
-    return QStringLiteral("Duration tokens, easing curves, and the six M3 Expressive springs.");
+    return L("时长令牌、缓动曲线，以及六个 M3 Expressive 弹簧。",
+             "Duration tokens, easing curves, and the six M3 Expressive springs.");
 }
 
 void MotionPage::build(GalleryContext &context)
 {
     QPainter *painter = context.painter();
 
-    context.section(QStringLiteral("Two motion systems"));
-    context.paragraph(QStringLiteral(
+    context.section(L("两套动效系统", "Two motion systems"));
+    context.paragraph(L(
+        "MD3 有两种让元素动起来的方式，且二者并存。令牌动效是固定时长加一条三次贝塞尔"
+        "缓动曲线——可预测，大多数过渡使用的都是它。M3 Expressive 弹簧动效则是阻尼谐"
+        "振子：没有时长，只有刚度与阻尼，这正是控件拥有物理手感的原因。弹簧无法用缓动"
+        "曲线表达，反之亦然，所以 qt-md3 对两者都做了建模。",
         "MD3 has two ways to move something and they coexist. Token motion is a fixed "
         "duration plus a cubic-bezier easing curve — predictable, and what most transitions "
         "use. M3 Expressive spring motion is a damped harmonic oscillator: no duration, just "
@@ -239,7 +266,7 @@ void MotionPage::build(GalleryContext &context)
     context.space(10.0);
 
     // --- easing curves ----------------------------------------------------
-    context.section(QStringLiteral("Easing"));
+    context.section(L("缓动", "Easing"));
     const int easingCount = int(md::MotionEasing::Count);
     const qreal plotSize = 88.0;
     const int columns = qMax(1, int(context.width() / (plotSize + 24.0)));
@@ -313,8 +340,10 @@ void MotionPage::build(GalleryContext &context)
     context.space(16.0);
 
     // --- durations --------------------------------------------------------
-    context.section(QStringLiteral("Durations"));
-    context.paragraph(QStringLiteral(
+    context.section(L("时长", "Durations"));
+    context.paragraph(L(
+        "十六个令牌，从 50 ms 的 short1 到 1000 ms 的 extra-long4。进度条按最长的令牌"
+        "等比缩放。",
         "Sixteen tokens, from short1 at 50 ms to extra-long4 at 1000 ms. Bars are scaled "
         "against the longest token."));
     for (int i = 0; i < int(md::MotionDuration::Count); ++i) {
@@ -345,8 +374,11 @@ void MotionPage::build(GalleryContext &context)
     context.space(16.0);
 
     // --- springs ----------------------------------------------------------
-    context.section(QStringLiteral("Springs"));
-    context.paragraph(QStringLiteral(
+    context.section(L("弹簧", "Springs"));
+    context.paragraph(L(
+        "六个 Expressive 槽位：空间与效果各占一半，各有快速、默认与慢速。空间弹簧是欠"
+        "阻尼的，会明显过冲；效果弹簧是临界阻尼的，因为会回弹的颜色或透明度看起来像 "
+        "bug。标记根据公开的刚度与阻尼比做动画。",
         "The six Expressive slots: spatial and effects, each at fast, default and slow. "
         "Spatial springs are underdamped and visibly overshoot; effects springs are "
         "critically damped because a colour or opacity that bounces looks like a bug. The "

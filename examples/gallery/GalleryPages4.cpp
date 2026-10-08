@@ -24,6 +24,8 @@
 
 #include "widgets/MdButton.h"
 
+#include "I18n.h"
+
 #include <QtCore/QHash>
 #include <QtGui/QPaintEvent>
 #include <QtGui/QResizeEvent>
@@ -56,6 +58,7 @@ public:
     ~ButtonPage() override;
 
     QString title() const override;
+    QString slug() const override;
     QString subtitle() const override;
     void build(GalleryContext &context) override;
 
@@ -109,19 +112,29 @@ ButtonPage::~ButtonPage() = default;
 
 QString ButtonPage::title() const
 {
+    return L("按钮", "Buttons");
+}
+
+QString ButtonPage::slug() const
+{
     return QStringLiteral("Buttons");
 }
 
 QString ButtonPage::subtitle() const
 {
-    return QStringLiteral("Five colour styles, five Expressive sizes, two container shapes — "
-                          "all live, so hover, click and Tab through them.");
+    return L("五种颜色样式、五种 Expressive 尺寸、两种容器形状——全部实时可交互，"
+             "欢迎悬停、点击并用 Tab 遍历。",
+             "Five colour styles, five Expressive sizes, two container shapes — "
+             "all live, so hover, click and Tab through them.");
 }
 
 md::MdButton *ButtonPage::button(const QString &id, const QString &text)
 {
     const auto found = m_bank.constFind(id);
     if (found != m_bank.constEnd()) {
+        // The banked widget survives rebuilds; re-apply the label so a language
+        // toggle re-renders the text through the normal build() path.
+        found.value()->setText(text);
         return found.value();
     }
     // Parented to the page and shown once; Qt owns the deletion from here on.
@@ -185,18 +198,22 @@ void ButtonPage::build(GalleryContext &context)
     m_slots.clear();
 
     // --- five colour styles ------------------------------------------------
-    context.section(QStringLiteral("Five colour styles — md.comp.button.<style>"));
-    context.paragraph(QStringLiteral(
+    context.section(L("五种颜色样式 —— md.comp.button.<style>",
+                      "Five colour styles — md.comp.button.<style>"));
+    context.paragraph(L(
+        "提升、填充、色调、描边与文本。无容器的两种（描边与文本）完全不画填充，这是"
+        "令牌层面的事实而非透明度技巧：它们的 md.comp.button.<style>.container.color "
+        "根本不存在。",
         "Elevated, filled, tonal, outlined and text. The container-less two (outlined and "
         "text) paint no fill at all, which is a token fact rather than a transparency trick: "
         "their md.comp.button.<style>.container.color does not exist."));
     {
         const QVector<QPair<QString, md::ButtonVariant>> specs = {
-            {QStringLiteral("Elevated"), md::ButtonVariant::Elevated},
-            {QStringLiteral("Filled"), md::ButtonVariant::Filled},
-            {QStringLiteral("Tonal"), md::ButtonVariant::Tonal},
-            {QStringLiteral("Outlined"), md::ButtonVariant::Outlined},
-            {QStringLiteral("Text"), md::ButtonVariant::Text},
+            {L("提升", "Elevated"), md::ButtonVariant::Elevated},
+            {L("填充", "Filled"), md::ButtonVariant::Filled},
+            {L("色调", "Tonal"), md::ButtonVariant::Tonal},
+            {L("描边", "Outlined"), md::ButtonVariant::Outlined},
+            {L("文本", "Text"), md::ButtonVariant::Text},
         };
         QVector<md::MdButton *> row;
         for (const auto &spec : specs) {
@@ -214,8 +231,11 @@ void ButtonPage::build(GalleryContext &context)
     }
 
     // --- five sizes --------------------------------------------------------
-    context.section(QStringLiteral("Five Expressive sizes"));
-    context.paragraph(QStringLiteral(
+    context.section(L("五种 Expressive 尺寸", "Five Expressive sizes"));
+    context.paragraph(L(
+        "md.comp.button.<size> 定义高度、图标尺寸、前后内边距、描边宽度与字体样式。"
+        "容器高度与令牌值分毫不差；其外的控件略高一些，因为它为向外扩展的焦点指示器"
+        "预留了空间——否则 Qt 会在控件边缘把它裁掉。",
         "md.comp.button.<size> sets the height, the icon size, the leading and trailing "
         "padding, the outline width and the type style. The container is exactly the token "
         "height; the widget around it is slightly taller because it reserves room for the "
@@ -241,8 +261,11 @@ void ButtonPage::build(GalleryContext &context)
     }
 
     // --- two shapes --------------------------------------------------------
-    context.section(QStringLiteral("Two container shapes"));
-    context.paragraph(QStringLiteral(
+    context.section(L("两种容器形状", "Two container shapes"));
+    context.paragraph(L(
+        "container.shape.round 在任何尺寸下都是 corner-full；.square 随尺寸递增"
+        "（12 / 12 / 16 / 28 / 28 px），按压形状比它低一档。按一个按钮看圆角形变——"
+        "那是弹簧，不是固定时长的缓动曲线。",
         "Container.shape.round is corner-full at every size; .square steps up with the size "
         "(12 / 12 / 16 / 28 / 28 px) and the pressed shape is one step below it. Press one to "
         "see the corners morph — it is a spring, not a fixed-duration easing curve."));
@@ -262,8 +285,11 @@ void ButtonPage::build(GalleryContext &context)
     }
 
     // --- icons -------------------------------------------------------------
-    context.section(QStringLiteral("Leading and trailing icons"));
-    context.paragraph(QStringLiteral(
+    context.section(L("前导与尾随图标", "Leading and trailing icons"));
+    context.paragraph(L(
+        "前导与尾随分别对应 inline-start 与 inline-end，因此在页眉的 rtl 开关下会互换。"
+        "图标盒是 md.comp.button.<size>.icon.size，与标签的间距是 icon-label-space，"
+        "它只在存在标签需要分隔时生效。",
         "Leading and trailing are inline-start and inline-end, so they swap under the header's "
         "rtl toggle. The icon box is md.comp.button.<size>.icon.size and the gap to the label "
         "is icon-label-space, which only applies when there is a label to separate."));
@@ -274,21 +300,21 @@ void ButtonPage::build(GalleryContext &context)
             widget->setButtonSize(md::ButtonSize::Small);
         };
 
-        auto *plain = button(QStringLiteral("icon-plain"), QStringLiteral("Label"), asSmallFilled);
+        auto *plain = button(QStringLiteral("icon-plain"), L("标签", "Label"), asSmallFilled);
 
-        auto *leading = button(QStringLiteral("icon-leading"), QStringLiteral("Send"),
+        auto *leading = button(QStringLiteral("icon-leading"), L("发送", "Send"),
                                [&asSmallFilled](md::MdButton *widget) {
                                    asSmallFilled(widget);
                                    widget->setLeadingIcon(QStringLiteral("send"));
                                });
 
-        auto *trailing = button(QStringLiteral("icon-trailing"), QStringLiteral("Open"),
+        auto *trailing = button(QStringLiteral("icon-trailing"), L("打开", "Open"),
                                 [&asSmallFilled](md::MdButton *widget) {
                                     asSmallFilled(widget);
                                     widget->setTrailingIcon(QStringLiteral("arrow_forward"));
                                 });
 
-        auto *both = button(QStringLiteral("icon-both"), QStringLiteral("Share"),
+        auto *both = button(QStringLiteral("icon-both"), L("分享", "Share"),
                             [&asSmallFilled](md::MdButton *widget) {
                                 asSmallFilled(widget);
                                 widget->setLeadingIcon(QStringLiteral("share"));
@@ -299,8 +325,11 @@ void ButtonPage::build(GalleryContext &context)
     }
 
     // --- states ------------------------------------------------------------
-    context.section(QStringLiteral("States"));
-    context.paragraph(QStringLiteral(
+    context.section(L("状态", "States"));
+    context.paragraph(L(
+        "上方与下方的每个按钮上，悬停、聚焦与按压都是实时生效的——本页不做任何伪造，"
+        "因为状态层与涟漪是最容易出错的两套机制，值得亲手试试。这里同时展示了禁用与"
+        "软禁用：禁用的按钮会退出 Tab 顺序，软禁用的按钮则保留在其中。",
         "Hover, focus and press are live on every button above and below — this page does not "
         "fake them, because the state layer and the ripple are the two mechanisms most likely "
         "to be wrong and they are worth poking at. Disabled and soft-disabled are shown here: "
@@ -311,7 +340,7 @@ void ButtonPage::build(GalleryContext &context)
         for (int i = 0; i < int(md::ButtonVariant::Count); ++i) {
             const auto variant = md::ButtonVariant(i);
             row.append(button(QStringLiteral("off-") + md::buttonVariantName(variant),
-                              md::buttonVariantName(variant) + QStringLiteral(" off"),
+                              md::buttonVariantName(variant) + L(" 禁用", " off"),
                               [variant](md::MdButton *widget) {
                                   widget->setVariant(variant);
                                   widget->setButtonSize(md::ButtonSize::Small);
@@ -322,19 +351,19 @@ void ButtonPage::build(GalleryContext &context)
     }
     {
         auto *softOutlined = button(QStringLiteral("soft-outlined"),
-                                    QStringLiteral("Soft-disabled"),
+                                    L("软禁用", "Soft-disabled"),
                                     [](md::MdButton *widget) {
                                         widget->setVariant(md::ButtonVariant::Outlined);
                                         widget->setSoftDisabled(true);
                                     });
 
-        auto *softFilled = button(QStringLiteral("soft-filled"), QStringLiteral("Tab to me"),
+        auto *softFilled = button(QStringLiteral("soft-filled"), L("用 Tab 切到我", "Tab to me"),
                                   [](md::MdButton *widget) {
                                       widget->setVariant(md::ButtonVariant::Filled);
                                       widget->setSoftDisabled(true);
                                   });
 
-        auto *mnemonic = button(QStringLiteral("mnemonic"), QStringLiteral("&Save"),
+        auto *mnemonic = button(QStringLiteral("mnemonic"), L("保存(&S)", "&Save"),
                                 [](md::MdButton *widget) {
                                     widget->setVariant(md::ButtonVariant::Filled);
                                 });
@@ -349,7 +378,7 @@ void ButtonPage::build(GalleryContext &context)
     Q_ASSERT(m_slots.size() == m_bank.size());
 
     // --- token facts -------------------------------------------------------
-    context.section(QStringLiteral("Token facts this page is pinned to"));
+    context.section(L("本页锁定的令牌事实", "Token facts this page is pinned to"));
     context.detail(QStringLiteral(
         "src: material-web tokens/versions/latest/sass/_md-comp-button{,-<style>,-<size>}.scss"));
     context.detail(QStringLiteral(
@@ -364,8 +393,9 @@ void ButtonPage::build(GalleryContext &context)
     context.detail(QStringLiteral(
         "focus     md.comp.button.focus.indicator: 3 px stroke, 2 px gap, secondary"));
     context.space(8.0);
-    context.detail(QStringLiteral(
-        "TestMd3Button pins all 5 x 5 x 2 combinations field by field against those files."));
+    context.detail(L("TestMd3Button 将全部 5 x 5 x 2 种组合逐字段与这些文件比对锁定。",
+                     "TestMd3Button pins all 5 x 5 x 2 combinations field by field against "
+                     "those files."));
 }
 
 void ButtonPage::placeChildren()

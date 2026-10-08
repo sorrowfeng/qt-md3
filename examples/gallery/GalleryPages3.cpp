@@ -3,7 +3,10 @@
 
 #include "GalleryPages.h"
 
+#include "I18n.h"
+
 #include <QtCore/QVariant>
+#include <QtCore/QStringList>
 #include <QtGui/QFontMetricsF>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
@@ -70,20 +73,29 @@ InteractionPage::InteractionPage(QWidget *parent)
 
 QString InteractionPage::title() const
 {
+    return L("交互反馈", "Interaction feedback");
+}
+
+QString InteractionPage::slug() const
+{
     return QStringLiteral("Interaction feedback");
 }
 
 QString InteractionPage::subtitle() const
 {
-    return QStringLiteral("State layers, the press ripple and the focus indicator — press one.");
+    return L("状态层、按压涟漪与焦点指示器——来按一下。",
+             "State layers, the press ripple and the focus indicator — press one.");
 }
 
 void InteractionPage::build(GalleryContext &context)
 {
     QPainter *painter = context.painter();
 
-    context.section(QStringLiteral("Two independent mechanisms"));
-    context.paragraph(QStringLiteral(
+    context.section(L("两套独立机制", "Two independent mechanisms"));
+    context.paragraph(L(
+        "悬停与聚焦会为组件着色，并在状态持续期间保持着色。涟漪则不同：它只在按压的"
+        "一瞬间存在，从触点出发以圆形扩散，并被裁剪进组件当前的圆角形状。二者刻意分成"
+        "两条代码路径，因为把它们合并正是控件出现永不消失的着色的原因。",
         "Hover and focus tint a component and keep it tinted for as long as the state holds. "
         "A ripple is different: it only exists for the moment of the press, expands as a "
         "circle from the point that was touched, and is clipped to whatever corner shape the "
@@ -91,12 +103,15 @@ void InteractionPage::build(GalleryContext &context)
         "them is how a control ends up with a tint that never goes away."));
 
     // Lay the targets out across the available width.
+    const QStringList targetLabels = {L("点我", "press me"), L("还有我", "and me"),
+                                      L("键盘", "keyboard"), L("换我", "or me")};
     const qreal targetWidth =
         qMax<qreal>((context.width() - kTargetGap * (m_targets.size() - 1))
                         / qMax<qreal>(qreal(m_targets.size()), 1.0),
                     120.0);
     const QRectF row = context.band(kTargetHeight + 20.0);
     for (int i = 0; i < m_targets.size(); ++i) {
+        m_targets[i].label = targetLabels.value(i);
         m_targets[i].rect = QRectF(row.left() + i * (targetWidth + kTargetGap), row.top(),
                                    targetWidth, kTargetHeight);
         m_ripples[i]->setBounds(m_targets[i].rect.size());
@@ -124,8 +139,10 @@ void InteractionPage::build(GalleryContext &context)
     }
     context.space(24.0);
 
-    context.section(QStringLiteral("State layer opacities"));
-    context.paragraph(QStringLiteral(
+    context.section(L("状态层透明度", "State layer opacities"));
+    context.paragraph(L(
+        "同一时刻只会应用一层。当多个状态叠加时，MD3 不会把透明度相加——由最强的单一"
+        "状态胜出，这就是下方色块呈现离散台阶而非叠加和的原因。",
         "Only one layer is ever applied at a time. When several states overlap MD3 does not "
         "stack the opacities — the strongest single state wins, which is why the chip below "
         "shows a discrete step rather than a sum."));
@@ -158,23 +175,28 @@ void InteractionPage::build(GalleryContext &context)
         painter->drawText(QRectF(chip.right() + 20.0, chipRow.top(), chipRow.width() - chipWidth - 20.0,
                                  chipRow.height()),
                           Qt::AlignLeft | Qt::AlignVCenter,
-                          QStringLiteral("alpha %1")
+                          L("透明度 %1", "alpha %1")
                               .arg(md::MdStateLayer::opacity(kind), 0, 'f', 2));
         painter->restore();
     }
     context.space(20.0);
 
-    context.section(QStringLiteral("Focus indicator"));
-    context.paragraph(QStringLiteral(
+    context.section(L("焦点指示器", "Focus indicator"));
+    context.paragraph(L(
+        "焦点环厚度为三个设备无关像素，与组件保持两个像素的净距，因此永远不会压到它所指"
+        "的对象。获得焦点时它先生长到 8px，再在 600 ms emphasized 曲线的剩余时间内回落，"
+        "这正是它醒目的原因。按 Tab，然后用方向键操作。",
         "The ring is three device-independent pixels thick and sits two pixels clear of the "
         "component, so it never overlaps what it is pointing at. On focus it first grows to "
         "8px and then settles back over the rest of a 600 ms emphasized curve, which is what "
         "makes it catch the eye. Press Tab, then use the arrow keys."));
-    context.detail(QStringLiteral("width %1 dp · gap %2 dp · grow to %3 dp")
+    context.detail(L("宽度 %1 dp · 间距 %2 dp · 生长至 %3 dp",
+                     "width %1 dp · gap %2 dp · grow to %3 dp")
                        .arg(md::MdFocusRingSpec().width, 0, 'f', 0)
                        .arg(md::MdFocusRingSpec().outwardOffset, 0, 'f', 0)
                        .arg(md::MdFocusRingSpec().activeWidth, 0, 'f', 0));
-    context.detail(QStringLiteral("duration %1 ms, split %2 ms grow + %3 ms settle")
+    context.detail(L("时长 %1 ms，其中 %2 ms 生长 + %3 ms 回落",
+                     "duration %1 ms, split %2 ms grow + %3 ms settle")
                        .arg(md::MdFocusRing::totalMs())
                        .arg(md::MdFocusRing::growMs())
                        .arg(md::MdFocusRing::settleMs()));
@@ -339,12 +361,18 @@ void InteractionPage::focusOutEvent(QFocusEvent *event)
 
 QString IconPage::title() const
 {
+    return L("图标", "Icons");
+}
+
+QString IconPage::slug() const
+{
     return QStringLiteral("Icons");
 }
 
 QString IconPage::subtitle() const
 {
-    return QStringLiteral("Material Symbols' four axes, over the bundled classic SVG baseline.");
+    return L("Material Symbols 的四个可变轴，及其下的经典 SVG 内置基线。",
+             "Material Symbols' four axes, over the bundled classic SVG baseline.");
 }
 
 void IconPage::build(GalleryContext &context)
@@ -354,24 +382,31 @@ void IconPage::build(GalleryContext &context)
 
     const md::MdIconSet resolved = md::MdIcon::resolveSet(md::MdIconSet::Auto);
 
-    context.section(QStringLiteral("Back ends"));
-    context.paragraph(QStringLiteral(
+    context.section(L("后端", "Back ends"));
+    context.paragraph(L(
+        "Material Symbols 是一款带四个可变轴的字体：FILL 把描边字形换成实心版本，wght "
+        "改变笔画粗细，GRAD 在不改变步进宽度的情况下调整光学字重，opsz 让字形适应自身"
+        "尺寸。这正是它是一套字体而非图标集的原因。",
         "Material Symbols is a variable font with four axes: FILL swaps the outlined glyph for "
         "its filled counterpart, wght changes stroke weight, GRAD changes optical weight "
         "without altering advance width, and opsz adapts the glyph to its size. That is what "
         "makes it a font rather than an icon set."));
-    context.detail(QStringLiteral("codepoints known     %1").arg(md::MdIcon::count()));
-    context.detail(QStringLiteral("classic svg bundled  %1").arg(md::MdIcon::classicNames().size()));
-    context.detail(QStringLiteral("resolved back end    %1").arg(md::iconSetName(resolved)));
-    context.detail(QStringLiteral("symbols font         %1")
+    context.detail(L("已知码点             %1", "codepoints known     %1").arg(md::MdIcon::count()));
+    context.detail(L("内置经典 SVG         %1", "classic svg bundled  %1")
+                       .arg(md::MdIcon::classicNames().size()));
+    context.detail(L("解析的后端           %1", "resolved back end    %1")
+                       .arg(md::iconSetName(resolved)));
+    context.detail(L("Symbols 字体         %1", "symbols font         %1")
                        .arg(md::MdIcon::isFontAvailable(md::MdIconFamily::Outlined)
-                                ? QStringLiteral("available")
-                                : QStringLiteral("not installed — falling back to SVG")));
+                                ? L("可用", "available")
+                                : L("未安装 —— 回退到 SVG", "not installed — falling back to SVG")));
     context.space(14.0);
 
     // --- axis chips -------------------------------------------------------
-    context.section(QStringLiteral("Axes"));
-    context.paragraph(QStringLiteral(
+    context.section(L("可变轴", "Axes"));
+    context.paragraph(L(
+        "点击一个数值即可应用。当 Symbols 字体未安装时，这些色块仍会记录轴值，但下方的 "
+        "SVG 基线只有一种字重——这恰恰说明了静态图标集为何满足不了 MD3。",
         "Click a value to apply it. When the Symbols font is not installed the chips still "
         "record the axis values, but the SVG baseline below has only one weight — which is "
         "exactly the limitation that makes a static icon set insufficient for MD3."));
@@ -434,7 +469,7 @@ void IconPage::build(GalleryContext &context)
     context.space(16.0);
 
     // --- Symbols preview --------------------------------------------------
-    context.section(QStringLiteral("Material Symbols preview"));
+    context.section(L("Material Symbols 预览", "Material Symbols preview"));
     static const char *kSymbolNames[] = {"home", "favorite", "settings", "search",
                                          "notifications", "palette"};
     const qreal symbolBox = 56.0;
@@ -465,8 +500,11 @@ void IconPage::build(GalleryContext &context)
     context.space(20.0);
 
     // --- classic grid -----------------------------------------------------
-    context.section(QStringLiteral("Classic Material Icons baseline"));
-    context.paragraph(QStringLiteral(
+    context.section(L("经典 Material Icons 基线", "Classic Material Icons baseline"));
+    context.paragraph(L(
+        "这是 Material Symbols 出现之前的那套 SVG 图标集。之所以内置它，是为了让库在完全"
+        "不安装字体的情况下也能用，但它只是回退方案：单一字重、无光学尺寸、无 grade，"
+        "只有当初提交进仓库的那些图标。需要完整图标集的场景应安装可变字体。",
         "The SVG set that shipped before Material Symbols. It is bundled so the library is "
         "useful with no font installation at all, but it is a fallback: one weight, no optical "
         "size, no grade, and only the icons that were checked in. Anything requiring the full "
@@ -496,7 +534,7 @@ void IconPage::build(GalleryContext &context)
         painter->restore();
     }
     context.space(12.0);
-    context.chip(QStringLiteral("%1 icons bundled").arg(names.size()),
+    context.chip(L("内置 %1 个图标", "%1 icons bundled").arg(names.size()),
                  role(md::ColorRole::SecondaryContainer),
                  role(md::ColorRole::OnSecondaryContainer));
 }

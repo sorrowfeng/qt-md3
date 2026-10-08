@@ -18,6 +18,7 @@ class OverviewPage : public GalleryPage
 public:
     using GalleryPage::GalleryPage;
     QString title() const override;
+    QString slug() const override;
     QString subtitle() const override;
     void build(GalleryContext &context) override;
 };
@@ -29,6 +30,7 @@ class ColourPage : public GalleryPage
 public:
     using GalleryPage::GalleryPage;
     QString title() const override;
+    QString slug() const override;
     QString subtitle() const override;
     void build(GalleryContext &context) override;
 };
@@ -41,6 +43,7 @@ class TypePage : public GalleryPage
 public:
     using GalleryPage::GalleryPage;
     QString title() const override;
+    QString slug() const override;
     QString subtitle() const override;
     void build(GalleryContext &context) override;
 };
@@ -52,6 +55,7 @@ class SurfacePage : public GalleryPage
 public:
     explicit SurfacePage(QWidget *parent = nullptr);
     QString title() const override;
+    QString slug() const override;
     QString subtitle() const override;
     void build(GalleryContext &context) override;
 
@@ -74,6 +78,7 @@ class MotionPage : public GalleryPage
 public:
     explicit MotionPage(QWidget *parent = nullptr);
     QString title() const override;
+    QString slug() const override;
     QString subtitle() const override;
     void build(GalleryContext &context) override;
 
@@ -91,6 +96,7 @@ class InteractionPage : public GalleryPage
 public:
     explicit InteractionPage(QWidget *parent = nullptr);
     QString title() const override;
+    QString slug() const override;
     QString subtitle() const override;
     void build(GalleryContext &context) override;
 
@@ -132,6 +138,7 @@ class IconPage : public GalleryPage
 public:
     using GalleryPage::GalleryPage;
     QString title() const override;
+    QString slug() const override;
     QString subtitle() const override;
     void build(GalleryContext &context) override;
 

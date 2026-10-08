@@ -250,7 +250,10 @@ void GalleryHeader::rebuildButtons()
         {4, md::densityName(theme.density()), QStringLiteral("straighten")},
         {5, theme.isRightToLeft() ? QStringLiteral("rtl") : QStringLiteral("ltr"),
          QStringLiteral("arrow_forward")},
-        {6, theme.languageTag(), QStringLiteral("text_fields")},
+        // Two languages only: Simplified Chinese (default) and English.
+        {6, theme.languageTag() == QStringLiteral("zh-Hans") ? QStringLiteral("中文")
+                                                            : QStringLiteral("English"),
+         QStringLiteral("text_fields")},
         {0, theme.themeMode() == md::ThemeMode::Dark ? QStringLiteral("dark")
                                                      : QStringLiteral("light"),
          theme.themeMode() == md::ThemeMode::Dark ? QStringLiteral("dark_mode")
@@ -294,7 +297,7 @@ void GalleryHeader::paintEvent(QPaintEvent *event)
     drawLabel(painter, QRectF(24.0, 36.0, width() * 0.5, 22.0),
               md::MdTypeScale::font(md::TypeStyle::LabelMedium),
               theme.color(md::ColorRole::OnSurfaceVariant),
-              QStringLiteral("qt-md3 component gallery"));
+              QStringLiteral("qt-md3 组件画廊 / component gallery"));
 
     for (int i = 0; i < m_buttons.size(); ++i) {
         const Button &button = m_buttons.at(i);
@@ -480,12 +483,12 @@ GalleryWindow::GalleryWindow(QWidget *parent)
     });
     connect(m_header, &GalleryHeader::languageCycled, this, [] {
         md::MdTheme &theme = md::MdTheme::instance();
-        // Cycling the tag re-runs the script-category lookup, which is what
-        // drives the line-height adjustment on the Type page.
-        static const QStringList tags = {QStringLiteral("en"), QStringLiteral("zh-Hans"),
-                                         QStringLiteral("ja"), QStringLiteral("hi")};
-        const int index = tags.indexOf(theme.languageTag());
-        theme.setLanguageTag(tags.at((index + 1) % tags.size()));
+        // A plain toggle: Simplified Chinese is the default, English is the
+        // only alternative. Switching the tag re-runs the script-category
+        // lookup, which is what drives the line-height adjustment on the Type
+        // page, and re-renders every page's bilingual copy.
+        const bool toChinese = theme.languageTag() != QStringLiteral("zh-Hans");
+        theme.setLanguageTag(toChinese ? QStringLiteral("zh-Hans") : QStringLiteral("en"));
     });
 
     // One subscription for the whole shell.
@@ -510,6 +513,14 @@ QString GalleryWindow::pageTitle(int index) const
         return QString();
     }
     return m_pages.at(index)->title();
+}
+
+QString GalleryWindow::pageSlug(int index) const
+{
+    if (index < 0 || index >= m_pages.size()) {
+        return QString();
+    }
+    return m_pages.at(index)->slug();
 }
 
 QWidget *GalleryWindow::pageWidget(int index) const
