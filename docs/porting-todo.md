@@ -23,6 +23,12 @@ When the spec page and the token export disagree, do not silently pick one:
 record both values in this file under the component's entry and state which
 one won and why (see the Button groups entry for a worked example).
 
+For **interaction behaviour** (hover / press / focus / ripple / shape motion)
+the standing comparison against the material-web demo site lives in
+[`interaction-reference.md`](interaction-reference.md) — check it before
+reporting a click effect as "different from the official demo", since
+material-web is standard M3 while qt-md3 implements M3 Expressive.
+
 ## Stage 1 — base modules
 
 All nineteen modules are implemented. What follows is what is *not* finished
