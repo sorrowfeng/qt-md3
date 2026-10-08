@@ -382,6 +382,31 @@ set_tests_properties(TestMd3LoadingIndicator PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3LoadingIndicator)
 
+# MdSnackbar, the fourth Communication family: the 34.0.21 export (one set,
+# no variants, both elements' state rows) plus the Compose-port behaviour —
+# the one-row/new-line measure policies, the keyboard activation contract and
+# the host's queue/duration/transition rules.
+add_executable(TestMd3Snackbar
+    TestMd3Snackbar.cpp
+)
+
+target_link_libraries(TestMd3Snackbar
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Snackbar COMMAND TestMd3Snackbar)
+set_tests_properties(TestMd3Snackbar PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Snackbar)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

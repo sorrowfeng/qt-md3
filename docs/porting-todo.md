@@ -447,8 +447,8 @@ A disabled selected segment keeps its secondary-container fill: the export
 has no disabled-container row and Compose's `disabledActiveContainerColor`
 is `SelectedContainerColor`.
 
-- [ ] §1.3 Communication — **Badges, Progress indicators and Loading indicator
-      ported**; snackbars and tooltips remain.
+- [ ] §1.3 Communication — **Badges, Progress indicators, Loading indicator and
+      Snackbar ported**; tooltips remain.
 
 #### Badges (ported)
 
@@ -567,6 +567,43 @@ track is painted (the merged export's `track.color`; material-web's legacy
   never freezes at the reference's visibility threshold (a sub-pixel
   difference at the snap, where the reference may hold at ≈0.99), and the
   morph path is a dense polyline rather than interpolated cubics.
+
+#### Snackbar (ported)
+
+`MdSnackbar` + `MdSnackbarHost` + `MdSnackbarStyle` + `MdSnackbarTokens`,
+locked by `TestMd3Snackbar`. Four facts shape the implementation:
+
+* **One published set, and the inverse roles carry it.** The 34.0.21 export
+  has no variants and no per-state colour rows beyond the state layers:
+  inverse-surface container (level 3, corner-extra-small), body-medium
+  supporting text in inverse-on-surface, label-large action in
+  inverse-primary, 24 px icon in inverse-on-surface. The export *does*
+  publish hover / focus / pressed rows for both interactive elements — the
+  first Communication family whose published state rows are all painted.
+  The ripple colour follows the pressed row (the project's ripple rule).
+* **The layout rows do not exist; Compose is the source, again.** The
+  one-row and new-line layouts port `OneRowSnackbar` / `NewLineButtonSnackbar`
+  (the styling-fix versions): container max width 600, start 16, the
+  text-end extra spacing 8, text vertical padding 14, first line at 30, the
+  new-line action's 4 px bottom padding and its 8 px end inset without a
+  dismiss icon. The single-line 48 / two-line 68 heights *are* export rows.
+  The action's hit region plays the role of Compose's TextButton bounds
+  (label + 12 px chrome) and the dismiss icon sits in a 40 px icon-button
+  chrome — both approximations are labelled in the token header.
+* **MdSnackbar is the visuals only; MdSnackbarHost is the other half.**
+  Compose's `SnackbarHostState.showSnackbar` owns the queue, the
+  4000/10000/Indefinite durations and the rule that an actionable snackbar
+  never self-dismisses; the host ports exactly that, plus the
+  FadeInFadeOutWithScale transition (opacity on the effects-fast spring,
+  scale 0.8→1 on the spatial-fast spring — both already in `MdMotion`).
+  One open question: Compose de-dupes only the *current* request, so this
+  host drops queued duplicates of the current one as its own back-pressure;
+  the upstream queue semantics are unspecified.
+* **A Qt child widget clips its own rect, so the level-3 shadow needs
+  headroom.** The widget rectangle is the container grown by an 8 px shadow
+  margin (`kShadowMargin`); the container sits inset and every layout runs
+  on it. The host positions the widget rect, so the shadow survives the
+  overlay.
 
 ### Gallery scaffolding fixes found while building the first component
 

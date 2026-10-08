@@ -198,6 +198,7 @@ GalleryPage *createBadgePage();
 /// Communication — Progress indicators (linear + circular, determinate/indeterminate/four-color).
 GalleryPage *createProgressIndicatorPage();
 GalleryPage *createLoadingIndicatorPage();
+GalleryPage *createSnackbarPage();
 
 } // namespace gallery
 

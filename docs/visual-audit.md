@@ -57,6 +57,7 @@ captured official screenshot.
 | Badges | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Progress indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Loading indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Snackbars | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -322,6 +323,26 @@ against the catalogue's reference images (soft-burst's 10 soft points,
 9-cookie's rounded lobes, the 45°-tilted pill, the tilted oval). The morph's
 radial-interpolation divergence is structural (see porting-todo.md) and
 cannot diverge visually for these star-convex shapes.
+
+### Snackbars
+
+Page 19 (`Snackbars`) places static snapshots: a one-row message-only
+snackbar, one with action + dismiss, a wrapped two-line message, and the
+new-line action layout. Checked against the page render:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Container | inverse-surface, corner-extra-small, the level-3 shadow visible around the 8 px margin | Yes |
+| Supporting text | body-medium, inverse-on-surface, vertically centred (one row) / top-14 px (new line) | Yes |
+| Action | label-large inverse-primary label, hover/pressed state layers + ripple on the button-chrome region | Yes (live) |
+| Dismiss icon | 24 px close glyph in inverse-on-surface, 40 px chrome flush right | Yes |
+| Wrapped one-row | first line at 30 px, height ≥ 68 | Yes |
+| New-line action | bottom-right, 4 px above the bottom, 8 px end inset without dismiss | Yes |
+| Host transition | fade + scale (0.8→1) on enter/exit, springs | Yes (exercise) |
+
+No side-by-side official reference exists (material-web ships no snackbar
+web component; the behaviour source is Compose), so this stays
+`Needs visual QA` like the other Compose-sourced families.
 
 ## 2026-10 comparison re-check (official vs ported)
 
