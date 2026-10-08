@@ -7,15 +7,15 @@ Last updated: 2026-10-08
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
-| Stage | Stage 1 — Batch 0 closed; §1.2 Actions under way |
-| Stage 1 families complete | `3 / 36` (Buttons, Button groups, Icon buttons) |
+| Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication under way |
+| Stage 1 families complete | `9 / 36` (§1.2 Actions × 8, Badges) |
 | Base modules | `21 / 21` |
-| Public components | `9` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`) |
-| Style classes | `9` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`) |
-| Example pages | `10` |
+| Public components | `11` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`) |
+| Style classes | `10` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`) |
+| Example pages | `16` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `21` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `22` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 — all eight Actions families
+### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges
 
 | Component | Covers |
 | --- | --- |
@@ -117,6 +117,10 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdSplitButtonTokens` | the `md.comp.split-button.<size>.*` metric layer (five rows verbatim, inner corners resolved from the shape scale) plus the button family's colour / type / focus rows at the identity size mapping — the spec page: "the same color schemes as standard buttons". |
 | `MdSegmentedButton` | one `QWidget` with N press targets: segments share one 40 px pill outline, neighbours overlap by exactly the outline width so the shared edge is the divider, `itemShape` rounds only the row's ends, and the check scales in on a reserved 18 px icon slot (spring-fast-spatial) so the label never moves. Single-choice (radio) by default, multi-choice per segment. |
 | `MdSegmentedButtonTokens` | the single `md.comp.outlined-segmented-button.*` set verbatim (no size scale, no colour variants) with the Compose-sourced rows the export lacks (8 px icon spacing, 12 px content padding, spring-fast-spatial check motion) — every borrow labelled in the header. |
+| `MdBadge` | `QWidget` (non-interactive by contract: `Qt::NoFocus`, transparent for mouse events), one token set with two forms decided by content — the 6 px dot and the minimum-16 px pill (label-small on-error text, 4 px Compose side padding). Empty accessible name falls back to "badge". One `Q_PROPERTY` (`text`) with NOTIFY. |
+| `MdBadgedBox` | the anchor container: content widget plus one `MdBadge` positioned with the Compose offsets (dot 6/6, pill 12/14); reserves the pill overhang (width − 12 / height − 14) in its own geometry because a Qt child is clipped to its parent — the one deliberate divergence from Compose's free overlap, recorded in the header. |
+| `MdBadgeTokens` | the `md.comp.badge.*` value layer verbatim (dot 6, large 16, both corner-full, error / on-error, label-small); no state rows exist in the export — non-interactivity is a published fact, not a gap. |
+| `MdBadgeStyle` | Pattern A style: the quietest painter in the library — a corner-full container and, in the content form, one label-small text. No state layer, no ripple, no focus indicator. |
 
 ## Known gaps, recorded rather than hidden
 
@@ -226,10 +230,10 @@ gallery scaffolding, unreachable from the seven token-only pages.
 
 ## What is next
 
-Stage 1 §1.2, in official order — Buttons is complete:
+Stage 1 §1.3 Communication, in official order — Badges is complete:
 
-**Button groups, icon buttons, FABs, extended FABs, FAB menu, split buttons,
-segmented buttons.** Then on to §1.3 Communication.
+**Progress indicators, loading indicator, snackbars, tooltips.** Then on to
+§1.4 Containment.
 
 Each component lands as its own commit and must satisfy all twelve Definition of
 Done items before the next one starts, including an independent gallery page, a

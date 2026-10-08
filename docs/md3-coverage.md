@@ -231,11 +231,41 @@ smoothed:
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Badges | MdBadge | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Badges | MdBadge + MdBadgedBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Progress indicators | MdProgressIndicator | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | ★ Loading indicator | MdLoadingIndicator | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Snackbar | MdSnackbar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Tooltips | MdTooltip | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+
+### Badges — the two rows that are still `🚧`
+
+Same standing as the Actions families: light/dark and RTL are handled, while
+seed change, contrast level, density and font switch have not yet been
+exercised *against the badge page*, and the side-by-side reference comparison
+has not been recorded. Neither is a known defect; both are unfinished evidence.
+
+Four transcription notes are pinned by `TestMd3Badge` rather than smoothed:
+
+* **material-web does not implement the Badge component** — there is no
+  `packages/badge`. The token file
+  `tokens/versions/latest/sass/_md-comp-badge.scss` is the only material-web
+  fact (dot 6 px, large minimum 16 px, both corner-full, error / on-error,
+  label-small text); every behaviour row is annotated `[compose]` and comes
+  from androidx `Badge.kt`;
+* **the export publishes no state rows at all** — a badge is not interactive:
+  no hover, no press, no focus indicator, no disabled row. The widget contract
+  is `Qt::NoFocus` plus `WA_TransparentForMouseEvents`, which is also what
+  lets an anchored badge pass clicks through to its content (Compose: not
+  wrapping the badge in a Surface "because it blocks touch propagation");
+* **the anchoring offsets are Compose facts** — the dot sits on the anchor's
+  top-end corner (offset 6/6), the pill's start edge 12 px inside the anchor's
+  end edge and its bottom edge 14 px below the anchor's top edge, with 4 px
+  label side padding;
+* **one Qt adaptation, recorded rather than hidden**: Compose lets the pill
+  overlap the surroundings freely, but a Qt child widget is clipped to its
+  parent, so `MdBadgedBox` reserves the overhang (pill width − 12 /
+  height − 14) in its own geometry — the painted result is identical, only
+  the surrounding layout sees a slightly larger box.
 
 ## 1.4 Containment
 

@@ -447,6 +447,37 @@ A disabled selected segment keeps its secondary-container fill: the export
 has no disabled-container row and Compose's `disabledActiveContainerColor`
 is `SelectedContainerColor`.
 
+- [ ] §1.3 Communication — **Badges ported**; progress indicators, loading
+      indicator, snackbars and tooltips remain.
+
+#### Badges (ported)
+
+`MdBadge` + `MdBadgedBox` + `MdBadgeStyle` + `MdBadgeTokens`, locked by
+`TestMd3Badge`. The quietest family so far — four facts shape it:
+
+* **material-web does not implement the Badge component.** There is no
+  `packages/badge`; the token file
+  `tokens/versions/latest/sass/_md-comp-badge.scss` is the only material-web
+  fact (dot 6 px, large minimum 16 px, both corner-full, error / on-error,
+  label-small label). Every behaviour row is annotated `[compose]` and comes
+  from androidx `Badge.kt` — the second family (after FAB menu's motion) with
+  no web behaviour source at all.
+* **The export publishes no state rows at all.** A badge is not interactive:
+  no hover, no press, no focus indicator, no disabled row. The widget
+  contract is `Qt::NoFocus` + `WA_TransparentForMouseEvents`, which is what
+  lets an anchored badge pass clicks through — Compose achieves the same by
+  not wrapping the badge in a Surface ("it blocks touch propagation behind
+  it").
+* **The anchoring offsets are Compose facts.** The dot sits on the anchor's
+  top-end corner (offset 6/6); the pill's start edge sits 12 px inside the
+  anchor's end edge and its bottom edge 14 px below the anchor's top edge,
+  with 4 px label side padding.
+* **One Qt adaptation, recorded rather than hidden.** Compose lets the pill
+  overlap the surroundings freely; a Qt child widget is clipped to its
+  parent. `MdBadgedBox` therefore reserves the overhang (pill width − 12 /
+  height − 14) in its own geometry — the painted result is identical to
+  Compose's, only the surrounding layout sees a slightly larger box.
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

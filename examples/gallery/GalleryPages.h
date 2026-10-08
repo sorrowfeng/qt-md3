@@ -191,8 +191,8 @@ GalleryPage *createSplitButtonPage();
 /// Actions — Segmented buttons (one outlined set, single/multi choice, check scale-in).
 GalleryPage *createSegmentedButtonPage();
 
-/// Actions — FABs (four colour sets x three sizes x lowered / raised).
-GalleryPage *createFabPage();
+/// Communication — Badges (dot and content forms, anchored over icon buttons).
+GalleryPage *createBadgePage();
 
 } // namespace gallery
 

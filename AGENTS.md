@@ -154,9 +154,9 @@ Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is closed** — all
 twenty-one modules are implemented, and `ContrastLevel` is applied rather than
 stored, so reduced / standard / medium / high genuinely move the tones.
 
-Stage 1 §1.2 Actions is complete: **`MdButton`, `MdButtonGroup`,
-`MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdSplitButton` and
-`MdSegmentedButton` are done** —
+Stage 1 §1.2 Actions is complete and §1.3 Communication has started:
+**`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`,
+`MdFabMenu`, `MdSplitButton` and `MdSegmentedButton` are done** —
 Buttons (5 colour styles × 5 Expressive sizes × 2 shapes, leading/trailing
 icons, soft-disabled, live states), Button groups (standard / connected, five
 sizes, four selection modes, round / square, horizontal / vertical, arrow-key
@@ -169,9 +169,12 @@ button + up to six staggered items, Compose-sourced reveal motion) split
 buttons (button-family colour rows over its own metric rows, five sizes, the
 inner-corner morph with the trailing-selected 50%) and segmented buttons (one
 outlined set, segments overlapping by the outline width, itemShape ends, the
-check scale-in on a reserved icon slot) — which is `8 / 36` families and
-**all of §1.2**. The next families are §1.3 Communication — badges, progress
-indicators, the loading indicator, snackbars, tooltips.
+check scale-in on a reserved icon slot) — as is **`MdBadge` + `MdBadgedBox`**
+(one token set, two forms decided by content, no state rows at all, Compose-
+sourced anchoring with the overhang reserved for Qt clipping) — which is
+`9 / 36` families: **all of §1.2** plus the first §1.3 Communication family.
+The remaining §1.3 families are progress indicators, the loading indicator,
+snackbars and tooltips.
 
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and

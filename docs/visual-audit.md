@@ -54,6 +54,27 @@ captured official screenshot.
 | FAB menu | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Split buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Segmented buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Badges | `Needs visual QA` | `Needs visual QA` | All | See below. |
+
+### Badges
+
+Rendered via `qt-md3-example --screenshot` in light and dark modes (page
+`16-badges`) and read against `tokens/versions/latest/sass/
+_md-comp-badge.scss` plus androidx `Badge.kt` — material-web does not
+implement the component.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Dot form | 6 px circle, error, corner-full, on the anchor's top-end corner | Yes |
+| Content form | minimum 16 px pill, label-small on-error text, 4 px side padding, widening for "99+" | Yes |
+| Anchoring | dot offset 6/6 [compose]; pill 12/14 with the overhang reserved by `MdBadgedBox` | Yes |
+| Non-interactivity | no state layer, no ripple, no focus ring; clicks pass through | Yes (live) |
+| Both modes | error / on-error track the scheme; the dot and pills stay legible on dark surfaces | Yes |
+
+Same standing as the other families: no side-by-side official reference yet,
+so this stays `Needs visual QA` rather than `Pass`.
 
 ### Split buttons
 

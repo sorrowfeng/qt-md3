@@ -305,6 +305,32 @@ set_tests_properties(TestMd3SegmentedButton PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3SegmentedButton)
 
+# --- Communication -----------------------------------------------------------
+# MdBadge, the first Communication family: the token table (dot 6 px, content
+# pill minimum 16 px, error / on-error, label-small), the non-interactivity
+# contract (no state rows are published at all), the anchoring offsets of
+# MdBadgedBox, and the reserved-overhang Qt adaptation.
+add_executable(TestMd3Badge
+    TestMd3Badge.cpp
+)
+
+target_link_libraries(TestMd3Badge
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Badge COMMAND TestMd3Badge)
+set_tests_properties(TestMd3Badge PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Badge)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.
