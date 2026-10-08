@@ -221,6 +221,27 @@ set_tests_properties(TestMd3Fab PROPERTIES
 qt_md3_deploy_runtime(TestMd3Fab)
 qt_md3_deploy_runtime(TestMd3ButtonGroup)
 
+add_executable(TestMd3ExtendedFab
+    TestMd3ExtendedFab.cpp
+)
+
+target_link_libraries(TestMd3ExtendedFab
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3ExtendedFab COMMAND TestMd3ExtendedFab)
+set_tests_properties(TestMd3ExtendedFab PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3ExtendedFab)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

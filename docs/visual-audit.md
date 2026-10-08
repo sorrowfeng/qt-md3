@@ -50,6 +50,30 @@ captured official screenshot.
 | Button groups | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Icon buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Extended FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
+
+### Extended FABs
+
+Rendered via `qt-md3-example --screenshot` in light mode (page
+`12-extended-fabs`) and read against `tokens/versions/latest/sass/
+_md-comp-extended-fab{,-<size>,-<variant>}.scss`.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Container heights | 56 / 80 / 96 px | Yes |
+| Container corners | corner-large 16 · corner-large-increased 20 · corner-extra-large 28 | Yes |
+| Icon sizes | 24 / 28 / 36 px | Yes |
+| Label type scale | title-medium / title-large / headline-small, per size | Yes |
+| Colour sets | primary / secondary / tertiary (on-* content) · primary/secondary/tertiary-container (on-*-container content); no surface set | Yes |
+| Content-derived width | leading + icon + gap + label + trailing, per size rhythm (16/8/16 · 26/12/26 · 28/16/28) | Yes |
+| Elevation shadow | raised L3 resting, L4 hovered; lowered L1 / L2, no lowered container colour | Yes (live) |
+| Press response | ripple only — no pressed shape, no flat pressed layer | Yes (live) |
+| Disabled | on-surface @ 0.12 container, @ 0.38 icon and label, no shadow, no state layer | Yes |
+
+Same standing as the other families: no side-by-side official reference yet,
+so this stays `Needs visual QA` rather than `Pass`.
 
 ### FABs
 

@@ -327,7 +327,37 @@ Text inputs, then the M3 Expressive cross-cutting pass.
       margin, for a 40 px FAB). Neither is on the official spec page's FAB
       colour/size axes; both are candidates for a follow-up pass.
 
-- [ ] Extended FABs, FAB menu, Split buttons,
+- [x] **`MdExtendedFab`** — 6 colour sets (primary / secondary / tertiary +
+      three `*-container`, **no surface**) × 3 sizes (56 / 80 / 96 px, corners
+      16 / 20 / 28 px, icons 24 / 28 / 36, labels title-medium / title-large /
+      headline-small) × lowered / raised elevation rows. Width is derived —
+      leading space + icon + icon-label space + label + trailing space — which
+      is the entire point of an "extended" FAB. `TestMd3ExtendedFab` pins the
+      size table, all six colour sets, the lowered elevation rows and the
+      disabled row field by field.
+
+      Three facts this component adds to the record:
+
+      * **No surface colour set.** The FAB family publishes surface / primary
+        / secondary / tertiary; the extended FAB ships six sets and none of
+        them surface-based. The spec page agrees, so this is a family
+        difference, not an export gap.
+      * **The base metric set matches no size table.** The unprefixed
+        `_md-comp-extended-fab.scss` publishes 56 px, label-large and a
+        16/12/20 rhythm, while the `small` table is also 56 px but
+        title-medium with a 16/8/16 rhythm. The three explicit size tables
+        win; the base rows are the legacy standard-M3 default.
+      * **Deprecated focus rows ignored.** The colour sets carry *deprecated*
+        `focus-icon-color`/`focus-state-layer-color` rows pointing at the
+        `*-container` roles alongside the non-deprecated `focused-*` rows
+        pointing at the interactive roles; the latter are used, matching the
+        FAB family's reading.
+
+      Elevation rows are word-for-word the FAB family's (raised L3/L4,
+      lowered L1/L2), and — unlike the FAB — lowered changes elevation only:
+      there is no lowered container colour in this family.
+
+- [ ] FAB menu, Split buttons,
       Segmented buttons — the rest of §1.2.
 
 ### Gallery scaffolding fixes found while building the first component

@@ -10,12 +10,12 @@ Last updated: 2026-10-08
 | Stage | Stage 1 — Batch 0 closed; §1.2 Actions under way |
 | Stage 1 families complete | `3 / 36` (Buttons, Button groups, Icon buttons) |
 | Base modules | `21 / 21` |
-| Public components | `4` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`) |
-| Style classes | `5` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`) |
+| Public components | `5` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`) |
+| Style classes | `6` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`) |
 | Example pages | `10` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `17` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `18` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 — the first four components
+### Stage 1 §1.2 — the first five components
 
 | Component | Covers |
 | --- | --- |
@@ -108,6 +108,8 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdIconButtonTokens` | the `md.comp.icon-button.*` value layer: three colour families (plain / selected / unselected) over five states, the five-size metric table, the five shape slots and the press spring. |
 | `MdFab` | `QPushButton` subclass, 4 colour sets (surface / primary / secondary / tertiary) × 3 sizes (small 40 / medium 56 / large 96 px, corners 12 / 16 / 28 px) × lowered / raised elevation rows, icon-only by token arithmetic, the one Actions family with a real per-state shadow. Six `Q_PROPERTY`s with NOTIFY. |
 | `MdFabTokens` | the `md.comp.fab.*` value layer: the three-size metric table, the four colour sets (flat interactive rows), the lowered elevation rows and the spec-filled disabled row — the export publishes none. |
+| `MdExtendedFab` | `QPushButton` subclass, 6 colour sets (primary / secondary / tertiary + three `*-container`, no surface) × 3 sizes (small 56 / medium 80 / large 96 px, corners 16 / 20 / 28 px, icons 24 / 28 / 36) × lowered / raised elevation rows, icon + label on a content-derived width (leading + icon + gap + label + trailing, not a token). Six `Q_PROPERTY`s with NOTIFY. |
+| `MdExtendedFabTokens` | the `md.comp.extended-fab.*` value layer: the three-size metric + type-scale table, the six colour sets (flat interactive rows reusing the FAB family structs), the lowered elevation rows and the spec-filled disabled row. |
 
 ## Known gaps, recorded rather than hidden
 

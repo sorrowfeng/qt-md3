@@ -37,7 +37,7 @@ Column meaning (nine check columns):
 | ★ Button groups | MdButtonGroup | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Icon buttons | MdIconButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | FABs | MdFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Extended FABs | MdExtendedFab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Extended FABs | MdExtendedFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ FAB menu | MdFabMenu | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | ★ Split buttons | MdSplitButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Segmented buttons | MdSegmentedButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
@@ -119,6 +119,30 @@ Two transcription notes are pinned by `TestMd3Fab` rather than smoothed:
 * no pressed container shape is published, so unlike the button/icon-button
   families a FAB does not morph on press — the ripple is the whole press
   response, which is also what the export's "Pressed (ripple)" row labels say.
+
+### Extended FABs — the two rows that are still `🚧`
+
+Same standing as the other Actions families: light/dark and RTL are handled,
+while seed change, contrast level, density and font switch have not yet been
+exercised *against the extended-FAB page*, and the side-by-side reference
+comparison has not been recorded. Neither is a known defect; both are
+unfinished evidence.
+
+Three transcription notes are pinned by `TestMd3ExtendedFab` rather than
+smoothed:
+
+* the export ships **no surface colour set** for this family — six sets
+  (primary / secondary / tertiary plus three `*-container`), unlike the FAB's
+  four including surface. The spec page agrees, so it is a family difference,
+  not an export gap;
+* the base (unprefixed) metric set — 56 px, label-large, 16/12/20 rhythm —
+  matches no size table: `small` is also 56 px but title-medium with a
+  16/8/16 rhythm. The three explicit size tables win (56/80/96 px); the base
+  rows are the legacy standard-M3 default;
+* the disabled row is filled from the spec's state table exactly as the FAB
+  family does (the export publishes no disabled rows), and the *deprecated*
+  focus rows pointing at `*-container` roles are ignored in favour of the
+  non-deprecated `focused-*` rows.
 
 ## 1.3 Communication
 

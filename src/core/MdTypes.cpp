@@ -396,6 +396,33 @@ QString fabSizeName(FabSize size)
     return QStringLiteral("unknown");
 }
 
+QString extendedFabVariantName(ExtendedFabVariant variant)
+{
+    // The `md.comp.extended-fab.<name>.*` colour-set segment.
+    switch (variant) {
+    case ExtendedFabVariant::Primary: return QStringLiteral("primary");
+    case ExtendedFabVariant::Secondary: return QStringLiteral("secondary");
+    case ExtendedFabVariant::Tertiary: return QStringLiteral("tertiary");
+    case ExtendedFabVariant::PrimaryContainer: return QStringLiteral("primary-container");
+    case ExtendedFabVariant::SecondaryContainer: return QStringLiteral("secondary-container");
+    case ExtendedFabVariant::TertiaryContainer: return QStringLiteral("tertiary-container");
+    case ExtendedFabVariant::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
+QString extendedFabSizeName(ExtendedFabSize size)
+{
+    // The `md.comp.extended-fab.<name>.*` size segment.
+    switch (size) {
+    case ExtendedFabSize::Small: return QStringLiteral("small");
+    case ExtendedFabSize::Medium: return QStringLiteral("medium");
+    case ExtendedFabSize::Large: return QStringLiteral("large");
+    case ExtendedFabSize::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {

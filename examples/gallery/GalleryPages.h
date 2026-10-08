@@ -176,6 +176,12 @@ GalleryPage *createButtonGroupPage();
 /// Actions — Icon buttons (four styles x five sizes x three tracks x toggle).
 GalleryPage *createIconButtonPage();
 
+/// Actions — FABs (four colour sets x three sizes x lowered/raised).
+GalleryPage *createFabPage();
+
+/// Actions — Extended FABs (six colour sets x three sizes x lowered/raised).
+GalleryPage *createExtendedFabPage();
+
 /// Actions — FABs (four colour sets x three sizes x lowered / raised).
 GalleryPage *createFabPage();
 
