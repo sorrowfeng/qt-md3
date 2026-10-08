@@ -13,9 +13,19 @@
   The variable fonts themselves are NOT committed: the smallest is 3.4 MB
   and the largest 15 MB. See docs/resources-manifest.md for the two
   supported ways to provide them.
+
+  Roboto IS committed: the MD3 type scale names it as both the brand and
+  plain typeface (md.ref.typeface), the static weights are ~147 KB each,
+  and without it every label silently falls back to the platform font
+  (Segoe UI on Windows), which is the single largest source of "this does
+  not look like Material" drift. Regular / Medium / Bold cover the type
+  scale's entire baseline weight set (400 / 500 / 700).
 -->
 <RCC>
     <qresource prefix="/qt-md3">
+        <file alias="fonts/Roboto-Regular.ttf">fonts/Roboto-Regular.ttf</file>
+        <file alias="fonts/Roboto-Medium.ttf">fonts/Roboto-Medium.ttf</file>
+        <file alias="fonts/Roboto-Bold.ttf">fonts/Roboto-Bold.ttf</file>
         <file alias="icons/material-symbols-codepoints.txt">icons/material-symbols-codepoints.txt</file>
         <file alias="icons/classic/24px/add.svg">icons/classic/24px/add.svg</file>
         <file alias="icons/classic/24px/animation.svg">icons/classic/24px/animation.svg</file>

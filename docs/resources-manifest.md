@@ -10,7 +10,7 @@ Inventory of everything under [`resources/`](../resources). Kept in step with
 | `resources/qt-md3.qrc` | Qt resource bundle | present |
 | `resources/icons/material-symbols-codepoints.txt` | Complete Material Symbols name → codepoint table, 4299 entries | present |
 | `resources/icons/classic/24px/*.svg` | Classic Material Icons SVG baseline, 49 icons | present |
-| `resources/fonts/` | Material Symbols variable fonts (not committed, see below) | opt-in |
+| `resources/fonts/` | **Roboto Regular / Medium / Bold + their licence** (committed) and the Material Symbols variable fonts (not committed, see below) | Roboto present, Symbols opt-in |
 | `resources/images/` | README gallery + showcase screenshots | empty |
 
 ## Bundled, committed
@@ -84,13 +84,26 @@ To enable the font, either:
 `resources/fonts/` if you would rather vendor them; the script prints the size
 first and asks for confirmation.
 
-## Fonts for text (Roboto / Roboto Flex)
+## Fonts for text (Roboto)
 
-Not committed either, for the same reason. `MdTypeScale` resolves family names
-through `MdTypeScale::setFamily()` and falls back to the platform's default
-sans-serif, and `MdTypeScale::setCjkFallbackFamilies()` handles the CJK pairing.
-A project that wants the exact MD3 look bundles the fonts itself and registers
-them with `MdFont`.
+**Roboto is now committed** — `fonts/Roboto-Regular.ttf`, `Roboto-Medium.ttf`,
+`Roboto-Bold.ttf` plus `fonts/LICENSE-ROBOTO.txt` (Apache-2.0), registered in
+`qt-md3.qrc` under `:/qt-md3/fonts/` and loaded by
+`MdFont::registerBundledFonts()` from `MdDesign::initialize()`.
+
+Why the policy differs from the icon fonts: the MD3 type scale names Roboto as
+both the brand and the plain typeface (`md.ref.typeface`), the three static
+weights cover the scale's entire baseline weight set (400 / 500 / 700), each
+file is ~147 KB, and without them every label silently falls back to the
+platform sans (Segoe UI on Windows) — which a 2026-10 side-by-side comparison
+against material-web.dev identified as the single largest "this does not look
+like Material" drift. Static weights rather than the variable
+`Roboto[wdth,wght].ttf` because Qt 5.15 renders variable fonts at their
+default instance only, losing the 500-weight labels this library leans on.
+
+CJK deliberately stays on the system: bundling Noto Sans SC would add ~10 MB.
+`MdTypeScale::setCjkFallbackFamilies()` pairs the platform CJK face with the
+bundled Roboto, and `MdTypeScale::setFamily()` can override either slot.
 
 ## Attribution
 

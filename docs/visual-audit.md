@@ -295,3 +295,50 @@ Same standing as the other families: no side-by-side official reference yet,
 so this stays `Needs visual QA` rather than `Pass`. The Expressive wave
 rendering is the family's registered gap (see porting-todo.md) and is called
 out on the page itself.
+
+## 2026-10 comparison re-check (official vs ported)
+
+Triggered by the observation that the ported components "do not look
+particularly like" the official renderings. Method: material-web.dev pages
+captured with a headless browser (the button page screenshot succeeded; the
+icon-button / fab / progress token tables came through as text when the
+network flapped), the qt-md3 gallery re-rendered from the current tree, both
+normalised to logical px (the gallery screenshots are captured at DPR 1.5),
+and side-by-side sheets composed under `build/audit/` (not committed).
+
+### Finding 1 — the text font was missing (fixed)
+
+`resources/fonts/` was empty: every label rendered in the platform sans
+(Segoe UI on Windows), not the Roboto that `md.ref.typeface` names for both
+the brand and the plain slots. This was the single largest source of visual
+drift — letterforms, metrics and the 500-weight emphasis were all wrong.
+
+Fix: Roboto Regular / Medium / Bold (the type scale's whole baseline weight
+set) are now committed and loaded from `:/qt-md3/fonts/` — see
+resources-manifest.md. CJK stays on the system fallback by design.
+
+### Finding 2 — token-level geometry agrees with the official tables
+
+Cross-checked against the token defaults the official pages publish:
+
+| Family | Official default | qt-md3 | Verdict |
+| --- | --- | --- | --- |
+| Buttons | 40 px height, corner-full, label-large | same (token-locked) | agree |
+| Icon buttons | 40×40, icon 24, corner-full, outlined 1 px | same | agree |
+| FAB | container corner-large, small corner-medium, large corner-extra-large (16/12/28), icons 24/24/36, surface-container-high + primary icon, lowered/raised | same | agree |
+| Linear progress | 4 px track & indicator, track surface-container-highest, corner-none, stop indicator + gap | same | agree |
+| Circular progress | 48 px, 8.3333 % stroke (percentage model) | Compose-derived geometry — deliberate divergence, recorded in porting-todo.md | recorded |
+
+### Finding 3 — the remaining differences are the documented ones
+
+* **Standard M3 vs M3 Expressive**: material-web is in maintenance mode and
+  renders the standard spec (pressed state layer + ripple); this library
+  implements Expressive (pressed ripple + shape morph). interaction-reference.md
+  documents this as intentional, component by component.
+* **No official live reference exists** for extended FABs, FAB menus, split
+  buttons, segmented buttons and badges — material-web never implemented
+  them; those families were ported against the token exports and Compose M3,
+  and their audits remain token/frame-based.
+* **Colour**: the official demo pages ship their own custom schemes (the
+  button page's gold/brown theme), so hue comparisons against them are
+  meaningless; the baseline purple here is the published reference palette.

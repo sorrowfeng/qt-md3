@@ -53,8 +53,11 @@ the upstream license.
 
 ## Roboto / Roboto Flex
 
-- Files (planned): `resources/fonts/Roboto*.ttf`
-- Source: <https://github.com/googlefonts/roboto>
+- Files: `resources/fonts/Roboto-Regular.ttf`, `resources/fonts/Roboto-Medium.ttf`,
+  `resources/fonts/Roboto-Bold.ttf` (committed, 2026-10), plus the licence copy
+  at `resources/fonts/LICENSE-ROBOTO.txt`
+- Source: <https://github.com/google/fonts> (`apache/roboto/static`, commit
+  `ff11ed9`); upstream project <https://github.com/googlefonts/roboto>
 - License: Apache License 2.0
 - Copyright: The Roboto Project Authors
 
