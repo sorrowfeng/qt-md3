@@ -385,8 +385,9 @@ Text inputs, then the M3 Expressive cross-cutting pass.
         container enforces none of these caps (a seventh item renders
         fine); the facts are recorded here and in the token header.
 
-- [ ] Split buttons — ported (see below); **Segmented buttons** — the last
-      of §1.2.
+- [x] §1.2 Actions — all eight families ported (buttons, button groups,
+      icon buttons, FABs, extended FABs, FAB menu, split buttons, segmented
+      buttons).
 
 #### Split buttons (ported)
 
@@ -418,6 +419,33 @@ Text inputs, then the M3 Expressive cross-cutting pass.
   49-icon set has no arrow_drop_down glyph, so the gallery page sets
   `expand_more` explicitly. Recorded as an icon-set gap, not a token
   divergence.
+
+#### Segmented buttons (ported)
+
+`MdSegmentedButton` + `MdSegmentedButtonStyle` + `MdSegmentedButtonTokens`,
+locked by `TestMd3SegmentedButton`. The export publishes exactly one set —
+no size scale, no colour variants — so the whole family rides on
+`md.comp.outlined-segmented-button.*` (40 px, label-large, 1 px outline,
+corner-full, icon 18, secondary-container selection). Four facts the
+implementation carries:
+
+* **the divider is the shared stroke**: segments overlap by exactly the
+  outline width (Compose lays the row out with
+  `Arrangement.spacedBy(-BorderWidth)`), so each segment paints its *full*
+  outline and shared edges stack into one 1 px line — no separate divider
+  element exists;
+* **`itemShape`** [compose]: the first segment rounds its inline-start
+  corners, the last its inline-end corners, middle segments are rectangles;
+* **the icon slot is always reserved** (18 + 8 px, [compose]; the export
+  publishes neither row, nor the 12 px content padding) so the check scales
+  in without moving the label; custom icons crossfade with it;
+* **the export's pressed state-layer opacity is the focus one** (as
+  published), and there are no motion rows — the check's scale-in runs on
+  spring-fast-spatial (Compose `FastSpatial`), labelled as such.
+
+A disabled selected segment keeps its secondary-container fill: the export
+has no disabled-container row and Compose's `disabledActiveContainerColor`
+is `SelectedContainerColor`.
 
 ### Gallery scaffolding fixes found while building the first component
 

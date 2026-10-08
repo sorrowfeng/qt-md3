@@ -40,7 +40,7 @@ Column meaning (nine check columns):
 | Extended FABs | MdExtendedFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ FAB menu | MdFabMenu | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ Split buttons | MdSplitButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Segmented buttons | MdSegmentedButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Segmented buttons | MdSegmentedButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 
 ### Buttons — the two rows that are still `🚧`
 
@@ -197,6 +197,35 @@ smoothed:
 * **the `arrow_drop_down` default has no glyph in the bundled classic
   49-icon set** — the gallery page sets `expand_more` explicitly; recorded
   as an icon-set gap, not a token divergence.
+
+### Segmented buttons — the two rows that are still `🚧`
+
+Same standing as the other Actions families: light/dark and RTL are handled,
+while seed change, contrast level, density and font switch have not yet been
+exercised *against the segmented-button page*, and the side-by-side reference
+comparison has not been recorded. Neither is a known defect; both are
+unfinished evidence.
+
+Four transcription notes are pinned by `TestMd3SegmentedButton` rather than
+smoothed:
+
+* **the export is exactly one set** — `md.comp.outlined-segmented-button.*`
+  publishes no size scale and no colour variants (40 px, label-large,
+  outline 1 px, corner-full, icon 18, secondary-container selection);
+* **the divider between segments is the shared stroke** — the row overlaps
+  neighbours by exactly the outline width (Compose
+  `Arrangement.spacedBy(-BorderWidth)`), and `itemShape` rounds only the
+  first segment's inline-start corners and the last segment's inline-end
+  corners; middle segments are rectangles;
+* **the icon slot is always reserved** (18 px + 8 px spacing, Compose
+  measure policy; the export publishes neither row) so the label never
+  moves when the check scales in on selection — the scale-in runs on
+  spring-fast-spatial, the spring Compose uses for it;
+* **the export's pressed-state-layer opacity is the focus one** (as
+  published — `pressed-state-layer-opacity: focus-state-layer-opacity`), and
+  a disabled *selected* segment keeps its secondary-container fill (the
+  export has no disabled-container row; Compose's disabledActive uses
+  SelectedContainerColor too).
 
 ## 1.3 Communication
 

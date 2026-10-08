@@ -31,6 +31,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdFabTokens.h
     core/MdExtendedFabTokens.h
     core/MdFabMenuTokens.h
+    core/MdSegmentedButtonTokens.h
     core/MdSplitButtonTokens.h
     core/MdIcon.h
     core/MdResources.h
@@ -47,6 +48,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdFabStyle.h
     styles/MdExtendedFabStyle.h
     styles/MdFabMenuStyle.h
+    styles/MdSegmentedButtonStyle.h
     styles/MdSplitButtonStyle.h
 )
 
@@ -58,6 +60,7 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdExtendedFab.h
     widgets/MdFabMenu.h
     widgets/MdFabMenuItem.h
+    widgets/MdSegmentedButton.h
     widgets/MdSplitButton.h
 )
 
@@ -83,6 +86,7 @@ set(QT_MD3_SOURCES
     core/MdFabTokens.cpp
     core/MdExtendedFabTokens.cpp
     core/MdFabMenuTokens.cpp
+    core/MdSegmentedButtonTokens.cpp
     core/MdSplitButtonTokens.cpp
     core/MdIcon.cpp
     core/MdResources.cpp
@@ -96,6 +100,7 @@ set(QT_MD3_SOURCES
     styles/MdFabStyle.cpp
     styles/MdExtendedFabStyle.cpp
     styles/MdFabMenuStyle.cpp
+    styles/MdSegmentedButtonStyle.cpp
     styles/MdSplitButtonStyle.cpp
     widgets/MdButton.cpp
     widgets/MdButtonGroup.cpp
@@ -104,6 +109,7 @@ set(QT_MD3_SOURCES
     widgets/MdExtendedFab.cpp
     widgets/MdFabMenu.cpp
     widgets/MdFabMenuItem.cpp
+    widgets/MdSegmentedButton.cpp
     widgets/MdSplitButton.cpp
 )
 

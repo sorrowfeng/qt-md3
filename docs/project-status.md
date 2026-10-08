@@ -10,12 +10,12 @@ Last updated: 2026-10-08
 | Stage | Stage 1 — Batch 0 closed; §1.2 Actions under way |
 | Stage 1 families complete | `3 / 36` (Buttons, Button groups, Icon buttons) |
 | Base modules | `21 / 21` |
-| Public components | `8` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`) |
-| Style classes | `8` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`) |
+| Public components | `9` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`) |
+| Style classes | `9` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`) |
 | Example pages | `10` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `20` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `21` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 — the first seven components
+### Stage 1 §1.2 — all eight Actions families
 
 | Component | Covers |
 | --- | --- |
@@ -115,6 +115,8 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdFabMenuTokens` | the `md.comp.fab-menu.*` value layer: the common spacing rows (8 / 4), both elements' metric + colour + elevation tables across the three colour groups, and the spec-filled disabled row. |
 | `MdSplitButton` | one `QWidget` with two press targets: a leading half (icon + label) and a trailing half (the dropdown icon), separated by the published 2 px gap. The facing corners morph on hover / press (4/4/4/8/12 -> 8/12/12/20/20 px per size) and go to the literal 50% while the trailing half is selected; outer corners stay a full pill. Left/Right walk the halves, Up/Down are swallowed, Space/Enter activate the focused half. |
 | `MdSplitButtonTokens` | the `md.comp.split-button.<size>.*` metric layer (five rows verbatim, inner corners resolved from the shape scale) plus the button family's colour / type / focus rows at the identity size mapping — the spec page: "the same color schemes as standard buttons". |
+| `MdSegmentedButton` | one `QWidget` with N press targets: segments share one 40 px pill outline, neighbours overlap by exactly the outline width so the shared edge is the divider, `itemShape` rounds only the row's ends, and the check scales in on a reserved 18 px icon slot (spring-fast-spatial) so the label never moves. Single-choice (radio) by default, multi-choice per segment. |
+| `MdSegmentedButtonTokens` | the single `md.comp.outlined-segmented-button.*` set verbatim (no size scale, no colour variants) with the Compose-sourced rows the export lacks (8 px icon spacing, 12 px content padding, spring-fast-spatial check motion) — every borrow labelled in the header. |
 
 ## Known gaps, recorded rather than hidden
 

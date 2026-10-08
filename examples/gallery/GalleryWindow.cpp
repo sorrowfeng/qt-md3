@@ -434,6 +434,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createExtendedFabPage(),
         createFabMenuPage(),
         createSplitButtonPage(),
+        createSegmentedButtonPage(),
     };
 
     QStringList titles;

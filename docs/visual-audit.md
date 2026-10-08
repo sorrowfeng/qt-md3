@@ -53,6 +53,7 @@ captured official screenshot.
 | Extended FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | FAB menu | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Split buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Segmented buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Split buttons
 
@@ -91,6 +92,27 @@ Checked against the published values:
 | Open animation | staggered fade + 24 px settle, top-down, from the anchor corner | Yes (live; Compose-sourced motion, no export rows) |
 | Anchor crossfade | FAB hides, close button appears in the same top trailing place | Yes (live) |
 | Disabled | on-surface @ 0.12 container, @ 0.38 content, no shadow, no state layer | Yes |
+
+Same standing as the other families: no side-by-side official reference yet,
+so this stays `Needs visual QA` rather than `Pass`.
+
+### Segmented buttons
+
+Rendered via `qt-md3-example --screenshot` in light mode (page
+`15-segmented-buttons`) and read against
+`_md-comp-outlined-segmented-button.scss` plus androidx `SegmentedButton.kt`.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| One set | 40 px tall, label-large, 1 px outline, corner-full ends | Yes |
+| Divider | neighbours overlap by the outline width; shared edge is a single 1 px stroke | Yes |
+| itemShape | first rounds inline-start, last rounds inline-end, middle rectangles | Yes |
+| Selection | secondary-container fill, on-secondary-container content, check scales in on a reserved 18 px slot | Yes |
+| Multi choice | independent toggles, same geometry | Yes |
+| Disabled | content @ 0.38, outline @ 0.12; a selected segment keeps its container fill | Yes |
+| Focus ring | one ring around the focused segment, keyboard focus only | Yes (live) |
 
 Same standing as the other families: no side-by-side official reference yet,
 so this stays `Needs visual QA` rather than `Pass`.

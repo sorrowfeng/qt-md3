@@ -154,9 +154,9 @@ Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is closed** — all
 twenty-one modules are implemented, and `ContrastLevel` is applied rather than
 stored, so reduced / standard / medium / high genuinely move the tones.
 
-Stage 1 components have started: **`MdButton`, `MdButtonGroup`,
-`MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu` and `MdSplitButton` are
-complete** —
+Stage 1 §1.2 Actions is complete: **`MdButton`, `MdButtonGroup`,
+`MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdSplitButton` and
+`MdSegmentedButton` are done** —
 Buttons (5 colour styles × 5 Expressive sizes × 2 shapes, leading/trailing
 icons, soft-disabled, live states), Button groups (standard / connected, five
 sizes, four selection modes, round / square, horizontal / vertical, arrow-key
@@ -165,10 +165,13 @@ toggle form with the selected colour families and swapped selected corners),
 FABs (4 colour sets × 3 sizes × lowered / raised, the one Actions family with
 a real shadow), extended FABs (6 colour sets × 3 sizes × lowered / raised,
 content-derived width) and FAB menus (3 colour groups × anchor FAB + close
-button + up to six staggered items, Compose-sourced reveal motion) and split
+button + up to six staggered items, Compose-sourced reveal motion) split
 buttons (button-family colour rows over its own metric rows, five sizes, the
-inner-corner morph with the trailing-selected 50%), which is `7 / 36`
-families. The next family is the last of §1.2 — segmented buttons.
+inner-corner morph with the trailing-selected 50%) and segmented buttons (one
+outlined set, segments overlapping by the outline width, itemShape ends, the
+check scale-in on a reserved icon slot) — which is `8 / 36` families and
+**all of §1.2**. The next families are §1.3 Communication — badges, progress
+indicators, the loading indicator, snackbars, tooltips.
 
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and

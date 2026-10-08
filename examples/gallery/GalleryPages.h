@@ -188,6 +188,9 @@ GalleryPage *createFabMenuPage();
 /// Actions — Split buttons (button-family colour rows, five sizes, inner-corner morph).
 GalleryPage *createSplitButtonPage();
 
+/// Actions — Segmented buttons (one outlined set, single/multi choice, check scale-in).
+GalleryPage *createSegmentedButtonPage();
+
 /// Actions — FABs (four colour sets x three sizes x lowered / raised).
 GalleryPage *createFabPage();
 
