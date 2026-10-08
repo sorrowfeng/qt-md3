@@ -263,6 +263,27 @@ set_tests_properties(TestMd3FabMenu PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3FabMenu)
 
+add_executable(TestMd3SplitButton
+    TestMd3SplitButton.cpp
+)
+
+target_link_libraries(TestMd3SplitButton
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3SplitButton COMMAND TestMd3SplitButton)
+set_tests_properties(TestMd3SplitButton PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3SplitButton)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

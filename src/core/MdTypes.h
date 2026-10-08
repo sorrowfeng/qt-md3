@@ -461,6 +461,23 @@ enum class FabMenuVariant {
     Count,
 };
 
+/// The five published split-button sizes, `md.comp.split-button.<size>.*`:
+/// xsmall (32 px), small (40 px), medium (56 px), large (96 px) and
+/// xlarge (136 px).
+///
+/// Expressive-only, like the button scale. Note the deliberate overlap and
+/// divergence with `md.comp.button.<size>`: the two families share 32 / 40 px
+/// but a split button's medium is 56 px (the button's large) and its large /
+/// xlarge (96 / 136 px) have no button counterpart.
+enum class SplitButtonSize {
+    XSmall,
+    Small,
+    Medium,
+    Large,
+    XLarge,
+    Count,
+};
+
 // ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
@@ -515,6 +532,7 @@ QT_MD3_EXPORT QString fabSizeName(FabSize size);
 QT_MD3_EXPORT QString extendedFabVariantName(ExtendedFabVariant variant);
 QT_MD3_EXPORT QString extendedFabSizeName(ExtendedFabSize size);
 QT_MD3_EXPORT QString fabMenuVariantName(FabMenuVariant variant);
+QT_MD3_EXPORT QString splitButtonSizeName(SplitButtonSize size);
 QT_MD3_EXPORT QString buttonGroupOrientationName(ButtonGroupOrientation orientation);
 QT_MD3_EXPORT QString buttonGroupSelectionName(ButtonGroupSelection selection);
 
@@ -548,5 +566,6 @@ Q_DECLARE_METATYPE(md::FabSize)
 Q_DECLARE_METATYPE(md::ExtendedFabVariant)
 Q_DECLARE_METATYPE(md::ExtendedFabSize)
 Q_DECLARE_METATYPE(md::FabMenuVariant)
+Q_DECLARE_METATYPE(md::SplitButtonSize)
 
 #endif // MD_TYPES_H

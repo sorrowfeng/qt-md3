@@ -52,6 +52,27 @@ captured official screenshot.
 | FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Extended FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | FAB menu | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Split buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
+
+### Split buttons
+
+Rendered via `qt-md3-example --screenshot` in light mode (page
+`14-split-buttons`) and read against `tokens/versions/latest/sass/
+_md-comp-split-button-<size>.scss` plus the spec page's colour rule.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Two halves + gap | leading content pill + 2 px between-space + trailing dropdown pill, outer corners at height/2 | Yes |
+| Inner corners at rest | 4 / 4 / 4 / 8 / 12 px by size — nearly square facing edges | Yes |
+| Colour rows | the button family's five variants (elevated / filled / tonal / outlined / text), selection adds a state layer only | Yes |
+| Trailing selected | facing corners at the literal 50%, sealing the gap | Yes |
+| Disabled | on-surface @ 0.12 container, @ 0.38 content (the button family's row) | Yes |
+| Focus ring | one ring around the whole split, keyboard focus only | Yes (live) |
+
+Same standing as the other families: no side-by-side official reference yet,
+so this stays `Needs visual QA` rather than `Pass`.
 
 ### FAB menu
 

@@ -385,8 +385,39 @@ Text inputs, then the M3 Expressive cross-cutting pass.
         container enforces none of these caps (a seventh item renders
         fine); the facts are recorded here and in the token header.
 
-- [ ] Split buttons,
-      Segmented buttons — the rest of §1.2.
+- [ ] Split buttons — ported (see below); **Segmented buttons** — the last
+      of §1.2.
+
+#### Split buttons (ported)
+
+`MdSplitButton` + `MdSplitButtonStyle` + `MdSplitButtonTokens`, locked by
+`TestMd3SplitButton`. Four sourced facts shape the implementation:
+
+* **The export publishes metric rows only.** No colour, state, focus or
+  typography rows exist for `md.comp.split-button.*`. The spec page fills the
+  gap in one sentence: "Split buttons use the same color schemes as standard
+  buttons ... shown in the following token module." So the colour / state /
+  focus / type rows are the button family's, resolved at the *identity* size
+  mapping — the two Expressive scales agree on every height (32 / 40 / 56 /
+  96 / 136). Recorded in the token header and pinned by
+  `heightMatchedButtonSetIsUsedForTypography`.
+* **The one behaviour the buttons don't have is the inner-corner morph.** The
+  facing corners rest at 4 / 4 / 4 / 8 / 12 px (per size) and spring to
+  8 / 12 / 12 / 20 / 20 px on hover *and* press; the trailing half's facing
+  corners go to the literal 50% while selected. The outer corners stay
+  corner-full at every size. The export publishes no motion rows, so the
+  morph runs on the button family's press spring (1400 / 0.9) — the Compose
+  Expressive choice, labelled as such.
+* **Two press targets, one control.** Each half has its own ripple, its own
+  state layer and its own focused colour row; the focus indicator is one ring
+  around the whole split (`:focus-visible` semantics, keyboard focus only).
+  Left/Right walk the halves, Up/Down are swallowed, Space/Enter activate the
+  focused half.
+* **The trailing icon default is `arrow_drop_down`** per the spec ("the
+  trailing button should always have a menu icon") — but the bundled classic
+  49-icon set has no arrow_drop_down glyph, so the gallery page sets
+  `expand_more` explicitly. Recorded as an icon-set gap, not a token
+  divergence.
 
 ### Gallery scaffolding fixes found while building the first component
 

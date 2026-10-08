@@ -39,7 +39,7 @@ Column meaning (nine check columns):
 | FABs | MdFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Extended FABs | MdExtendedFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ FAB menu | MdFabMenu | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ Split buttons | MdSplitButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| ★ Split buttons | MdSplitButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Segmented buttons | MdSegmentedButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 
 ### Buttons — the two rows that are still `🚧`
@@ -170,6 +170,33 @@ smoothed:
   corner, a recommended 4 dp FAB-to-menu gap on the web, and "inherits its
   states and specs from the baseline menu". All recorded; the menu caps
   nothing (adding a seventh item is allowed and simply beyond spec).
+
+### Split buttons — the two rows that are still `🚧`
+
+Same standing as the other Actions families: light/dark and RTL are handled,
+while seed change, contrast level, density and font switch have not yet been
+exercised *against the split-button page*, and the side-by-side reference
+comparison has not been recorded. Neither is a known defect; both are
+unfinished evidence.
+
+Four transcription notes are pinned by `TestMd3SplitButton` rather than
+smoothed:
+
+* **the export publishes metric rows only** — no colour, state, focus or
+  typography rows exist for `md.comp.split-button.*`. The spec page fills the
+  gap in one sentence ("Split buttons use the same color schemes as standard
+  buttons"), so the colour / state / focus / type rows are the button
+  family's at the identity size mapping — the two Expressive scales agree on
+  every height (32 / 40 / 56 / 96 / 136);
+* **the inner-corner morph is the family's own behaviour** — facing corners
+  rest at 4/4/4/8/12 px and spring to 8/12/12/20/20 px on hover *and* press;
+  the trailing half's facing corners go to the literal 50% while selected;
+  outer corners stay corner-full at every size;
+* **no motion rows** — the morph runs on the button family's press spring
+  (1400 / 0.9), the Compose Expressive choice, labelled as such;
+* **the `arrow_drop_down` default has no glyph in the bundled classic
+  49-icon set** — the gallery page sets `expand_more` explicitly; recorded
+  as an icon-set gap, not a token divergence.
 
 ## 1.3 Communication
 

@@ -435,6 +435,20 @@ QString fabMenuVariantName(FabMenuVariant variant)
     return QStringLiteral("unknown");
 }
 
+QString splitButtonSizeName(SplitButtonSize size)
+{
+    // The `md.comp.split-button.<name>.*` size segment.
+    switch (size) {
+    case SplitButtonSize::XSmall: return QStringLiteral("xsmall");
+    case SplitButtonSize::Small: return QStringLiteral("small");
+    case SplitButtonSize::Medium: return QStringLiteral("medium");
+    case SplitButtonSize::Large: return QStringLiteral("large");
+    case SplitButtonSize::XLarge: return QStringLiteral("xlarge");
+    case SplitButtonSize::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {
