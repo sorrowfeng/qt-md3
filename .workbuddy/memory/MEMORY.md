@@ -11,6 +11,12 @@ Qt Widgets 手绘复刻 Material Design 3（含 M3 Expressive）的 C++ 组件�
 - **切换唯一依据：`docs/md3-coverage.md` 九列全绿。** 门禁
   `TestMd3CoveragePolicy` 会在阶段一未全绿时拦截 `src/widgets/` 中的阶段二组件。
 
+## 交互保真度规则（2026-10-08 按压动画审计得出，适用于所有后续组件）
+- **焦点环走 `:focus-visible` 语义**：鼠标点击不显示焦点环与 Focused 状态色，仅键盘焦点（Tab/Backtab/快捷键）显示。Qt 按 focusInEvent 的 reason() 分类，控件暴露 hasKeyboardFocus()，样式用它门控环与 Focused 状态行（MdButton/MdIconButton 已实现，后续组件照抄）。
+- **涟漪 = pressed 状态层**：涟漪颜色必须取 tokens 按压行的 stateLayer 角色（filled=on-primary 白色涟漪，tonal=on-secondary-container，outlined/text=on-surface），禁止全局 OnSurface。
+- **按压不是平的状态层**：平层只画 hover+键盘焦点（strongestActive 传 pressed=false），按压响应完全由扩散的涟漪圆承载。
+- 动画验证方法：探针 exe 逐帧截图（~50ms 步进）+ PIL 拼胶片 + 像素采样，与 material-web ripple 源码常量（450/225/375/0.2/10/75/0.35、STANDARD easing）比对。
+
 ## 移植参考来源（用户明确要求）
 每个组件移植时参考两处：① 官方规范 m3.material.io/components/<component>（结构/行为，JS 渲染需浏览器抓取）；② material-web 仓库（tokens/versions/latest/sass 的全部数值 + docs/components 行为说明，maintenance mode 未实现 Expressive，Expressive 行为以 Compose M3 为准）。两者冲突时记录分歧并说明取舍，不默默选一个。已固化为 AGENTS.md 与 docs/porting-todo.md 的守则。
 
