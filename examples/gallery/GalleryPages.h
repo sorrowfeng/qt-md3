@@ -7,6 +7,7 @@
 #include "GalleryPage.h"
 
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QVariant>
 #include <QtCore/QVector>
 
 namespace gallery {

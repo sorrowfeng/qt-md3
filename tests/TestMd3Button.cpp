@@ -21,6 +21,7 @@
 #include "styles/MdButtonStyle.h"
 #include "widgets/MdButton.h"
 
+#include <QtGui/QFontDatabase>
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
 #include <QtGui/QPixmap>
@@ -138,6 +139,14 @@ void TestMd3Button::pointerFocusShowsNoFocusIndicatorButKeyboardFocusDoes()
     button.resize(button.sizeHint());
     button.show();
     QVERIFY(QTest::qWaitForWindowExposed(&button));
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Qt 5's QTest delivers pointer events straight to the widget without the
+    // window system's synthesized enter; the hovered state is part of what
+    // this test asserts, so establish it the way Qt 6's QTest would.
+    QEvent syntheticEnter(QEvent::Enter);
+    QApplication::sendEvent(&button, &syntheticEnter);
+#endif
 
     // A pointer press that moves focus must not read as keyboard focus.
     QTest::mouseClick(&button, Qt::LeftButton);
@@ -614,6 +623,16 @@ void TestMd3Button::pressMorphsTheContainerTowardsThePressedShape()
 
 void TestMd3Button::everyCombinationRendersSomething()
 {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Bare offscreen environments (this guard exists for local Windows
+    // offscreen runs; the CI containers ship fonts) cannot rasterise any
+    // label, so the text/outlined variants legitimately paint nothing.
+    const bool fontsUsable = !QFontDatabase().families().isEmpty();
+    if (!fontsUsable) {
+        QSKIP("no fonts installed on this platform — label pixels cannot render");
+    }
+#endif
+
     // 5 variants x 5 sizes x 2 shapes. Every one of the 50 is a published token
     // set, so every one has to paint.
     for (int v = 0; v < int(ButtonVariant::Count); ++v) {

@@ -7,6 +7,7 @@
 #include "core/MdTheme.h"
 #include "widgets/MdFab.h"
 
+#include <cmath>
 #include <QtWidgets/QLayout>
 
 namespace md {

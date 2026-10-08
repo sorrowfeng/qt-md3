@@ -139,7 +139,10 @@ MdSegmentedButtonStyle::Layout MdSegmentedButtonStyle::layoutFor(
     const qreal base = tokens.baseCornerRadius();
     qreal cursor = rtl ? inner.left() + (inner.width() - total) : inner.left();
     for (int i = 0; i < count; ++i) {
-        SegmentLayout &segment = layout.segments.emplaceBack();
+        // append(SegmentLayout{}) + last() works on both Qt 5's QVector and
+        // Qt 6's QList; emplaceBack() is Qt 6-only.
+        layout.segments.append(SegmentLayout{});
+        SegmentLayout &segment = layout.segments.last();
         segment.rect = QRectF(cursor, inner.top(), widths.at(i), tokens.containerHeight);
         // In RTL the enumeration still goes leading -> trailing, which draws
         // right-to-left; the radii helper mirrors accordingly.

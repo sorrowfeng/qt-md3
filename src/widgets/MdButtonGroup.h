@@ -134,8 +134,12 @@ public:
     MdButton *itemAt(int index) const;
     /// The item's index, or -1 when it is not in this group.
     int indexOf(const MdButton *item) const;
-    /// Every item, in order.
-    QList<MdButton *> items() const { return m_items; }
+    /// Every item, in order. (Copied through iterators: Qt 5 keeps
+    /// QList and QVector as distinct types, Qt 6 aliases them.)
+    QList<MdButton *> items() const
+    {
+        return QList<MdButton *>(m_items.cbegin(), m_items.cend());
+    }
 
     /// Create and append an item.
     ///

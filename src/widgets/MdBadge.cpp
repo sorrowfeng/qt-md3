@@ -4,6 +4,7 @@
 
 #include "core/MdTheme.h"
 
+#include <cmath>
 #include <QtCore/QEvent>
 
 namespace md {

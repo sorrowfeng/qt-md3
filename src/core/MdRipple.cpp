@@ -3,6 +3,7 @@
 #include "MdMotion.h"
 #include "MdStateLayer.h"
 
+#include <cmath>
 #include <QtCore/QTimer>
 #include <QtCore/QtMath>
 #include <QtGui/QPainter>

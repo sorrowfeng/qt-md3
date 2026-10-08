@@ -2,6 +2,7 @@
 
 #include "MdBadge.h"
 
+#include <cmath>
 #include <QtGui/QResizeEvent>
 #include <QtGui/QShowEvent>
 

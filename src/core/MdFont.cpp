@@ -103,7 +103,13 @@ bool MdFont::hasFamily(const QString &family)
     if (family.isEmpty()) {
         return false;
     }
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     return QFontDatabase::families().contains(family, Qt::CaseInsensitive);
+#else
+    // Qt 5: families() is an instance method; addApplicationFont and
+    // applicationFontFamilies are static on both sides.
+    return QFontDatabase().families().contains(family, Qt::CaseInsensitive);
+#endif
 }
 
 } // namespace md

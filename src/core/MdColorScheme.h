@@ -25,6 +25,15 @@
 
 namespace md {
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+/// Qt 5's QHash has no built-in enum support; Qt 6 does, so the overload
+/// is only needed on the Qt 5 path.
+inline uint qHash(ColorRole key, uint seed = 0) noexcept
+{
+    return ::qHash(static_cast<int>(key), seed);
+}
+#endif
+
 class QT_MD3_EXPORT MdColorScheme
 {
 public:

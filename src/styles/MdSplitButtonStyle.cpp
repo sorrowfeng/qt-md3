@@ -371,7 +371,12 @@ void MdSplitButtonStyle::paintSplitButton(QPainter &painter,
         MdFocusRingController *ring = button.focusRingController();
         const MdFocusRingSpec spec = focusRingSpec(buttonTokens);
         // The ring hugs the outer pill: corner-full on all four corners.
-        const QList<qreal> containerRadii(4, metrics.outerCornerRadius());
+        // (Append loop: Qt 5's QList has neither the (count, value) ctor
+        // nor fill(); Qt 6's QList has both.)
+        QList<qreal> containerRadii;
+        for (int i = 0; i < 4; ++i) {
+            containerRadii.append(metrics.outerCornerRadius());
+        }
         MdFocusRing::paint(&painter, layout.container, containerRadii,
                            theme.color(buttonTokens.focusIndicator), spec,
                            (ring && ring->isAnimating()) ? ring->elapsedMs() : -1);

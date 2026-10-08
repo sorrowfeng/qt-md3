@@ -5,6 +5,7 @@
 #include "core/MdFocusRing.h"
 #include "core/MdTheme.h"
 
+#include <cmath>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QMouseEvent>
 
@@ -199,7 +200,7 @@ void MdExtendedFab::mousePressEvent(QMouseEvent *event)
     m_hasPressPosition = true;
     // The ripple controller works in container-local coordinates; the layout
     // centres the container in the widget, so the same offset applies here.
-    m_pressPosition = QPointF(event->position()) - containerRect().topLeft();
+    m_pressPosition = QPointF(mousePosition(event)) - containerRect().topLeft();
     QPushButton::mousePressEvent(event);
 }
 
@@ -209,7 +210,7 @@ void MdExtendedFab::mouseReleaseEvent(QMouseEvent *event)
     QPushButton::mouseReleaseEvent(event);
 }
 
-void MdExtendedFab::enterEvent(QEnterEvent *event)
+void MdExtendedFab::enterEvent(MdEnterEvent *event)
 {
     m_hovered = true;
     QPushButton::enterEvent(event);

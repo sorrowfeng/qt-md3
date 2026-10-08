@@ -18,6 +18,7 @@
 #include "core/MdFabMenuTokens.h"
 #include "core/MdRipple.h"
 #include "core/MdTypes.h"
+#include "core/MdQtCompat.h"
 #include "core/QtMd3Export.h"
 
 #include <QtCore/QPointF>
@@ -93,7 +94,7 @@ signals:
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-    void enterEvent(QEnterEvent *event) override;
+    void enterEvent(md::MdEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;

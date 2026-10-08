@@ -9,6 +9,8 @@
 #include <QtGui/QPainter>
 #include <QtWidgets/QWidget>
 
+#include <cmath> // std::round / floor / fmod — MinGW 8.1 needs the explicit include
+
 namespace md {
 
 namespace {

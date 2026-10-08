@@ -5,6 +5,7 @@
 #include "core/MdFocusRing.h"
 #include "core/MdTheme.h"
 
+#include <cmath>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QMouseEvent>
 
@@ -186,7 +187,7 @@ void MdFabMenuItem::onReleased()
 void MdFabMenuItem::mousePressEvent(QMouseEvent *event)
 {
     m_hasPressPosition = true;
-    m_pressPosition = QPointF(event->position()) - containerRect().topLeft();
+    m_pressPosition = QPointF(mousePosition(event)) - containerRect().topLeft();
     QPushButton::mousePressEvent(event);
 }
 
@@ -196,7 +197,7 @@ void MdFabMenuItem::mouseReleaseEvent(QMouseEvent *event)
     QPushButton::mouseReleaseEvent(event);
 }
 
-void MdFabMenuItem::enterEvent(QEnterEvent *event)
+void MdFabMenuItem::enterEvent(MdEnterEvent *event)
 {
     m_hovered = true;
     QPushButton::enterEvent(event);

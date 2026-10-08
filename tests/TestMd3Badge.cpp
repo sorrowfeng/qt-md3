@@ -13,6 +13,7 @@
 #include "widgets/MdBadge.h"
 #include "widgets/MdBadgedBox.h"
 
+#include <QtGui/QFontDatabase>
 #include <QtGui/QFontMetrics>
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
@@ -287,6 +288,15 @@ void TestMd3Badge::badgedBoxReservesThePillOverhang()
 
 void TestMd3Badge::renderSmokeBothForms()
 {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Bare offscreen environments (local Windows offscreen runs; the CI
+    // containers ship fonts) cannot rasterise the label, so the on-error
+    // text colour is legitimately absent.
+    if (QFontDatabase().families().isEmpty()) {
+        QSKIP("no fonts installed on this platform — label pixels cannot render");
+    }
+#endif
+
     // The dot renders as one error-coloured disc.
     m_dot->resize(m_dot->sizeHint());
     const QColor error = MdTheme::instance().color(ColorRole::Error);

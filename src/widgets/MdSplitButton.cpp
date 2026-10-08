@@ -7,6 +7,7 @@
 #include "core/MdTheme.h"
 #include "core/MdTypeScale.h"
 
+#include <cmath>
 #include <QtCore/QTimer>
 #include <QtGui/QFontMetricsF>
 #include <QtGui/QPainter>
@@ -376,11 +377,11 @@ void MdSplitButton::mousePressEvent(QMouseEvent *event)
         event->accept();
         return;
     }
-    const Zone zone = zoneAt(event->position());
+    const Zone zone = zoneAt(mousePosition(event));
     m_pressedZone = zone;
     if (zone != Zone::None) {
         const QRectF half = zone == Zone::Leading ? leadingRect() : trailingRect();
-        rippleController(zone)->press(event->position() - half.topLeft());
+        rippleController(zone)->press(mousePosition(event) - half.topLeft());
         rippleController(zone)->setBounds(half.size());
         animateMorphTo(zone, innerRadiusTarget(zone));
         // Deliberately no setFocus(): a pointer press shows no focus ring.
@@ -391,7 +392,7 @@ void MdSplitButton::mousePressEvent(QMouseEvent *event)
 
 void MdSplitButton::mouseMoveEvent(QMouseEvent *event)
 {
-    setHoveredZone(zoneAt(event->position()));
+    setHoveredZone(zoneAt(mousePosition(event)));
     event->accept();
 }
 
@@ -403,7 +404,7 @@ void MdSplitButton::mouseReleaseEvent(QMouseEvent *event)
         rippleController(pressed)->release();
         animateMorphTo(pressed, innerRadiusTarget(pressed));
     }
-    const Zone releasedOn = zoneAt(event->position());
+    const Zone releasedOn = zoneAt(mousePosition(event));
     update();
     if (pressed != Zone::None && releasedOn == pressed) {
         if (pressed == Zone::Leading) {
@@ -415,9 +416,9 @@ void MdSplitButton::mouseReleaseEvent(QMouseEvent *event)
     event->accept();
 }
 
-void MdSplitButton::enterEvent(QEnterEvent *event)
+void MdSplitButton::enterEvent(MdEnterEvent *event)
 {
-    setHoveredZone(zoneAt(event->position()));
+    setHoveredZone(zoneAt(enterPosition(this, event)));
     QWidget::enterEvent(event);
 }
 

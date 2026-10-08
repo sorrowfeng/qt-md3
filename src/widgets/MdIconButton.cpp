@@ -6,6 +6,7 @@
 #include "core/MdMotion.h"
 #include "core/MdTheme.h"
 
+#include <cmath>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QMouseEvent>
 #include <QtCore/QTimer>
@@ -287,7 +288,7 @@ void MdIconButton::mousePressEvent(QMouseEvent *event)
     m_hasPressPosition = true;
     // The ripple controller works in container-local coordinates; the layout
     // centres the container in the widget, so the same offset applies here.
-    m_pressPosition = QPointF(event->position()) - containerRect().topLeft();
+    m_pressPosition = QPointF(mousePosition(event)) - containerRect().topLeft();
     QPushButton::mousePressEvent(event);
 }
 
@@ -297,7 +298,7 @@ void MdIconButton::mouseReleaseEvent(QMouseEvent *event)
     QPushButton::mouseReleaseEvent(event);
 }
 
-void MdIconButton::enterEvent(QEnterEvent *event)
+void MdIconButton::enterEvent(MdEnterEvent *event)
 {
     m_hovered = true;
     QPushButton::enterEvent(event);

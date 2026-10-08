@@ -6,6 +6,7 @@
 #include "core/MdTheme.h"
 #include "core/MdTypeScale.h"
 
+#include <cmath>
 #include <QtCore/QTimer>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QFontMetricsF>
@@ -47,10 +48,10 @@ void MdSegmentedButton::init()
 {
     // The segments ctor sets m_segments in its init-list, before this runs:
     // sync every per-segment array here so both construction paths agree.
-    m_checked.assign(m_segments.size(), false);
-    m_checkMorph.assign(m_segments.size(), 0.0);
-    m_morphFrom.assign(m_segments.size(), 0.0);
-    m_morphTo.assign(m_segments.size(), 0.0);
+    m_checked.fill(false, m_segments.size());
+    m_checkMorph.fill(0.0, m_segments.size());
+    m_morphFrom.fill(0.0, m_segments.size());
+    m_morphTo.fill(0.0, m_segments.size());
 
     // Tab focus only: a pointer press must not move focus (`:focus-visible`).
     setFocusPolicy(Qt::TabFocus);
@@ -94,10 +95,10 @@ void MdSegmentedButton::setSegments(const QStringList &segments)
         return;
     }
     m_segments = segments;
-    m_checked.assign(m_segments.size(), false);
-    m_checkMorph.assign(m_segments.size(), 0.0);
-    m_morphFrom.assign(m_segments.size(), 0.0);
-    m_morphTo.assign(m_segments.size(), 0.0);
+    m_checked.fill(false, m_segments.size());
+    m_checkMorph.fill(0.0, m_segments.size());
+    m_morphFrom.fill(0.0, m_segments.size());
+    m_morphTo.fill(0.0, m_segments.size());
     m_hovered = m_pressed = m_focused = -1;
     rebuildControllers();
     invalidateTokens();
@@ -338,12 +339,12 @@ void MdSegmentedButton::mousePressEvent(QMouseEvent *event)
         event->accept();
         return;
     }
-    const int index = segmentAt(event->position());
+    const int index = segmentAt(mousePosition(event));
     m_pressed = index;
     if (MdRippleController *ripple = rippleController(index)) {
         const QRectF rect = segmentRect(index);
         ripple->setBounds(rect.size());
-        ripple->press(event->position() - rect.topLeft());
+        ripple->press(mousePosition(event) - rect.topLeft());
         // Deliberately no setFocus(): pointer focus shows no ring.
     }
     update();
@@ -352,7 +353,7 @@ void MdSegmentedButton::mousePressEvent(QMouseEvent *event)
 
 void MdSegmentedButton::mouseMoveEvent(QMouseEvent *event)
 {
-    setHoveredSegment(segmentAt(event->position()));
+    setHoveredSegment(segmentAt(mousePosition(event)));
     event->accept();
 }
 
@@ -364,7 +365,7 @@ void MdSegmentedButton::mouseReleaseEvent(QMouseEvent *event)
         if (MdRippleController *ripple = rippleController(pressed)) {
             ripple->release();
         }
-        if (segmentAt(event->position()) == pressed) {
+        if (segmentAt(mousePosition(event)) == pressed) {
             activate(pressed);
         }
     }
@@ -372,9 +373,9 @@ void MdSegmentedButton::mouseReleaseEvent(QMouseEvent *event)
     event->accept();
 }
 
-void MdSegmentedButton::enterEvent(QEnterEvent *event)
+void MdSegmentedButton::enterEvent(MdEnterEvent *event)
 {
-    setHoveredSegment(segmentAt(event->position()));
+    setHoveredSegment(segmentAt(enterPosition(this, event)));
     QWidget::enterEvent(event);
 }
 

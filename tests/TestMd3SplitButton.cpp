@@ -204,6 +204,14 @@ void TestMd3SplitButton::theInnerCornerMorphsOnPress()
     split.show();
     QVERIFY(QTest::qWaitForWindowExposed(&split));
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Qt 5's QTest delivers pointer events straight to the widget without the
+    // window system's synthesized enter; the hovered row is the post-release
+    // target this test asserts, so establish it the way Qt 6's QTest would.
+    QEvent syntheticEnter(QEvent::Enter);
+    QApplication::sendEvent(&split, &syntheticEnter);
+#endif
+
     const qreal pressed = split.tokens().metrics.innerCornerPressed;
     QTest::mousePress(&split, Qt::LeftButton, Qt::NoModifier,
                       centerOf(split.leadingRect()).toPoint());

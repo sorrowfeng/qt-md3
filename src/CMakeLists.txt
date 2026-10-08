@@ -35,6 +35,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdProgressIndicatorTokens.h
     core/MdSegmentedButtonTokens.h
     core/MdSplitButtonTokens.h
+    core/MdQtCompat.h
     core/MdIcon.h
     core/MdResources.h
     core/MdTheme.h

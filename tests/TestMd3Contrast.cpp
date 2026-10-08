@@ -713,10 +713,12 @@ void TestMd3Contrast::dynamicTonalSpotIsNotTheStaticBaseline()
     // #65558f comes out of a solve that round-trips through tone/chroma and then
     // clips to the sRGB gamut at chroma 36, which nudges the hue slightly. A
     // fraction of a degree is expected; a different family is not.
-    QCOMPARE_GT(MdHct(0xFF65558Fu).hue(), 297.0);
-    QCOMPARE_LT(MdHct(0xFF65558Fu).hue(), 301.0);
-    QCOMPARE_GT(MdHct(0xFF6750A4u).hue(), 297.0);
-    QCOMPARE_LT(MdHct(0xFF6750A4u).hue(), 301.0);
+    // QVERIFY rather than QCOMPARE_GT/LT: those macros are Qt 6.4+ and the
+    // suite also builds against Qt 5.15.
+    QVERIFY(MdHct(0xFF65558Fu).hue() > 297.0);
+    QVERIFY(MdHct(0xFF65558Fu).hue() < 301.0);
+    QVERIFY(MdHct(0xFF6750A4u).hue() > 297.0);
+    QVERIFY(MdHct(0xFF6750A4u).hue() < 301.0);
     QVERIFY(qAbs(MdHct(0xFF65558Fu).hue() - MdHct(0xFF6750A4u).hue()) < 1.5);
 
     // The chroma, by contrast, is the whole difference and must not drift back:

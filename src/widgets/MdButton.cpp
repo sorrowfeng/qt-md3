@@ -270,7 +270,7 @@ void MdButton::mouseReleaseEvent(QMouseEvent *event)
     QPushButton::mouseReleaseEvent(event);
 }
 
-void MdButton::enterEvent(QEnterEvent *event)
+void MdButton::enterEvent(MdEnterEvent *event)
 {
     if (!m_hovered) {
         m_hovered = true;
