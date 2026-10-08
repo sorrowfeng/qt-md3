@@ -430,6 +430,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createButtonPage(),
         createButtonGroupPage(),
         createIconButtonPage(),
+        createFabPage(),
     };
 
     QStringList titles;

@@ -371,6 +371,31 @@ QString iconButtonSpaceTrackName(IconButtonSpaceTrack track)
     return QStringLiteral("unknown");
 }
 
+QString fabVariantName(FabVariant variant)
+{
+    // The `md.comp.fab.<name>.*` colour-set segment.
+    switch (variant) {
+    case FabVariant::Surface: return QStringLiteral("surface");
+    case FabVariant::Primary: return QStringLiteral("primary");
+    case FabVariant::Secondary: return QStringLiteral("secondary");
+    case FabVariant::Tertiary: return QStringLiteral("tertiary");
+    case FabVariant::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
+QString fabSizeName(FabSize size)
+{
+    // The `md.comp.fab.<name>.*` size segment.
+    switch (size) {
+    case FabSize::Small: return QStringLiteral("small");
+    case FabSize::Medium: return QStringLiteral("medium");
+    case FabSize::Large: return QStringLiteral("large");
+    case FabSize::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {

@@ -194,6 +194,31 @@ set_tests_properties(TestMd3IconButton PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3IconButton)
+
+# --- FAB ---------------------------------------------------------------------
+# MdFab: the token table (metrics per size, the four colour sets, the lowered
+# elevation rows and the spec-filled disabled row), the widget contract, and a
+# render smoke check over all 4 x 3 x 2 combinations.
+add_executable(TestMd3Fab
+    TestMd3Fab.cpp
+)
+
+target_link_libraries(TestMd3Fab
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Fab COMMAND TestMd3Fab)
+set_tests_properties(TestMd3Fab PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Fab)
 qt_md3_deploy_runtime(TestMd3ButtonGroup)
 
 # --- Policy gates -----------------------------------------------------------

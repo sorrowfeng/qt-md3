@@ -296,7 +296,38 @@ Text inputs, then the M3 Expressive cross-cutting pass.
         The common button already did this right; the icon button initially
         did not, which is why it is written down here.
 
-- [ ] FABs, Extended FABs, FAB menu, Split buttons,
+- [x] **`MdFab`** — 4 colour sets (surface / primary / secondary / tertiary) ×
+      3 sizes (40 / 56 / 96 px, corners 12 / 16 / 28 px, icons 24 / 24 / 36) ×
+      lowered / raised elevation rows, icon-only by token arithmetic (the
+      labelled form is the extended FAB, a separate family). `TestMd3Fab`
+      pins the size table, all four colour sets, the lowered elevation rows
+      and the disabled row field by field.
+
+      Three facts this component adds to the record:
+
+      * **The token export publishes no disabled rows.** The disabled values
+        (on-surface @12% container, on-surface @38% icon, elevation level0)
+        come from the official spec page's disabled state table — the same
+        disabled row every push-button family shows. Pinned by
+        `disabledRowFillsTheExportGapFromTheSpecTable`.
+      * **No pressed container shape, so no press morph.** The button and
+        icon-button families publish `pressed.container.shape` and spring the
+        corners there; the FAB family does not, and its pressed rows are
+        literally labelled "(ripple)". A FAB's press response is the ripple
+        alone, which is also consistent with the interaction reference
+        (`docs/interaction-reference.md`).
+      * **It is the Actions family that casts a real shadow.** Every colour
+        set publishes a `container.elevation` (raised L3/L4, lowered L1/L2),
+        so `MdFabStyle` paints `MdElevation::drawShadow` per state row — a
+        lowered surface FAB visibly sits closer to the page.
+
+      Not carried yet (recorded, not forgotten): the latest export also has
+      `primary-container`-style tonal sets (`md.comp.fab.primary-container.*`)
+      and the small-FAB touch-target wrapper (`48px - container-height`
+      margin, for a 40 px FAB). Neither is on the official spec page's FAB
+      colour/size axes; both are candidates for a follow-up pass.
+
+- [ ] Extended FABs, FAB menu, Split buttons,
       Segmented buttons — the rest of §1.2.
 
 ### Gallery scaffolding fixes found while building the first component

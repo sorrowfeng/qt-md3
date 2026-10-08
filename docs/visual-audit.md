@@ -49,6 +49,28 @@ captured official screenshot.
 | Buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Button groups | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Icon buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
+
+### FABs
+
+Rendered via `qt-md3-example --screenshot` in light mode (page `11-fabs`) and
+read against `tokens/versions/latest/sass/_md-comp-fab{,-<variant>,-<size>}.scss`.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Container sizes | 40 / 56 / 96 px | Yes |
+| Container corners | corner-medium 12 · corner-large 16 · corner-extra-large 28 | Yes |
+| Icon sizes | 24 / 24 / 36 px | Yes |
+| Colour sets | surface-container-high + primary icon · primary · secondary · tertiary, on-* icons | Yes |
+| Elevation shadow | raised L3 resting, L4 hovered; real layered shadow | Yes (live) |
+| Lowered | L1 resting / L2 hovered; surface variant swaps to surface-container-low | Yes |
+| Press response | ripple only — no pressed shape, no flat pressed layer | Yes (live) |
+| Disabled | on-surface @ 0.12 container, @ 0.38 icon, no shadow, no state layer | Yes |
+
+Same standing as the other families: no side-by-side official reference yet,
+so this stays `Needs visual QA` rather than `Pass`.
 
 ### Icon buttons
 

@@ -36,7 +36,7 @@ Column meaning (nine check columns):
 | Buttons | MdButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ Button groups | MdButtonGroup | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Icon buttons | MdIconButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| FABs | MdFab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| FABs | MdFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Extended FABs | MdExtendedFab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | ★ FAB menu | MdFabMenu | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | ★ Split buttons | MdSplitButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
@@ -102,6 +102,23 @@ One upstream inconsistency is preserved rather than reconciled, pinned by
   publishes `container.shape: corner-full` for every connected size), so
   `ButtonGroupShape::Square` keeps the round outer corner and squares only the
   items' own shape tokens. Recorded; not silently merged.
+
+### FABs — the two rows that are still `🚧`
+
+Same standing as the other Actions families: light/dark and RTL are handled,
+while seed change, contrast level, density and font switch have not yet been
+exercised *against the FAB page*, and the side-by-side reference comparison has
+not been recorded. Neither is a known defect; both are unfinished evidence.
+
+Two transcription notes are pinned by `TestMd3Fab` rather than smoothed:
+
+* the token export publishes **no disabled rows** — the disabled values
+  (on-surface @12% container, on-surface @38% icon, level0) come from the
+  official spec page's disabled state table, the same row every button family
+  shows;
+* no pressed container shape is published, so unlike the button/icon-button
+  families a FAB does not morph on press — the ripple is the whole press
+  response, which is also what the export's "Pressed (ripple)" row labels say.
 
 ## 1.3 Communication
 

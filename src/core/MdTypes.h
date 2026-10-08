@@ -403,6 +403,32 @@ enum class IconButtonSpaceTrack {
 };
 
 // ---------------------------------------------------------------------------
+// FAB
+// ---------------------------------------------------------------------------
+
+/// The four published FAB colour sets, `md.comp.fab.<variant>.*`:
+/// surface | primary | secondary | tertiary. (The latest export also carries
+/// `primary-container`-style tonal sets; see docs/porting-todo.md for why they
+/// are not a variant here yet.)
+enum class FabVariant {
+    Surface,
+    Primary,
+    Secondary,
+    Tertiary,
+    Count,
+};
+
+/// The three published FAB sizes, `md.comp.fab.<size>.*`:
+/// small (40 px, corner-medium), medium (56 px, corner-large) and
+/// large (96 px, corner-extra-large).
+enum class FabSize {
+    Small,
+    Medium,
+    Large,
+    Count,
+};
+
+// ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
 
@@ -451,6 +477,8 @@ QT_MD3_EXPORT QString buttonShapeName(ButtonShape shape);
 QT_MD3_EXPORT QString buttonGroupVariantName(ButtonGroupVariant variant);
 QT_MD3_EXPORT QString iconButtonVariantName(IconButtonVariant variant);
 QT_MD3_EXPORT QString iconButtonSpaceTrackName(IconButtonSpaceTrack track);
+QT_MD3_EXPORT QString fabVariantName(FabVariant variant);
+QT_MD3_EXPORT QString fabSizeName(FabSize size);
 QT_MD3_EXPORT QString buttonGroupOrientationName(ButtonGroupOrientation orientation);
 QT_MD3_EXPORT QString buttonGroupSelectionName(ButtonGroupSelection selection);
 
@@ -479,5 +507,7 @@ Q_DECLARE_METATYPE(md::ButtonGroupOrientation)
 Q_DECLARE_METATYPE(md::ButtonGroupSelection)
 Q_DECLARE_METATYPE(md::IconButtonVariant)
 Q_DECLARE_METATYPE(md::IconButtonSpaceTrack)
+Q_DECLARE_METATYPE(md::FabVariant)
+Q_DECLARE_METATYPE(md::FabSize)
 
 #endif // MD_TYPES_H
