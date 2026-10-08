@@ -104,6 +104,15 @@ function(_qt_md3_collect_qt_modules target out_var)
             if(_type STREQUAL "SHARED_LIBRARY")
                 list(APPEND _modules ${_current})
             endif()
+        elseif(TARGET ${_current})
+            # Project-shared libraries (qt-md3.dll itself) are load-time
+            # dependencies just like the Qt ones: a test executable next to
+            # which only the Qt DLLs were deployed still dies with
+            # STATUS_DLL_NOT_FOUND. Collect them too.
+            get_target_property(_type ${_current} TYPE)
+            if(_type STREQUAL "SHARED_LIBRARY")
+                list(APPEND _modules ${_current})
+            endif()
         endif()
 
         if(NOT TARGET ${_current})
