@@ -3,6 +3,26 @@
 Upstream gaps and outstanding work. Stage 1 must be green before any Stage 2 item
 is started (see [md3-coverage.md](md3-coverage.md)).
 
+## Reference sources for every port
+
+Each component is ported against both of these, in this order:
+
+1. **Official spec** — <https://m3.material.io/components/<component>/overview>
+   (plus the `/specs` and `/accessibility` pages). Source of structure:
+   variants, sizes, shapes, states, selection behaviour, keyboard behaviour,
+   accessibility rules. JS-rendered; capture with a real browser, not `WebFetch`.
+2. **`material-web`** — <https://github.com/material-components/material-web>.
+   Source of every numeric value: `tokens/versions/latest/sass/` for the
+   per-component `md.comp.*` export (and `tokens/versions/v0_192` for the
+   pinned `MdTokens` reference layer), `docs/components/` for behaviour notes.
+   The repo is in maintenance mode and does not implement Expressive, so where
+   Expressive behaviour is not in the tokens (springs, shape morphs), the
+   Jetpack Compose Material3 source is the behaviour reference.
+
+When the spec page and the token export disagree, do not silently pick one:
+record both values in this file under the component's entry and state which
+one won and why (see the Button groups entry for a worked example).
+
 ## Stage 1 — base modules
 
 All nineteen modules are implemented. What follows is what is *not* finished

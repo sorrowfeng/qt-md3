@@ -35,8 +35,15 @@ the M3 Expressive cross-cutting pass.
 
 ## Authoritative sources
 
+**Every component port consults both of these first** — the official spec for
+structure and behaviour, and the `material-web` token export for every numeric
+value. If the two disagree, record the disagreement in `docs/porting-todo.md`
+and say which one won and why; never silently pick one.
+
 - Design spec: <https://m3.material.io/> (JS-rendered — use a browser, not
-  `WebFetch`).
+  `WebFetch`). Per-component pages live under
+  <https://m3.material.io/components/<component>/overview> (plus `/specs` and
+  `/accessibility`).
 - **Token values (must be taken from here, never from memory):**
   <https://github.com/material-components/material-web/tree/main/tokens>.
 - Color algorithms (official C++): <https://github.com/material-foundation/material-color-utilities>.
