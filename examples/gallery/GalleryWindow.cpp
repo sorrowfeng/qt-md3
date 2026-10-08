@@ -443,6 +443,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createCardPage(),
         createDialogPage(),
         createBottomSheetPage(),
+        createSideSheetPage(),
     };
 
     QStringList titles;

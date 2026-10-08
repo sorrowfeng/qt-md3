@@ -203,6 +203,7 @@ GalleryPage *createTooltipPage();
 GalleryPage *createCardPage();
 GalleryPage *createDialogPage();
 GalleryPage *createBottomSheetPage();
+GalleryPage *createSideSheetPage();
 
 } // namespace gallery
 

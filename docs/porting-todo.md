@@ -449,8 +449,8 @@ is `SelectedContainerColor`.
 
 - [x] §1.3 Communication — **Badges, Progress indicators, Loading indicator,
       Snackbar and Tooltips ported** (the family is closed).
-- [ ] §1.4 Containment — **Cards, Dialogs and Bottom sheets ported**; side
-      sheets, carousel, divider and lists remain.
+- [ ] §1.4 Containment — **Cards, Dialogs, Bottom sheets and Side sheets
+      ported**; carousel, divider and lists remain.
 
 #### Badges (ported)
 
@@ -762,6 +762,56 @@ content padding and neither does this class.
   edge-to-edge with the parent's bottom), and `dismissed()` fires when the
   slide-down settles — Compose's `invokeOnCompletion` timing, not at request
   time.
+
+#### Side sheets (ported)
+
+`MdSideSheet` + `MdSideSheetHost` + `MdSideSheetStyle` +
+`MdSideSheetTokens`, locked by `TestMd3SideSheet`. Four facts shape it:
+
+* **The behaviour source is MDC-Android, not Compose.** material-web ships
+  only the token export (`_md-comp-sheet-side.scss`, 34.0.21) and Compose M3
+  ships no side sheet at all — the official overview's availability table
+  lists Android Views as the ONE available implementation. The two-state
+  machine (Hidden / Expanded plus the transient dragging/settling), the
+  Left/Right delegate geometry (`hiddenOffset` = the parent's width,
+  `expandedOffset` = `max(0, parentWidth - childWidth - innerMargin)`, and
+  the mirrored pair for the left edge), the `isReleasedCloseToInnerEdge`
+  midpoint settle, and the dialog wrapper (cancel on hide) all transcribe
+  from `SideSheetBehavior.java` / `RightSheetDelegate.java` /
+  `SideSheetDialog.java`; the measurements (24 px content padding, the 256 px
+  container width, the 16 px detached margin) come from
+  m3.material.io/components/side-sheets/specs.
+* **Recorded divergences**: (1) no velocity-weighted settle — MDC projects
+  the release position through the 0.1 hide friction against the 0.5 hide
+  threshold and weighs the 500 px/s significant velocity; the Qt port
+  settles on the midpoint rule positionally (all three constants are
+  transcribed into the token struct as the record). (2) The spec overview's
+  M2→M3 diff says "modal side sheets have a 16dp corner radius" but the
+  token export and MDC both publish `corner-large-start` (the 24 px large
+  radius on the start pair) — the paint follows the token export + MDC, the
+  16 dp note is recorded. (3) The detached presentation (16 px margins all
+  around, `detached.container.shape` = corner-large, the
+  `Widget.Material3.SideSheet.Detached` style) is recorded, not ported. (4)
+  The Expressive floating sheet (`_md-comp-sheet-floating.scss`) is a
+  separate token set — recorded, not ported. (5) MDC's coplanar sibling
+  layout (`updateCoplanarSiblingLayoutParams` — the content beside a docked
+  sheet reflows to make room as it slides) needs a coordinating parent
+  layout the port's overlay model does not have — recorded. (6) The
+  focus-indicator rows and the action rows (primary label-text, the state
+  layer opacities) are recorded, not painted — the sheet surface paints
+  none of them; the content is the caller's widgets. (7) Modality stops at
+  the host's parent, the shared child-widget caveat.
+* **The corner-large-start pair is edge-aware.** The published shape names
+  the START pair, which faces the app content: for a right-docked sheet the
+  TL / BL pair rounds (the style builds {r, 0, 0, r}), for a left-docked
+  sheet the TR / BR pair ({0, r, r, 0}) — the LeftSheetDelegate's mirror,
+  written as one layout function with an edge parameter.
+* **Geometry management is opt-in**, the bottom sheet's guard: a
+  statically-placed sheet never jumps to its anchors when the parent
+  resizes; the host calls `setGeometryManaged(true)`. The widget rect
+  carries the level-1 shadow margin on the top/bottom/inner edges with a
+  FLUSH docked edge, and `dismissed()` fires when the slide-out settles —
+  MDC's `SideSheetDialog` cancel timing (the behavior reports HIDDEN).
 
 ### Gallery scaffolding fixes found while building the first component
 

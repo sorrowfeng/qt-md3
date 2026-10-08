@@ -578,3 +578,27 @@ set_tests_properties(TestMd3BottomSheet PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3BottomSheet)
+
+# MdSideSheet + MdSideSheetHost, the Containment family's edge-docked pair:
+# the sheet surface (left/right delegates, the midpoint drag settle) and the
+# modal presentation (scrim, Escape / scrim click).
+add_executable(TestMd3SideSheet
+    TestMd3SideSheet.cpp
+)
+
+target_link_libraries(TestMd3SideSheet
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3SideSheet COMMAND TestMd3SideSheet)
+set_tests_properties(TestMd3SideSheet PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3SideSheet)

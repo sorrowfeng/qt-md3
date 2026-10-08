@@ -62,6 +62,7 @@ captured official screenshot.
 | Cards | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Dialogs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Bottom sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Side sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -426,6 +427,24 @@ No side-by-side official reference exists (material-web ships only the token
 export; the behaviour source is Compose M3's BottomSheet.kt and
 SheetDefaults.kt), so this stays `Needs visual QA` like the other
 Compose-sourced families.
+
+### Side sheets
+
+Page 24 (`Side sheets`) places three static sheet snapshots and one live
+demo (a real `MdSideSheetHost` raised over the page). Checked against the
+page render:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Modal container (right) | surface-container-low, level-1 shadow, the LARGE radius on TL/BL (the start pair facing the content), the right edge flush | Yes |
+| Standard sheet | surface at level 0, square corners, a 1 px outline divider on the content-facing edge — against the page's own surface only the divider reads, which is the token-faithful rendering | Yes |
+| Left-docked modal | the mirror: the radius pair on TR/BR | Yes |
+| Live host | the demo button raises the scrim (black 0.32) + the right-docked full-height sheet; drag / Escape / scrim click run the cancel flow | Yes (live) |
+
+No side-by-side official reference exists (material-web ships only the token
+export and Compose ships no side sheet; the behaviour source is MDC-Android's
+sidesheet package), so this stays `Needs visual QA` like the other
+MDC-sourced families.
 
 ## 2026-10 comparison re-check (official vs ported)
 
