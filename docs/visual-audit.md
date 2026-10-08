@@ -56,6 +56,7 @@ captured official screenshot.
 | Segmented buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Badges | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Progress indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Loading indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -295,6 +296,32 @@ Same standing as the other families: no side-by-side official reference yet,
 so this stays `Needs visual QA` rather than `Pass`. The Expressive wave
 rendering is the family's registered gap (see porting-todo.md) and is called
 out on the page itself.
+
+### Loading indicators
+
+Rendered via `qt-md3-example --screenshot` in light and dark modes (page
+`18-loading-indicators`) and read against
+`_md-comp-loading-indicator.scss` plus the Compose M3 Expressive
+`LoadingIndicator` / `MaterialShapes` sources — the export is token-only, so
+there is no official web rendering to compare against at all.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Container | 48 px corner-full disc; only the contained variant paints it (primary-container) | Yes |
+| Active indicator | 38 px target (ActiveIndicatorScale 38/48), primary / on-primary-container | Yes |
+| Indeterminate | the seven-shape morph loop, one 650 ms spring morph each, bounce kept (overshoot ≈1.08) | Yes (frame-checked against the pure functions) |
+| Rotation | quarter-turn step per morph over the 4666 ms linear spin | Yes (pure-function checked) |
+| Determinate | circle(rot 18°) → soft-burst by progress, sweeping −180° | Yes (0/25/50/75/100 % snapshots on the page) |
+| Non-interactivity | no state layer, no ripple, no focus ring | Yes (live) |
+| Both modes | colours track the scheme | Yes |
+
+Shape-engine ground truth: the eight MaterialShapes render recognisably
+against the catalogue's reference images (soft-burst's 10 soft points,
+9-cookie's rounded lobes, the 45°-tilted pill, the tilted oval). The morph's
+radial-interpolation divergence is structural (see porting-todo.md) and
+cannot diverge visually for these star-convex shapes.
 
 ## 2026-10 comparison re-check (official vs ported)
 

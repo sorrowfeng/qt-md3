@@ -460,6 +460,17 @@ QString progressIndicatorShapeName(ProgressIndicatorShape shape)
     return QStringLiteral("unknown");
 }
 
+QString loadingIndicatorVariantName(LoadingIndicatorVariant variant)
+{
+    // The `md.comp.loading-indicator[.<name>].*` variant segment.
+    switch (variant) {
+    case LoadingIndicatorVariant::Plain: return QStringLiteral("plain");
+    case LoadingIndicatorVariant::Contained: return QStringLiteral("contained");
+    case LoadingIndicatorVariant::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {

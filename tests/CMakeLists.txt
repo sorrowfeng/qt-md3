@@ -357,6 +357,31 @@ set_tests_properties(TestMd3ProgressIndicator PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3ProgressIndicator)
 
+# MdLoadingIndicator, the third Communication family: the Expressive
+# token-only export (34.0.21) plus the Compose-port behaviour — the shape
+# engine (graphics-shapes port), the radial morph, the spring/morph-grid
+# pure functions, the determinate sweep and the non-interactivity contract.
+add_executable(TestMd3LoadingIndicator
+    TestMd3LoadingIndicator.cpp
+)
+
+target_link_libraries(TestMd3LoadingIndicator
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3LoadingIndicator COMMAND TestMd3LoadingIndicator)
+set_tests_properties(TestMd3LoadingIndicator PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3LoadingIndicator)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

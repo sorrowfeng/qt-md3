@@ -8,14 +8,14 @@ Last updated: 2026-10-08
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
 | Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication under way |
-| Stage 1 families complete | `10 / 36` (§1.2 Actions × 8, Badges, Progress indicators) |
+| Stage 1 families complete | `11 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator) |
 | Base modules | `21 / 21` |
-| Public components | `12` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`) |
-| Style classes | `11` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`) |
-| Example pages | `17` |
+| Public components | `13` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`) |
+| Style classes | `12` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`) |
+| Example pages | `18` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `23` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `24` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges and Progress indicators
+### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges, Progress indicators and Loading indicator
 
 | Component | Covers |
 | --- | --- |
@@ -122,6 +122,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdBadgeTokens` | the `md.comp.badge.*` value layer verbatim (dot 6, large 16, both corner-full, error / on-error, label-small); no state rows exist in the export — non-interactivity is a published fact, not a gap. |
 | `MdBadgeStyle` | Pattern A style: the quietest painter in the library — a corner-full container and, in the content form, one label-small text. No state layer, no ripple, no focus indicator. |
 | `MdProgressIndicator` | `QWidget` (non-interactive by contract), one merged family with two shapes: linear (determinate with the 4 px gap + stop indicator, buffer with the scaled track and scrolling 2 px dots, the MDC 2 s two-bar indeterminate) and circular (determinate arc from 12 o'clock, the three-composed-rotation indeterminate). Determinate value changes transition over the published 250/500 ms curves; `fourColor` rides the deprecated four-color sets. Six `Q_PROPERTY`s with NOTIFY. |
+| `MdLoadingIndicator` | `QWidget` (non-interactive by contract), the Expressive shape-morphing family: plain and contained variants, the seven-shape indeterminate loop (650 ms morph grid, closed-form spring with the bounce kept, quarter-turn steps over the 4666 ms linear spin) and the determinate circle→soft-burst walk with the −180° sweep. Backed by the `MdMaterialShapes` engine (a faithful graphics-shapes port) and the radial morph — the one registered divergence. Four `Q_PROPERTY`s with NOTIFY. |
 | `MdProgressIndicatorTokens` | the merged `md.comp.progress-indicator.*` value layer verbatim — base + linear + circular rows, the deprecated base metrics, the deprecated `thick.*` rows (transcribed, never exposed as an API) and the four-color roles from the deprecated per-shape sets. The Expressive wave rows are carried but not rendered (the family's registered gap). |
 | `MdProgressIndicatorStyle` | Pattern A style plus the indeterminate math as *pure functions of elapsed time* (`linearIndeterminateFrame`, `circularIndeterminateFrame`, `fourColorAt`) so the tests pin the keyframes field by field without an event loop. Owns a hand-rolled cubic-bezier solver — `QEasingCurve` has no public per-t evaluation. |
 
@@ -239,10 +240,10 @@ gallery scaffolding, unreachable from the seven token-only pages.
 
 ## What is next
 
-Stage 1 §1.3 Communication, in official order — Badges and Progress
-indicators are complete:
+Stage 1 §1.3 Communication, in official order — Badges, Progress indicators
+and the Loading indicator are complete:
 
-**Loading indicator, snackbars, tooltips.** Then on to §1.4 Containment.
+**Snackbars, tooltips.** Then on to §1.4 Containment.
 
 Each component lands as its own commit and must satisfy all twelve Definition of
 Done items before the next one starts, including an independent gallery page, a

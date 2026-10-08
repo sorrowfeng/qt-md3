@@ -233,7 +233,7 @@ smoothed:
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Badges | MdBadge + MdBadgedBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Progress indicators | MdProgressIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ Loading indicator | MdLoadingIndicator | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| ★ Loading indicator | MdLoadingIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Snackbar | MdSnackbar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Tooltips | MdTooltip | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 

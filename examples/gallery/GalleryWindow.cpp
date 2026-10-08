@@ -437,6 +437,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createSegmentedButtonPage(),
         createBadgePage(),
         createProgressIndicatorPage(),
+        createLoadingIndicatorPage(),
     };
 
     QStringList titles;

@@ -447,8 +447,8 @@ A disabled selected segment keeps its secondary-container fill: the export
 has no disabled-container row and Compose's `disabledActiveContainerColor`
 is `SelectedContainerColor`.
 
-- [ ] §1.3 Communication — **Badges and Progress indicators ported**; loading
-      indicator, snackbars and tooltips remain.
+- [ ] §1.3 Communication — **Badges, Progress indicators and Loading indicator
+      ported**; snackbars and tooltips remain.
 
 #### Badges (ported)
 
@@ -522,6 +522,51 @@ percentage-stroke CSS resolves differently) and the circular determinate
 track is painted (the merged export's `track.color`; material-web's legacy
 `.track` stroke is transparent). RTL mirrors the linear indicator, the CSS
 `scale(-1)` contract.
+
+#### Loading indicator (ported)
+
+`MdLoadingIndicator` + `MdLoadingIndicatorStyle` + `MdLoadingIndicatorTokens`
++ the `MdMaterialShapes` engine in core, locked by
+`TestMd3LoadingIndicator`. Four facts shape the implementation:
+
+* **The export is token-only.** material-web ships
+  `_md-comp-loading-indicator.scss` (34.0.21: active indicator 38 px,
+  container 48×48 corner-full, primary / on-primary-container on
+  primary-container, **no state rows**) but no web component. The behaviour
+  port is Compose M3 Expressive's `LoadingIndicator` (androidx-main) — the
+  third family whose behaviour source is Compose (after Badge and the FAB
+  menu motion).
+* **The shape engine is a faithful graphics-shapes port.** `MdCubic` /
+  `MdRoundedPolygon` reproduce androidx `graphics-shapes`' corner-rounding
+  construction field by field — the two-step cut negotiation between
+  adjacent corners, the smoothing flanking curves, the circular-arc cubic,
+  `normalized()` (against the *control-point* hull, like the reference), the
+  exact and max-rotation bounds, and the first-corner arc-midpoint outline
+  start. The eight catalogue shapes the family needs (circle, oval, pill,
+  pentagon, sunny, 4-cookie, 9-cookie, soft-burst) are transcribed from
+  `MaterialShapes.kt` verbatim; the generic polygon/star/custom machinery is
+  exposed so more of the catalogue can be added without touching the engine.
+* **One registered divergence: the morph.** graphics-shapes' `Morph` matches
+  curve *features* between two shapes before interpolating them
+  (MeasuredPolygon + featureMapper, ≈1500 further lines). This port samples
+  both normalized outlines radially (240 angles from the polygon centre) and
+  interpolates the matching points. Every shape in the indicator's sequence
+  is star-convex around its centre, so at the family's 38 px the difference
+  is not observable; the divergence is pinned in the test suite and on the
+  gallery page. If a later component needs morphs between shapes that are
+  not star-convex (ghostish, arrow, …), the feature-matching algorithm has
+  to be ported — **open question**.
+* **The animation is the Compose spec as pure functions.** The morph runs on
+  a 650 ms grid; each morph is the closed form of the published spring
+  (dampingRatio 0.6, stiffness 200) and is left **unclamped** — the spring
+  overshoots to ≈1.08 and the morph extrapolates linearly, which *is* the
+  shape bounce. The draw rotation composes the in-morph quarter turn, a
+  quarter-turn step per completed morph, and a 4666 ms linear global spin.
+  The determinate mode walks the open circle→soft-burst morph by progress
+  and sweeps −180°. Two recorded simplifications: the closed-form spring
+  never freezes at the reference's visibility threshold (a sub-pixel
+  difference at the snap, where the reference may hold at ≈0.99), and the
+  morph path is a dense polyline rather than interpolated cubics.
 
 ### Gallery scaffolding fixes found while building the first component
 
