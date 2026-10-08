@@ -441,6 +441,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createSnackbarPage(),
         createTooltipPage(),
         createCardPage(),
+        createDialogPage(),
     };
 
     QStringList titles;

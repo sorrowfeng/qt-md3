@@ -8,14 +8,14 @@ Last updated: 2026-10-09
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
 | Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication closed; §1.4 Containment under way |
-| Stage 1 families complete | `14 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards) |
+| Stage 1 families complete | `15 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs) |
 | Base modules | `21 / 21` |
-| Public components | `18` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`) |
-| Style classes | `15` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`) |
-| Example pages | `21` |
+| Public components | `20` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`, `MdDialog`, `MdDialogHost`) |
+| Style classes | `16` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`, `MdDialogStyle`) |
+| Example pages | `22` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `27` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `28` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3Dialog`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -136,6 +136,10 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdCard` | `QWidget` container for the three exports with Compose's clickability split: non-clickable cards paint the enabled row edge-to-edge (no interaction source, no focus), clickable cards add the hover / keyboard-focus state layers, the press ripple (press never raises — the "Pressed (ripple)" row repeats the resting elevation), the `:focus-visible` ring with its reserved contents margin, Space/Enter activation and the `clicked()` signal. Children fill the painted container through the contents margins. The elevation ladder *animates* (standard easing 200 ms; disabled snaps), and an explicit `dragged` setter paints the dragged row for external drag frameworks. Three `Q_PROPERTY`s with NOTIFY. |
 | `MdCardTokens` | the three `md.comp.<variant>-card.*` sets verbatim — per-state container / state-layer / outline roles and the elevation ladders (filled L0→L1→L3, elevated L1→L2→L4, outlined L0→L1→L3), the exported disabled rows (filled → surface-variant, elevated → surface, outlined container unchanged) and Compose's disabled constants (0.38 container / 0.38 content / 0.12 outline). |
 | `MdCardStyle` | Pattern A style: the layout as a pure function (container = widget rect minus the focus margin for clickable cards, zero for plain surfaces), shadow via the elevation ladder's animated dp, the disabled compositing exactly as Compose does it (disabled colour over the enabled container), and `paintCard` shared with the test suite. |
+| `MdDialog` | `QWidget` carrying Compose's four AlertDialog slots: the headline and supporting text are painted by the style (the snackbar idiom), the icon slot is any `QWidget` handed to `setIconWidget`, and the action slots are real Text-variant `MdButton` children — the export's action rows are the text button's own tokens, so ripple and `:focus-visible` come free (the recorded divergence from the snackbar's self-drawn action). Escape emits `dismissed()`. Two `Q_PROPERTY`s with NOTIFY. |
+| `MdDialogTokens` | the single `md.comp.dialog.*` export verbatim (34.0.21) — container surface-container-high at level3 with the extra-large corner, headline-small on-surface, body-medium on-surface-variant, 24 px secondary icon, label-large primary action with the hover/focus/pressed state rows (0.08/0.12/0.12), the deprecated-but-published divider rows, Compose's private layout constants (24 px padding, icon 16 / title 16 / text 24 bottoms, 8 px action spacing, 280..560 width clamp, 0.32 scrim) and the shadow-margin idiom. |
+| `MdDialogStyle` | Pattern A style: the layout as a pure function of a `ContentSpec` (icon centred, title start-aligned, text wrapped, one or two end-aligned action rows restating Compose's RTL FlowRow trick — confirm rightmost, wrapping confirm-above-dismiss), `paintDialog` shared with the test suite, painter-opacity carrying the host's fade. |
+| `MdDialogHost` | the Compose `BasicAlertDialog` half: an overlay across its parent painting the scrim (black 0.32, faded by the transition), the dialog centred and width-clamped into 280..560, Escape and scrim clicks running the `onDismissRequest` flow (`dismissed()` emitted at request time), fade-in/out on the effects-fast spring — dialogs fade only, no scale. |
 
 ## Known gaps, recorded rather than hidden
 
@@ -251,9 +255,9 @@ gallery scaffolding, unreachable from the seven token-only pages.
 
 ## What is next
 
-Stage 1 §1.4 Containment, in official order — Cards is complete:
+Stage 1 §1.4 Containment, in official order — Cards and Dialogs are complete:
 
-**Dialogs.** Then bottom sheets.
+**Bottom sheets.** Then side sheets.
 
 Each component lands as its own commit and must satisfy all twelve Definition of
 Done items before the next one starts, including an independent gallery page, a

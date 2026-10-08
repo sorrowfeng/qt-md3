@@ -449,7 +449,7 @@ is `SelectedContainerColor`.
 
 - [x] §1.3 Communication — **Badges, Progress indicators, Loading indicator,
       Snackbar and Tooltips ported** (the family is closed).
-- [ ] §1.4 Containment — **Cards ported**; dialogs and bottom sheets remain.
+- [ ] §1.4 Containment — **Cards and Dialogs ported**; bottom sheets remain.
 
 #### Badges (ported)
 
@@ -682,6 +682,40 @@ Also of note: contents margins always match the painted container (the
 focus margin for a clickable card, zero otherwise), so a layout installed
 on the card fills the container exactly; Compose publishes no default
 content padding and neither does this class.
+
+#### Dialog (ported)
+
+`MdDialog` + `MdDialogHost` + `MdDialogStyle` + `MdDialogTokens`, locked by
+`TestMd3Dialog`. Four facts shape it:
+
+* **material-web ships no dialog web component** (token export only), so the
+  visuals come from `_md-comp-dialog.scss` (34.0.21) and the behaviour from
+  Compose M3's `AlertDialog.kt`. The full-screen-dialog token export
+  (`_md-comp-full-screen-dialog.scss`) exists but Compose implements no M3
+  full-screen dialog to port behaviour from — recorded, not ported.
+* **The action slots are real Text buttons, not self-drawn regions** — the
+  recorded counter-divergence to the snackbar: there the inverse-primary
+  action colour no `MdButton` variant could express; here the export's
+  action rows (label-large in primary at the standard opacities) ARE the
+  text button's own tokens, and Compose documents that its slots are
+  TextButtons which use their own colours. Embedding gets ripple, state
+  layers and `:focus-visible` for free; the token table still transcribes
+  the export's rows as the family's record.
+* **The slots map onto Qt by kind**: headline and supporting text are
+  painted by the style (the snackbar idiom), the icon slot is any `QWidget`
+  (Compose's icon slot is any composable), actions are the embedded
+  buttons. Compose's RTL `AlertDialogFlowRow` trick is restated plainly:
+  one row puts the confirm rightmost, wrapping puts the confirm on the
+  first row and the dismiss on the second, both end-aligned.
+* **The host is the Compose `BasicAlertDialog` half**: scrim (black at
+  0.32, md.sys.color.scrim — not a dialog row), centring with the
+  280..560 width clamp, Escape and scrim clicks running the
+  `onDismissRequest` flow with the fade on the effects-fast spring —
+  dialogs fade only, no scale. Recorded divergence: modality stops at the
+  host's parent — a child-widget port cannot run the platform modal loop,
+  so the overlay swallows interaction within its parent only. Compose's
+  flag-gated "precision pointer" sizing (20/16 paddings, 20 sp title) is
+  not ported.
 
 ### Gallery scaffolding fixes found while building the first component
 

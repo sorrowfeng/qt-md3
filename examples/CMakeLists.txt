@@ -28,6 +28,7 @@ add_executable(qt-md3-example
     gallery/GalleryPages19.cpp
     gallery/GalleryPages20.cpp
     gallery/GalleryPages21.cpp
+    gallery/GalleryPages22.cpp
     gallery/GalleryWindow.cpp
 )
 

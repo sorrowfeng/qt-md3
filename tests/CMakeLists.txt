@@ -457,6 +457,27 @@ set_tests_properties(TestMd3Card PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Card)
 
+add_executable(TestMd3Dialog
+    TestMd3Dialog.cpp
+)
+
+target_link_libraries(TestMd3Dialog
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Dialog COMMAND TestMd3Dialog)
+set_tests_properties(TestMd3Dialog PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Dialog)
+
 # --- Policy gates -----------------------------------------------------------
 # These are CMake scripts, not compiled tests. They enforce project-wide rules
 # that must hold from day one.

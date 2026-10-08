@@ -60,6 +60,7 @@ captured official screenshot.
 | Snackbars | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Tooltips | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Cards | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Dialogs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -387,6 +388,24 @@ contents margins). Checked against the page render:
 No side-by-side official reference exists (material-web ships only the token
 exports for this family; the behaviour source is Compose M3's Card.kt), so
 this stays `Needs visual QA` like the other Compose-sourced families.
+
+### Dialogs
+
+Page 22 (`Dialogs`) places two static dialog snapshots and one live demo
+(a real `MdDialogHost` raised over the page). Checked against the page
+render:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Container | surface-container-high, corner-extra-large, level-3 shadow ring visible | Yes |
+| Basic slots | centred title (headline-small), wrapped supporting text (body-medium), end-aligned text actions | Yes |
+| Action order | dismiss left of confirm, both flush to the end padding | Yes |
+| Text-only | no icon/title — the supporting text starts at the top padding | Yes |
+| Live host | the demo button raises the scrim + centred dialog; Escape / scrim click dismiss | Yes (live) |
+
+No side-by-side official reference exists (material-web ships only the token
+export; the behaviour source is Compose M3's AlertDialog.kt), so this stays
+`Needs visual QA` like the other Compose-sourced families.
 
 ## 2026-10 comparison re-check (official vs ported)
 
