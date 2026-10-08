@@ -423,6 +423,18 @@ QString extendedFabSizeName(ExtendedFabSize size)
     return QStringLiteral("unknown");
 }
 
+QString fabMenuVariantName(FabMenuVariant variant)
+{
+    // The `md.comp.fab-menu.<name>.*` colour-group segment.
+    switch (variant) {
+    case FabMenuVariant::Primary: return QStringLiteral("primary");
+    case FabMenuVariant::Secondary: return QStringLiteral("secondary");
+    case FabMenuVariant::Tertiary: return QStringLiteral("tertiary");
+    case FabMenuVariant::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString iconFamilyName(MdIconFamily family)
 {
     switch (family) {

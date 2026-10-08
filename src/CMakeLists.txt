@@ -30,6 +30,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdIconButtonTokens.h
     core/MdFabTokens.h
     core/MdExtendedFabTokens.h
+    core/MdFabMenuTokens.h
     core/MdIcon.h
     core/MdResources.h
     core/MdTheme.h
@@ -44,6 +45,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdIconButtonStyle.h
     styles/MdFabStyle.h
     styles/MdExtendedFabStyle.h
+    styles/MdFabMenuStyle.h
 )
 
 set(QT_MD3_WIDGET_HEADERS
@@ -52,6 +54,8 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdIconButton.h
     widgets/MdFab.h
     widgets/MdExtendedFab.h
+    widgets/MdFabMenu.h
+    widgets/MdFabMenuItem.h
 )
 
 set(QT_MD3_SOURCES
@@ -75,6 +79,7 @@ set(QT_MD3_SOURCES
     core/MdIconButtonTokens.cpp
     core/MdFabTokens.cpp
     core/MdExtendedFabTokens.cpp
+    core/MdFabMenuTokens.cpp
     core/MdIcon.cpp
     core/MdResources.cpp
     core/MdTheme.cpp
@@ -86,11 +91,14 @@ set(QT_MD3_SOURCES
     styles/MdIconButtonStyle.cpp
     styles/MdFabStyle.cpp
     styles/MdExtendedFabStyle.cpp
+    styles/MdFabMenuStyle.cpp
     widgets/MdButton.cpp
     widgets/MdButtonGroup.cpp
     widgets/MdIconButton.cpp
     widgets/MdFab.cpp
     widgets/MdExtendedFab.cpp
+    widgets/MdFabMenu.cpp
+    widgets/MdFabMenuItem.cpp
 )
 
 set(QT_MD3_RESOURCES

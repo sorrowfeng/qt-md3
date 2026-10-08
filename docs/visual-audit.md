@@ -51,6 +51,28 @@ captured official screenshot.
 | Icon buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Extended FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| FAB menu | `Needs visual QA` | `Needs visual QA` | All | See below. |
+
+### FAB menu
+
+Rendered via `qt-md3-example --screenshot` in light mode (page
+`13-fab-menus`) and read against `tokens/versions/latest/sass/
+_md-comp-fab-menu{,-<variant>-container,-<variant>-close-button}.scss`.
+
+Checked against the published values:
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Close button | 56 × 56, icon 20, corner-full, elevation L3 resting / L4 hovered | Yes (live) |
+| List items | 56 tall, icon 24, 24/8/24 rhythm, corner-full, title-medium label, L0 throughout | Yes |
+| Colour groups | close = pure primary / secondary / tertiary, items = the matching `*-container`, on-* content | Yes |
+| Spacing | 8 px close-to-first-item, 4 px between items, right-aligned under the anchor corner | Yes |
+| Open animation | staggered fade + 24 px settle, top-down, from the anchor corner | Yes (live; Compose-sourced motion, no export rows) |
+| Anchor crossfade | FAB hides, close button appears in the same top trailing place | Yes (live) |
+| Disabled | on-surface @ 0.12 container, @ 0.38 content, no shadow, no state layer | Yes |
+
+Same standing as the other families: no side-by-side official reference yet,
+so this stays `Needs visual QA` rather than `Pass`.
 
 ### Extended FABs
 

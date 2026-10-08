@@ -182,6 +182,9 @@ GalleryPage *createFabPage();
 /// Actions — Extended FABs (six colour sets x three sizes x lowered/raised).
 GalleryPage *createExtendedFabPage();
 
+/// Actions — FAB menus (three colour groups, up to six staggered items).
+GalleryPage *createFabMenuPage();
+
 /// Actions — FABs (four colour sets x three sizes x lowered / raised).
 GalleryPage *createFabPage();
 

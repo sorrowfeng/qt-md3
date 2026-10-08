@@ -31,10 +31,10 @@ system:
 
 | Metric | Value |
 | --- | --- |
-| Stage 1 MD3 families complete | `5 / 36` (Buttons, Button groups, Icon buttons, FABs, Extended FABs) |
+| Stage 1 MD3 families complete | `6 / 36` (Buttons, Button groups, Icon buttons, FABs, Extended FABs, FAB menu) |
 | Foundation modules | `21` |
-| Public components | `5` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`) |
-| CTest entries | `18` (all green) |
+| Public components | `7` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`) |
+| CTest entries | `19` (all green) |
 | Stage 2 (Qt extensions) | Not started — gated until Stage 1 is green |
 
 Progress is tracked in [docs/md3-coverage.md](docs/md3-coverage.md), the single

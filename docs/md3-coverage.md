@@ -38,7 +38,7 @@ Column meaning (nine check columns):
 | Icon buttons | MdIconButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | FABs | MdFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Extended FABs | MdExtendedFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ FAB menu | MdFabMenu | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| ★ FAB menu | MdFabMenu | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ Split buttons | MdSplitButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Segmented buttons | MdSegmentedButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 
@@ -143,6 +143,33 @@ smoothed:
   family does (the export publishes no disabled rows), and the *deprecated*
   focus rows pointing at `*-container` roles are ignored in favour of the
   non-deprecated `focused-*` rows.
+
+### FAB menu — the two rows that are still `🚧`
+
+Same standing as the other Actions families: light/dark and RTL are handled,
+while seed change, contrast level, density and font switch have not yet been
+exercised *against the FAB-menu page*, and the side-by-side reference
+comparison has not been recorded. Neither is a known defect; both are
+unfinished evidence.
+
+Three transcription notes are pinned by `TestMd3FabMenu` rather than
+smoothed:
+
+* **the export publishes no motion rows for this family** — the spec page
+  says only "the FAB menu animates from the top trailing edge of the FAB".
+  The reveal runs on the Compose M3 Expressive `SpatialDefault` spring with
+  a 40 ms per-item stagger and a 24 px settle; that is a
+  sourced-from-Compose convention, not a token fact, and is labelled as
+  such on the gallery page.
+* **no focus-indicator rows of its own** — the close button and items carry
+  focused state-layer colours but no `focus.indicator.*` rows, so the
+  indicator falls back to the shared `md-sys-state-focus-indicator` values
+  (secondary, 3 px, offset 2).
+* **spec-page structural facts the export cannot express** — up to six
+  items, the close button always 56 dp sharing the FAB's top trailing
+  corner, a recommended 4 dp FAB-to-menu gap on the web, and "inherits its
+  states and specs from the baseline menu". All recorded; the menu caps
+  nothing (adding a seventh item is allowed and simply beyond spec).
 
 ## 1.3 Communication
 

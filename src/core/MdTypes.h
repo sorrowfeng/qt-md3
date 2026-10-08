@@ -451,6 +451,16 @@ enum class ExtendedFabSize {
     Count,
 };
 
+/// The three published FAB menu colour groups, `md.comp.fab-menu.<group>.*`.
+/// Each group is published twice — once for the close button (the pure
+/// colour) and once for the list items (the container colour).
+enum class FabMenuVariant {
+    Primary,
+    Secondary,
+    Tertiary,
+    Count,
+};
+
 // ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
@@ -504,6 +514,7 @@ QT_MD3_EXPORT QString fabVariantName(FabVariant variant);
 QT_MD3_EXPORT QString fabSizeName(FabSize size);
 QT_MD3_EXPORT QString extendedFabVariantName(ExtendedFabVariant variant);
 QT_MD3_EXPORT QString extendedFabSizeName(ExtendedFabSize size);
+QT_MD3_EXPORT QString fabMenuVariantName(FabMenuVariant variant);
 QT_MD3_EXPORT QString buttonGroupOrientationName(ButtonGroupOrientation orientation);
 QT_MD3_EXPORT QString buttonGroupSelectionName(ButtonGroupSelection selection);
 
@@ -536,5 +547,6 @@ Q_DECLARE_METATYPE(md::FabVariant)
 Q_DECLARE_METATYPE(md::FabSize)
 Q_DECLARE_METATYPE(md::ExtendedFabVariant)
 Q_DECLARE_METATYPE(md::ExtendedFabSize)
+Q_DECLARE_METATYPE(md::FabMenuVariant)
 
 #endif // MD_TYPES_H

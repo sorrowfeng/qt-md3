@@ -357,7 +357,35 @@ Text inputs, then the M3 Expressive cross-cutting pass.
       lowered L1/L2), and — unlike the FAB — lowered changes elevation only:
       there is no lowered container colour in this family.
 
-- [ ] FAB menu, Split buttons,
+- [x] **`MdFabMenu`** — 3 colour groups (primary / secondary / tertiary,
+      each published twice: the close button takes the pure colour, the
+      list items the container colour), an anchor FAB + a 56 px close
+      button sharing its top trailing corner + up to six staggered list
+      items. `TestMd3FabMenu` pins both elements' rows, the three groups,
+      the spacing and the disabled row field by field.
+
+      Facts this component adds to the record:
+
+      * **No motion rows in the export.** The spec page's only motion
+        statement is "the FAB menu animates from the top trailing edge of
+        the FAB". The reveal here uses the Compose M3 Expressive
+        `SpatialDefault` spring, a 40 ms per-item stagger and a 24 px
+        settle — recorded as a sourced-from-Compose convention, labelled as
+        such on the gallery page, not a token fact.
+      * **No focus-indicator rows of its own.** Focused state-layer colours
+        exist; `focus.indicator.*` rows do not, so the shared
+        `md-sys-state-focus-indicator` fallback (secondary, 3 px, offset 2)
+        applies.
+      * **No disabled rows** — the spec's disabled state table fills them
+        (on-surface @12% container, @38% content, level0), as in every
+        family since the buttons.
+      * **Structural facts from the spec page**: up to six items, the close
+        button always 56 dp, a recommended 4 dp FAB-to-menu gap on web, and
+        "inherits its states and specs from the baseline menu". The
+        container enforces none of these caps (a seventh item renders
+        fine); the facts are recorded here and in the token header.
+
+- [ ] Split buttons,
       Segmented buttons — the rest of §1.2.
 
 ### Gallery scaffolding fixes found while building the first component

@@ -10,12 +10,12 @@ Last updated: 2026-10-08
 | Stage | Stage 1 — Batch 0 closed; §1.2 Actions under way |
 | Stage 1 families complete | `3 / 36` (Buttons, Button groups, Icon buttons) |
 | Base modules | `21 / 21` |
-| Public components | `5` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`) |
-| Style classes | `6` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`) |
+| Public components | `7` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`) |
+| Style classes | `7` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`) |
 | Example pages | `10` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `18` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `19` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 — the first five components
+### Stage 1 §1.2 — the first six components
 
 | Component | Covers |
 | --- | --- |
@@ -110,6 +110,9 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdFabTokens` | the `md.comp.fab.*` value layer: the three-size metric table, the four colour sets (flat interactive rows), the lowered elevation rows and the spec-filled disabled row — the export publishes none. |
 | `MdExtendedFab` | `QPushButton` subclass, 6 colour sets (primary / secondary / tertiary + three `*-container`, no surface) × 3 sizes (small 56 / medium 80 / large 96 px, corners 16 / 20 / 28 px, icons 24 / 28 / 36) × lowered / raised elevation rows, icon + label on a content-derived width (leading + icon + gap + label + trailing, not a token). Six `Q_PROPERTY`s with NOTIFY. |
 | `MdExtendedFabTokens` | the `md.comp.extended-fab.*` value layer: the three-size metric + type-scale table, the six colour sets (flat interactive rows reusing the FAB family structs), the lowered elevation rows and the spec-filled disabled row. |
+| `MdFabMenu` | `QWidget` container: an anchor `MdFab`, a 56 px close button sharing its top trailing corner, and up to six list items staggering in top-down on the Compose `SpatialDefault` spring (40 ms stagger) — the export publishes no motion rows. `Q_PROPERTY`s for variant / expanded / anchor icon, `itemActivated(int, QString)`. |
+| `MdFabMenuItem` | `QPushButton` subclass for both element shapes (close button / list item), each with its own published token rows; `reveal` property drives the staggered open animation (opacity + 24 px settle). |
+| `MdFabMenuTokens` | the `md.comp.fab-menu.*` value layer: the common spacing rows (8 / 4), both elements' metric + colour + elevation tables across the three colour groups, and the spec-filled disabled row. |
 
 ## Known gaps, recorded rather than hidden
 

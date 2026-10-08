@@ -155,16 +155,18 @@ twenty-one modules are implemented, and `ContrastLevel` is applied rather than
 stored, so reduced / standard / medium / high genuinely move the tones.
 
 Stage 1 components have started: **`MdButton`, `MdButtonGroup`,
-`MdIconButton`, `MdFab` and `MdExtendedFab` are complete** — Buttons (5 colour
-styles × 5 Expressive sizes × 2 shapes, leading/trailing icons, soft-disabled,
-live states), Button groups (standard / connected, five sizes, four selection
-modes, round / square, horizontal / vertical, arrow-key navigation), Icon
-buttons (4 styles × 5 sizes × 2 shapes × 3 padding tracks, toggle form with
-the selected colour families and swapped selected corners), FABs (4 colour
-sets × 3 sizes × lowered / raised, the one Actions family with a real shadow)
-and extended FABs (6 colour sets × 3 sizes × lowered / raised, content-derived
-width), which is `5 / 36` families. The next families are the rest of §1.2 —
-FAB menu, split buttons, segmented buttons.
+`MdIconButton`, `MdFab`, `MdExtendedFab` and `MdFabMenu` are complete** —
+Buttons (5 colour styles × 5 Expressive sizes × 2 shapes, leading/trailing
+icons, soft-disabled, live states), Button groups (standard / connected, five
+sizes, four selection modes, round / square, horizontal / vertical, arrow-key
+navigation), Icon buttons (4 styles × 5 sizes × 2 shapes × 3 padding tracks,
+toggle form with the selected colour families and swapped selected corners),
+FABs (4 colour sets × 3 sizes × lowered / raised, the one Actions family with
+a real shadow), extended FABs (6 colour sets × 3 sizes × lowered / raised,
+content-derived width) and FAB menus (3 colour groups × anchor FAB + close
+button + up to six staggered items, Compose-sourced reveal motion), which is
+`6 / 36` families. The next families are the rest of §1.2 — split buttons,
+segmented buttons.
 
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and
