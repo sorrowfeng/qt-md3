@@ -189,6 +189,40 @@ Text inputs, then the M3 Expressive cross-cutting pass.
         kept in the table (so the table stays a faithful transcription) and not
         painted (so the widget follows the spec).
 
+      **Interaction-fidelity audit (2026-10-08).** The press animation was
+      captured frame by frame (probe builds, ~50 ms steps) and compared
+      against the official specs page and `material-web`'s ripple source.
+      Three behaviours were wrong and are now fixed and pinned by
+      `TestMd3Button` / `TestMd3IconButton`:
+
+      * **The focus indicator follows `:focus-visible`.** The official
+        components show the ring and the focused state colours for keyboard
+        focus only — a pointer press that moves focus shows nothing. Qt only
+        offers the focus *reason*, so `MdButton`/`MdIconButton` classify it in
+        `focusInEvent` (Tab / Backtab / shortcut / other = visible; mouse /
+        popup / window-activation = not) and expose `hasKeyboardFocus()`.
+        Styles gate both the ring and the `Focused` state row on it.
+      * **The ripple is the pressed state layer, so it takes that state's
+        colour.** It was hard-coded to on-surface, which painted a *dark*
+        ripple on every style; the export says
+        `md.comp.button.pressed.state-layer.color` is on-primary for the
+        filled button (a light ripple on the purple container) and
+        on-secondary-container for tonal. The style now feeds the ripple the
+        pressed row's `stateLayer` role.
+      * **Press is not a flat state layer.** While pressed, the official
+        `.hovered` and keyboard-`:focus-visible` flat tints keep painting and
+        the press response rides entirely on the growing ripple circle.
+        `MdStateLayer::strongestActive` is therefore called with
+        `pressed=false`; folding press back in would darken the whole
+        container the instant the pointer went down and destroy the ripple's
+        spatial cue.
+
+      Verified numerically after the fix: container lightens under the ripple
+      (on-primary at the state opacity), the circle spreads from the press
+      point to full coverage over 450 ms of standard easing, the corners
+      spring 28 px → 12 px (medium) and back on `spring-fast-spatial`
+      (1400 / 0.9), and the release fades over 375 ms linear.
+
 - [x] **`MdButtonGroup`** — standard and connected variants, all five Expressive
       sizes, four selection modes (none / single / multiple / required), round
       and square shapes, horizontal and vertical orientation, live arrow-key

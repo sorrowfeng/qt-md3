@@ -159,6 +159,16 @@ public:
     MdRippleController *rippleController() const { return m_ripple; }
     MdFocusRingController *focusRingController() const { return m_focusRing; }
 
+    /// True when the button holds focus *and* that focus is keyboard focus.
+    ///
+    /// The official web components show the focus indicator and the focused
+    /// state colours under `:focus-visible` semantics — a Tab into the control
+    /// shows them, a mouse click does not. Qt has no such distinction, so the
+    /// focus *reason* is recorded when focus arrives: Tab / Backtab / shortcut
+    /// (and the ambiguous "other") count as keyboard, mouse and popup focus do
+    /// not. Styles read this instead of `hasFocus()`.
+    bool hasKeyboardFocus() const { return hasFocus() && m_focusIsKeyboard; }
+
     /// The label as painted: QPushButton mnemonics ("&File", "&&") removed,
     /// because MD3 has no mnemonic underline and the ampersand would otherwise
     /// be drawn literally. The shortcut itself still works — QAbstractButton
@@ -233,6 +243,9 @@ private:
 
     MdRippleController *m_ripple = nullptr;
     MdFocusRingController *m_focusRing = nullptr;
+    /// Whether the focus currently held arrived by keyboard (see
+    /// hasKeyboardFocus()). Reset on any focus loss.
+    bool m_focusIsKeyboard = false;
 
     bool m_hasPressPosition = false;
     QPointF m_pressPosition;

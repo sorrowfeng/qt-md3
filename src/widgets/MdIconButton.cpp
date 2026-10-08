@@ -314,8 +314,24 @@ void MdIconButton::leaveEvent(QEvent *event)
 void MdIconButton::focusInEvent(QFocusEvent *event)
 {
     QPushButton::focusInEvent(event);
+    // `:focus-visible` semantics, shared with MdButton — pointer focus shows
+    // no ring, keyboard focus does.
+    switch (event->reason()) {
+    case Qt::MouseFocusReason:
+    case Qt::PopupFocusReason:
+    case Qt::ActiveWindowFocusReason:
+        m_focusIsKeyboard = false;
+        break;
+    default:
+        m_focusIsKeyboard = true;
+        break;
+    }
     if (m_focusRing) {
-        m_focusRing->start();
+        if (m_focusIsKeyboard) {
+            m_focusRing->start();
+        } else {
+            m_focusRing->stop();
+        }
     }
     update();
 }
@@ -323,6 +339,7 @@ void MdIconButton::focusInEvent(QFocusEvent *event)
 void MdIconButton::focusOutEvent(QFocusEvent *event)
 {
     QPushButton::focusOutEvent(event);
+    m_focusIsKeyboard = false;
     if (m_focusRing) {
         m_focusRing->stop();
     }

@@ -97,6 +97,7 @@ private slots:
     // --- render smoke -------------------------------------------------------
 
     void everyCombinationRendersInk();
+    void pointerFocusShowsNoRingKeyboardFocusDoes();
 };
 
 void TestMd3IconButton::sizeTableMatchesTheExport()
@@ -467,3 +468,31 @@ void TestMd3IconButton::everyCombinationRendersInk()
 
 QTEST_MAIN(TestMd3IconButton)
 #include "TestMd3IconButton.moc"
+
+void TestMd3IconButton::pointerFocusShowsNoRingKeyboardFocusDoes()
+{
+    md::MdIconButton button;
+    button.setIconName(QStringLiteral("settings"));
+    button.resize(button.sizeHint());
+    button.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&button));
+
+    // `:focus-visible` semantics, pinned here so a regression back to
+    // "any focus shows the ring" cannot slip through.
+    QTest::mouseClick(&button, Qt::LeftButton);
+    QVERIFY(button.hasFocus());
+    QVERIFY(!button.hasKeyboardFocus());
+
+    // setFocus() on a widget that already holds focus does not re-deliver
+    // focusInEvent, so drop it first.
+    button.clearFocus();
+    button.setFocus(Qt::TabFocusReason);
+    QVERIFY(button.hasKeyboardFocus());
+
+    button.clearFocus();
+    button.setFocus(Qt::MouseFocusReason);
+    QVERIFY(button.hasFocus());
+    QVERIFY(!button.hasKeyboardFocus());
+
+    button.hide();
+}

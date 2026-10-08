@@ -291,8 +291,33 @@ void MdButton::leaveEvent(QEvent *event)
 void MdButton::focusInEvent(QFocusEvent *event)
 {
     QPushButton::focusInEvent(event);
+    // The focus indicator follows `:focus-visible` semantics: a pointer press
+    // that merely moves focus shows no ring, a Tab (or a shortcut, or an
+    // unclassifiable programmatic focus) does. The pressed/hovered states are
+    // unaffected either way.
+    switch (event->reason()) {
+    case Qt::MouseFocusReason:
+    case Qt::PopupFocusReason:
+    case Qt::ActiveWindowFocusReason:
+        m_focusIsKeyboard = false;
+        break;
+    case Qt::TabFocusReason:
+    case Qt::BacktabFocusReason:
+    case Qt::ShortcutFocusReason:
+    case Qt::MenuBarFocusReason:
+    case Qt::OtherFocusReason:
+    default:
+        m_focusIsKeyboard = true;
+        break;
+    }
     if (m_focusRing) {
-        m_focusRing->start();
+        if (m_focusIsKeyboard) {
+            m_focusRing->start();
+        } else {
+            // Focus was gained, but not visibly: keep the ring idle rather
+            // than growing it unseen.
+            m_focusRing->stop();
+        }
     }
     update();
 }
@@ -300,6 +325,7 @@ void MdButton::focusInEvent(QFocusEvent *event)
 void MdButton::focusOutEvent(QFocusEvent *event)
 {
     QPushButton::focusOutEvent(event);
+    m_focusIsKeyboard = false;
     if (m_focusRing) {
         m_focusRing->stop();
     }

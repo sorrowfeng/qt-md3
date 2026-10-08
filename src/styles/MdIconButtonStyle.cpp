@@ -96,7 +96,7 @@ MdIconButtonState MdIconButtonStyle::stateFor(const MdIconButton &button)
     if (button.isHovered()) {
         return MdIconButtonState::Hovered;
     }
-    if (button.hasFocus()) {
+    if (button.hasKeyboardFocus()) {
         return MdIconButtonState::Focused;
     }
     return MdIconButtonState::Enabled;
@@ -200,9 +200,11 @@ void MdIconButtonStyle::paintIconButton(QPainter &painter,
     // 2. State layer, one composited overlay.
     const bool interactive = !button.isEffectivelyDisabled();
     StateLayerKind kind = StateLayerKind::Hover;
+    // Hover and keyboard focus only — press rides on the ripple, as in
+    // MdButtonStyle (see the longer note there).
     if (interactive
-        && MdStateLayer::strongestActive(&kind, button.isHovered(), button.hasFocus(),
-                                         button.isDown(), false)
+        && MdStateLayer::strongestActive(&kind, button.isHovered(),
+                                         button.hasKeyboardFocus(), false, false)
         && colours.stateLayer != ColorRole::Count) {
         const QColor overlay = MdStateLayer::overlay(theme.color(colours.stateLayer), kind);
         if (overlay.isValid()) {
@@ -218,7 +220,15 @@ void MdIconButtonStyle::paintIconButton(QPainter &painter,
         const QPainterPath localPath = MdShape::roundedRect(localRect, layout.radii);
         ripple->setBounds(layout.container.size());
         ripple->setClipPath(localPath);
-        ripple->setContentColor(theme.color(ColorRole::OnSurface));
+        // The ripple is the pressed state layer, so it takes that state's
+        // published colour per selected/plain family — not a global on-surface.
+        const ColorRole pressLayerRole =
+            tokens.familyFor(button.isToggleable(), button.isToggleable() && button.isChecked())
+                .state(MdIconButtonState::Pressed)
+                .stateLayer;
+        ripple->setContentColor(theme.color(pressLayerRole != ColorRole::Count
+                                                ? pressLayerRole
+                                                : ColorRole::OnSurface));
         const MdRippleFrame frame = ripple->currentFrame();
         if (frame.valid) {
             painter.save();
@@ -248,8 +258,8 @@ void MdIconButtonStyle::paintIconButton(QPainter &painter,
                       button.iconSet(), button.iconFamily());
     }
 
-    // 6. Focus indicator, last so nothing paints over it.
-    if (interactive && button.hasFocus()) {
+    // 6. Focus indicator, last so nothing paints over it. Keyboard focus only.
+    if (interactive && button.hasKeyboardFocus()) {
         MdFocusRingController *ring = button.focusRingController();
         MdFocusRing::paint(&painter, layout.container, layout.radii,
                            theme.color(tokens.focusIndicator), focusRingSpec(tokens),

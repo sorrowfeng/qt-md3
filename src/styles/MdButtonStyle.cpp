@@ -103,7 +103,7 @@ MdButtonState MdButtonStyle::stateFor(const MdButton &button)
     if (button.isHovered()) {
         return MdButtonState::Hovered;
     }
-    if (button.hasFocus()) {
+    if (button.hasKeyboardFocus()) {
         return MdButtonState::Focused;
     }
     return MdButtonState::Enabled;
@@ -310,9 +310,17 @@ void MdButtonStyle::paintButton(QPainter &painter,
     //    variant happens to be sitting on.
     const bool interactive = !button.isEffectivelyDisabled();
     StateLayerKind kind = StateLayerKind::Hover;
+    // The flat layer covers hover and keyboard focus only. Press is *not* a
+    // flat layer here: in the official components the press response is the
+    // ripple itself (the pressed state-layer colour rides on the growing
+    // circle), while the `.hovered` and keyboard-`:focus-visible` flat tints
+    // keep painting underneath it. Passing pressed=false below encodes that
+    // split — folding press into this flat overlay would darken the whole
+    // container the instant the pointer went down and kill the ripple's
+    // spatial cue.
     if (interactive
-        && MdStateLayer::strongestActive(&kind, button.isHovered(), button.hasFocus(),
-                                         button.isDown(), false)
+        && MdStateLayer::strongestActive(&kind, button.isHovered(),
+                                         button.hasKeyboardFocus(), false, false)
         && colours.stateLayer != ColorRole::Count) {
         const QColor overlay = MdStateLayer::overlay(theme.color(colours.stateLayer), kind);
         if (overlay.isValid()) {
@@ -332,7 +340,16 @@ void MdButtonStyle::paintButton(QPainter &painter,
         const QPainterPath localPath = MdShape::roundedRect(localRect, layout.radii);
         ripple->setBounds(layout.container.size());
         ripple->setClipPath(localPath);
-        ripple->setContentColor(theme.color(ColorRole::OnSurface));
+        // The ripple *is* the pressed state layer, so it paints with that
+        // state's published colour — `md.comp.button.pressed.state-layer.color`,
+        // which for the filled button is on-primary (a light ripple on the
+        // primary container) and for outlined/text is on-surface. A global
+        // on-surface here would paint a dark ripple on every style, which is
+        // exactly the "wrong-looking" press the filled button had.
+        const ColorRole pressLayerRole = tokens.state(MdButtonState::Pressed).stateLayer;
+        ripple->setContentColor(theme.color(pressLayerRole != ColorRole::Count
+                                                ? pressLayerRole
+                                                : ColorRole::OnSurface));
         const MdRippleFrame frame = ripple->currentFrame();
         if (frame.valid) {
             painter.save();
@@ -385,8 +402,9 @@ void MdButtonStyle::paintButton(QPainter &painter,
     }
 
     // 6. Focus indicator, last so nothing paints over it, and only while the
-    //    button can actually be activated.
-    if (interactive && button.hasFocus()) {
+    //    button can actually be activated. Keyboard focus only — a pointer
+    //    press that moves focus shows no ring, matching `:focus-visible`.
+    if (interactive && button.hasKeyboardFocus()) {
         MdFocusRingController *ring = button.focusRingController();
         const MdFocusRingSpec spec = focusRingSpec(tokens);
         MdFocusRing::paint(&painter, layout.container, layout.radii,

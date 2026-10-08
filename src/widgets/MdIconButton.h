@@ -140,6 +140,12 @@ public:
     MdRippleController *rippleController() const { return m_ripple; }
     MdFocusRingController *focusRingController() const { return m_focusRing; }
 
+    /// True when the icon button holds focus *and* that focus is keyboard
+    /// focus — the `:focus-visible` rule the official components apply to the
+    /// focus indicator and the focused state colours. See MdButton for the
+    /// reason-classification.
+    bool hasKeyboardFocus() const { return hasFocus() && m_focusIsKeyboard; }
+
     /// The painted container, in widget coordinates.
     QRectF containerRect() const;
 
@@ -204,6 +210,8 @@ private:
 
     MdRippleController *m_ripple = nullptr;
     MdFocusRingController *m_focusRing = nullptr;
+    /// Whether the focus currently held arrived by keyboard.
+    bool m_focusIsKeyboard = false;
 
     bool m_hasPressPosition = false;
     QPointF m_pressPosition;

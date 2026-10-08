@@ -123,10 +123,50 @@ private slots:
     void displayTextStripsMnemonics();
     void softDisabledStaysFocusableButIgnoresPointerAndKeyboard();
     void pressMorphsTheContainerTowardsThePressedShape();
+    void pointerFocusShowsNoFocusIndicatorButKeyboardFocusDoes();
     void everyCombinationRendersSomething();
     void lightAndDarkPaintDifferentContainers();
     void outlinedAndTextPaintNoContainer();
 };
+
+void TestMd3Button::pointerFocusShowsNoFocusIndicatorButKeyboardFocusDoes()
+{
+    // The official components gate the focus indicator and the focused state
+    // colours on `:focus-visible` — a Tab shows them, a mouse click does not.
+    // Qt only offers the focus *reason*, so that is what the widget records.
+    MdButton button(QStringLiteral("Focus"));
+    button.resize(button.sizeHint());
+    button.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&button));
+
+    // A pointer press that moves focus must not read as keyboard focus.
+    QTest::mouseClick(&button, Qt::LeftButton);
+    QVERIFY(button.hasFocus());
+    QVERIFY(!button.hasKeyboardFocus());
+    // The pointer is still over the button, so the visible state is hovered —
+    // hovered regardless of focus, which is the point: focus alone must not
+    // upgrade the state when it is not the keyboard kind.
+    QCOMPARE(button.paintState(), MdButtonState::Hovered);
+
+    // Keyboard focus (a Tab) is the visible kind. setFocus() on a widget
+    // that already holds focus does not re-deliver focusInEvent, so drop it
+    // first — that is also what makes the reason re-classification run.
+    button.clearFocus();
+    button.setFocus(Qt::TabFocusReason);
+    QVERIFY(button.hasFocus());
+    QVERIFY(button.hasKeyboardFocus());
+
+    // Mouse focus taking focus *away* and giving it back clears the flag —
+    // and again, drop the focus first so the reason is re-delivered.
+    button.clearFocus();
+    button.setFocus(Qt::MouseFocusReason);
+    QVERIFY(button.hasFocus());
+    QVERIFY(!button.hasKeyboardFocus());
+
+    button.clearFocus();
+    QVERIFY(!button.hasKeyboardFocus());
+    button.hide();
+}
 
 void TestMd3Button::cleanup()
 {
