@@ -728,3 +728,30 @@ set_tests_properties(TestMd3Toolbar PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3Toolbar)
+
+# TestMd3Navigation — the Navigation family: MdNavigationBar (both published
+# families — the baseline `navigation-bar` one and the flexible `nav-bar` one,
+# which coexist in a single export version) and its MdNavigationBarItem
+# children. The two-family separation, the behaviour-won item gap, the Centered
+# band fractions, the fill-the-slot placement rule, the width-only pill
+# animation and the Start position's content-wrapping pill.
+add_executable(TestMd3Navigation
+    TestMd3Navigation.cpp
+)
+
+target_link_libraries(TestMd3Navigation
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Navigation COMMAND TestMd3Navigation)
+set_tests_properties(TestMd3Navigation PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Navigation)
