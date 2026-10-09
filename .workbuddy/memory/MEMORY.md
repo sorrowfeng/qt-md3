@@ -46,7 +46,38 @@ Qt Widgets 手绘复刻 Material Design 3（含 M3 Expressive）的 C++ 组件�
   （列表项、以及后续 navigation bar / toolbar 的项）无法自绘矩形外的阴影，
   父级代画又会被相邻项的不透明容器盖住。Compose 的做法是**浮层**渲染。遇此
   情况按项目规矩「承载 token、不绘制、写进 porting-todo」，不要写一个画出来
-  看不见的实现充数。
+  看不见的实现充数。**2026-10-09 floating toolbar 是最干净的一例**：不带动作
+  按钮时控件矩形 == pill，level3 阴影探针读到的就是页面底色（diff=0）；带 FAB
+  时控件 80 宽而 pill 64，上下各 8px 余量，阴影才落地。**行继续画**（有地就落）
+  是正确做法，但必须把「哪里看不见」写进 porting-todo。
+- **「发布了但没人读」的 token 行，token 测试永远抓不到**（2026-10-09 toolbars
+  最重要的教训）：`floating.container.between-space` 被解析、被 `floatingTokenTable`
+  断言为 4.0、被头文件注释描述成「项间距」，**而布局一个字符都没读它**。症状只有
+  像素能看见（三项 pill 量到 136，导出算式要求 144）。因此：① 新增「本库读这条行」
+  的断言时，必须走 **override → `sizeHint()`/布局** 的路径，不能只断言结构体字段；
+  ② 每条 token 行落码时自问「谁读它」，答案是「没人」就要么接上、要么明确写成
+  「承载不读」并列进 porting-todo。**Compose 同族也有同样形态**（同一条行在
+  `FloatingToolbar.kt` 里引用 0 次，因为它把排列交给调用方的 `Row`）——所以
+  「Compose 没读」**不等于**「我们也不该读」：本库控件自己摆子控件，就得自己读。
+- **QtTest 在本机（Windows offscreen）有两个坑**：① 测试 exe **不写 stdout**，
+  必须 `-o <file>,txt` 才能读到断言（直接跑还会看到 `exit=127` / ctest 报
+  0xc0000374 的假象，断言其实在文件里）；② **QWidget 析构会删掉子控件**，栈上
+  被 `addWidget()` 收养的探针若声明在容器**之前**，容器先析构 → 探针二次析构 →
+  堆损坏。规律：**先声明容器，再声明探针**（`TestMd3Toolbar::verticalIsTheTranspose`
+  栽过一次，写进注释了）。
+- **画廊页不得拉伸「贴内容」的控件**：`MdFloatingToolbar` 是
+  `QSizePolicy::Fixed`，画廊放置时若一律铺满 band，pill 仍在首端（长度来自内容）
+  但 `End` 位按钮会被甩到 band 最右。规律：**按 `sizePolicy().horizontalPolicy()
+  == QSizePolicy::Expanding` 决定「用 band 还是用 sizeHint」**。
+- **`MdChildBox::resizedGeometryOn()`**（toolbars 新增）：`geometryOn()` 的姊妹，
+  给「尺寸不归自己」的那一个子控件用 —— 把 widget 调到 `box + 2*margin` 并
+  **对齐中心**（不是左上角）。这是唯一同时适配「容器 = widget − margin」与
+  「容器是固定 token 尺寸、居中在更大 widget 里」（正是 `MdFab`）的规则。
+  `MdFab` 的容器恒为 `MdFabTokens::containerWidth/Height`，所以它在 80px 框里
+  仍是 56px 的圆 —— 那是 FAB 族的尺寸集缺口，工具栏几何是对的。
+- **`MdIconButton` 的尺寸阶梯是 Expressive 的 32 / 40 / 56 / 96 / 136，没有 48**：
+  所以规范里 `8 + 48 + 8 = 64` 的组合在本库复现不出来（工具栏也没有 item 尺寸行，
+  项宽完全由子控件决定）→ pill 每项窄 8px。要补的是 icon-button，不是工具栏。
 - **库内没有颜色覆盖机制**（`MdCompTokenParse.h` 只有 length/shape，全库无
   parseColor）。画廊若要给组件换容器色是做不到的，演示必须靠真实状态
   （selected / dragged / disabled）让形状/颜色可见。
@@ -84,11 +115,23 @@ Qt Widgets 手绘复刻 Material Design 3（含 M3 Expressive）的 C++ 组件�
   `mingw_64` + `C:/Qt/Tools/Ninja`，用 `-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64`。
 - 运行测试/示例需把 `C:/Qt/Tools/mingw1310_64/bin` 与 `C:/Qt/6.9.1/mingw_64/bin`
   加入 PATH（缺 MinGW 运行库会加载失败）。
-- 代理会漂移，别记死：2026-10-09 时 shell 侧为 `127.0.0.1:9426`（用 `env`
-  确认），git config 为 `127.0.0.1:7889`。**推送 main/dev 直接绕过代理最稳**：
+- 代理会漂移，别记死：2026-10-09 多轮内依次见过 `9426` → `12574`（`env` 确认），
+  git config 为 `127.0.0.1:7889`。**推送 main/dev 直接绕过代理最稳**：
   `git -c http.proxy= -c https.proxy= push`（已连续三次成功）。curl 走
   raw.githubusercontent.com 常 404/被挡，取 material-web 源码一律用
   `gh api repos/.../contents/<path> --jq .content | base64 -d`。偶发
-  `schannel handshake` 失败时，改用 `gh api` 验证远程状态。直连可达
-  `m3.material.io`，但 `lh3.googleusercontent.com` / `raw.githubusercontent.com`
-  被挡（app bars 时确认）。
+  `schannel handshake` 失败时，改用 `gh api` 验证远程状态。直连
+  （`curl --noproxy '*'`）可达 `m3.material.io`，但 `lh3.googleusercontent.com` /
+  `raw.githubusercontent.com` 被挡。
+- **抓 m3.material.io 的正确姿势（2026-10-09 toolbars 时摸清）**：该站是纯客户端
+  Angular SPA（`<mio-root>`，`<noscript>` 提示需要 JS），curl/WebFetch 只拿到空壳。
+  内容接口 `/guide-page-content` 是**无参 GET 且只返回根页**（"Get Started"），
+  对 path/query/Referer/cookie 一律无视——别在这上面浪费时间。唯一可行路径是
+  截图：`msedge.exe --headless --disable-gpu --hide-scrollbars
+  --window-size=1440,<高> --screenshot="C:/绝对/路径.png" --virtual-time-budget=16000
+  --proxy-server="direct://"`。**三个硬约束**：① 输出与 `--user-data-dir` 都必须是
+  **Windows 绝对路径**（Edge 是原生二进制，`/tmp/...` 认不了）；② `--dump-dom`
+  在本机**必被 SIGTERM**，只能用 `--screenshot`；③ 一次 Bash 调用**只跑一个 Edge
+  实例**（循环/重试里跑第二个会被杀），且约四次里成一次——失败就单独重试。
+  页面下方是懒加载，给高视口能多渲一部分，抓不全时可 `--virtual-time-budget` 加大
+  或换一个 `--user-data-dir` 重试。
