@@ -454,6 +454,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createNavigationDrawerPage(),
         createTabsPage(),
         createCheckboxPage(),
+        createChipPage(),
     };
 
     QStringList titles;

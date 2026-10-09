@@ -220,6 +220,9 @@ GalleryPage *createNavigationDrawerPage();
 GalleryPage *createTabsPage();
 /// Page 34. The Checkbox.
 GalleryPage *createCheckboxPage();
+/// Page 35. The Chips family: assist / filter / input / suggestion, flat and
+/// elevated.
+GalleryPage *createChipPage();
 
 } // namespace gallery
 
