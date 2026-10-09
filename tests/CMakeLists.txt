@@ -676,3 +676,29 @@ set_tests_properties(TestMd3List PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3List)
+
+# TestMd3AppBar — the App bars family: MdTopAppBar + MdBottomAppBar. The token
+# tables for the common set, the five size sets and the bottom app bar; the
+# derived 16 px edge distance; the two-row row split and the title push; the
+# colour transition table; the three scroll behaviours' consumption arithmetic;
+# and the bottom app bar's FAB strip.
+add_executable(TestMd3AppBar
+    TestMd3AppBar.cpp
+)
+
+target_link_libraries(TestMd3AppBar
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3AppBar COMMAND TestMd3AppBar)
+set_tests_properties(TestMd3AppBar PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3AppBar)

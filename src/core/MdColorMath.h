@@ -107,6 +107,18 @@ public:
     /// MCU's SolveToInt / IntFromHcl.
     static Argb intFromHcl(double hueDegrees, double chroma, double lstar);
 
+    // --- interpolation ---------------------------------------------------
+    /// Interpolate two colours in Oklab.
+    ///
+    /// Compose's `animateColorAsState` does not cross-fade in gamma space: its
+    /// `Color.VectorConverter` converts both ends to `ColorSpaces.Oklab` and
+    /// lerps the three components. Every animated *colour* in the library
+    /// therefore goes through here, so a transition's midpoint matches the
+    /// reference implementation instead of merely its endpoints.
+    ///
+    /// `fraction` is clamped to 0..1; alpha is interpolated linearly.
+    static Argb lerpOklab(Argb from, Argb to, double fraction);
+
     // --- accessibility ---------------------------------------------------
     /// WCAG 2.x relative-luminance contrast ratio, 1.0 .. 21.0.
     static double contrastRatio(Argb a, Argb b);

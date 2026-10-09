@@ -969,6 +969,141 @@ Divergences recorded rather than resolved:
   This is true of material-web as well; the gallery page says so explicitly,
   because it is easy to misread as a missing feature.
 
+#### App bars (ported)
+
+`MdTopAppBar` + `MdBottomAppBar` + their two styles + `MdAppBarTokens` +
+`MdAppBarScrollBehavior`, locked by `TestMd3AppBar` and by the page-28 pixel
+audit. material-web ships **no production top app bar** — only a catalog stub
+and an experimental `labs/gb/components/appbar/` — so this family follows the
+Divider split: the export supplies every number, Compose `AppBar.kt` /
+`AppBarDsl.kt` supplies the layout and the scroll state machine, and the spec
+page supplies the taxonomy. Compose's `AppBar*Tokens.kt` were cross-checked
+against the export and agree row for row, deprecated rows included.
+
+* **Seven spec entries, five layouts.** "Center-aligned" is documented as "Use
+  centered-text configuration", so it is `MdAppBarAlignment`; the search app
+  bar is the configuration whose *centre* is a search field, so it is the
+  `centerWidget` slot. No sixth and seventh classes.
+* **Baseline medium and large are deprecated as designs but still published.**
+  The spec says so outright ("No subtitle support on the legacy app bar") and
+  points at the flexible replacements. Both are still ported and still
+  rendered: a port that could not draw a 2024 app bar would not be a port.
+  Their `subtitle.font` rows are carried verbatim and never reachable —
+  `supportsSubtitle()` is false for them.
+* **The 16 dp edge distance is not a token row.** It is the published
+  `leading-space` (4) plus the 12 px an icon button brings itself, so
+  `titleInset()` is `edgeSpace − leadingSpace` = 12 and a theme that retunes
+  `leading-space` moves the inset rather than the edge distance. The 24 px
+  medium title bottom and 28 px large title bottom are likewise Compose
+  constants with no token row.
+* **`collapsedRowHeight` is read from the small set for every variant.** That
+  is Compose's own arithmetic (`MediumAppBarCollapsedHeight` and
+  `LargeAppBarCollapsedHeight` are both `AppBarSmallTokens.ContainerHeight`),
+  and it is what makes a medium bar lose 48 px and a large bar 88 rather than
+  collapsing to nothing. A *single-row* bar is the opposite case: its whole
+  height is collapsible, so it slides off the screen.
+* **The colour transition is a step on one row and a ramp on two.** Compose:
+  `overlappedFraction > 0.01f` asks for the scrolled colour outright on a
+  single-row bar (the 0 → 1 is the `animateColorAsState` spring), while a
+  two-row bar reads `collapsedFraction` continuously — "changes color at the
+  same rate the app bar expands or collapse". Both are reproduced.
+* **The transition fraction is eased, and the interpolation is Oklab.**
+  `containerColor(f) = lerp(container, scrolled, FastOutLinearInEasing(f))`,
+  and Compose's colour lerp goes through `Color.VectorConverter`, i.e. Oklab.
+  `MdColorMath::lerpOklab` is new for this: it is the first *animated colour*
+  in the library, so it is the first place the interpolation space is
+  observable. Interpolating in sRGB would land on a different midpoint.
+* **`consumeScroll` reduces Compose's two-hook protocol to one entry point.**
+  Compose divides the work between `onPreScroll` (Pinned takes nothing,
+  EnterAlways takes everything, ExitUntilCollapsed takes the collapsing
+  direction only — "Don't intercept if scrolling down") and `onPostScroll`.
+  A Qt host has no nested-scroll protocol to plug into, so both hooks live
+  behind `consumeScroll(dy, contentAtStart)`. The over-consumption is
+  deliberate and matches Compose: a non-pinned mode answers with the **whole**
+  delta as soon as the bar moves at all, not with the part it absorbed.
+* **A container lays out *containers*, not widgets — and that needed a shared
+  helper.** Every qt-md3 component that can show a focus indicator reserves the
+  ring's room *inside* itself, because Qt clips a child to its own rectangle and
+  the indicator is an outward one. `MdIconButton` is therefore a 55 × 55 widget
+  around a 40 × 40 container and `MdFab` a 71 × 71 one around a 56 × 56, both
+  with an exact 7.5 px margin on every side (`offset 2 + activeWidth 8 / 2 +
+  width 3 / 2`). `MdButtonGroup` was the first component to have to place such a
+  child at a token position and established the rule — *place the container, not
+  the widget, and accept that two neighbouring widget rects then overlap by
+  `2 * margin − gap`* — doing the arithmetic inline in its own layout. The app
+  bars are the second and third, so the rule is now factored out as
+  **`styles/MdChildBox.h`**: `measure()` sizes a child and reports where it
+  paints, `geometryOn()` returns the geometry that puts that box on a target.
+
+  Measured on the gallery page, before → after: the bottom bar's first icon
+  draws 23 px from its edge → **14** (4 content padding + 8 icon padding + the
+  glyph's own inset), and its three icons sit 55 px apart → **40**; the top
+  bar's navigation draws 23 px in → **15**, its title starts at 63 → **48**
+  (`max(12, 4 + 40) + 4`), and its two action buttons sit 55 px apart → **40**
+  with the last container flush against the published 4 px trailing inset. Both
+  bars' first revisions had the bug; the page-28 pixel audit is what caught it.
+
+  The dispatch inside `measure()` is a closed list of the components that have a
+  `containerRect()` — the eight a slot can realistically hold. **Add a component
+  there when it grows one**, or a container will silently lay it out by its
+  `sizeHint` again.
+* **Neighbouring children's widget rects overlap, deliberately.** Two 40 px icon
+  buttons whose containers touch are two 55 px widgets overlapping by 15 px. The
+  overhang is transparent — a container draws nothing outside itself — and the
+  alternative is worse: reserving the margin as real spacing moves the visible
+  icons 15 px apart from what the tokens say. Compose does not have the problem
+  at all, because a focus indicator there is an overlay drawn outside the layout
+  bounds rather than something the layout has to make room for. The one
+  observable consequence is that the *input* region of a child is its widget,
+  not its container, so a click in the 7.5 px band either side of a shared edge
+  goes to the child that is later in the stacking order. Recorded rather than
+  hidden; the alternative is a parent-side mouse router, which is a library-wide
+  decision and not one family's to make.
+* **The bottom app bar's FAB is placed by its container, not by its widget.**
+  The default medium FAB is a 71 × 71 widget wrapped around a 56 × 56 container
+  at (7.5, 7.5), so laying the widget out by its `sizeHint` parked the painted
+  disc 25 px from the trailing edge instead of 16 and 20 px from the top instead
+  of 12. The first revision did exactly that and the page-28 pixel audit caught
+  it; `MdChildBox` plus a resize-before-measure is the fix. The residual
+  half-pixel (the widget's position is integral, the offset is not) is the
+  floor, not a shortcut. `TestMd3AppBar` grew a *real*-`MdFab` case for it,
+  because the layout test's fixed-size probe could not reach it.
+* **RTL is not mirrored.** Both widgets handle `LayoutDirectionChange` and
+  relayout, and both used to carry a comment claiming the styles "read logical
+  edges" — they do not: the layouts place physical ones, so an RTL app bar keeps
+  its navigation on the left where Compose's `placeRelative` would move it
+  right. `MdTheme::isRightToLeft()` is honoured by `MdButtonStyle`,
+  `MdButtonGroupStyle`, `MdSegmentedButtonStyle` and `MdSplitButtonStyle` and by
+  nothing else in the library, so this is a library-wide gap rather than an app
+  bar defect. The misleading comments are gone and the gap is recorded here; the
+  coverage row's `主题` cell stays `🚧` partly because of it.
+* **The bottom app bar's content band has no bottom padding.** The export's
+  `ContentPadding` is `start 4 / top 4 / end 4`; the row's contents therefore
+  sit 2 px below the container's true centre and the band runs to the bottom
+  edge. Reproduced, not corrected.
+* **`container.elevation` (level 2) is carried and not painted** — a bottom
+  app bar's shadow falls *above* its own rect, which Qt clips away for a
+  widget laid out in place. Same call the list family made for its dragged
+  elevation. Compose draws it because a Compose layout does not clip.
+* **The search field is not this family's.** Every published `search.*` row is
+  resolved (56 px, corner-full, `search.label.color` on-surface-variant,
+  container surface-container rising to surface-container-highest on scroll,
+  8 px leading and trailing, body-large label), but the field itself is a text
+  field and this library has no text field yet. Gallery page 28 puts an
+  `MdButton` in the centre slot to show the slot's geometry and says so in the
+  page copy; the field belongs to ★ Text fields.
+* **`FlexibleBottomAppBar` is ★ Toolbars, not App bars.** Compose's flexible
+  bottom bar reads `DockedToolbarTokens` — `FlexibleContentPadding` and
+  `FlexibleBottomAppBarHeight` are both docked-toolbar rows — and material-web
+  ships `_md-comp-toolbar-docked.scss` for it. Noted here so the next family
+  claims its own component rather than inheriting it by accident.
+* **Docs gap noticed while writing this entry**: `docs/project-status.md`'s
+  "What exists today" component table still stops at `MdDialogHost`, so the
+  §1.4 families ported after the Dialog (bottom sheets, side sheets, carousel,
+  Divider, Lists) have module rows missing there even though their coverage
+  rows and porting notes are present. Left unfixed rather than back-filled
+  from memory; the App bars rows were appended.
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three
@@ -992,6 +1127,33 @@ fixed:
 `--screenshot` now also writes a `-full.png` per page: the page widget grown to
 its own `heightForWidth()`. The window shot can only ever prove that the *top*
 of a page draws, which is not enough once pages are taller than the viewport.
+
+The app bar page then exposed a fourth defect, in the screenshot hook itself: it
+sampled a page after a single `processEvents()`, so anything that animates
+towards its resting state on first show — the app bar's scroll colour springing
+from surface to surface-container, a progress indicator's indeterminate track, a
+sheet sliding in — was documented at the *start* of its animation. `settleAnimations()`
+now pumps the event loop for a bounded budget (400 ms; the longest of those
+springs, stiffness 1600 and critically damped, settles inside 200 ms) before each
+grab. Qt's timers are wall-clock based, which is why the short sleep between
+pumps is what actually advances them. Without it, page 28's "scrolled" sample
+bar would have been captured as surface — i.e. indistinguishable from the
+"at rest" bar it is meant to contrast with.
+
+A fifth followed from the same page, and is the reason the example grew a
+`--language` option. The gallery's copy is written in both languages
+(`L("中文", "English")`), but a screenshot of the *Chinese* copy on this machine
+is a wall of tofu boxes: the bundled font set carries no CJK coverage and
+neither does the offscreen platform plugin's fallback. The page still rendered,
+so the pixel audit could read its geometry, but no human could audit it. The
+hook can now be asked for `--language en`, which is how every measurement on
+this page was read. While producing that screenshot the app bar page turned out
+to have a real localisation bug of its own — three of its row tables carried an
+`…Zh` / `…En` pair and read only the Chinese one, so the 136 dp and 152 dp
+flexible rows drew their subtitle as four tofu boxes in English mode. Fixed with
+a `copyOrEmpty()` helper that returns an empty string when either copy is
+absent, rather than falling back to the wrong language. No other page had the
+pattern.
 
 ## Stage 2 — Qt extensions
 

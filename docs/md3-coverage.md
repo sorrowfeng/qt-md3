@@ -322,12 +322,74 @@ smoothed:
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| App bars | MdTopAppBar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| App bars | MdTopAppBar / MdBottomAppBar | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ Toolbars | MdToolbar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Navigation bar | MdNavigationBar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Navigation rail | MdNavigationRail | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Navigation drawer | MdNavigationDrawer | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Tabs | MdTabs / MdTab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+
+### App bars — the two rows that are still `🚧`
+
+Same standing as the Actions families, and for the same reasons: seed change,
+contrast level, density and font switch have not yet been exercised *against the
+app bar page*, and the side-by-side reference comparison has not been recorded.
+Neither is a known defect; both are unfinished evidence. **RTL is a third gap,
+and it is the tracked cross-cutting one**: `MdTheme::isRightToLeft()` is honoured
+by the four button families and by nothing else, so an RTL app bar keeps its
+navigation on the left rather than mirroring the way Compose's `placeRelative`
+does. The app bar is simply the first family to say so out loud instead of
+claiming the mirroring; see "RTL 全组件" under Cross-cutting items and the entry
+in [porting-todo.md](porting-todo.md).
+
+Six transcription notes are pinned by `TestMd3AppBar` and the page-28 pixel
+audit rather than smoothed:
+
+* **material-web has no production top app bar** — the component directory
+  holds only a catalog stub (`catalog/src/components/top-app-bar.ts`) and an
+  experimental `labs/gb/components/appbar/`. As with Divider, the numbers come
+  from the export and the *layout* comes from Compose `AppBar.kt` /
+  `AppBarDsl.kt` plus the spec page;
+* **seven spec entries, five layouts** — the m3.material.io variant table
+  lists seven, but "Center-aligned" is documented as "Use centered-text
+  configuration" (so it is `MdAppBarAlignment`, not a class) and the search
+  app bar is the configuration whose *centre* is a search field (so it is the
+  centre slot). The baseline medium and large bars are deprecated **as
+  designs** — "No subtitle support on the legacy app bar" — but remain
+  published token sets and remain rendered;
+* **the 16 dp edge distance is not a token row** — it is the published
+  `leading-space` (4) plus the 12 px an icon button brings itself, which is
+  why `titleInset()` is 16 − 4 and why retuning `leading-space` moves the
+  inset, not the edge distance;
+* **a two-row bar collapses its text row only** — `heightOffsetLimit` comes
+  from `collapsedRowHeight`, which is read from the **small** size set for
+  every variant, so medium loses 48 px and large 88 and the 64 px icon row
+  never leaves the screen. A *single-row* bar's whole height is collapsible,
+  i.e. it slides off instead;
+* **the colour transition is eased and Oklab-interpolated** — the fraction
+  runs through `FastOutLinearInEasing` (`cubic-bezier(0.4, 0, 1, 1)`, which
+  is *below* linear at its midpoint: 0.32481 at x = 0.5) and then through
+  `MdColorMath::lerpOklab`, because Compose's `Color.VectorConverter`
+  interpolates in Oklab. The page-28 audit samples the half-collapsed medium
+  bar and measures `#faf4fc`, which is the eased fraction's result and not
+  the naive 0.5 average (`#f9f2fb` in sRGB, `#f8f2fb` in Oklab) — an
+  end-to-end check of the whole chain;
+* **the search field is not this family's** — every published `search.*` row
+  is resolved (56 px, corner-full, surface-container rising to
+  surface-container-highest on scroll, 8 px leading/trailing, body-large
+  label), but the field itself is a text field, and this library has no text
+  field yet. Gallery page 28 puts an `MdButton` in the centre slot to show the
+  slot's geometry and says so. Recorded in [porting-todo.md](porting-todo.md);
+* **a container lays out *containers*, not widgets** — the app bars are the
+  first family since `MdButtonGroup` to place a caller's child at a token
+  position, and every such child reserves its focus ring's room inside itself
+  (7.5 px a side), so `sizeHint()` is the wrong thing to lay out by. The rule
+  `MdButtonGroup` established is now factored out as `styles/MdChildBox.h` and
+  used by both bars: the nav container sits its own 4 px from the edge (not
+  11.5), the title clears it by the published 12 px inset (not 27), and two
+  action buttons sit 40 px apart (not 55). Neighbouring widget rects overlap by
+  `2 * 7.5` as a consequence, which is deliberate and audited in
+  [porting-todo.md](porting-todo.md).
 
 ## 1.6 Selection
 

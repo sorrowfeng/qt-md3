@@ -66,6 +66,7 @@ captured official screenshot.
 | Carousel | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Divider | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Lists | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| App bars | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -510,6 +511,82 @@ list is a live custom element whose shadow DOM needs a browser; the source of
 truth for every number above is the `md.comp.list.*` export, which the token
 table in `TestMd3List` pins field by field. The family therefore stays
 `Needs visual QA` like the other Compose-sourced ones.
+
+### App bars
+
+Page 28 (`App bars`) places nine `MdTopAppBar`s — the five size layouts across
+seven heights, the two-row collapse ladder at 0/0.5/1, the two alignments, and
+the scroll-colour pair — plus three `MdBottomAppBar`s (Start / Center /
+SpaceBetween with a docked FAB). Audited by pixel sampling of the page render
+at DPR 1 (the window is 1280 × 860 and the page column 994 px, so one device
+pixel is one logical pixel here). Read from the `--language en` render, because
+the bundled font set has no CJK coverage and a Chinese shot is a wall of tofu
+boxes — legible to an assertion, useless to a reader.
+
+Two measurements carry the family, and both were **wrong on the first pass**.
+
+**The container geometry.** Every child that can show a focus indicator
+reserves 7.5 px a side inside its own widget, so a layout that places the
+*widget* on a token position draws the container inset by that margin:
+
+| What | Token says | First pass | Rendered |
+| --- | --- | --- | --- |
+| Bottom bar, first icon's ink from the bar's edge | 4 (content) + 8 (icon padding) + ink ≈ 14 | 23 *(measured)* | **14** |
+| Bottom bar, three icons centre-to-centre | 40 (container) + 0 (`iconButtonSpace`) | 55 *(measured)* | **40.5** |
+| Top bar, navigation ink from the bar's edge | ≈ 15 | 23 *(measured)* | **15** |
+| Top bar, title's left edge | `max(12, 4 + 40) + 4` = 48 | 63 *(derived — the old code measured the nav's 55 px `sizeHint`)* | **48**, ink at 49 |
+| Top bar, two actions centre-to-centre | 40 | 55 *(derived)* | **40** (last container flush at the 4 px trailing inset) |
+
+The fix is the rule `MdButtonGroup` established and `styles/MdChildBox.h` now
+shares: place the container, not the widget. `TestMd3AppBar`'s
+`containersArePlacedNotWidgets` pins it with *real* `MdIconButton`s, which the
+fixed-size probes cannot stand in for.
+
+**The heights.** A bar at rest paints surface on a surface page — that is the
+spec's own behaviour, not a rendering failure — so the seven size bands cannot
+be found by colour. They were measured instead through the navigation glyph,
+whose three 2 px marks sit at the row's vertical centre: consecutive glyph
+centres are `height + 12` apart, and the six spacings that fit on the page give
+76, 124, 164, 124, 148 and 132 px, i.e. **64, 112, 152, 112, 136 and 120** —
+the small, medium, large, medium-flexible, medium-flexible-with-subtitle and
+large-flexible heights, each exact. The seventh (large-flexible-with-subtitle,
+152) follows the same rule.
+
+**The scroll colour.** The page's "scrolled" sample is a single-row bar pushed
+past `overlappedFraction > 0.01`, so it takes surface-container outright; the
+half-collapsed medium bar sits at `collapsedFraction = 0.5` and reproduces the
+whole chain — `FastOutLinearInEasing` then Oklab:
+
+| Fraction | Expected | Rendered |
+| --- | --- | --- |
+| 0.5, eased then Oklab-interpolated | `#faf4fc` | Yes — the half-collapsed medium band, 88 px tall |
+| 0.5, naive sRGB average | `#f9f2fb` | No — ruled out by the pixel |
+| 0.5, naive Oklab average | `#f8f2fb` | No — ruled out by the pixel |
+| 1.0 | surface-container `#f3edf7` | Yes — 64 px on both the medium and the large bar |
+
+The half-collapsed bars are 88 px tall (medium: `112 − 48/2`) and the fully
+collapsed ones 64 px, which is the `collapsedRowHeight`-from-the-small-set
+arithmetic made visible.
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| The five size layouts | 64 / 112 / 152 / 112 / 136 / 120 / 152 | Yes — measured through the 12 px-separated navigation glyph centres, see above |
+| Two-row collapse keeps the icon row | 112 → 88 → 64 and 152 → 108 → 64, never to zero | Yes — 88, 64, 76 + 17 (split by the title glyphs), 64 |
+| Leading title alpha at 0.5 | `TopTitleAlphaEasing(0.5)` ≈ 0.03, i.e. all but invisible | Yes |
+| Bottom app bar height | 80 for all three arrangements | Yes — 80, 80, 80 |
+| Bottom bar's content band | 2 px below the container's centre (there is no bottom padding) | Yes — glyph centre 2626.5 against a band centre 2625.5, i.e. the band's own 2 px offset plus the glyph's ink asymmetry |
+| Docked FAB container | 56 × 56, 16 px from the trailing edge, 12 px from the top | Yes — the primary fill measures 55 × 55 with one antialiased pixel on the rounded edge, so the container spans 954..1009 and 2810..2865, i.e. 16 and 12 |
+| Resting top-bar container | invisible — `container.color` is surface on a surface page, which is the spec's own behaviour | By design; the page says so, and the scroll section exists precisely so the container is visible somewhere |
+| Two-row widget rects overlap | two 40 px containers touching are two 55 px widgets overlapping by 15 px | By design, recorded in porting-todo.md |
+
+Not verifiable in this environment: material-web has **no production top app
+bar** (only a catalog stub and an experimental `labs/gb/` one), and the spec
+page's six measurement diagrams are served from `lh3.googleusercontent.com`,
+which is unreachable from here on any proxy. The source of truth for every
+number above is therefore the `md.comp.app-bar.*` export cross-checked against
+Compose's `AppBar*Tokens.kt` (which agree row for row up to the two deprecated
+subtitle rows), plus `AppBar.kt` for the layout and the state machine. The
+family stays `Needs visual QA`.
 
 ## 2026-10 comparison re-check (official vs ported)
 

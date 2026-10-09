@@ -9,6 +9,8 @@
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QThread>
 #include <QtCore/QTimer>
 #include <QtGui/QPixmap>
 #include <QtWidgets/QApplication>
@@ -31,6 +33,28 @@ QString slugify(const QString &title)
         slug.chop(1);
     }
     return slug.isEmpty() ? QStringLiteral("page") : slug;
+}
+
+/// Pumps the event loop until `budgetMs` of wall clock has passed.
+///
+/// A single `processEvents()` grabs whatever frame the window happens to be on,
+/// and several components animate towards their resting state on first show:
+/// the app bar's scroll colour springs from surface to surface-container, a
+/// progress indicator runs its indeterminate track, a sheet slides. Sampling
+/// the first frame would document the animation's *start* rather than the
+/// component. The longest of those springs (stiffness 1600, critically damped)
+/// settles inside 200 ms, so 400 ms leaves headroom without costing a
+/// screenshot run much. Qt's timers are wall-clock based, which is why the
+/// sleep between pumps is what actually advances them.
+void settleAnimations(int budgetMs = 400)
+{
+    QElapsedTimer clock;
+    clock.start();
+    while (clock.elapsed() < budgetMs) {
+        QCoreApplication::processEvents();
+        QThread::msleep(8);
+    }
+    QCoreApplication::processEvents();
 }
 
 /// Renders every page to `directory` and returns the number written.
@@ -60,8 +84,9 @@ int writeScreenshots(gallery::GalleryWindow &window, const QString &directory)
     const int count = window.pageCount();
     for (int index = 0; index < count; ++index) {
         window.setCurrentPage(index);
-        // Let the stack swap and the scroll area relayout before grabbing.
-        QCoreApplication::processEvents();
+        // Let the stack swap and the scroll area relayout, then let anything
+        // that animates towards its resting state get there.
+        settleAnimations();
 
         const QString stem = QStringLiteral("%1-%2")
                                  .arg(index + 1, 2, 10, QLatin1Char('0'))
@@ -131,6 +156,19 @@ int main(int argc, char *argv[])
     parser.addOption(themeOption);
     parser.addOption(QCommandLineOption(QStringLiteral("dynamic"),
                                         QStringLiteral("Start with dynamic colour enabled.")));
+    // The gallery's own pages are written in both languages, but the *palette*
+    // is not the only thing a screenshot has to show: it has to show text. The
+    // bundled font set has no CJK coverage and neither does the offscreen
+    // platform plugin's fallback on a bare CI image, so a Chinese shot is a
+    // wall of tofu boxes — legible to a pixel assertion, useless to a reader.
+    // This option exists so the screenshot hook can ask for `en` and produce an
+    // image a human can actually audit. It is not a feature of the gallery: the
+    // header's language button remains the interactive switch.
+    QCommandLineOption languageOption(
+        QStringLiteral("language"),
+        QStringLiteral("Language tag for the initial UI, e.g. `en` or `zh-Hans`."),
+        QStringLiteral("tag"), QStringLiteral("zh-Hans"));
+    parser.addOption(languageOption);
     QCommandLineOption screenshotOption(
         QStringLiteral("screenshot"),
         QStringLiteral("Render every page to PNG in <dir>, then quit."),
@@ -141,8 +179,8 @@ int main(int argc, char *argv[])
     // Registers bundled fonts, sets the language and the base font, applies
     // the layout direction. This is the one entry point every consumer calls.
     // The gallery defaults to Simplified Chinese; the header's language button
-    // toggles between zh-Hans and en.
-    const QString languageTag = QStringLiteral("zh-Hans");
+    // toggles between zh-Hans and en, and `--language` picks the starting tag.
+    const QString languageTag = parser.value(languageOption);
     md::MdDesign::initialize(&app, languageTag);
 
     // The icon system works with or without the Material Symbols font, but it

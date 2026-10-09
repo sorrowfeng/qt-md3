@@ -208,6 +208,9 @@ GalleryPage *createCarouselPage();
 GalleryPage *createDividerPage();
 GalleryPage *createListPage();
 
+/// Navigation — App bars (`md.comp.app-bar.*` and `md.comp.bottom-app-bar.*`).
+GalleryPage *createAppBarPage();
+
 } // namespace gallery
 
 #endif // GALLERY_PAGES_H

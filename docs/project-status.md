@@ -7,15 +7,15 @@ Last updated: 2026-10-09
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
-| Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication closed; §1.4 Containment closed |
-| Stage 1 families complete | `20 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets, Carousel, Divider, Lists) |
+| Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication closed; §1.4 Containment closed; §1.5 Navigation opened (App bars in) |
+| Stage 1 families complete | `21 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets, Carousel, Divider, Lists, App bars) |
 | Base modules | `21 / 21` |
-| Public components | `28` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`, `MdDialog`, `MdDialogHost`, `MdBottomSheet`, `MdBottomSheetHost`, `MdSideSheet`, `MdSideSheetHost`, `MdCarousel`, `MdDivider`, `MdList`, `MdListItem`) |
-| Style classes | `22` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`, `MdDialogStyle`, `MdBottomSheetStyle`, `MdSideSheetStyle`, `MdCarouselStyle`, `MdDividerStyle`, `MdListStyle`, `MdListItemStyle`) |
-| Example pages | `27` |
+| Public components | `30` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`, `MdDialog`, `MdDialogHost`, `MdBottomSheet`, `MdBottomSheetHost`, `MdSideSheet`, `MdSideSheetHost`, `MdCarousel`, `MdDivider`, `MdList`, `MdListItem`, `MdTopAppBar`, `MdBottomAppBar`) |
+| Style classes | `24` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`, `MdDialogStyle`, `MdBottomSheetStyle`, `MdSideSheetStyle`, `MdCarouselStyle`, `MdDividerStyle`, `MdListStyle`, `MdListItemStyle`, `MdTopAppBarStyle`, `MdBottomAppBarStyle`) |
+| Example pages | `28` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `33` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3Dialog`, `TestMd3BottomSheet`, `TestMd3SideSheet`, `TestMd3Carousel`, `TestMd3Divider`, `TestMd3List`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `34` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3Dialog`, `TestMd3BottomSheet`, `TestMd3SideSheet`, `TestMd3Carousel`, `TestMd3Divider`, `TestMd3List`, `TestMd3AppBar`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -94,7 +94,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
   grown to its own `heightForWidth()` — because the window shot can only ever
   prove that the *top* of a page draws.
 
-### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges, Progress indicators, Loading indicator, Snackbar and Tooltips + §1.4 Cards
+### Stage 1 §1.2 Actions (all eight families) + §1.3 Badges, Progress indicators, Loading indicator, Snackbar and Tooltips + §1.4 Cards + §1.5 App bars
 
 | Component | Covers |
 | --- | --- |
@@ -140,6 +140,14 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdDialogTokens` | the single `md.comp.dialog.*` export verbatim (34.0.21) — container surface-container-high at level3 with the extra-large corner, headline-small on-surface, body-medium on-surface-variant, 24 px secondary icon, label-large primary action with the hover/focus/pressed state rows (0.08/0.12/0.12), the deprecated-but-published divider rows, Compose's private layout constants (24 px padding, icon 16 / title 16 / text 24 bottoms, 8 px action spacing, 280..560 width clamp, 0.32 scrim) and the shadow-margin idiom. |
 | `MdDialogStyle` | Pattern A style: the layout as a pure function of a `ContentSpec` (icon centred, title start-aligned, text wrapped, one or two end-aligned action rows restating Compose's RTL FlowRow trick — confirm rightmost, wrapping confirm-above-dismiss), `paintDialog` shared with the test suite, painter-opacity carrying the host's fade. |
 | `MdDialogHost` | the Compose `BasicAlertDialog` half: an overlay across its parent painting the scrim (black 0.32, faded by the transition), the dialog centred and width-clamped into 280..560, Escape and scrim clicks running the `onDismissRequest` flow (`dismissed()` emitted at request time), fade-in/out on the effects-fast spring — dialogs fade only, no scale. |
+| `MdTopAppBar` | `QWidget`, the five published size layouts (small 64 / medium 112 / large 152 / medium-flexible 112 and 136 / large-flexible 120 and 152) × 2 alignments, with a navigation slot, a centre slot (the search app bar is this configuration, not a sixth layout) and an action row. A two-row bar collapses only its *text row* — the 64 px icon row never leaves — so medium loses 48 px and large 88. Surface, subtitle, badge-free: this family publishes no hover / press / focus rows at all, because its interaction *is* scrolling. Five `Q_PROPERTY`s with NOTIFY. |
+| `MdBottomAppBar` | `QWidget`, the single 80 px row with the export's `start 4 / top 4 / end 4` content band (no bottom value, faithfully), four arrangements and an optional docked FAB placed by its *container* — 16 px from the trailing edge, 12 px from the top. Three `Q_PROPERTY`s with NOTIFY. |
+| `MdAppBarTokens` | the `md.comp.app-bar.*` value layer: the common set (avatar 32, icons 24, leading/trailing 4, search 8, the surface → surface-container / level0 → level2 scroll rows) over all five size sets verbatim, plus `md.comp.bottom-app-bar.*`. Carries the derived geometry the export leaves implicit — `titleInset()` = 16 − 4, the medium 24 / large 28 title bottoms, and `collapsedRowHeight`, which is read from the **small** set whatever the variant (that is what makes a medium bar stop at 64). |
+| `MdAppBarScrollBehavior` | the `TopAppBarState` half as a `QObject`: the coerced `heightOffset`, `collapsedFraction`, `overlappedFraction` (verbatim, special case included), the three modes (Pinned / EnterAlways / ExitUntilCollapsed with Compose's own pre- vs post-scroll division of labour), settle-and-snap on the `spring-effects-default`, and `followScrollBar()` for a plain `QScrollBar` host. |
+| `MdTopAppBarStyle` | Pattern A style: the layout as a pure function (nav centred in the leading row, title aligned against the bar and *then* pushed past the nav and action boxes — Compose's own order, and measured against the *containers* the slots paint rather than the widgets' `sizeHint`s), the colour transition as `lerp(container, scrolled, FastOutLinearInEasing(fraction))` interpolated in **Oklab**, and the two title alphas (`TopTitleAlphaEasing` for the small title, `1 − collapsedFraction` for the expanded one). |
+| `MdBottomAppBarStyle` | Pattern A style: content band, the FAB's container target rect, the actions band that stops at it, and the per-child container box each of the row's own children belongs on — already distributed by the arrangement and already vertically centred, so the widget's placement pass has no arithmetic left to do. |
+| `MdChildBox` | the shared answer to "where does a child widget actually paint": `measure()` sizes a child and reports the container inside it, `geometryOn()` returns the geometry that puts that container on a target box. Every component that can show a focus indicator reserves 7.5 px a side inside itself (Qt clips a child to its own rect, so the room cannot live outside it), which makes `sizeHint()` the wrong thing for a *container* to lay a child out by. `MdButtonGroup` established the rule inline; `MdChildBox` is it factored out, and both app bars use it. |
+| `MdColorMath::lerpOklab` | new shared primitive: Oklab interpolation with a linear alpha, added because every *animated colour* in Compose goes through `Color.VectorConverter`, which interpolates in Oklab. Interpolating the app bar's container in sRGB instead lands on a different midpoint. |
 
 ## Known gaps, recorded rather than hidden
 
@@ -158,6 +166,15 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
    nor this port renders them. Compose's `WavyLinearProgressIndicator` /
    `WavyCircularProgressIndicator` are the porting source; see
    [porting-todo.md](porting-todo.md).
+5. **RTL mirroring is not library-wide.**
+   `MdTheme::isRightToLeft()` is honoured by `MdButtonStyle`,
+   `MdButtonGroupStyle`, `MdSegmentedButtonStyle` and `MdSplitButtonStyle` and
+   by nothing else, so cards, dialogs, sheets, lists, carousels, snackbars,
+   tooltips and now the app bars lay themselves out the same way in an RTL
+   locale. It is a tracked cross-cutting item in
+   [md3-coverage.md](md3-coverage.md) ("RTL 全组件"); the App bars family is the
+   first to state the gap in its own code rather than carry a comment claiming
+   a mirroring that does not happen.
 
 `ContrastLevel` used to head this list. It is closed: `MdColorSpec` solves every
 role against its own `ContrastCurve` and `ToneDeltaPair`, and all four levels
@@ -255,11 +272,20 @@ gallery scaffolding, unreachable from the seven token-only pages.
 
 ## What is next
 
-Stage 1 §1.4 Containment is closed — Cards, Dialogs, Bottom sheets, Side
-sheets, the Carousel, the Divider and Lists are all in:
+Stage 1 §1.5 Navigation is open — the App bars family is in, both halves of it
+(`MdTopAppBar` and `MdBottomAppBar`, over one token layer and one scroll
+behaviour):
 
-**§1.5 Navigation.** In official order: App bars, Toolbars, the Navigation bar,
-the Navigation rail, the Navigation drawer and Tabs.
+**§1.5 Navigation.** In official order: App bars ✅, ★ Toolbars, the Navigation
+bar, the Navigation rail, the Navigation drawer and Tabs. The next family is
+**★ Toolbars** — and it is worth noting that `FlexibleBottomAppBar` already
+belongs to it rather than to this one: Compose's flexible bottom bar reads
+`DockedToolbarTokens` (`FlexibleContentPadding` and `FlexibleBottomAppBarHeight`
+are both docked-toolbar rows), and material-web ships
+`_md-comp-toolbar-docked.scss` / `-floating.scss` / `-floating-fab.scss` /
+`-standard.scss` / `-vibrant.scss` for the family. The docking FAB semantics
+that this port's bottom app bar establishes are the same ones Toolbars will
+reuse.
 
 Each component lands as its own commit and must satisfy all twelve Definition of
 Done items before the next one starts, including an independent gallery page, a

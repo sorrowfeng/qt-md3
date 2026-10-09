@@ -819,6 +819,105 @@ Argb MdColorMath::intFromHcl(double hueDegrees, double chroma, double lstar)
     return solveToInt(hueDegrees, chroma, lstar);
 }
 
+namespace {
+
+/// 0..1 sRGB component <-> 0..1 linear-light component.
+double srgbToLinear(double c)
+{
+    return c <= 0.04045 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4);
+}
+
+double linearToSrgb(double c)
+{
+    return c <= 0.0031308 ? c * 12.92 : 1.055 * std::pow(c, 1.0 / 2.4) - 0.055;
+}
+
+/// Björn Ottosson's Oklab, the space Compose lerps colours in.
+struct Oklab
+{
+    double l = 0.0;
+    double a = 0.0;
+    double b = 0.0;
+};
+
+Oklab oklabFromLinear(double r, double g, double bl)
+{
+    const double l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * bl;
+    const double m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * bl;
+    const double s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * bl;
+
+    const double l_ = std::cbrt(l);
+    const double m_ = std::cbrt(m);
+    const double s_ = std::cbrt(s);
+
+    Oklab out;
+    out.l = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_;
+    out.a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_;
+    out.b = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_;
+    return out;
+}
+
+/// Linear-light sRGB, components outside 0..1 left as-is so the caller can see
+/// that the interpolation left the gamut and clamp exactly once.
+MdVec3 linearFromOklab(const Oklab &ok)
+{
+    const double l_ = ok.l + 0.3963377774 * ok.a + 0.2158037573 * ok.b;
+    const double m_ = ok.l - 0.1055613458 * ok.a - 0.0638541728 * ok.b;
+    const double s_ = ok.l - 0.0894841775 * ok.a - 1.2914855480 * ok.b;
+
+    const double l = l_ * l_ * l_;
+    const double m = m_ * m_ * m_;
+    const double s = s_ * s_ * s_;
+
+    MdVec3 rgb;
+    rgb.a = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+    rgb.b = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+    rgb.c = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+    return rgb;
+}
+
+} // namespace
+
+Argb MdColorMath::lerpOklab(Argb from, Argb to, double fraction)
+{
+    const double t = std::clamp(fraction, 0.0, 1.0);
+    if (t <= 0.0) {
+        return from;
+    }
+    if (t >= 1.0) {
+        return to;
+    }
+
+    const auto toOklab = [](Argb argb) {
+        return oklabFromLinear(srgbToLinear(redFromArgb(argb) / 255.0),
+                               srgbToLinear(greenFromArgb(argb) / 255.0),
+                               srgbToLinear(blueFromArgb(argb) / 255.0));
+    };
+
+    const Oklab a = toOklab(from);
+    const Oklab b = toOklab(to);
+
+    Oklab mixed;
+    mixed.l = a.l + (b.l - a.l) * t;
+    mixed.a = a.a + (b.a - a.a) * t;
+    mixed.b = a.b + (b.b - a.b) * t;
+
+    const MdVec3 linear = linearFromOklab(mixed);
+    const int red = int(std::clamp(linearToSrgb(linear.a), 0.0, 1.0) * 255.0 + 0.5);
+    const int green = int(std::clamp(linearToSrgb(linear.b), 0.0, 1.0) * 255.0 + 0.5);
+    const int blue = int(std::clamp(linearToSrgb(linear.c), 0.0, 1.0) * 255.0 + 0.5);
+
+    // Alpha rides a straight line — Oklab has no alpha axis, and Compose's
+    // converter lerps the alpha channel separately for the same reason.
+    const int alpha =
+        int(std::clamp(double(alphaFromArgb(from))
+                           + (double(alphaFromArgb(to)) - double(alphaFromArgb(from))) * t,
+                       0.0, 255.0)
+            + 0.5);
+
+    return (Argb(alpha) << 24) | (Argb(red) << 16) | (Argb(green) << 8) | Argb(blue);
+}
+
 double MdColorMath::contrastRatio(Argb a, Argb b)
 {
     const double l1 = yFromLstar(lstarFromArgb(a));
