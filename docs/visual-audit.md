@@ -64,6 +64,7 @@ captured official screenshot.
 | Bottom sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Side sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Carousel | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Divider | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -462,6 +463,21 @@ No side-by-side official reference exists (material-web ships only the token
 export; the behaviour source is the Compose M3 carousel package, verified
 against Compose's own MultiBrowseTest expectations), so this stays
 `Needs visual QA` like the other Compose-sourced families.
+
+### Divider
+
+Page 26 (`Divider`) places the four horizontal inset modes, three vertical
+snapshots and one 4 px thickness/colour override. Verified against the page
+render with pixel sampling (the 1 px hairlines are too fine to eyeball):
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Full-width | the hairline spanning the entire content column, outline-variant | Yes |
+| Inset start | the line starting 16 px in, flush at the end (the spec's "inset" measurement) | Yes (24 device px at dpr 1.5) |
+| Inset end | flush at the start, ending 16 px short (material-web's `[inset-end]`) | Yes |
+| Middle inset | 16 px padded on both sides (the spec's "middle-inset") | Yes |
+| Vertical | the full-height column and the two padded columns (48 / 32 / 16 logical px tall) | Yes |
+| 4 px override | the thickness parameter honoured with the custom colour, crisp edges (no AA blur) | Yes |
 
 ## 2026-10 comparison re-check (official vs ported)
 

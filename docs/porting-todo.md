@@ -449,8 +449,8 @@ is `SelectedContainerColor`.
 
 - [x] §1.3 Communication — **Badges, Progress indicators, Loading indicator,
       Snackbar and Tooltips ported** (the family is closed).
-- [ ] §1.4 Containment — **Cards, Dialogs, Bottom sheets, Side sheets and
-      the Carousel ported**; divider and lists remain.
+- [ ] §1.4 Containment — **Cards, Dialogs, Bottom sheets, Side sheets, the
+      Carousel and the Divider ported**; lists remain.
 
 #### Badges (ported)
 
@@ -853,6 +853,41 @@ content padding and neither does this class.
   by raise order) are recorded. (6) Item content is mouse-transparent — the
   carousel owns the drag; per-item interaction (Compose's clickable items)
   is the caller's business, recorded.
+
+#### Divider (ported)
+
+`MdDivider` + `MdDividerStyle` + `MdDividerTokens`, locked by
+`TestMd3Divider`. The smallest token export in the library — exactly two
+rows (`thickness: 1px`, `color: outline-variant`, 34.0.21) — so the port is
+mostly arrangement:
+
+* **Three sources, two vocabularies for "inset".** The m3.material.io
+  measurements name "inset" (left 16dp, right 0) and "middle-inset" (both
+  16dp); material-web publishes the attributes `[inset-start]`, `[inset-end]`
+  and `[inset]` — where `[inset]` pads **both** edges. `InsetMode`
+  (None / Start / End / Both) covers every combination so both vocabularies
+  are reachable; the naming conflict is recorded here rather than resolved
+  silently.
+* **The 16px inset is not a published token** — material-web hardcodes it as
+  `padding-inline-start/end: 16px` in `divider/internal/_divider.scss`. The
+  port tokenises it as `md.comp.divider.inset` so themes can retune it; the
+  hardcoding is the divergence.
+* **Start/end are logical inline edges** — material-web spells the padding
+  `padding-inline-*`, so an RTL layout swaps the physical sides. The widget
+  mirrors on `LayoutDirectionChange`; pinned by a test.
+* **The vertical form is `[compose]`** — Compose publishes
+  `VerticalDivider` (`fillMaxHeight().width(thickness)`); material-web has
+  no vertical form (CSS layout does not need one). The thickness and colour
+  parameter overrides mirror Compose's `thickness` / `color` parameters.
+* **The hairline is painted device-pixel aligned** — the line rect is
+  snapped outward onto whole device pixels and drawn without antialiasing,
+  so the 1px token thickness stays one crisp physical pixel instead of
+  straddling two at half coverage.
+* **Non-interactivity is the contract**: no state rows are published at all;
+  `Qt::NoFocus`, `WA_TransparentForMouseEvents`, no disabled form.
+* **Recorded, not ported**: the spec's usage spacing rows ("space between
+  divider & supporting-text 4dp", "right/bottom margin 8dp") are caller
+  layout guidance, not component tokens.
 
 ### Gallery scaffolding fixes found while building the first component
 

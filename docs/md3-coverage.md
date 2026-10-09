@@ -315,7 +315,7 @@ smoothed:
 | Bottom sheets | MdBottomSheet + MdBottomSheetHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Side sheets | MdSideSheet + MdSideSheetHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Carousel | MdCarousel | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Divider | MdDivider | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Divider | MdDivider | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Lists | MdList / MdListItem | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 
 ## 1.5 Navigation

@@ -625,3 +625,28 @@ set_tests_properties(TestMd3Carousel PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3Carousel)
+
+# MdDivider, the Containment family's grouping hairline: the two-row export
+# (thickness 1px / outline-variant — the smallest token table in the library),
+# the non-interactivity contract, the four inset modes (with the RTL inline
+# mirroring), the vertical form and the device-pixel-aligned rendering.
+add_executable(TestMd3Divider
+    TestMd3Divider.cpp
+)
+
+target_link_libraries(TestMd3Divider
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Divider COMMAND TestMd3Divider)
+set_tests_properties(TestMd3Divider PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Divider)

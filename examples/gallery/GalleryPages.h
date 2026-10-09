@@ -205,6 +205,7 @@ GalleryPage *createDialogPage();
 GalleryPage *createBottomSheetPage();
 GalleryPage *createSideSheetPage();
 GalleryPage *createCarouselPage();
+GalleryPage *createDividerPage();
 
 } // namespace gallery
 
