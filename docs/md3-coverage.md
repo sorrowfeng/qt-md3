@@ -324,9 +324,9 @@ smoothed:
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | App bars | MdTopAppBar / MdBottomAppBar | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | ★ Toolbars | MdDockedToolbar / MdFloatingToolbar | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Navigation bar | MdNavigationBar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Navigation rail | MdNavigationRail | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Navigation drawer | MdNavigationDrawer | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Navigation bar | MdNavigationBar + MdNavigationBarItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
+| Navigation rail | MdNavigationRail | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
+| Navigation drawer | MdNavigationDrawer + MdNavigationDrawerItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Tabs | MdTabs / MdTab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 
 ### App bars — the two rows that are still `🚧`
@@ -465,6 +465,72 @@ Eight transcription notes are pinned by `TestMd3Toolbar` rather than smoothed:
   `expandedProgress`, which is Compose's own behaviour, so a collapsed pill
   casts nothing; the with-FAB constants Compose uses instead (`level1` expanded,
   `level0` collapsed, no token rows at all) are recorded rather than copied.
+
+### Navigation bar, rail, drawer — one export, two coexisting families (and one that is not)
+
+Navigation is the second family (after Toolbars) where the "one component =
+one token family" assumption breaks, and the first where the break is
+**two live families in one export version**. The bar ships
+`md.comp.navigation-bar.*` (80 px tall, a 64x32 pill, the selected label
+`on-surface`) *and* `md.comp.nav-bar.*` + `nav-bar-item-{vertical,horizontal}`
+(64 px, 56x32, the selected label `secondary`) at the same 34.0.21; the rail
+does the same (`navigation-rail` vs `nav-rail-collapsed` / `-expanded` /
+`nav-rail` / `nav-rail-item*`); the drawer ships only one family. The spec's
+own words are that the flexible bar and rail *replace* the baseline ones and
+that the **expanded navigation rail replaces the navigation drawer** — but
+nothing was removed, and Compose keeps both generations as separate classes
+(`NavigationBar` / `ShortNavigationBar`, `NavigationRail` /
+`WideNavigationRail`). So the port carries both under one `variant` per
+component, and `TestMd3Navigation` pins both token tables in one test file.
+
+The judgment method — read the Compose implementation body, not just its
+token file, because migration residue lies — is recorded in
+`AGENTS.md`/memory: Compose's `NavigationBarTokens.ContainerHeight = 64` sits
+under a `// TODO` while the behaviour reads `TallContainerHeight` (80), and
+the export and the spec agree on 80. Four divergences are pinned for the bar:
+
+* **the 80 height** — export + behaviour body + spec beat the TODO'd token
+  row;
+* **the baseline pill is 64 wide, not 56** — two sources publish 64; Compose's
+  baseline reuses the flexible family's 56;
+* **the item gap is 8, not the export's `0px`** — Compose's hard-coded
+  `spacedBy(8.dp)`; a gap between items is behaviour, and behaviour wins;
+* **the level2 elevation is carried and not painted** — the spec's "no
+  shadow", same grounds as the bottom app bar's.
+
+The rail's rows are where the two sources actually meet: the flexible rail's
+export tables match Compose's `WideNavigationRail*Tokens` line for line, and
+the items are *the bar's* — Compose says outright that
+`WideNavigationRailItem` and `ShortNavigationBarItem` wrap the one
+`NavigationItem` composable, so the port pushes the rail's item rows into the
+shared `MdNavigationBarItem` (three rows join for the rail's sake: the
+horizontal item's 8 px icon-label gap, the baseline's 56x56 no-label pill,
+the expanded item's `label-large`). Expanded is a **state**, not a variant:
+one container, 96 collapsed and content-driven 220–360 expanded, the items
+flipping Top/Start at the edge; the baseline family publishes no expanded
+rows and refuses `setExpanded(true)`.
+
+The drawer is the deliberate exception: Compose's `NavigationDrawerItem` is
+*not* a wrapper over the shared item, because the geometry differs in kind —
+the pill **is** the item, a full-width 56 px row whose container colour is
+the selected state, no width animation, a badge slot — and the export's
+colour table diverges from the bar's in three pinned places (every active row
+`on-secondary-container`; the inactive pressed state layer is the one-row
+special case `on-secondary-container` where hover and focus read
+`on-surface`; the label `label-large`). So it gets its own
+`MdNavigationDrawerItem`. Three of its rows are carried and not painted: the
+scrim (a window overlay a child widget cannot cover — `scrimColor()` /
+`scrimOpacity()` are on the tokens for a host; the export's
+`neutral-variant20` is recorded against the library's `neutral0` Scrim
+role), the modal level1 elevation, and the large-badge rows (a text is what
+they describe; Compose's badge is an arbitrary composable slot).
+
+The `🚧` columns carry the same unfinished evidence as every other family
+(seed change, contrast level, density, font switch and the side-by-side
+comparison have not been run against pages 30–32), plus the library-wide RTL
+gap: the drawer's `corner-large-end` mirrors its radii with the layout
+direction and its item content rows re-read it, but the containers are not
+`placeRelative`-mirrored — recorded, not claimed.
 
 ## 1.6 Selection
 

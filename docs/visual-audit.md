@@ -68,6 +68,9 @@ captured official screenshot.
 | Lists | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | App bars | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Toolbars | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Navigation bar | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Navigation rail | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Navigation drawer | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -697,6 +700,71 @@ spec's own availability table marks both variants `Web: Unavailable`, so there
 is no official web rendering to compare against — only the headless-Edge capture
 of the taxonomy (Variant / Baseline / Configuration / Anatomy) and the export's
 five token files. The family therefore stays `Needs visual QA`.
+
+### Navigation bar
+
+Page 30 (`Navigation bar`) puts the two published families side by side — a
+baseline bar and a flexible bar, four items each with the first selected —
+then the same flexible bar in `EqualWeight` and `Centered`, then a `Start`
+row. Audited by pixel sampling the offscreen smoke render (which carries its
+own uniform scale of ≈1.04, so the numbers below are ratios, not absolute
+pixels — every one lands on the token value under that single scale):
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Baseline container height | 80 | Yes — 82-83 at the smoke scale, `#f3edf7` (surface-container) across the band |
+| Flexible container height | 64 | Yes — 65, the same container colour |
+| Baseline pill | 64 x 32, `corner-full`, `secondary-container` | Yes — 66 x 33, `#e8def8`, icon ink `#4a4458` (on-secondary-container) |
+| Flexible pill | 56 x 32 | Yes — 59 x 34 |
+| Centered band | one tenth per side at four items | Yes — the second row's pill sits visibly inboard of the first's |
+| Start pill height | 40 (16 + icon 24 + 8 a side) | Yes — 41; the pill wraps icon and label, its width content-driven |
+| Selected label cut | emphasized (prominent) | Yes — the selected label is visibly heavier |
+
+`itemLayout` is the bar's own property — the page learned that the hard way:
+setting `iconPosition` on the items *before* `addItem` was silently
+overwritten by `applyToItem`, which is the design (the bar owns the
+arrangement) working as intended.
+
+### Navigation rail
+
+Page 31 (`Navigation rail`) puts the baseline and flexible rails side by side
+in one band (FAB header, four items, first selected), then the flexible rail
+expanded, then the modal one. Same smoke-scale caveat:
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Baseline rail width / pill | 80 wide, pill 56 x 32 centred | Yes — pill 58 x 33, centred in the column |
+| Flexible collapsed width / pill | 96 wide, pill 56 x 32, top inset 44 | Yes — the flexible column's FAB sits visibly lower than the baseline's |
+| Expanded pill | `Start` arrangement, 56 tall, width = 16 + icon + 8 + label + 16 | Yes — 58 tall, width 79 at the offscreen font's label advance |
+| Expanded item form | icon beside label, labels always on | Yes — every item shows its label, not just the selected one |
+| Modal container | `surface-container` / level2 / `corner-large` | Yes — the third column is visibly tinted against the page |
+| Item pitch, collapsed | item + 4, from the family's top inset | Yes — the four pills stack at the 4 px rhythm |
+
+The expanded width is the content's between 220 and 360, and the flip is a
+state switch — the page holds one rail per state rather than animating, which
+is what Compose's boolean does too.
+
+### Navigation drawer
+
+Page 32 (`Navigation drawer`) shows the standard sheet (headline, divider,
+four items, first selected with a `24` badge) and the modal one. Same
+smoke-scale caveat:
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Standard container | 360 wide, `surface` at level0, `corner-large-end` | Yes — `#fef7ff`, the end pair rounded, the leading edge square |
+| Modal container | `surface-container-low` at level1 | Yes — `#f7f2fa` against the page's `#fef7ff` |
+| Item pill | 336 = 360 - 2 x 12, full width of the inset, 56 tall, `corner-full` | Yes — 350 x 58, one row per destination, no gaps between rows |
+| Pill colour | `secondary-container` when selected, nothing when not | Yes — `#e8def8` on the selected row only |
+| Badge | trailing text at the 24 px inset, `large-badge-label-*` | Yes — the `24` hangs inside the pill's trailing edge |
+| Headline / divider | `title-small` in `on-surface-variant`, then the outline rule | Yes — both push the items down by their own height plus the recorded gaps |
+
+Not verifiable in this environment, as with every Navigation family member:
+m3.material.io's navigation pages are a client-side SPA, and the availability
+table marks the flexible rows `Web: Unavailable` — there is no official web
+rendering to compare against, only the headless-Edge captures of the taxonomy
+and the export's token files. The three families therefore stay
+`Needs visual QA`.
 
 ## 2026-10 comparison re-check (official vs ported)
 

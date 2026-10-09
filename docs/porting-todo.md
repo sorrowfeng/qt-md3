@@ -1247,6 +1247,102 @@ one rule that lands the container on the box for both a component that fills
 `widget - margin` and one whose container is a fixed token size centred inside a
 larger widget (which is exactly what `MdFab` is).
 
+#### Navigation bar, rail and drawer (ported)
+
+`MdNavigationBar` + `MdNavigationBarItem` + `MdNavigationBarTokens` +
+`MdNavigationBarStyle` + `MdNavigationBarItemStyle`, `MdNavigationRail` +
+`MdNavigationRailTokens` + `MdNavigationRailStyle`, `MdNavigationDrawer` +
+`MdNavigationDrawerItem` + `MdNavigationDrawerTokens` + `MdNavigationDrawerStyle`
++ `MdNavigationDrawerItemStyle`, locked by `TestMd3Navigation` (38 slots) and by
+the page 30-32 gallery shots. material-web implements none of the three as a
+product — `labs/navigationbar`, `labs/navigationdrawer` and
+`labs/gb/components/navbar` are the only code there — so the export supplies
+every number and Compose supplies the behaviour, from *five* files this time
+(`NavigationBar.kt`, `ShortNavigationBar.kt`, `NavigationItem.kt`,
+`NavigationRail.kt` / `WideNavigationRail.kt`, `NavigationDrawer.kt`).
+
+**Navigation is the family where "one component = one token family" breaks
+open.** The bar ships two live families in one export version (34.0.21) —
+`md.comp.navigation-bar.*` and `md.comp.nav-bar.*` + items — the rail the same,
+and the drawer one. The spec says the flexible bar and rail replace the baseline
+ones and the expanded rail replaces the drawer; nothing was removed. Both
+bar/rail generations ride one `variant`; the judgment method (read the
+implementation body, not the token file — migration residue lies) is in
+`AGENTS.md` and memory. The pinned divergences and gaps:
+
+* **Compose's own token file lies about the bar height.**
+  `NavigationBarTokens.ContainerHeight = 64` sits under a `// TODO`, while the
+  behaviour reads `NavigationBarHeight = NavigationBarTokens.TallContainerHeight`
+  (80) and the export and the spec agree on 80. 80 it is — the first source in
+  this library whose *own tokens* were overruled by its own code.
+* **The baseline pill is 64 wide, Compose's is 56.** Two sources publish 64;
+  Compose's baseline reuses the flexible family's 56. The pill paddings are
+  derived (`(64 - 24) / 2 = 20`), which is why the baseline bar's selected pill
+  looks wider than Compose's screenshot of it.
+* **The item gap is 8, not the export's `0px`.** Compose hard-codes
+  `Arrangement.spacedBy(8.dp)`; a gap between items is behaviour, and behaviour
+  wins. Same shape as the toolbar's `between-space` call, opposite direction.
+* **The bar's level2 elevation is carried and not painted** — the spec's
+  "Differences from M2: no shadow". The drawer's modal level1 and the rail's
+  modal level2 fall outside a child widget's rect and are carried the same way.
+* **The drawer's scrim is carried, not painted.** `scrim-color:
+  neutral-variant20` / `scrim-opacity: 0.4` describe an overlay over the
+  drawer's *parent*, which a child widget cannot paint. `scrimColor()` /
+  `scrimOpacity()` expose them for a host. Divergence recorded: the library's
+  `ColorRole::Scrim` resolves from `neutral0` and there are no per-component
+  colour rows, so the semantic role is what is carried, not the export's tone.
+* **The drawer's item is deliberately not the shared expressive item.**
+  Compose's `NavigationDrawerItem` is independent because the geometry differs
+  in kind — the pill IS the item, a full-width 56 px row whose container colour
+  is the selected state, no width animation, a badge slot. Its colour table
+  diverges from the bar's in three pinned places: every active row
+  `on-secondary-container`, the inactive *pressed* state layer the one-row
+  special case (`on-secondary-container` where hover and focus read
+  `on-surface`), and `label-large`. The badge is a text (the
+  `large-badge-label-*` rows are what the export publishes); Compose's badge is
+  an arbitrary composable slot.
+* **The rail's items are the bar's.** Compose says outright that
+  `WideNavigationRailItem` and `ShortNavigationBarItem` wrap the one
+  `NavigationItem` composable, so the rail pushes its family's item rows into
+  `MdNavigationBarItem`. Three rows join the shared item for the rail's sake:
+  the horizontal item's 8 px icon-label gap (`horizontalIconLabelSpace`), the
+  baseline's 56x56 no-label pill (`noLabelIndicatorHeight`), and the expanded
+  item's `label-large` (`horizontalLabelTextType`).
+* **Expanded is a state, not a variant.** The flexible rail has one container
+  with two widths — 96 collapsed, content-driven 220-360 expanded (the widest
+  item plus 20 px of trailing room, clamped) — and expanding flips every item
+  Top/Start with no interpolation, which is Compose's own boolean. The baseline
+  rail publishes no expanded rows and refuses `setExpanded(true)`.
+* **Four spacing rows are Compose hard-codes.** The baseline rail publishes no
+  spacing rows at all; Compose's `NavigationRail.kt` hard-codes 4 between items,
+  4 of item vertical padding and 8 after the header. The drawer's content row
+  (`start 16 / icon 24 / gap 12 / end 24`) and `ItemPadding` (horizontal 12,
+  where 336 = 360 - 24 comes from) are hard-codes too, and the drawer's
+  headline-to-content 12 is Compose *sample* spacing — none are token rows, all
+  are recorded in the token headers as the behaviour's numbers.
+* **`corner-large-end` has no enum.** Directional shapes are carried as the
+  base radius with the pair placement done in the style's `Layout.radii`
+  (end pair rounded, leading edge square, mirrored in RTL) — the bottom
+  sheet's `corner-extra-large-top` precedent. The drawer is also the one
+  Navigation container that does re-read the layout direction (its item content
+  rows swap leading/trailing); the containers themselves are still not
+  `placeRelative`-mirrored, the library-wide RTL gap.
+* **A layout function must never measure.** Found by the rail tests:
+  `MdNavigationRailStyle::layoutFor` runs on the *paint* path, and
+  `MdChildBox::measure` resizes its subject — so a layout that measured would
+  drag every item back to its hint on each repaint and leave it there. The
+  rule now: layout reads `sizeHint()`; `measure` only ever appears in a
+  placement pass where every measure is immediately followed by its
+  `setGeometry`. Written into `AGENTS.md`-adjacent memory and pinned by
+  `TestMd3Navigation::railFlexibleExpands`.
+* **Two struct-default and width-source defects the tests flushed out.** A
+  multi-family token struct must write every family's literals explicitly
+  (the flexible bar inherited the struct's baseline defaults and silently
+  resolved 80 px tall), and a component's `boxes()` must place trailing
+  content against the content width, not the widget width, if the same
+  arithmetic answers `sizeHint()` on an unsized widget (the drawer item's
+  badge landed at a 640 x 480 top-level's trailing edge).
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three
