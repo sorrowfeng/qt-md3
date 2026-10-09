@@ -92,6 +92,23 @@ Qt Widgets 手绘复刻 Material Design 3（含 M3 Expressive）的 C++ 组件�
 ## 移植参考来源（用户明确要求）
 每个组件移植时参考两处：① 官方规范 m3.material.io/components/<component>（结构/行为，JS 渲染需浏览器抓取）；② material-web 仓库（tokens/versions/latest/sass 的全部数值 + docs/components 行为说明，maintenance mode 未实现 Expressive，Expressive 行为以 Compose M3 为准）。两者冲突时记录分歧并说明取舍，不默默选一个。已固化为 AGENTS.md 与 docs/porting-todo.md 的守则。
 
+## ★ token 导出里「一个组件 = 两套并存家族」的判定法（2026-10-09 navigation 调查得出）
+MD3 的 bar / rail 在**同一个导出版本号内**同时发布两套家族，靠命名区分，不是新旧两代：
+baseline 用 `navigation-*` 名（bar 80 / rail 80），M3 Expressive 用另一套名
+（bar 叫 `nav-bar` 64 且多出横向 item 变体；rail 叫 `nav-rail-collapsed` 96 /
+`nav-rail-expanded` 220–360）。抽屉只有 `navigation-drawer` 一套，其 Expressive
+替代品是 **expanded navigation rail**。
+判定权威的顺序（三步，别跳）：
+1. **看 Compose 的 `tokens/*Tokens.kt` 读哪一套** —— 这是行为真值。注意 Compose
+   会留「声明了但没读」的迁移残迹（`NavigationBarTokens.ContainerHeight = 64` 被
+   标 TODO，实际读 `TallContainerHeight = 80`），所以必须读**实现体**确认，不能只看
+   令牌文件。
+2. **看 material-web 的 `tokens/versions/v0_192/_md-comp-*.scss`** —— 那是它已实现
+   组件消费的稳定值，可与 `versions/latest` 对拍确认哪套是「现行规范」。
+3. **规范站截图拿分类法**（Variant/Baseline/Configuration 与 "M3 Expressive update"
+   段）。规范站的 Availability 表会直接写 `Web: Unavailable`，一眼看出 material-web
+   是否实现过（本族正式版两套都没实现，实现只在 `labs/`）。
+
 ## 关键约定
 - 目录：`src/core`（token/主题/颜色算法/字体/形状/动效/图标）、`src/styles`
   （`Md*Style`）、`src/widgets`（`Md*` 公开组件）、`examples`、`tests`、`resources`、`docs`。
