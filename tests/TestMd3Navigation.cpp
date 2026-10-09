@@ -35,15 +35,20 @@
 //   * the selected label is the *prominent* cut of the same size.
 
 #include "core/MdNavigationBarTokens.h"
+#include "core/MdNavigationDrawerTokens.h"
 #include "core/MdNavigationRailTokens.h"
+#include "core/MdShape.h"
 #include "core/MdTheme.h"
 #include "core/MdTypes.h"
 #include "styles/MdChildBox.h"
 #include "styles/MdNavigationBarItemStyle.h"
 #include "styles/MdNavigationBarStyle.h"
+#include "styles/MdNavigationDrawerStyle.h"
 #include "styles/MdNavigationRailStyle.h"
 #include "widgets/MdNavigationBar.h"
 #include "widgets/MdNavigationBarItem.h"
+#include "widgets/MdNavigationDrawer.h"
+#include "widgets/MdNavigationDrawerItem.h"
 #include "widgets/MdNavigationRail.h"
 
 #include <QtGui/QImage>
@@ -193,6 +198,15 @@ private slots:
     void railWidthAnimates();
     void railModalRows();
     void railNarrowRowIsCarried();
+
+    // --- drawer: the drawer's own item, the full-width pill ------------------
+    void drawerTokenTable();
+    void drawerItemGeometry();
+    void drawerPlacesItsItems();
+    void drawerSelectionIsMirrored();
+    void drawerPaintsItsPill();
+    void drawerVariantsDifferInContainer();
+    void drawerEndShapeMirrorsInRtl();
 
     // --- cross-cutting ------------------------------------------------------
     void rtlIsNotMirrored();
@@ -1048,6 +1062,227 @@ void TestMd3Navigation::railNarrowRowIsCarried()
                  .forVariant(MdNavigationRailVariant::Flexible)
                  .narrowContainerWidth,
              88.0);
+}
+
+// ---------------------------------------------------------------------------
+// Drawer — the family's own item and the full-width pill
+// ---------------------------------------------------------------------------
+
+void TestMd3Navigation::drawerTokenTable()
+{
+    const MdNavigationDrawerTokens tokens = MdNavigationDrawerTokens::resolve();
+    const MdNavigationDrawerVariantTokens &modal =
+        tokens.forVariant(MdNavigationDrawerVariant::Modal);
+    const MdNavigationDrawerVariantTokens &standard =
+        tokens.forVariant(MdNavigationDrawerVariant::Standard);
+
+    // One family, two container row groups — the only rows that differ.
+    QCOMPARE(standard.containerWidth, 360.0);
+    QCOMPARE(modal.containerWidth, 360.0);
+    QVERIFY(standard.containerColor == ColorRole::Surface);
+    QVERIFY(standard.containerElevation == ElevationLevel::Level0);
+    QVERIFY(modal.containerColor == ColorRole::SurfaceContainerLow);
+    QVERIFY(modal.containerElevation == ElevationLevel::Level1);
+    // `corner-large-end`, carried as the base radius; the style puts it on
+    // the end pair (see drawerEndShapeMirrorsInRtl).
+    QVERIFY(standard.containerShape == ShapeCorner::Large);
+
+    // The scrim, carried for a host overlay (a child widget cannot paint its
+    // parent). Divergence recorded: the export names `neutral-variant20`,
+    // the library's Scrim role resolves from `neutral0`.
+    QVERIFY(standard.scrimColor == ColorRole::Scrim);
+    QCOMPARE(standard.scrimOpacity, 0.4);
+
+    QVERIFY(standard.headlineColor == ColorRole::OnSurfaceVariant);
+    QVERIFY(standard.headlineType == TypeStyle::TitleSmall);
+    QVERIFY(standard.dividerColor == ColorRole::Outline);
+
+    // --- the item rows ---------------------------------------------------------
+    const MdNavigationDrawerItemTokens &item = standard.item;
+    QCOMPARE(item.activeIndicatorHeight, 56.0);
+    QCOMPARE(item.activeIndicatorWidth, 336.0);
+    QCOMPARE(item.iconSize, 24.0);
+    // The behaviour's four content insets, Compose's hard-codes.
+    QCOMPARE(item.itemPadding, 12.0);
+    QCOMPARE(item.contentLeadingSpace, 16.0);
+    QCOMPARE(item.contentTrailingSpace, 24.0);
+    QCOMPARE(item.iconLabelSpace, 12.0);
+    QVERIFY(item.labelTextType == TypeStyle::LabelLarge);
+    QVERIFY(item.indicatorShape == ShapeCorner::Full);
+
+    QVERIFY(item.focusIndicatorColor == ColorRole::Secondary);
+    QCOMPARE(item.focusIndicatorOffset, 2.0);
+    QCOMPARE(item.focusIndicatorThickness, 3.0);
+    QCOMPARE(item.hoverStateLayerOpacity, 0.08);
+    QCOMPARE(item.focusStateLayerOpacity, 0.12);
+    QCOMPARE(item.pressedStateLayerOpacity, 0.12);
+
+    // The table the bar's is not: every active row is
+    // `on-secondary-container`.
+    QVERIFY(item.coloursFor(true).iconFor(MdNavigationItemState::Pressed).role
+            == ColorRole::OnSecondaryContainer);
+    QVERIFY(item.coloursFor(true).labelFor(MdNavigationItemState::Hovered).role
+            == ColorRole::OnSecondaryContainer);
+    QVERIFY(item.coloursFor(true).indicator.role == ColorRole::SecondaryContainer);
+    QVERIFY(item.coloursFor(false).iconFor(MdNavigationItemState::Enabled).role
+            == ColorRole::OnSurfaceVariant);
+    QVERIFY(item.coloursFor(false).iconFor(MdNavigationItemState::Hovered).role
+            == ColorRole::OnSurface);
+    QVERIFY(item.coloursFor(false).stateLayerFor(MdNavigationItemState::Hovered).role
+            == ColorRole::OnSurface);
+    // The one-row special case: the *inactive pressed state layer* is the
+    // active content colour, where hover and focus read `on-surface`.
+    QVERIFY(item.coloursFor(false).stateLayerFor(MdNavigationItemState::Pressed).role
+            == ColorRole::OnSecondaryContainer);
+    QVERIFY(item.coloursFor(false).indicator.isPresent() == false);
+
+    // The disabled pair stays the derived rule: the enabled colours at 0.38.
+    QVERIFY(item.coloursFor(false).iconFor(MdNavigationItemState::Disabled).role
+            == ColorRole::OnSurfaceVariant);
+    QCOMPARE(item.coloursFor(false).iconFor(MdNavigationItemState::Disabled).opacity, 0.38);
+}
+
+void TestMd3Navigation::drawerItemGeometry()
+{
+    MdNavigationDrawerItem item(QStringLiteral("Inbox"), QStringLiteral("inbox"));
+    item.setBadge(QStringLiteral("24"));
+
+    // The content row is a paint-time contract, so the item is sized the way
+    // the drawer sizes it — at its natural width, the row's own 56 — before
+    // the boxes are read. (An unsized stack item is a 640 x 480 top-level
+    // widget, and its pill honestly centres in that.)
+    const QSize natural = item.sizeHint();
+    item.resize(natural.width(), 56);
+
+    const auto content = item.boxes();
+    // The pill is the item: one row, 56 tall, no pill-in-item arithmetic.
+    QCOMPARE(content.naturalSize.height(), 56.0);
+    QCOMPARE(content.pill, QRectF(0.0, 0.0, qreal(natural.width()), 56.0));
+
+    // The content row: 16 | icon 24 | 12 | label ... | 12 | badge | 24.
+    QCOMPARE(content.icon, QRectF(16.0, (56.0 - 24.0) / 2.0, 24.0, 24.0));
+    QCOMPARE(content.label.left(), 52.0);
+    // The badge hangs off the trailing inset of the stretched width.
+    QCOMPARE(content.badge.right(), qreal(natural.width()) - 24.0);
+    QCOMPARE(content.label.right() + 12.0, content.badge.left());
+    // And the natural width was the content's own: the badge's right edge at
+    // the stretchable minimum is the same number.
+    QCOMPARE(content.naturalSize.width() - 24.0, content.badge.right());
+
+    // Without a badge the label's box runs to the trailing inset, and there
+    // is no badge box.
+    MdNavigationDrawerItem plain(QStringLiteral("Inbox"), QStringLiteral("inbox"));
+    QVERIFY(plain.boxes().badge.isEmpty());
+    QVERIFY(!plain.boxes().label.isEmpty());
+}
+
+void TestMd3Navigation::drawerPlacesItsItems()
+{
+    MdNavigationDrawer drawer;
+    auto *inbox = new MdNavigationDrawerItem(QStringLiteral("Inbox"), QStringLiteral("inbox"));
+    auto *outbox = new MdNavigationDrawerItem(QStringLiteral("Outbox"), QStringLiteral("send"));
+    drawer.addItem(inbox);
+    drawer.addItem(outbox);
+    drawer.show();
+    drawer.resize(360, 400);
+
+    // Direct geometry — the pill is the item, so the row *is* the slot:
+    // x = the behaviour's 12, width = 360 - 24 = 336, rows stacked with no
+    // gap from the content's 16.
+    QCOMPARE(inbox->geometry(), QRect(12, 16, 336, 56));
+    QCOMPARE(outbox->geometry(), QRect(12, 72, 336, 56));
+
+    // A headline pushes the rows down by its own height plus the recorded 12
+    // gap — the headline's height is the platform's, so the relations are
+    // the assertion.
+    drawer.setHeadline(QStringLiteral("Mail"));
+    QVERIFY(inbox->geometry().top() > 16);
+    QCOMPARE(inbox->geometry().left(), 12);
+    QCOMPARE(inbox->geometry().width(), 336);
+    QCOMPARE(outbox->geometry().top(), inbox->geometry().top() + 56);
+
+    // The divider takes its 4 + 1 + 12 of air between headline and rows.
+    const int withHeadline = inbox->geometry().top();
+    drawer.setDividerVisible(true);
+    QVERIFY(inbox->geometry().top() > withHeadline);
+    QCOMPARE(outbox->geometry().top(), inbox->geometry().top() + 56);
+}
+
+void TestMd3Navigation::drawerSelectionIsMirrored()
+{
+    MdNavigationDrawer drawer;
+    for (int i = 0; i < 3; ++i) {
+        drawer.addItem(new MdNavigationDrawerItem(QString(QChar('A' + i)),
+                                                  QStringLiteral("home")));
+    }
+
+    drawer.setCurrentIndex(1);
+    QVERIFY(drawer.itemAt(1)->isSelected());
+    QVERIFY(!drawer.itemAt(0)->isSelected());
+    QVERIFY(!drawer.itemAt(2)->isSelected());
+
+    // Report-back: selecting an item directly moves the index.
+    drawer.itemAt(2)->setSelected(true);
+    QCOMPARE(drawer.currentIndex(), 2);
+    QVERIFY(!drawer.itemAt(1)->isSelected());
+}
+
+void TestMd3Navigation::drawerPaintsItsPill()
+{
+    MdNavigationDrawer drawer;
+    auto *inbox = new MdNavigationDrawerItem(QStringLiteral("Inbox"), QStringLiteral("inbox"));
+    auto *outbox = new MdNavigationDrawerItem(QStringLiteral("Outbox"), QStringLiteral("send"));
+    drawer.addItem(inbox);
+    drawer.addItem(outbox);
+    drawer.show();
+    drawer.resize(360, 400);
+    drawer.setCurrentIndex(0);
+
+    // The selected row's pill — `secondary-container`, the full item. Sampled
+    // past the badge (which ends at content x 312) and vertically clear of
+    // the text: (335, 44) in the drawer is inside the pill, inside nothing
+    // else.
+    QCOMPARE(pixelColorAt(drawer, QPointF(335, 44)),
+             MdTheme::instance().color(ColorRole::SecondaryContainer));
+
+    // The unselected row paints nothing over the container: `surface`, the
+    // standard family's container.
+    QCOMPARE(pixelColorAt(drawer, QPointF(335, 100)),
+             MdTheme::instance().color(ColorRole::Surface));
+}
+
+void TestMd3Navigation::drawerVariantsDifferInContainer()
+{
+    MdNavigationDrawer drawer;
+    drawer.addItem(new MdNavigationDrawerItem(QStringLiteral("Inbox"), QStringLiteral("inbox")));
+    drawer.show();
+    drawer.resize(360, 400);
+
+    // Sampled outside the items' 12 px inset: the container itself. The
+    // modal group is `surface-container-low` at level1, the standard one
+    // `surface` at level0.
+    drawer.setVariant(MdNavigationDrawerVariant::Modal);
+    QCOMPARE(pixelColorAt(drawer, QPointF(5, 200)),
+             MdTheme::instance().color(ColorRole::SurfaceContainerLow));
+
+    drawer.setVariant(MdNavigationDrawerVariant::Standard);
+    QCOMPARE(pixelColorAt(drawer, QPointF(5, 200)), MdTheme::instance().color(ColorRole::Surface));
+}
+
+void TestMd3Navigation::drawerEndShapeMirrorsInRtl()
+{
+    // `corner-large-end`: the end pair rounds, the leading edge stays square,
+    // and "end" follows the layout direction.
+    MdNavigationDrawer drawer;
+    drawer.resize(360, 400);
+
+    const qreal radius = MdShape::resolvedRadius(ShapeCorner::Large, QSizeF(360, 400));
+    const auto ltr = MdNavigationDrawerStyle::layoutFor(drawer, drawer.tokens());
+    QCOMPARE(ltr.radii, (QList<qreal>{0.0, radius, radius, 0.0}));
+
+    drawer.setLayoutDirection(Qt::RightToLeft);
+    const auto rtl = MdNavigationDrawerStyle::layoutFor(drawer, drawer.tokens());
+    QCOMPARE(rtl.radii, (QList<qreal>{radius, 0.0, 0.0, radius}));
 }
 
 // ---------------------------------------------------------------------------

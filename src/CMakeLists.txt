@@ -37,6 +37,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdFloatingToolbarTokens.h
     core/MdNavigationBarTokens.h
     core/MdNavigationRailTokens.h
+    core/MdNavigationDrawerTokens.h
     core/MdDividerTokens.h
     core/MdListTokens.h
     core/MdButtonGroupTokens.h
@@ -75,6 +76,8 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdNavigationBarStyle.h
     styles/MdNavigationBarItemStyle.h
     styles/MdNavigationRailStyle.h
+    styles/MdNavigationDrawerItemStyle.h
+    styles/MdNavigationDrawerStyle.h
     styles/MdChildBox.h
     styles/MdDividerStyle.h
     styles/MdListStyle.h
@@ -112,6 +115,8 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdNavigationBar.h
     widgets/MdNavigationBarItem.h
     widgets/MdNavigationRail.h
+    widgets/MdNavigationDrawer.h
+    widgets/MdNavigationDrawerItem.h
     widgets/MdDivider.h
     widgets/MdList.h
     widgets/MdListItem.h
@@ -161,6 +166,7 @@ set(QT_MD3_SOURCES
     core/MdFloatingToolbarTokens.cpp
     core/MdNavigationBarTokens.cpp
     core/MdNavigationRailTokens.cpp
+    core/MdNavigationDrawerTokens.cpp
     core/MdDividerTokens.cpp
     core/MdListTokens.cpp
     core/MdButtonGroupTokens.cpp
@@ -194,6 +200,8 @@ set(QT_MD3_SOURCES
     styles/MdNavigationBarStyle.cpp
     styles/MdNavigationBarItemStyle.cpp
     styles/MdNavigationRailStyle.cpp
+    styles/MdNavigationDrawerItemStyle.cpp
+    styles/MdNavigationDrawerStyle.cpp
     styles/MdChildBox.cpp
     styles/MdDividerStyle.cpp
     styles/MdListStyle.cpp
@@ -228,6 +236,8 @@ set(QT_MD3_SOURCES
     widgets/MdNavigationBar.cpp
     widgets/MdNavigationBarItem.cpp
     widgets/MdNavigationRail.cpp
+    widgets/MdNavigationDrawer.cpp
+    widgets/MdNavigationDrawerItem.cpp
     widgets/MdDivider.cpp
     widgets/MdList.cpp
     widgets/MdListItem.cpp
