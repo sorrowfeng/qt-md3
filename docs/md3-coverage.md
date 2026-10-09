@@ -674,12 +674,56 @@ The `🚧` columns carry the same unfinished evidence as every other family,
 plus the library-wide RTL gap: the chip's row layout does not mirror yet —
 recorded, not claimed.
 
+### Radio button — the leanest export, and one colour for stroke and dot
+
+The radio button is the leanest Selection export in the batch: 27 rows —
+two metrics (`icon.size` 20, `state-layer.size` 40), one icon colour table,
+one state-layer colour table, both indexed `[selection][interaction]`, and the
+two disabled opacities. No container, no outline, no error variant, no drag
+rows, and **no focus-indicator rows** — the ring carries the system values
+(`md.sys.state.focus-indicator`, outer offset 2, thickness 3) with Compose's
+`focusRingShape = CircleShape`.
+
+Five transcription notes are pinned by `TestMd3RadioButton` rather than
+smoothed:
+
+* **the pressed state-layer special cases are checkbox-shaped** —
+  `unselected.pressed.state-layer.color` is `primary` (the colour the button
+  is about to earn) and `selected.pressed.state-layer.color` is `on-surface`;
+  hover and focus read each side's own colour (`on-surface` unselected,
+  `primary` selected). The state layer has no enabled/dragged/disabled rows —
+  the enabled slot stays absent, pinned rather than smoothed.
+* **one colour paints the stroke and the dot.** Compose draws both circles in
+  one `animatedColor` — the icon table's row; there is no separate dot colour.
+* **the dot sizes are Compose constants, not export rows.** The export
+  publishes only `icon.size`; Compose hardcodes `RadioButtonDotSize` 12 dp
+  (drawn at `dotRadius − strokeWidth/2`, a 5 px radius), `RadioStrokeWidth`
+  2 dp and `RadioButtonPadding` 2 dp — carried as behaviour constants. The dot
+  scales in and out on the **fast spatial** spring (Compose's
+  `animateDpAsState`), the only selection animation with no snap delays
+  anywhere.
+* **an autoExclusive checked radio cannot be unchecked.** Not by clicking
+  (Compose's `selectable` never unchecks either) and not even by a
+  programmatic `setChecked(false)` — Qt's `QAbstractButton::setChecked`
+  silently ignores it for the checked button of an exclusive group. The only
+  deselection path is a sibling's check, which is what the dot-shrink test
+  drives through.
+* **the disabled transition snaps** — the dot's scale and the colour fade's
+  timers are both cut on `EnabledChange` ("there should be no animations
+  between enabled / disabled"); the disabled icon rows read `on-surface` at
+  0.38 on both sides (the export's two rows carry identical numbers).
+
+The `🚧` columns carry the same unfinished evidence as every other family,
+plus the library-wide RTL gap: nothing to mirror in the circle itself, but
+the shared focus-ring and state-layer code paths are not RTL-audited.
+
 ## 1.6 Selection
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Checkbox | MdCheckBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Chips | MdChip | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
+| Radio button | MdRadioButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Date pickers | MdDatePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Menus | MdMenu / MdMenuItem | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Radio button | MdRadioButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |

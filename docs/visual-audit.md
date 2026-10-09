@@ -74,6 +74,7 @@ captured official screenshot.
 | Tabs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Checkbox | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Chips | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Radio button | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -836,6 +837,31 @@ The pixel-probe standing of the family matches the checkbox's: the 1 px flat
 outline hugs the top edge (the stroke is inset half a width), so sampling at
 y = 0.5 rounds to the first empty row and a naive edge sample reads
 transparent — the test samples row 0.
+
+The official side-by-side comparison is the same standing as the rest of the
+matrix: m3.material.io is a client-side SPA with no server-rendered markup to
+diff, so the family stays `Needs visual QA` until the reference captures are
+taken.
+
+### Radio button
+
+Page 36 (`Radio button`) shows the two selection sides with a group member,
+the disabled pair and a live three-button group. The page-36 smoke shot was
+read against the export's token values at the usual ~1.04 smoke scale:
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Unselected | a 20 px circle stroked 2 px in `on-surface-variant`, transparent centre | Yes — the bare ring, no dot |
+| Selected | the same ring in `primary` with a 5 px radius dot (12 px diameter minus the stroke inset) | Yes — the `primary` dot inside the ring |
+| Disabled | both sides `on-surface` @ 0.38 | Yes — the pale pair, the selected one still dotted |
+| Live group | three interactive siblings, one exclusive group per section | Yes — clicking one moves the dot |
+
+The page-36 build itself caught the one trap this family's group semantics
+hide: without per-section `QButtonGroup`s every radio on the page shares the
+page parent's autoExclusive group, so checking the *disabled* sample silently
+unchecked the *selected* sample two sections above — the first screenshot
+rendered three bare rings and no selected dot. The page now wraps each row in
+its own exclusive group.
 
 The official side-by-side comparison is the same standing as the rest of the
 matrix: m3.material.io is a client-side SPA with no server-rendered markup to

@@ -1514,6 +1514,49 @@ one). The pinned divergences and gaps:
 * **RTL: not mirrored.** The chip's row layout keeps the LTR placement under
   an RTL layout direction — the library-wide gap.
 
+#### Radio button (ported)
+
+`MdRadioButton` + `MdRadioButtonTokens` + `MdRadioButtonStyle`, locked by
+`TestMd3RadioButton` (18 slots) and by the page 36 gallery shot. The export
+(`_md-comp-radio-button.scss`, 27 rows) supplies the two metrics and the two
+colour tables; Compose's `RadioButton.kt` supplies the behaviour. The pinned
+divergences and gaps:
+
+* **The dot and stroke sizes are Compose constants, not export rows.**
+  `RadioButtonDotSize` 12 dp (drawn at `dotRadius − strokeWidth/2`, a 5 px
+  radius), `RadioStrokeWidth` 2 dp and `RadioButtonPadding` 2 dp are carried
+  as behaviour constants; the export publishes only `icon.size` 20 and
+  `state-layer.size` 40.
+* **One colour paints the stroke and the dot** — Compose draws both circles in
+  one `animatedColor` (the icon table's row); there is no separate dot colour
+  to port.
+* **The ripple is unbounded with a fixed radius.** Compose's
+  `ripple(bounded = false, radius = StateLayerSize / 2)` — a 20 px radius
+  circle that does not grow with the pointer. This port runs the standard
+  bounded ripple inside the 40 px layer bounds, clipped to its circle: the
+  growth curve past the clip is invisible, so the visible result matches (the
+  same standing as the checkbox's ripple).
+* **An autoExclusive checked radio cannot be unchecked.** Not by clicking
+  (Compose's `selectable` never unchecks) and not even by a programmatic
+  `setChecked(false)` — Qt's `QAbstractButton::setChecked` silently ignores it
+  for the checked button of an exclusive group. The only deselection is a
+  sibling's check; the dot-shrink test drives through that path. The gallery
+  page therefore wraps each section row in its own `QButtonGroup` — without
+  them every radio on the page would share the page parent's autoExclusive
+  group and checking the disabled sample would uncheck the selected one above.
+* **The focus ring carries system values.** The export publishes no
+  focus-indicator rows; the ring is the system outer offset 2 / thickness 3 in
+  Compose's `focusRingShape = CircleShape`, around the 20 px icon.
+* **Labels are not painted.** MD3's radio button has no built-in label and
+  Compose's has none either; Qt's `QRadioButton` carries a `text` property
+  that this widget ignores — a label is the caller's widget (the checkbox's
+  standing).
+* **The size holds while disabled** — the checkbox's recorded divergence, the
+  same here.
+* **RTL: not mirrored.** Nothing to mirror in the circle itself, but the
+  shared focus-ring and state-layer paths are not RTL-audited — the
+  library-wide gap.
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three
