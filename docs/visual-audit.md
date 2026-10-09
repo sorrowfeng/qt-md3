@@ -67,6 +67,7 @@ captured official screenshot.
 | Divider | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Lists | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | App bars | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Toolbars | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -587,6 +588,115 @@ number above is therefore the `md.comp.app-bar.*` export cross-checked against
 Compose's `AppBar*Tokens.kt` (which agree row for row up to the two deprecated
 subtitle rows), plus `AppBar.kt` for the layout and the state machine. The
 family stays `Needs visual QA`.
+
+### Toolbars
+
+Page 29 (`Toolbars`) places two `MdDockedToolbar`s — expanded and at
+`heightOffset = -32` — three floating toolbars for the orientation × colour
+matrix, three more at `expandedProgress` 1 / 0.5 / 0 with a leading and a
+trailing action, and three with an action button (FAB at `End`, at `Start`, and
+a vertical toolbar with it at the bottom). Audited the same way as the app bars:
+pixel sampling of the `--language en` render at DPR 1, the page column being
+994 px wide (x 32…1025), so one device pixel is one logical pixel. Sampling is
+by **exact token colour** rather than by difference-from-background, because the
+level3 pill shadow is faint enough to fall under a `diff > 6` threshold and the
+bounding boxes would otherwise be the pill's, not the shadow's.
+
+Every number below is the export's own arithmetic, and every one of them was
+**wrong on the first pass in a way only the pixels could show**.
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Docked container | 994 × 64, `corner-none` | Yes — `#f3edf7` across the whole band |
+| Docked at `heightOffset = -32` | 994 × **32** (`heightOffsetLimit = -placeable.height`) | Yes — 32, the whole bar, not one row |
+| Docked item pitch | 40 (`containerHeight`) + **32** (`containerMaxSpacing`) = 72 | Yes — glyph centres 457.5 / 529.5 / 601.5 |
+| Docked run centring | 3 × 40 + 2 × 32 = 184 centred in the 961 px band (48…1009) → first container at 436.5 | Yes — first glyph centre 457.5 = 436.5 + 20 + ink asymmetry |
+| Floating pill, horizontal | 8 + 40 + **4** + 40 + **4** + 40 + 8 = 144 × 64 | Yes — 144 (first pass 136, see below) |
+| Floating pill, vertical | the same numbers transposed | Yes — 64 × 144, exact |
+| Five slots (`leading + 3 + trailing`) | 8 + 5 × 40 + 4 × 4 + 8 = 232 | Yes — 232 |
+| …at `expandedProgress = 0.5` | 232 × 0.5 = 116, **trailing edge fixed** | Yes — right edge 264 = 32 + 232 and the pill sweeps left |
+| …at `expandedProgress = 0` | no extent at all, and the leading / trailing slots have left the layout | Yes — nothing but the row's label |
+| Pill with an action button | pill 8 + 40 + 4 + 40 + 8 = 100, strip = 8 + **56** (the *expanded* FAB) = 64, widget 164 × 80 | Yes — pill 32…132, widget trailing edge 196 |
+| The action button at `End`, expanded | box = `outerMainEnd - 56` = 140…196 | Yes — the `#6750a4` circle measures 141…195, i.e. 56 with one antialiased pixel |
+| The same at `Start` | box 32…88, pill begins after the strip at 96 | Yes — pill 96…195 |
+| The same on a vertical toolbar | `Bottom` is the axis' end, so the box is `outerMainEnd - 56` | Yes — circle 45…99 × 1806…1860 |
+| The same, collapsed | box = `outerMainEnd - 80` = 116, i.e. **16 px inside** the pill's 132 anchor | Pinned by `TestMd3Toolbar::floatingFabStripAndSizeSets`; not visible on the page (see below) |
+
+**The finding that changed the component.** The three-item pill measured 136 px.
+The export says `container.between-space: 4`, so it should have been 144 — and
+`MdFloatingToolbarStyle::layoutFor` had been advancing its cursor by each slot's
+container and by nothing else. The row was resolved, carried in the token struct
+and asserted by `floatingTokenTable`, while the layout ignored it: a token test
+cannot see a row that nothing reads. Compose is no help here, because it does
+not read the row either — `FloatingToolbarTokens.ContainerBetweenSpace` is
+referenced nowhere in `FloatingToolbar.kt`, since upstream arranges a toolbar's
+items in the *caller's* `Row`. This widget owns its children's arrangement, so
+the published gap is applied, and `TestMd3Toolbar::betweenSpaceSeparatesTheSlots`
+now pins it from the override down to `sizeHint()`. The pitch is visible in the
+render: 44 px between neighbouring glyph centres, in a five-slot row as well as
+a three-slot one.
+
+**The half-collapsed docked bar is not a bug, and the source says so.** At
+`heightOffset = -32` the bar is 32 px tall while its 20 rows of glyph ink become
+9 (rows 319…327 of a 296…327 band — the glyphs' upper slivers, at the band's
+bottom edge). That is `AppBar.kt` line for line:
+
+```kotlin
+val height = (placeable.height + heightOffset).coerceAtLeast(0f)
+layout(placeable.width, height.roundToInt()) { placeable.place(0, 0) }
+```
+
+The row stays at y = 0 inside a shorter box; nothing re-centres it. A Compose
+app would additionally paint the overflow over whatever is behind the bar, since
+`Modifier.layout` reports a smaller height without an implicit clip — Qt cannot
+paint a child outside its widget at all, so this port cuts instead of
+overflowing. Same discretisation as the floating pill's slots, recorded in
+[porting-todo.md](porting-todo.md).
+
+**Qt clips the pill's shadow away.** `container.elevation` is `level3` in the
+export and this port paints it (`MdElevation::drawShadowDp`, ramped by
+`expandedProgress`), but a floating toolbar with **no** action button has a
+widget rectangle identical to its pill and Qt clips painting to the widget, so
+the shadow has nowhere to land: sampling 8 px below the standard pill's bottom
+edge returns the page background exactly (`#fef7ff`, `diff = 0`), and the only
+non-background pixels beyond the pill's outline are its own antialiased edge.
+With a FAB the widget is 80 px across against the pill's 64, so there are 8 px of
+slack above and below — and there the shadow does land: at x = 50, which the
+pill's rounded end has already left at that row (the fill begins at x ≈ 56), rows
+1549…1553 measure 152 → 174 → 196 → 216 → 233 grey, a five-row falloff under the
+pill's edge, while the row above (inside the fill) is the pill's own
+`#EADDFF`. So the row is carried and painted, visible exactly where the widget
+has room for it; the lists' drag shadow carries the same note.
+
+**There is no item size to be faithful to.** The pill's *length is its
+children's*: the export publishes no item height or width for a toolbar (all 36
+`docked` and 75 `floating` rows were re-read to check), so a toolbar advances by
+whatever container its child publishes — the same intrinsic-measurement rule
+Compose uses. Page 29 uses the library's 40 px default icon button, because the
+`MdIconButton` ladder is the Expressive one (32 / 40 / 56 / 96 / 136) and there
+is no 48; a 48 px item would make the band exactly `64 − 8 − 8` and reproduce
+the export's own "8 + 48 + 8 = 64" composition. Every pill on the page is
+therefore 8 px narrower per item than the spec's arithmetic. That is a fact about
+the child component, not about this layout, and it is why the audit compares the
+pill against *its own* children rather than against a nominal 168.
+
+**Clamping at 0.5.** Of the five slots in the half-progress row only the fourth
+and fifth survive — glyph ink at 186…199 (`delete`) and 235…238 (`more_vert`) —
+because the pill spans 148…264 (relative 116…232): the leading, first-content and
+second-content containers (relative 8…48, 52…92, 96…136) all start before the
+pill does, while the third content container (relative 140…180, absolute
+172…212) and the trailing one (relative 184…224, absolute 216…256) sit inside
+it. The rule is "fully inside or hidden", which is what makes an overlapping slot
+disappear rather than be cut. It is a discretisation of Compose's
+`graphicsLayer { clip = true; shape = shape }`, forced by Qt clipping a child to
+its widget rather than to a shape drawn inside it.
+
+Not verifiable in this environment: m3.material.io's `/components/toolbars`
+pages are a client-side SPA whose content arrives only in the browser, and the
+spec's own availability table marks both variants `Web: Unavailable`, so there
+is no official web rendering to compare against — only the headless-Edge capture
+of the taxonomy (Variant / Baseline / Configuration / Anatomy) and the export's
+five token files. The family therefore stays `Needs visual QA`.
 
 ## 2026-10 comparison re-check (official vs ported)
 

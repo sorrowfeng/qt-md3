@@ -33,6 +33,8 @@ set(QT_MD3_CORE_HEADERS
     core/MdDialogTokens.h
     core/MdAppBarScrollBehavior.h
     core/MdAppBarTokens.h
+    core/MdDockedToolbarTokens.h
+    core/MdFloatingToolbarTokens.h
     core/MdDividerTokens.h
     core/MdListTokens.h
     core/MdButtonGroupTokens.h
@@ -66,6 +68,8 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdCardStyle.h
     styles/MdDialogStyle.h
     styles/MdBottomAppBarStyle.h
+    styles/MdDockedToolbarStyle.h
+    styles/MdFloatingToolbarStyle.h
     styles/MdChildBox.h
     styles/MdDividerStyle.h
     styles/MdListStyle.h
@@ -98,6 +102,8 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdDialog.h
     widgets/MdDialogHost.h
     widgets/MdBottomAppBar.h
+    widgets/MdDockedToolbar.h
+    widgets/MdFloatingToolbar.h
     widgets/MdDivider.h
     widgets/MdList.h
     widgets/MdListItem.h
@@ -143,6 +149,8 @@ set(QT_MD3_SOURCES
     core/MdDialogTokens.cpp
     core/MdAppBarScrollBehavior.cpp
     core/MdAppBarTokens.cpp
+    core/MdDockedToolbarTokens.cpp
+    core/MdFloatingToolbarTokens.cpp
     core/MdDividerTokens.cpp
     core/MdListTokens.cpp
     core/MdButtonGroupTokens.cpp
@@ -171,6 +179,8 @@ set(QT_MD3_SOURCES
     styles/MdCardStyle.cpp
     styles/MdDialogStyle.cpp
     styles/MdBottomAppBarStyle.cpp
+    styles/MdDockedToolbarStyle.cpp
+    styles/MdFloatingToolbarStyle.cpp
     styles/MdChildBox.cpp
     styles/MdDividerStyle.cpp
     styles/MdListStyle.cpp
@@ -200,6 +210,8 @@ set(QT_MD3_SOURCES
     widgets/MdDialog.cpp
     widgets/MdDialogHost.cpp
     widgets/MdBottomAppBar.cpp
+    widgets/MdDockedToolbar.cpp
+    widgets/MdFloatingToolbar.cpp
     widgets/MdDivider.cpp
     widgets/MdList.cpp
     widgets/MdListItem.cpp

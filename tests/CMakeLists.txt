@@ -702,3 +702,29 @@ set_tests_properties(TestMd3AppBar PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3AppBar)
+
+# TestMd3Toolbar — the Toolbars family: MdDockedToolbar + MdFloatingToolbar. The
+# five token sets, the docked row's centred 32 px spacing and whole-height
+# collapse, the floating pill's progress-driven length, its leading/trailing
+# visibility rule, the action button's strip and 56/80 size sets, and the
+# container-placement rule both share.
+add_executable(TestMd3Toolbar
+    TestMd3Toolbar.cpp
+)
+
+target_link_libraries(TestMd3Toolbar
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Toolbar COMMAND TestMd3Toolbar)
+set_tests_properties(TestMd3Toolbar PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Toolbar)

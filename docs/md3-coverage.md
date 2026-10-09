@@ -323,7 +323,7 @@ smoothed:
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | App bars | MdTopAppBar / MdBottomAppBar | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ Toolbars | MdToolbar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| ★ Toolbars | MdDockedToolbar / MdFloatingToolbar | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Navigation bar | MdNavigationBar | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Navigation rail | MdNavigationRail | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Navigation drawer | MdNavigationDrawer | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
@@ -390,6 +390,81 @@ audit rather than smoothed:
   action buttons sit 40 px apart (not 55). Neighbouring widget rects overlap by
   `2 * 7.5` as a consequence, which is deliberate and audited in
   [porting-todo.md](porting-todo.md).
+
+### Toolbars — why the class name in the table changed, and the eight notes
+
+The reserved name was one class, `MdToolbar`. It is now two —
+`MdDockedToolbar` and `MdFloatingToolbar` — because the published component is
+two: the spec's variant table lists exactly `Docked` and `Floating`, Compose
+ships `HorizontalFloatingToolbar`/`VerticalFloatingToolbar` and **no** docked
+component at all, and the two have mutually exclusive token sets (`corner-none`
+vs `corner-full`, 16 px padding vs 8, no elevation row vs `level3`). The two
+`floating` *configurations* — orientation and colour scheme — stay enums on the
+one floating class, because the export's horizontal and vertical rows are exact
+transposes that differ by a single number, and because both dimensions are
+published per orientation there is no third class to make.
+
+The `🚧` columns are the same unfinished evidence the App bars carry (seed
+change, contrast level, density, font switch and the side-by-side comparison
+have not been run against this page) plus the library-wide RTL gap: a toolbar is
+large, `placeRelative`-positioned and entirely unmirrored, and this family
+records that rather than claiming otherwise.
+
+Eight transcription notes are pinned by `TestMd3Toolbar` rather than smoothed:
+
+* **material-web implements neither variant** — the availability table says
+  `Web: Unavailable`, and the export's five `_md-comp-toolbar-*.scss` files are
+  the only place either exists there. As with Divider, the numbers come from the
+  export and the behaviour from Compose — which for this family means *two*
+  different sources: `FloatingToolbar.kt` for the floating toolbar and
+  `AppBar.kt`'s `FlexibleBottomAppBar` for the docked one;
+* **the docked toolbar has no Compose component** — it is realised as
+  `FlexibleBottomAppBar` with `DockedToolbarTokens` substituted for the bottom
+  app bar's rows. That composable *is* the docked toolbar, which is why this
+  port models it as one and stops treating `FlexibleBottomAppBar` as a member of
+  the App bars family;
+* **the docked toolbar collapses its whole height** — `BottomAppBarLayout` sets
+  `heightOffsetLimit = -placeable.height`, so `MdDockedToolbar::heightOffsetLimit()`
+  is `-64`, the opposite of the two-row app bar rule above. It has no
+  `arrangement` property either, because its row is `Arrangement.spacedBy(
+  ContainerMaxSpacing /* 32 */, Alignment.CenterHorizontally)` and there is
+  nothing for a caller to set;
+* **two published rows are carried and never read** — `docked.container.min-spacing`
+  (Compose reads `max` and only `max`) and `floating.container.height` (Compose's
+  `ContainerSize` still points at the deprecated single row, while the export has
+  superseded it with the horizontal/vertical pair that `containerCrossExtent()`
+  returns). Both are recorded, not silently dropped;
+* **`container.between-space` is the one row this port reads and Compose does
+  not** — `FloatingToolbarTokens.ContainerBetweenSpace` is declared and
+  referenced nowhere in `FloatingToolbar.kt`, because upstream's toolbar items
+  are arranged by the *caller's* `Row` and Compose therefore ships no spacing of
+  its own. `MdFloatingToolbar` owns the arrangement of its children, so it
+  applies the published 4 px: a run of `n` slots is
+  `8 + n * item + (n - 1) * 4 + 8` long. The gap was found by the page-29 pixel
+  audit — a three-item pill measured 136 px where the export's own arithmetic
+  says 144 — and had been resolved and asserted for a whole round while the
+  layout ignored it, which is why
+  `TestMd3Toolbar::betweenSpaceSeparatesTheSlots` now pins the override all the
+  way through to the widget's `sizeHint()`;
+* **the leading and trailing slots exist only while the toolbar is expanded** —
+  Compose wraps each in `AnimatedVisibility(visible = expandedState)`, so at
+  `expandedProgress == 0` they leave the layout and the content re-centres in the
+  band they vacated. The pill is measured at `maxIntrinsicWidth * progress`, so
+  the *widget's* bounds never move while the pill inside them shortens — the
+  page-29 band that is blank at progress 0 is the state, not a bug;
+* **the adjacent action button is two size sets** — 56 px with `corner-large`
+  and `level1` expanded, 80 px with `corner-large-increased` and `level2`
+  collapsed, so it *grows* as the toolbar shrinks, and the reserved strip is the
+  expanded 56 even when the button is 80. `MdFab` publishes one size, so an
+  `MdFab` handed to `setFab()` stays 56 px centred in the 80 px box: the
+  toolbar's geometry is right and the gap is the FAB family's. Recorded in
+  [porting-todo.md](porting-todo.md);
+* **`container.elevation` is `level3` in the export and unused in Compose** —
+  Compose's own constants are `ElevationTokens.Level0` with a "TODO read from
+  token". This port paints the published row and ramps it with
+  `expandedProgress`, which is Compose's own behaviour, so a collapsed pill
+  casts nothing; the with-FAB constants Compose uses instead (`level1` expanded,
+  `level0` collapsed, no token rows at all) are recorded rather than copied.
 
 ## 1.6 Selection
 

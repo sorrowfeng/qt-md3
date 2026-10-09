@@ -69,6 +69,20 @@ public:
     /// widget's own margin overhanging. Empty for an invalid box.
     QRect geometryOn(const QRectF &box) const;
 
+    /// The geometry that puts the container on `box`: the widget is resized to
+    /// `box + 2 * margin` and centred on the box, rather than merely moved.
+    ///
+    /// `geometryOn` is right for every component whose size is a token, which
+    /// is all of them so far — it aligns the container's top-left, and for a
+    /// component that fills `widget - margin` the two differ only by rounding.
+    /// It is the wrong tool for the one caller that has to hold a component at
+    /// a size the component does not publish: the floating toolbar's action
+    /// button, whose container is 56 px with the toolbar expanded and 80 px
+    /// with it collapsed (`MdToolbarFabTokens::sizeFor`). Centring is what
+    /// makes that work for a component of either kind — see the note in the
+    /// implementation. Empty for an invalid box.
+    QRect resizedGeometryOn(const QRectF &box) const;
+
 private:
     QWidget *m_widget = nullptr;
     QSize m_widgetSize;

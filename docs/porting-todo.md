@@ -1104,6 +1104,149 @@ against the export and agree row for row, deprecated rows included.
   rows and porting notes are present. Left unfixed rather than back-filled
   from memory; the App bars rows were appended.
 
+#### Toolbars (ported)
+
+`MdDockedToolbar` + `MdFloatingToolbar` + `MdDockedToolbarStyle` +
+`MdFloatingToolbarStyle` + `MdDockedToolbarTokens` + `MdFloatingToolbarTokens`,
+locked by `TestMd3Toolbar` and by the page-29 pixel audit. material-web
+implements **neither** variant — the spec's own availability table says
+`Web: Unavailable`, and the export's five `_md-comp-toolbar-*.scss` files
+(docked 36 rows, floating 75, floating-fab 51, standard 87, vibrant 87) are the
+only place either exists there. So, as with Divider and the app bars, the export
+supplies every number and Compose supplies the behaviour — and for this family
+that means *two* different behaviour sources, because the two variants have
+nothing in common structurally:
+
+* **Docked → `AppBar.kt`'s `FlexibleBottomAppBar`.** Compose has no
+  `DockedToolbar` composable; `DockedToolbarTokens` is read by
+  `FlexibleBottomAppBar` for its height (64), its content padding (16 / 16) and
+  its arrangement (`Arrangement.spacedBy(ContainerMaxSpacing /* 32 */,
+  Alignment.CenterHorizontally)`). That composable *is* the docked toolbar, so
+  this port models it as one — which also settles the note the App bars entry
+  left behind ("`FlexibleBottomAppBar` is ★ Toolbars, not App bars").
+* **Floating → `FloatingToolbar.kt`.** Its `HorizontalFloatingToolbar` and
+  `VerticalFloatingToolbar` are the two published layouts; the file is 2069
+  lines and covers five private layouts between them.
+
+Twelve divergences and gaps were found and are recorded rather than smoothed:
+
+* **The reserved action-button strip uses the *expanded* size.** Compose's
+  `Layout` reports `width = toolbarMaxWidth + toolbarToFabGap + FabSizeRange.
+  start` and never revisits it, so a collapsed toolbar's 80 px button is placed
+  at `width - 80`, which is 16 px *inside* `width - 64`. The overlap is real and
+  is reproduced; `TestMd3Toolbar` asserts it.
+* **`MdFab` cannot take the 80 px size.** The floating toolbar's action button
+  is 56 px expanded and 80 px collapsed with different icons (24 / 28) and
+  corners (`corner-large` / `corner-large-increased`), and `setFab()` does ask
+  the child for that size — `MdChildBox::resizedGeometryOn` resizes the widget
+  and centres it on the token box. But `MdFabStyle::layoutFor` derives its
+  container from `MdFabTokens::containerWidth/Height` rather than from the
+  widget's own rect, so an `MdFab` handed in stays 56 px, centred in the 80 px
+  box, with a 24 px icon and the wrong corner. The toolbar's geometry is
+  correct; what is missing is a size set on the FAB family. A plain widget
+  fills the box correctly, and `TestMd3Toolbar` asserts both halves.
+* **`container.elevation` is published and unused.** The export carries
+  `md.comp.toolbar.floating.container.elevation: level3`; Compose's
+  `FloatingToolbarDefaults.ContainerExpandedElevation` is
+  `ElevationTokens.Level0` with a literal `// TODO read from token`. This port
+  paints the published row, ramped by `expandedProgress` so a collapsed pill
+  casts nothing — which is Compose's own behaviour applied to the export's own
+  value. Compose's *with-FAB* constants (`level1` expanded, `level0` collapsed,
+  no token rows behind either) are recorded, not copied.
+* **Two published rows are carried and never read.** `docked.container.
+  min-spacing` (4): Compose's arrangement reads `max` and only `max`.
+  `floating.container.height`: Compose's `ContainerSize` still points at the
+  deprecated single row while the export has superseded it with
+  `horizontal.container.height` / `vertical.container.width`, which is what
+  `containerCrossExtent()` returns. All three are 64, so nothing observable
+  differs until a theme moves one — which is what makes silently dropping the
+  row the wrong call.
+* **The selected group publishes colours but no opacities and no disabled
+  row.** Both are gaps in the export rather than transcription slips: none of
+  the four scss files carries a `selected.*.state-layer.opacity`, and the
+  `disabled` rows exist only unselected. The port carries the unselected
+  opacities across and uses the unselected disabled colours for
+  `selected[Disabled]`, which is where Compose's `!enabled -> disabled`
+  precedence lands anyway.
+* **Qt clips a child to its widget, Compose clips it to the pill.** Compose's
+  floating toolbar wraps its content in `graphicsLayer { clip = true; shape =
+  shape }`, so a collapsing pill progressively clips the slots inside it. In Qt
+  the pill is a shape drawn *inside* the widget, and a child widget is clipped
+  to the widget's rectangle, so an unclipped child would float over the page
+  behind the pill. `MdFloatingToolbar::placeChildren()` therefore **hides** a
+  child whose container has left the pill: the same reveal, discretised per
+  item instead of per pixel. Gallery page 29's "expanded and collapsed" bands
+  are the evidence.
+* **`floating.container.between-space` is read here and nowhere in Compose.** The
+  export publishes the row (4 px) and so does Compose — but
+  `FloatingToolbarTokens.ContainerBetweenSpace` is referenced nowhere in
+  `FloatingToolbar.kt`, because a floating toolbar's items are arranged by the
+  *caller's* `Row` and upstream ships no spacing at all. `MdFloatingToolbar`
+  owns the arrangement of its children, so it applies the row: a run of `n`
+  slots is `8 + n * item + (n - 1) * 4 + 8` long. This one was a **real defect
+  for a whole round** — the row was resolved, carried and asserted by
+  `floatingTokenTable` while `MdFloatingToolbarStyle::layoutFor` advanced its
+  cursor by each container and by nothing else, so a three-item pill measured
+  136 px where the export's arithmetic says 144. Found by the page-29 pixel
+  audit, not by reasoning, and the lesson is in the entry's own shape: a token
+  test cannot see a row that nothing reads.
+  `TestMd3Toolbar::betweenSpaceSeparatesTheSlots` now pins the override through
+  to `sizeHint()` so it cannot happen again.
+* **The pill's level3 shadow has nowhere to land when there is no action
+  button.** `container.elevation` is resolved and painted
+  (`MdElevation::drawShadowDp`, ramped by `expandedProgress`), but a floating
+  toolbar without a FAB has a widget rectangle *identical* to its pill, and Qt
+  clips painting to the widget — so the shadow is invisible: sampling 8 px below
+  the standard pill's edge returns the page background exactly. With a FAB the
+  widget is 80 px across against the pill's 64, and there the shadow does show
+  in the 8 px of slack (rows 1549…1553 under the pill's rounded edge measure a
+  152 → 233 grey falloff). The row stays painted because it lands wherever the
+  widget has room; the same Qt clip is why the lists' drag shadow is carried
+  rather than drawn.
+* **Qt clips the docked toolbar's row where Compose overflows it.**
+  `BottomAppBarLayout` ends with
+  `layout(placeable.width, height.roundToInt()) { placeable.place(0, 0) }`, so at
+  `heightOffset = -32` the row keeps y = 0 inside a 32 px box — the glyphs are
+  *not* re-centred, and page 29 shows their upper slivers (9 ink rows where the
+  expanded bar has 20). A Compose app would additionally paint the overflow over
+  whatever is behind the bar, since `Modifier.layout` reports a smaller height
+  without an implicit clip; a Qt child cannot be painted outside its widget at
+  all, so this port cuts instead of overflowing. The *position* is Compose's; the
+  *cut* is Qt's, and it is the docked half of the same divergence the floating
+  pill's hidden slots carry.
+* **A toolbar has no item size, and this library has no 48 px icon button.**
+  Neither the 36 `docked` nor the 75 `floating` exported rows contains an item
+  height or width, so the pill's length is its children's — every toolbar
+  advances by whatever container its child publishes, which is also what
+  Compose's intrinsic measurement does. The spec's composition is
+  `8 + 48 + 8 = 64`, i.e. a 48 px item in the 48 px band, but
+  `MdIconButtonTokens`' ladder is the Expressive one (32 / 40 / 56 / 96 / 136:
+  xsmall, small, medium, large, xlarge) and has no 48, so page 29 uses the 40 px
+  default and every pill is 8 px narrower per item than the spec's arithmetic.
+  Closing this is an `MdIconButton` question (a size set with a 48, or an
+  interactive-size concept beside the container), not a toolbar one — recorded
+  here because it is the toolbar that shows the difference. It is the icon-button
+  family's sibling of the `MdFab` 80 px gap above.
+* **RTL is not mirrored**, as everywhere else in this library:
+  `MdTheme::isRightToLeft()` reaches only the four button families, and neither
+  toolbar reads it. A toolbar is the largest `placeRelative`-positioned
+  component in the set, so the gap is proportionally the most visible here.
+  `TestMd3Toolbar::rtlIsNotMirrored` pins the current behaviour so a future RTL
+  pass has to change it deliberately.
+* **`MdToolbarFabPosition` is one enum, not two.** Compose splits the concept
+  into `FloatingToolbarHorizontalFabPosition {Start, End}` and
+  `FloatingToolbarVerticalFabPosition {Top, Bottom}`; both are the same two
+  places on the main axis and both defaults are the axis' end, so the port has
+  a single `{Start, End}` enum documented as the main axis.
+
+One shared primitive came out of this family:
+`MdChildBox::resizedGeometryOn()` — `geometryOn()`'s sibling for the one child
+whose size is *not* its own. It sizes the widget to `box + 2 * margin` and
+**centres** it on the box, rather than aligning top-lefts, because that is the
+one rule that lands the container on the box for both a component that fills
+`widget - margin` and one whose container is a fixed token size centred inside a
+larger widget (which is exactly what `MdFab` is).
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

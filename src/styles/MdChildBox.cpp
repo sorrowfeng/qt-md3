@@ -76,4 +76,27 @@ QRect MdChildBox::geometryOn(const QRectF &box) const
                  m_widgetSize.height());
 }
 
+QRect MdChildBox::resizedGeometryOn(const QRectF &box) const
+{
+    if (m_widget == nullptr || !box.isValid()) {
+        return QRect();
+    }
+    // `m_widgetSize - m_container.size()` is exactly the margin the component
+    // reserves a side, which is what has to be re-added around the new box.
+    const QSizeF margin = QSizeF(m_widgetSize) - m_container.size();
+    const QSizeF size = box.size() + margin;
+
+    // The widget's **centre** goes on the box's centre, not its top-left on
+    // the box's. That is the one rule that lands the container on the box for
+    // both kinds of component: one whose container fills `widget - margin`
+    // (then the two centres coincide anyway), and one whose container is a
+    // fixed token size centred inside a larger widget — `MdFab`'s container is
+    // always `containerWidth x containerHeight`, so a top-left alignment would
+    // let it drift towards the middle of an oversized widget, and centring at
+    // least leaves it centred on the box it could not fill.
+    return QRect(int(std::lround(box.center().x() - size.width() / 2.0)),
+                 int(std::lround(box.center().y() - size.height() / 2.0)),
+                 int(std::lround(size.width())), int(std::lround(size.height())));
+}
+
 } // namespace md

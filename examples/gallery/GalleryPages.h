@@ -210,6 +210,8 @@ GalleryPage *createListPage();
 
 /// Navigation — App bars (`md.comp.app-bar.*` and `md.comp.bottom-app-bar.*`).
 GalleryPage *createAppBarPage();
+/// Page 29. The Toolbars family.
+GalleryPage *createToolbarPage();
 
 } // namespace gallery
 
