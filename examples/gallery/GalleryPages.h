@@ -218,6 +218,8 @@ GalleryPage *createNavigationBarPage();
 GalleryPage *createNavigationRailPage();
 GalleryPage *createNavigationDrawerPage();
 GalleryPage *createTabsPage();
+/// Page 34. The Checkbox.
+GalleryPage *createCheckboxPage();
 
 } // namespace gallery
 

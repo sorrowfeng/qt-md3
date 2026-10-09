@@ -755,6 +755,32 @@ set_tests_properties(TestMd3Tabs PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Tabs)
 
+# TestMd3CheckBox — the Checkbox: MdCheckBox over QCheckBox. The two
+# state-layer special cases (unselected pressed primary, selected pressed
+# on-surface), the check path's Compose fractions, the snap-delay undo, the
+# indeterminate gravitation, the disabled snap, the error variant and the
+# drawBox/drawCheck port.
+add_executable(TestMd3CheckBox
+    TestMd3CheckBox.cpp
+)
+
+target_link_libraries(TestMd3CheckBox
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3CheckBox COMMAND TestMd3CheckBox)
+set_tests_properties(TestMd3CheckBox PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3CheckBox)
+
 # TestMd3Navigation — the Navigation family: MdNavigationBar (both published
 # families — the baseline `navigation-bar` one and the flexible `nav-bar` one,
 # which coexist in a single export version) and its MdNavigationBarItem
