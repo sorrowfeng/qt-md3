@@ -584,11 +584,50 @@ The `🚧` columns carry the same unfinished evidence as every other family
 comparison have not been run against page 33), plus the library-wide RTL gap:
 the row is not `placeRelative`-mirrored — recorded, not claimed.
 
+### Checkbox — one export, one deprecated rendering model, and Compose's transparent ripple
+
+The checkbox is the first Selection family, and the first whose export carries
+a **deprecated rendering model inside the same version**: `unselected.*.icon.*`
+and `disabled.*.icon.*` rows still publish, marked "Checkbox changed how
+rendering was specified" — the current model colours the check from
+`selected.icon.color` and folds the 0.38 into the *container* opacity rows.
+The rows are carried into the tables for the record and read by nothing.
+
+Five transcription notes are pinned by `TestMd3CheckBox` rather than smoothed:
+
+* **the state-layer special cases** — `unselected.pressed.state-layer.color`
+  is `primary` (the colour the box is about to earn) and
+  `selected.pressed.state-layer.color` is `on-surface`; the error variant
+  presses `error`. The same shape of special case the tabs' inactive pressed
+  layer carries.
+* **Compose's unchecked ripple is a bug.** With the styling fix on,
+  `indicatorColor(Off)` returns the *transparent* unchecked box fill — an
+  unchecked checkbox would ripple invisibly. The export's state-layer rows
+  win; the divergence is recorded in porting-todo.md.
+* **indeterminate is a selected state with a gravitation of its own.** The
+  dash is the check path lerped onto the centre line (Compose's
+  `crossCenterGravitation`), not a second glyph: `Off → Indeterminate` snaps
+  the gravitation (the dash draws in from nothing), `On ↔ Indeterminate`
+  springs the morph, and anything → `Off` holds the old visual for the 100 ms
+  `SnapAnimationDelay` and then snaps it away.
+* **the check proportions follow the styling fix** — 0.25/0.5 → 0.4/0.65 →
+  0.75/0.3, revealed along the path's length (Compose's
+  `pathMeasure.getSegment`).
+* **the focus ring is the *outward* variant** — `md.sys.state.focus-indicator`
+  outer offset 2, thickness 3, secondary, around the 18 px box. The export
+  publishes no shape row, so material-web's rule applies (the ring follows the
+  box's radii); Compose overrides with a 25 % rounded rect — a difference of
+  under 2 px at this size, recorded.
+
+The `🚧` columns carry the same unfinished evidence as every other family,
+plus the library-wide RTL gap: a checkbox has nothing to mirror, but the
+focus-ring and state-layer code paths are shared with families that do.
+
 ## 1.6 Selection
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Checkbox | MdCheckBox | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Checkbox | MdCheckBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Chips | MdChip | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Date pickers | MdDatePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Menus | MdMenu / MdMenuItem | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |

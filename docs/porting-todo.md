@@ -1398,6 +1398,66 @@ pinned divergences and gaps:
   the row, its scroll and its indicator keep the LTR placement under an RTL
   layout direction.
 
+#### Checkbox (ported)
+
+`MdCheckBox` + `MdCheckBoxTokens` + `MdCheckBoxStyle`, locked by
+`TestMd3CheckBox` (24 slots) and by the page 34 gallery shot. The export
+(`_md-comp-checkbox.scss`) supplies every number; Compose's `Checkbox.kt`
+supplies the behaviour, read along its `isCheckboxStylingFixEnabled` path (the
+fix is current). The pinned divergences and gaps:
+
+* **Compose's unchecked ripple is transparent — an upstream oversight.** With
+  the styling fix on, `CheckboxColors.indicatorColor(Off)` returns
+  `uncheckedBoxColor`, which the default colours set to `Color.Transparent`,
+  so an unchecked checkbox would ripple invisibly. The export's state-layer
+  rows win: an unchecked press ripples `primary` (the row the box is about to
+  earn), a checked press `on-surface`, an error press `error`.
+* **The deprecated rows are carried, not read.** `unselected.*.icon.color`,
+  `disabled.selected.icon.*` and `disabled.unselected.icon.*` predate the
+  rendering rework ("Checkbox changed how rendering was specified"); the
+  current model colours the check from `selected.icon.color` even at rest and
+  folds the 0.38 into the container-opacity rows. The unselected checkmark
+  table is filled `on-surface` for the record; nothing reads it (no glyph is
+  painted when unchecked). The error `outline-width` rows are marked
+  "redundant" upstream — the base width rows carry the same numbers, so they
+  are recorded here as comments rather than table columns.
+* **The error variant publishes no disabled rows.** `error.*` rows cover the
+  enabled interactions only; a disabled error box falls back to the base
+  disabled rows through the `boxFor`/`outlineFor`/`checkmarkFor`/
+  `stateLayerFor` accessors.
+* **The focus ring follows the component's radii, not Compose's 25 %.** The
+  export publishes no `focus-indicator.shape` row, so material-web's rule
+  applies (the ring's radii follow the box's, offset by the gap — 4 px on a
+  2 px box). Compose overrides with `RoundedCornerShape(25)` ≈ 5.5 px on the
+  ring's 22 px box. The difference is under 2 px at this size; the
+  `focusRingRadiusPercent` row is carried for the record.
+* **The touch target is the whole widget; Qt's native one is not.** Qt 6.9's
+  `QCheckBox::hitButton` defers to the platform style's indicator rect — with
+  no text it puts the clickable sliver at the left edge and the 48 px target
+  is dead everywhere else. `MdCheckBox` overrides `hitButton` to the whole
+  rect (the MD3 target is the whole 48 px).
+* **The size holds while disabled.** Compose applies
+  `minimumInteractiveComponentSize` only when `onClick != null`, so a disabled
+  checkbox shrinks to the 18 px canvas and reshuffles the layout around it.
+  This port keeps 48 px in both states for layout stability; recorded, not
+  silently merged.
+* **The hover/focus colour changes do not animate.** Compose wraps every
+  resolved colour in `animateColorAsState`, so a hover's outline lift from
+  `on-surface-variant` to `on-surface` also fades. This port animates the
+  selection fade (the effects springs) and applies interaction-state colours
+  directly — the same standing as the tab's colour fade, and visually
+  negligible at these deltas.
+* **The ripple's geometry is bounded where Compose's is unbounded.** Compose's
+  checkbox ripple is `bounded = false` with a fixed radius of
+  `StateLayerSize / 2`; this port runs the standard bounded ripple in the 40 px
+  state-layer bounds, clipped to its circle — the growth curve past the clip
+  is invisible, so the visible result matches.
+* **Text is not painted.** MD3's checkbox has no label; Compose's `Checkbox`
+  has none either. Qt's `QCheckBox` carries a `text` property that this widget
+  ignores — a label is the caller's widget, as in the gallery.
+* **RTL: not mirrored.** Nothing to mirror in the box itself, but the shared
+  focus-ring and state-layer paths are not RTL-audited — the library-wide gap.
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

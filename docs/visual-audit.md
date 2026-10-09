@@ -72,6 +72,7 @@ captured official screenshot.
 | Navigation rail | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Navigation drawer | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Tabs | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Checkbox | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -785,6 +786,32 @@ at the usual ~1.04 smoke scale:
 
 The official side-by-side comparison is the same standing as the rest of the
 family: m3.material.io is a client-side SPA with no server-rendered markup to
+diff, so the family stays `Needs visual QA` until the reference captures are
+taken.
+
+### Checkbox
+
+Page 34 (`Checkbox`) shows the three check states, the disabled trio, the
+error pair and two live boxes. The page-34 smoke shot was read against the
+export's token values at the usual ~1.04 smoke scale:
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Unchecked box | 18 px, 2 px corners, 2 px `on-surface-variant` outline, no fill | Yes — outline only, centre transparent |
+| Checked box | one `primary` fill (border collapsed into it), an `on-primary` check | Yes — `#6750a4` fill, white check through (0.25, 0.5) → (0.4, 0.65) → (0.75, 0.3) |
+| Indeterminate | the same fill, the check gravitated flat onto the centre line | Yes — a horizontal `on-primary` dash from 0.25 to 0.75 of the box |
+| Disabled, checked | the whole box `on-surface` @ 0.38, the check `surface` at full strength | Yes — the greyed fill with a light check |
+| Disabled, unchecked | the 2 px outline in `on-surface` @ 0.38 | Yes — the pale outline, no fill |
+| Error | container `error` `#b3261e`, check `on-error`; unchecked outline `error` | Yes — the red pair |
+| State layer | 40 px circle behind the box, `primary`/`on-surface` pressed by side | Visible on press only — the live boxes ripple `primary` unchecked |
+
+The pixel probes in `TestMd3CheckBox` also caught the one trap this page's
+arithmetic hides: the check's second leg passes within a stroke width of the
+box centre, so a naive "centre pixel = fill" sample reads the check's
+`on-primary` instead. The probes sample above the path's topmost point.
+
+The official side-by-side comparison is the same standing as the rest of the
+matrix: m3.material.io is a client-side SPA with no server-rendered markup to
 diff, so the family stays `Needs visual QA` until the reference captures are
 taken.
 
