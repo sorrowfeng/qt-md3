@@ -449,6 +449,9 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createListPage(),
         createAppBarPage(),
         createToolbarPage(),
+        createNavigationBarPage(),
+        createNavigationRailPage(),
+        createNavigationDrawerPage(),
     };
 
     QStringList titles;

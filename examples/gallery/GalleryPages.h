@@ -212,6 +212,11 @@ GalleryPage *createListPage();
 GalleryPage *createAppBarPage();
 /// Page 29. The Toolbars family.
 GalleryPage *createToolbarPage();
+/// Pages 30-32. The Navigation family: bar (both published families), rail
+/// (collapsed / expanded) and drawer.
+GalleryPage *createNavigationBarPage();
+GalleryPage *createNavigationRailPage();
+GalleryPage *createNavigationDrawerPage();
 
 } // namespace gallery
 
