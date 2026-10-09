@@ -1557,6 +1557,46 @@ divergences and gaps:
   shared focus-ring and state-layer paths are not RTL-audited — the
   library-wide gap.
 
+#### Switch (ported)
+
+`MdSwitch` + `MdSwitchTokens` + `MdSwitchStyle`, locked by `TestMd3Switch`
+(18 slots) and by the page 37 gallery shot. Compose's `ThumbNode.measure` is
+ported verbatim — the thumb's diameter and x offset targets, the fast spatial
+spring, the pressed `SnapSpec`. The pinned divergences and gaps:
+
+* **The press snaps; the release springs.** While pressed, both thumb
+  animations run Compose's `SnapSpec` — the pressed targets (28 px, 2 px
+  further inward) land on the first tick; releasing re-targets the spring.
+  The test waits for the snap instead of guessing a wall-clock budget (one
+  8 ms tick can be starved under the full suite's load).
+* **No colour animation — matching Compose exactly.** The track/handle/icon
+  colours resolve by state (`colors.thumbColor(enabled, checked)` straight
+  into the `Box`); only the thumb's position and size animate. The first
+  layout lands directly (Compose's `initialSize` / `initialOffset`), and the
+  widget re-targets on `toggled`, press/release, icon change and
+  `EnabledChange`.
+* **The disabled selected handle keeps full strength** — the export's
+  `disabled.selected.handle.opacity` is 1; the track/outline fade at 0.12,
+  the icon and the unselected handle at 0.38. Row-level, not a blanket alpha.
+* **The ripple rides the thumb** — an unbounded 40 px circle at the thumb's
+  centre (Compose hangs it on the thumb `Box`); this port clips the bounded
+  ripple to the circle that follows the thumb, the checkbox's standing.
+* **The selected outline rows are absent** — Compose's default
+  `checkedBorderColor` is transparent; the export publishes no
+  `selected.*.track.outline.*` rows.
+* **The deprecated 20 px handle rows are carried, not read** ("The Material
+  Switch component has been updated to a new design"); the per-state rows
+  (16/24/28/24) win.
+* **The inset-ring focus variant is opt-in upstream and not ported** —
+  `RippleThemeConfiguration.Focus.InsetRing` swaps the ring to an inset
+  track-shaped one; the default outward system ring around the track is the
+  port.
+* **Labels are not painted** — MD3's switch has no built-in label; Qt's
+  `text` property is ignored, the label is the caller's widget.
+* **RTL: not mirrored.** Compose places the thumb with `placeRelative` (which
+  mirrors); this port has not audited an RTL layout direction — the
+  library-wide gap.
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

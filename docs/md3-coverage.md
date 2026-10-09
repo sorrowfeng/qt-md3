@@ -717,6 +717,50 @@ The `🚧` columns carry the same unfinished evidence as every other family,
 plus the library-wide RTL gap: nothing to mirror in the circle itself, but
 the shared focus-ring and state-layer code paths are not RTL-audited.
 
+### Switch — the travelling thumb, and the press that snaps
+
+The switch is the heaviest Selection export so far (~90 rows) and the first
+whose geometry *animates*: Compose's `ThumbNode.measure` computes both the
+thumb's diameter (16 unselected → 24 selected/with-icon → 28 pressed) and its
+x offset (the unchecked thumb sits at the track's left inner inset, the
+checked one at the far bound `52 − 24 − 4 = 24`) and animates both on the fast
+spatial spring — **while pressed both run `SnapSpec`**, so a press lands
+instantly and a release springs back.
+
+Six transcription notes are pinned by `TestMd3Switch` rather than smoothed:
+
+* **no colour animation.** `SwitchImpl` resolves `colors.thumbColor(enabled,
+  checked)` straight into the `Box` — the track/handle/icon colours land this
+  frame (the chips' standing again; only the thumb's *position and size*
+  animate).
+* **the ripple rides the thumb.** Compose hangs
+  `ripple(bounded = false, radius = StateLayerSize / 2)` on the thumb `Box` —
+  the state-layer colour rows are tagged "(ripple)" against the track context
+  but paint at the thumb's centre. The bounded stand-in clips the ripple to
+  the 40 px circle that follows the thumb.
+* **the disabled selected handle keeps full strength.** The export's
+  `disabled.selected.handle.opacity` is **1** — only the track (and its
+  outline) fade at their own 0.12, the icon and the unselected handle at 0.38.
+  The special case is row-level, not a blanket alpha.
+* **the with-icon handle is 24 px unchecked** — Compose's `hasContent` branch
+  sizes a thumb carrying `thumbContent` like a checked one; the checked thumb
+  is 24 px anyway, so the icon switches the unchecked diameter, not the
+  checked one.
+* **the selected outline rows are absent.** Compose's default
+  `checkedBorderColor` is `Color.Transparent` — a checked track draws no
+  border; the export publishes no `selected.*.track.outline.*` rows and the
+  table keeps the slot absent.
+* **the deprecated 20 px handle rows are carried, not read.**
+  `handle.height` / `handle.width` predate the sizing rework ("The Material
+  Switch component has been updated to a new design"); the per-state rows
+  (16/24/28/24) win. The inset-ring focus variant (`RippleThemeConfiguration.
+  Focus.InsetRing`) is an upstream opt-in and is not ported — the outward
+  system ring around the track is the default and the port.
+
+The `🚧` columns carry the same unfinished evidence as every other family,
+plus the library-wide RTL gap: the thumb's travel mirrors under
+`placeRelative` upstream; this port has not audited an RTL layout direction.
+
 ## 1.6 Selection
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
@@ -726,9 +770,8 @@ the shared focus-ring and state-layer code paths are not RTL-audited.
 | Radio button | MdRadioButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Date pickers | MdDatePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Menus | MdMenu / MdMenuItem | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Radio button | MdRadioButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Sliders | MdSlider | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Switch | MdSwitch | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Switch | MdSwitch | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Time pickers | MdTimePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 
 ## 1.7 Text inputs

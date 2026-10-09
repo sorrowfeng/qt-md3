@@ -75,6 +75,7 @@ captured official screenshot.
 | Checkbox | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Chips | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Radio button | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Switch | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -862,6 +863,25 @@ page parent's autoExclusive group, so checking the *disabled* sample silently
 unchecked the *selected* sample two sections above — the first screenshot
 rendered three bare rings and no selected dot. The page now wraps each row in
 its own exclusive group.
+
+The official side-by-side comparison is the same standing as the rest of the
+matrix: m3.material.io is a client-side SPA with no server-rendered markup to
+diff, so the family stays `Needs visual QA` until the reference captures are
+taken.
+
+### Switch
+
+Page 37 (`Switch`) shows the two sides plus the icon thumbs, the disabled
+pair and two live switches. The page-37 smoke shot was read against the
+export's token values at the usual ~1.04 smoke scale:
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Unselected | a 52×32 `surface-container-highest` track, 2 px `outline` border, a 16 px `outline` thumb at the left inset (8 px in) | Yes — the grey track, the small thumb left |
+| Selected | a `primary` track, no border, a 24 px `on-primary` thumb at the far bound (right inset 4 px) | Yes — the purple track, the white thumb right |
+| With icon | a 24 px thumb even unchecked (Compose's `hasContent` branch), the 16 px check in the icon row's colour | Yes — the check rides the thumb, track's colour unchecked / `primary` selected |
+| Disabled | the track @ 0.12, the unselected handle @ 0.38, the icon @ 0.38 — the **selected handle `surface` @ 1** | Yes — the pale pair, the selected one's white thumb at full strength |
+| Live | two interactive switches, the ripple riding the thumb | Yes — pressing snaps the thumb 2 px inward and blooms at the thumb |
 
 The official side-by-side comparison is the same standing as the rest of the
 matrix: m3.material.io is a client-side SPA with no server-rendered markup to
