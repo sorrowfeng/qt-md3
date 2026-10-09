@@ -327,7 +327,7 @@ smoothed:
 | Navigation bar | MdNavigationBar + MdNavigationBarItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Navigation rail | MdNavigationRail | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Navigation drawer | MdNavigationDrawer + MdNavigationDrawerItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Tabs | MdTabs / MdTab | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Tabs | MdTabs / MdTab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 
 ### App bars — the two rows that are still `🚧`
 
@@ -531,6 +531,58 @@ comparison have not been run against pages 30–32), plus the library-wide RTL
 gap: the drawer's `corner-large-end` mirrors its radii with the layout
 direction and its item content rows re-read it, but the containers are not
 `placeRelative`-mirrored — recorded, not claimed.
+
+### Tabs — the two families' indicators, and the three pinned divergences
+
+Tabs is the last Navigation family, and it is a two-family export like the
+bar and the rail: `md.comp.primary-navigation-tab.*` and
+`md.comp.secondary-navigation-tab.*` at the same 34.0.21, differing in
+indicator height (3 vs 2), indicator shape (rounded on top vs square), the
+indicator's width semantics (the selected tab's *content* width vs the whole
+tab), and the colour tables (primary keeps `active.*` / `inactive.*` rows
+where the inactive **pressed** layer is `primary`; secondary publishes one
+shared `on-surface` table). material-web ships neither family as a component,
+so the numbers come from the export and the behaviour from Compose's
+`TabRow.kt` / `Tab.kt` — with Flutter's M3 defaults (generated from the same
+token database) as the third vote where the two disagree.
+
+Four transcription notes are pinned by `TestMd3Tabs` rather than smoothed:
+
+* **the icon+label container height is 64, not 72** — the export, the spec
+  page and Compose's own `PrimaryNavigationTabTokens.IconAndLabelText-
+  ContainerHeight` all say 64, while `Tab.kt`'s `LargeTabHeight` hard-codes
+  `72.dp` in the behaviour (an M2-era residue with no TODO). Three sources
+  against one hard-coded number: 64 wins, and the tab's content block is
+  centred (Qt has no cross-widget baseline alignment; Compose's baseline
+  arithmetic lands within a few pixels of centre — recorded, not silently
+  merged);
+* **the secondary indicator is 2, not 3** — the secondary export publishes
+  `active-indicator-height: 2px`, but Compose's
+  `SecondaryNavigationTabTokens` declares no height row at all, so its
+  `SecondaryIndicator` borrows the *primary's* 3 through a default parameter.
+  The export's own row wins;
+* **the indicator centres in the tab** — Compose's scrollable row places the
+  indicator at `max(0, (tabWidth - indicatorWidth) / 2)` explicitly, but its
+  fixed `TabRowImpl` places it at the tab's start with no centring step.
+  Flutter's M3 defaults (`TabBarIndicatorSize.label` for the primary family
+  and `.tab` for the secondary) centre both, and a left-aligned content-width
+  indicator contradicts every official rendering. The centring wins; the
+  fixed-row omission is recorded in porting-todo.md;
+* **no motion rows and no disabled rows** — the indicator's offset and width
+  animate on the spatial default spring and the content colours cross-fade on
+  the effects ones (in `EffectsDefault`, out `EffectsFast` — Compose's
+  `TabTransition`), all labelled as behaviour rather than tokens; the
+  disabled content is the system 0.38 alpha over the unselected colour, the
+  same rule the navigation families apply. The press ripple's colour is the
+  *active* side's pressed colour — Compose builds
+  `ripple(color = selectedContentColor)` "because we want to show the color
+  before the item is considered selected" — which is the primary family's
+  `inactive.pressed.state-layer.color = primary` one-row special case.
+
+The `🚧` columns carry the same unfinished evidence as every other family
+(seed change, contrast level, density, font switch and the side-by-side
+comparison have not been run against page 33), plus the library-wide RTL gap:
+the row is not `placeRelative`-mirrored — recorded, not claimed.
 
 ## 1.6 Selection
 

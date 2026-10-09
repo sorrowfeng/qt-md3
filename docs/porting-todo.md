@@ -1343,6 +1343,61 @@ implementation body, not the token file — migration residue lies) is in
   arithmetic answers `sizeHint()` on an unsized widget (the drawer item's
   badge landed at a 640 x 480 top-level's trailing edge).
 
+#### Tabs (ported)
+
+`MdTabs` + `MdTab` + `MdTabsTokens` + `MdTabsStyle` + `MdTabStyle`, locked by
+`TestMd3Tabs` (21 slots) and by the page 33 gallery shot. material-web
+implements neither family as a product, so the export supplies every number
+(`_md-comp-primary-navigation-tab.scss` and `-secondary-navigation-tab.scss`)
+and Compose supplies the behaviour (`TabRow.kt`, `Tab.kt`) — with Flutter's M3
+defaults (generated from the same token database, `tabs.dart`'s
+`_TabsPrimaryDefaultsM3` / `_TabsSecondaryDefaultsM3`) as the third vote. The
+pinned divergences and gaps:
+
+* **The icon+label height: 64, not Compose's hard-coded 72.** The export and
+  the spec page agree on `with-icon-and-label-text.container.height: 64px`,
+  and Compose *declares* `IconAndLabelTextContainerHeight = 64` — but its
+  `Tab.kt` `LargeTabHeight` hard-codes `72.dp` with no TODO, an M2-era
+  residue. Three sources beat one hard-coded number; 64 it is.
+* **The icon+label content block is centred, not baseline-aligned.** Compose
+  aligns the pair on the text baseline (`SingleLineTextBaselineWithIcon` 14,
+  `IconDistanceFromBaseline` 20sp); Qt has no cross-widget baseline
+  alignment, so the icon + 4 + label block is vertically centred in the 64.
+  With a single-line `title-small` label Compose's own arithmetic lands the
+  block within a few pixels of centre. Recorded, not silently merged.
+* **The secondary indicator is 2, not the 3 Compose renders.** The secondary
+  export publishes `active-indicator-height: 2px`; Compose's
+  `SecondaryNavigationTabTokens` declares no height row, so its
+  `SecondaryIndicator` falls back to the *primary's* 3 through a default
+  parameter. The export's own row wins.
+* **The fixed row's indicator centring is missing upstream.** Compose's
+  `ScrollableTabRowImpl` places the indicator at
+  `max(0, (tabWidth - indicatorWidth) / 2)` explicitly; its fixed
+  `TabRowImpl` places it at the tab's start with no centring step, which
+  would left-align a content-width indicator inside an equal-share tab and
+  contradict every official rendering. Flutter's M3 defaults
+  (`TabBarIndicatorSize.label` primary / `.tab` secondary) centre both.
+  This port centres both; the Compose omission is recorded.
+* **No motion rows and no disabled rows.** The indicator's offset/width ride
+  the spatial default spring and the content colours cross-fade on the
+  effects ones (in `EffectsDefault`, out `EffectsFast` — `TabTransition`'s
+  own `if (false isTransitioningTo true)` split), all behaviour, labelled as
+  such. Disabled content is the system 0.38 alpha, as in the navigation
+  families.
+* **The keyboard walk is a convention, not a published row.** Compose's row
+  is a `selectableGroup` and its tests walk Left/Right; the spec page spells
+  nothing out. `MdTabs` implements Left/Right (wrapping), Home/End.
+* **A child paints over its parent: the tab's ripple covers the indicator's
+  3 px during a press.** Compose places the indicator on top of the tabs; a
+  Qt child widget always draws above its parent's `paintEvent`. The overlap
+  is a transient press-state edge; recorded rather than re-architected.
+* **The divider rows are deprecated but painted.** Compose's default tab row
+  still paints a `HorizontalDivider`; the export's `divider.*` rows are
+  carried (`surface-variant`, 1 px) and painted.
+* **RTL: not mirrored.** Same library-wide gap as every Navigation family —
+  the row, its scroll and its indicator keep the LTR placement under an RTL
+  layout direction.
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

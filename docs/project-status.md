@@ -7,15 +7,15 @@ Last updated: 2026-10-09
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
-| Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication closed; §1.4 Containment closed; §1.5 Navigation opened (App bars, Toolbars, Navigation bar, Navigation rail and Navigation drawer in; Tabs out) |
-| Stage 1 families complete | `25 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets, Carousel, Divider, Lists, App bars, Toolbars, Navigation bar, Navigation rail, Navigation drawer) |
+| Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication closed; §1.4 Containment closed; §1.5 Navigation closed (App bars, Toolbars, Navigation bar, Navigation rail, Navigation drawer and Tabs all in); §1.6 Selection opened |
+| Stage 1 families complete | `26 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets, Carousel, Divider, Lists, App bars, Toolbars, Navigation bar, Navigation rail, Navigation drawer, Tabs) |
 | Base modules | `21 / 21` |
-| Public components | `37` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`, `MdDialog`, `MdDialogHost`, `MdBottomSheet`, `MdBottomSheetHost`, `MdSideSheet`, `MdSideSheetHost`, `MdCarousel`, `MdDivider`, `MdList`, `MdListItem`, `MdTopAppBar`, `MdBottomAppBar`, `MdDockedToolbar`, `MdFloatingToolbar`, `MdNavigationBar`, `MdNavigationBarItem`, `MdNavigationRail`, `MdNavigationDrawer`, `MdNavigationDrawerItem`) |
-| Style classes | `31` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`, `MdDialogStyle`, `MdBottomSheetStyle`, `MdSideSheetStyle`, `MdCarouselStyle`, `MdDividerStyle`, `MdListStyle`, `MdListItemStyle`, `MdTopAppBarStyle`, `MdBottomAppBarStyle`, `MdDockedToolbarStyle`, `MdFloatingToolbarStyle`, `MdNavigationBarStyle`, `MdNavigationBarItemStyle`, `MdNavigationRailStyle`, `MdNavigationDrawerStyle`, `MdNavigationDrawerItemStyle`) |
-| Example pages | `32` |
+| Public components | `39` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`, `MdDialog`, `MdDialogHost`, `MdBottomSheet`, `MdBottomSheetHost`, `MdSideSheet`, `MdSideSheetHost`, `MdCarousel`, `MdDivider`, `MdList`, `MdListItem`, `MdTopAppBar`, `MdBottomAppBar`, `MdDockedToolbar`, `MdFloatingToolbar`, `MdNavigationBar`, `MdNavigationBarItem`, `MdNavigationRail`, `MdNavigationDrawer`, `MdNavigationDrawerItem`, `MdTabs`, `MdTab`) |
+| Style classes | `33` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`, `MdDialogStyle`, `MdBottomSheetStyle`, `MdSideSheetStyle`, `MdCarouselStyle`, `MdDividerStyle`, `MdListStyle`, `MdListItemStyle`, `MdTopAppBarStyle`, `MdBottomAppBarStyle`, `MdDockedToolbarStyle`, `MdFloatingToolbarStyle`, `MdNavigationBarStyle`, `MdNavigationBarItemStyle`, `MdNavigationRailStyle`, `MdNavigationDrawerStyle`, `MdNavigationDrawerItemStyle`, `MdTabsStyle`, `MdTabStyle`) |
+| Example pages | `33` |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `36` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3Dialog`, `TestMd3BottomSheet`, `TestMd3SideSheet`, `TestMd3Carousel`, `TestMd3Divider`, `TestMd3List`, `TestMd3AppBar`, `TestMd3Toolbar`, `TestMd3Navigation`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `37` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3Dialog`, `TestMd3BottomSheet`, `TestMd3SideSheet`, `TestMd3Carousel`, `TestMd3Divider`, `TestMd3List`, `TestMd3AppBar`, `TestMd3Toolbar`, `TestMd3Navigation`, `TestMd3Tabs`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -86,7 +86,7 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
     double-click produces. They fail if the Qt runtime deployment is incomplete,
     the one failure mode no other test can see.
   - `TestMd3Version` — the library links, loads and reports its version.
-- The example is a 32-page gallery under `examples/gallery/`, built into
+- The example is a 33-page gallery under `examples/gallery/`, built into
   `build/` and never committed. `--screenshot <dir>` renders every page to PNG
   and quits, which is how the pages are checked for a non-blank result: a page
   whose `paintEvent` draws nothing still exits 0, so "the window opened" proves
@@ -164,6 +164,9 @@ outstanding behaviour gaps are listed separately below rather than glossed over.
 | `MdNavigationDrawerTokens` | the `md.comp.navigation-drawer.*` set verbatim, the item's own colour table (every active row `on-secondary-container`; the inactive pressed state layer the one-row special case; `label-large`), and the carried scrim rows with the export's `neutral-variant20` recorded against the library's `neutral0` Scrim role. |
 | `MdNavigationDrawerStyle` / `MdNavigationDrawerItemStyle` | Pattern A styles: the sheet's `corner-large-end` radii on the end pair, mirrored in RTL (the bottom-sheet precedent), the headline and divider boxes, and the item's paint — the full-width pill, the state layer and ripple clipped to it, the left-aligned label and badge, the inward focus ring. |
 | `MdChildBox` | the shared answer to "where does a child widget actually paint": `measure()` sizes a child and reports the container inside it, `geometryOn()` returns the geometry that puts that container on a target box, and `resizedGeometryOn()` is the sibling for the one child whose size is *not* its own — it resizes the widget to `box + 2 * margin` and **centres** it on the box, which is the only rule that lands the container on the box both for a component that fills `widget - margin` and for one whose container is a fixed token size inside a larger widget. Every component that can show a focus indicator reserves 7.5 px a side inside itself (Qt clips a child to its own rect, so the room cannot live outside it), which makes `sizeHint()` the wrong thing for a *container* to lay a child out by. `MdButtonGroup` established the rule inline; `MdChildBox` is it factored out, and both app bars, both toolbars and the FAB menu use it. |
+| `MdTabs` | `QWidget`, both published families under one `variant` (primary: a 3 px indicator rounded on top, animated to the selected tab's *content* width; secondary: a 2 px square indicator spanning the whole tab) and one `layout` (Fixed divides the width evenly; Scrollable keeps a 52 px edge padding, a 90 px minimum tab, and scrolls the selection towards the centre on the spatial spring). The row paints the container, the deprecated divider and the indicator; the indicator's first placement lands without a spring. `addTab` / `insertTab` / `removeTab` / `clearTabs` / `currentIndex`, a Left/Right (wrapping) and Home/End keyboard walk. Three `Q_PROPERTY`s with NOTIFY. |
+| `MdTab` | a checkable `QPushButton` in three content shapes: text-only and icon-only at 48 px, icon-above-label at 64 px, and the `LeadingIconTab`'s icon-beside-label at 48 px. The content colours cross-fade on the effects springs (in `EffectsDefault`, out `EffectsFast`) through an Oklab interpolation; the press ripple is coloured with the *active* side's pressed colour - the primary family's `inactive.pressed` one-row special case; `indicatorContentWidth()` is the arithmetic the primary indicator animates to. The `:focus-visible` ring draws inward. Seven `Q_PROPERTY`s with NOTIFY. |
+| `MdTabsTokens` | both `md.comp.primary-navigation-tab.*` and `md.comp.secondary-navigation-tab.*` resolved verbatim, plus Compose's behaviour constants (`HorizontalTextPadding` 16, `TextDistanceFromLeadingIcon` 8, `ScrollableTabRowEdgeStartPadding` 52, `ScrollableTabRowMinTabWidth` 90, the 24 px indicator floor). Carries the three pinned divergences in its header: the 64-vs-72 icon+label height, the secondary indicator's 2-vs-3, and the fixed row's missing centring. |
 | `MdColorMath::lerpOklab` | new shared primitive: Oklab interpolation with a linear alpha, added because every *animated colour* in Compose goes through `Color.VectorConverter`, which interpolates in Oklab. Interpolating the app bar's container in sRGB instead lands on a different midpoint. |
 
 ## Known gaps, recorded rather than hidden
@@ -289,20 +292,17 @@ gallery scaffolding, unreachable from the seven token-only pages.
 
 ## What is next
 
-Stage 1 §1.5 Navigation is open — the App bars family is in, both halves of it
-(`MdTopAppBar` and `MdBottomAppBar`, over one token layer and one scroll
-behaviour):
+Stage 1 §1.5 Navigation is closed — all six families are in, ending with Tabs
+(`MdTabs` / `MdTab`, both published families, fixed and scrollable). The
+section that opens is §1.6 Selection, in official order:
 
-**§1.5 Navigation.** In official order: App bars ✅, ★ Toolbars, the Navigation
-bar, the Navigation rail, the Navigation drawer and Tabs. The next family is
-**★ Toolbars** — and it is worth noting that `FlexibleBottomAppBar` already
-belongs to it rather than to this one: Compose's flexible bottom bar reads
-`DockedToolbarTokens` (`FlexibleContentPadding` and `FlexibleBottomAppBarHeight`
-are both docked-toolbar rows), and material-web ships
-`_md-comp-toolbar-docked.scss` / `-floating.scss` / `-floating-fab.scss` /
-`-standard.scss` / `-vibrant.scss` for the family. The docking FAB semantics
-that this port's bottom app bar establishes are the same ones Toolbars will
-reuse.
+**§1.6 Selection.** Checkbox, Chips, Date pickers, Menus, Radio button,
+Sliders, Switch, Time pickers. The first family is **Checkbox** — material-web
+implements it (`packages/checkbox`), Compose's `Checkbox.kt` is the behaviour
+source, and the export publishes the full `md.comp.checkbox.*` set including
+the state layers. Chips follow as the section's largest family (four exported
+sets: assist / filter / input / suggestion). §1.7 Text inputs (Text fields,
+Search) closes Stage 1.
 
 Each component lands as its own commit and must satisfy all twelve Definition of
 Done items before the next one starts, including an independent gallery page, a

@@ -71,6 +71,7 @@ captured official screenshot.
 | Navigation bar | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Navigation rail | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Navigation drawer | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Tabs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -765,6 +766,27 @@ table marks the flexible rows `Web: Unavailable` — there is no official web
 rendering to compare against, only the headless-Edge captures of the taxonomy
 and the export's token files. The three families therefore stay
 `Needs visual QA`.
+
+### Tabs
+
+Page 33 (`Tabs`) shows the primary and secondary rows with icons, the 64 dp
+icon+label row, a scrollable row with the last tab selected, and the leading
+icon row. The page-33 smoke shot was read against the export's token values
+at the usual ~1.04 smoke scale:
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Primary indicator | 3 px tall, rounded on top, 24 px content width under tab 0 | Yes — 3 rows of `#6750a4`, a 23 px run (24 / 1.04) centred under the first tab |
+| Secondary indicator | 2 px tall, square, the whole tab | Yes — 2 rows of `#6750a4` spanning the full tab width |
+| Icon+label row | 64 dp tall; the indicator still 3 px | Yes — the band grows, the indicator keeps its height |
+| Scrollable row | 52 px edge padding, 90 px minimum tab, the last tab scrolled towards the centre | Yes — the run is offset, not pinned to the start edge |
+| Divider | `surface-variant` `#e7e0ec`, 1 px, under the indicator | Yes in the offscreen probes; the smoke scale blurs the single row into a blend, as with every 1 px rule |
+| Content colours | selected `primary` `#6750a4`, unselected `on-surface-variant` | Yes — the selected tab's label and icon lift to `#6750a4` |
+
+The official side-by-side comparison is the same standing as the rest of the
+family: m3.material.io is a client-side SPA with no server-rendered markup to
+diff, so the family stays `Needs visual QA` until the reference captures are
+taken.
 
 ## 2026-10 comparison re-check (official vs ported)
 
