@@ -781,6 +781,32 @@ set_tests_properties(TestMd3CheckBox PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3CheckBox)
 
+
+# TestMd3RadioButton — the Radio button: MdRadioButton over QRadioButton. The
+# pressed state-layer special cases (unselected pressed primary, selected
+# pressed on-surface), the dot's fast-spatial scale, the colour fade, the
+# disabled snap, the native group exclusivity and the circular focus ring.
+add_executable(TestMd3RadioButton
+    TestMd3RadioButton.cpp
+)
+
+target_link_libraries(TestMd3RadioButton
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3RadioButton COMMAND TestMd3RadioButton)
+set_tests_properties(TestMd3RadioButton PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3RadioButton)
+
 # TestMd3Chip — the Chips family: MdChip over the four published exports
 # (assist / filter / input / suggestion), the flat and elevated kinds, the
 # pressed state-layer swap, the two-spacing arrangement and the weighted

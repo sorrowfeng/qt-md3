@@ -223,6 +223,8 @@ GalleryPage *createCheckboxPage();
 /// Page 35. The Chips family: assist / filter / input / suggestion, flat and
 /// elevated.
 GalleryPage *createChipPage();
+/// Page 36. The Radio button.
+GalleryPage *createRadioButtonPage();
 
 } // namespace gallery
 
