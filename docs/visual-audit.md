@@ -65,6 +65,7 @@ captured official screenshot.
 | Side sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Carousel | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Divider | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Lists | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -478,6 +479,37 @@ render with pixel sampling (the 1 px hairlines are too fine to eyeball):
 | Middle inset | 16 px padded on both sides (the spec's "middle-inset") | Yes |
 | Vertical | the full-height column and the two padded columns (48 / 32 / 16 logical px tall) | Yes |
 | 4 px override | the thickness parameter honoured with the custom colour, crisp edges (no AA blur) | Yes |
+
+### Lists
+
+Page 27 (`List`) places six `MdList` widgets: the Standard/Expressive pair, the
+56/72/88 line-count ladder, the three leading-slot kinds, a segmented set, and
+the interaction states. Audited by pixel sampling of the page render, because
+the shape ladder is a *corner radius* — a value no eye can read off a
+screenshot.
+
+The measurement that carries the family is the Standard/Expressive pair: two
+lists with identical content and identical states, so the selected item's
+container is the same colour, the same width and the same height in both, and
+the shape is the only variable.
+
+| What | Expected | Rendered |
+| --- | --- | --- |
+| Standard, selected | a 56 dp container of secondary-container with **all four corners square** (corner-none) | Yes — the selected band is 1494x84 device px at dpr 1.5 and all four corner pixels sampled 1 px inside are the container colour |
+| Expressive, selected | the same band with all four corners rounded (corner-large, 16 dp) | Yes — identical band, and all four sampled corner pixels are the page surface instead |
+| Selected container colour | secondary-container, identical in both lists | Yes — `#e8def8` exactly in both |
+| Segmented gap | 2 px between items (`segmented.gap`) | Yes — 3 device px of surface between the two selected bands |
+| Dragged | on-surface at 0.16 over the surface, corner-large | Yes — `#dad4db`, the composite of `#1d1b20` at 0.16 over `#fef7ff`, with rounded corners |
+| Selected + disabled | on-surface at 0.38 over the selected container | Yes — `#9b94a6`, the composite of `#1d1b20` at 0.38 over `#e8def8`, with rounded corners |
+| Disabled, unselected | the container unchanged; only the content fades | Yes — the container pixel is the bare surface, as the export's missing `disabled.container` row requires |
+| Avatar slot | a 40 dp corner-full disc in primary-container, with the label centred | Yes |
+| Rendering of the resting shape | none — a surface container on a surface list has no visible shape, in this port and in material-web alike | By design; the page says so in prose, so the demo leans on the selected / dragged / disabled rows |
+
+Not verifiable in this environment: the official material-web rendering of a
+list is a live custom element whose shadow DOM needs a browser; the source of
+truth for every number above is the `md.comp.list.*` export, which the token
+table in `TestMd3List` pins field by field. The family therefore stays
+`Needs visual QA` like the other Compose-sourced ones.
 
 ## 2026-10 comparison re-check (official vs ported)
 

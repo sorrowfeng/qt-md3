@@ -449,8 +449,8 @@ is `SelectedContainerColor`.
 
 - [x] §1.3 Communication — **Badges, Progress indicators, Loading indicator,
       Snackbar and Tooltips ported** (the family is closed).
-- [ ] §1.4 Containment — **Cards, Dialogs, Bottom sheets, Side sheets, the
-      Carousel and the Divider ported**; lists remain.
+- [x] §1.4 Containment — **Cards, Dialogs, Bottom sheets, Side sheets, the
+      Carousel, the Divider and Lists ported** (the family is closed).
 
 #### Badges (ported)
 
@@ -888,6 +888,86 @@ mostly arrangement:
 * **Recorded, not ported**: the spec's usage spacing rows ("space between
   divider & supporting-text 4dp", "right/bottom margin 8dp") are caller
   layout guidance, not component tokens.
+
+#### Lists (ported)
+
+`MdList` + `MdListItem` + their two styles + `MdListTokens` / the container
+tokens, locked by `TestMd3List`. Unlike the Divider, lists *do* have a
+material-web implementation, so the export supplies every number and the
+behaviour comes from Compose; the split is:
+
+* **The container owns selection and navigation, the item owns its paint.**
+  `MdList` carries the roving tab stop, the arrow / Home / End keys, the wrap
+  policy (`wrapNavigation ?? true`, material-web's default) and the three
+  selection modes; `MdListItem` only knows how to paint its own state. That is
+  Compose's `selectable` overload split and material-web's `ListController`.
+* **The line count is derived, never set** [compose] `ListItemType`: three when
+  there is both an overline and a supporting text *or* the supporting text
+  wraps (`isSupportingMultilineHeuristic`), two when there is either, one
+  otherwise. The container height takes the 56 / 72 / 88 token floor, so a tall
+  content stack grows past it.
+* **The shape ladder is the behaviour**, not a token rewrite
+  [compose] `ListItemShapes.shapeForInteraction`: pressed > dragged > selected
+  > focused > hovered > base. `MdListTokens::resolve` therefore reports the
+  export *verbatim* even for the Standard variant; "Standard is square" is
+  applied by `MdListItemStyle::shapeFor`, which short-circuits to
+  `container.shape` (corner-none).
+* **Two disabled shape rows, not one.** The export publishes both
+  `disabled.container.expressive.shape` (corner-extra-small) and
+  `selected.disabled.container.expressive.shape` (corner-large). Compose has no
+  disabled branch at all — selection would win there — and lands on the same
+  two values, which is a useful cross-check on the reading.
+* **The selected interaction rows drop the icons to on-surface** while the label
+  keeps on-secondary-container. That asymmetry is the export's, not a slip.
+* **`segmentedShapes(index, count)`** [compose]: the first item's *top* corner
+  pair and the last item's *bottom* pair take the list's own
+  `container.shape`; a single item takes all four; middle items are untouched.
+  A count of 1 is a real segment, not "not segmented".
+* **The focus ring is inward and follows the container's radii.**
+  `focusRingInset` returns 0: the ring is drawn *inside* the item, so a list
+  needs no outside margin (contrast the card's 7.5 px outward ring). The
+  thickness and the offset come from the component's own
+  `md.comp.list.focus.indicator.*` rows; the published
+  `focus.indicator.outline.offset` is a CSS `outline-offset` of -3 px, which
+  with a 3 px outline is the inward variant's zero gap — derived in
+  `MdListTokens::focusRingGap()` rather than hard-coded.
+
+Divergences recorded rather than resolved:
+
+* **The between-space is 12 px.** The export and Compose both say 12
+  (`ItemBetweenSpace`); material-web's `_list-item.scss` hardcodes `gap: 16px`
+  and loses, two sources against one hardcode.
+* **The trailing element's right padding is the token's 16 px**, not the spec's
+  24 dp. The spec value is recorded; the token wins.
+* **The container's 8 px vertical padding is not a token row** — it is
+  `padding: 8px 0` in `list/internal/_list.scss`. Carried as a value so a theme
+  can retune it; the export publishes no key to override it through, so
+  `MdListContainerTokens::resolve` deliberately does not look one up.
+* **The dragged level-4 elevation is carried but not painted.** A list item's
+  container *is* its whole widget rect, so a shadow drawn around it is clipped
+  away by Qt, and a parent-side shadow would be covered by the neighbouring
+  items' opaque containers. Compose renders a dragged item in an overlay above
+  the list; `MdList` lays items out in place, so the dragged state is expressed
+  through its shape row and its state layer instead. A future overlay host can
+  turn the row on without touching the tokens.
+* **The focus ring follows the container radii**, where material-web hardcodes
+  `md-focus-ring { shape: 8px }`. Compose and the spec both describe a ring that
+  follows the component's shape, and this port's item has real per-state radii,
+  so the hardcode is the one that loses.
+* **material-web fades the whole disabled item** (`opacity: 0.38`), where the
+  export publishes per-element opacities and a container colour only for the
+  *selected* family. Compose is a third reading and has no `selectedDisabled`
+  rows at all — its `ListItemColors.containerColor` takes
+  `!enabled -> disabledContainerColor`, and `disabledContainerColor` is the
+  *plain* container, so a disabled-and-selected item would lose its
+  secondary-container entirely. This port follows the export (and lands where
+  material-web does): a disabled selected item keeps the selected container and
+  composites on-surface at 0.38 over it, while a disabled *unselected* item's
+  container is untouched.
+* **Resting and hovered items show no shape** — the container colour is
+  `surface`, and a surface container on a surface list has no visible outline.
+  This is true of material-web as well; the gallery page says so explicitly,
+  because it is easy to misread as a missing feature.
 
 ### Gallery scaffolding fixes found while building the first component
 

@@ -33,6 +33,7 @@ add_executable(qt-md3-example
     gallery/GalleryPages24.cpp
     gallery/GalleryPages25.cpp
     gallery/GalleryPages26.cpp
+    gallery/GalleryPages27.cpp
     gallery/GalleryWindow.cpp
 )
 

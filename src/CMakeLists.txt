@@ -32,6 +32,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdCardTokens.h
     core/MdDialogTokens.h
     core/MdDividerTokens.h
+    core/MdListTokens.h
     core/MdButtonGroupTokens.h
     core/MdIconButtonTokens.h
     core/MdFabTokens.h
@@ -63,6 +64,8 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdCardStyle.h
     styles/MdDialogStyle.h
     styles/MdDividerStyle.h
+    styles/MdListStyle.h
+    styles/MdListItemStyle.h
     styles/MdButtonGroupStyle.h
     styles/MdIconButtonStyle.h
     styles/MdFabStyle.h
@@ -90,6 +93,8 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdDialog.h
     widgets/MdDialogHost.h
     widgets/MdDivider.h
+    widgets/MdList.h
+    widgets/MdListItem.h
     widgets/MdButtonGroup.h
     widgets/MdIconButton.h
     widgets/MdFab.h
@@ -130,6 +135,7 @@ set(QT_MD3_SOURCES
     core/MdCardTokens.cpp
     core/MdDialogTokens.cpp
     core/MdDividerTokens.cpp
+    core/MdListTokens.cpp
     core/MdButtonGroupTokens.cpp
     core/MdIconButtonTokens.cpp
     core/MdFabTokens.cpp
@@ -156,6 +162,8 @@ set(QT_MD3_SOURCES
     styles/MdCardStyle.cpp
     styles/MdDialogStyle.cpp
     styles/MdDividerStyle.cpp
+    styles/MdListStyle.cpp
+    styles/MdListItemStyle.cpp
     styles/MdButtonGroupStyle.cpp
     styles/MdIconButtonStyle.cpp
     styles/MdFabStyle.cpp
@@ -180,6 +188,8 @@ set(QT_MD3_SOURCES
     widgets/MdDialog.cpp
     widgets/MdDialogHost.cpp
     widgets/MdDivider.cpp
+    widgets/MdList.cpp
+    widgets/MdListItem.cpp
     widgets/MdButtonGroup.cpp
     widgets/MdIconButton.cpp
     widgets/MdFab.cpp

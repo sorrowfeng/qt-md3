@@ -650,3 +650,29 @@ set_tests_properties(TestMd3Divider PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3Divider)
+
+# MdList + MdListItem, the Containment family's vertical index: the list
+# export (metrics, shapes, the two colour families, the disabled opacities),
+# the Compose line-count rule, the shape-morph ladder, the spec's alignment
+# breakpoint, the segmented outer corners, the list's selection modes and the
+# roving-tabindex keyboard navigation.
+add_executable(TestMd3List
+    TestMd3List.cpp
+)
+
+target_link_libraries(TestMd3List
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3List COMMAND TestMd3List)
+set_tests_properties(TestMd3List PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3List)
