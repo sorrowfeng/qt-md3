@@ -217,6 +217,7 @@ GalleryPage *createToolbarPage();
 GalleryPage *createNavigationBarPage();
 GalleryPage *createNavigationRailPage();
 GalleryPage *createNavigationDrawerPage();
+GalleryPage *createTabsPage();
 
 } // namespace gallery
 

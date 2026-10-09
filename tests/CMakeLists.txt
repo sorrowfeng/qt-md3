@@ -729,6 +729,32 @@ set_tests_properties(TestMd3Toolbar PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Toolbar)
 
+# TestMd3Tabs — the Tabs family: MdTabs (both published families, fixed and
+# scrollable) and its MdTab children. The families' indicator heights and
+# shapes, the content-width rule, the centring divergence, the spatial spring,
+# the scrollable edge padding / minimum width / auto-centre scroll, the
+# inactive pressed layer's `primary` special case and the keyboard walk.
+add_executable(TestMd3Tabs
+    TestMd3Tabs.cpp
+)
+
+target_link_libraries(TestMd3Tabs
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Tabs COMMAND TestMd3Tabs)
+set_tests_properties(TestMd3Tabs PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Tabs)
+
 # TestMd3Navigation — the Navigation family: MdNavigationBar (both published
 # families — the baseline `navigation-bar` one and the flexible `nav-bar` one,
 # which coexist in a single export version) and its MdNavigationBarItem
