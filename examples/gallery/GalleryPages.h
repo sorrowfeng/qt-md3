@@ -225,6 +225,8 @@ GalleryPage *createCheckboxPage();
 GalleryPage *createChipPage();
 /// Page 36. The Radio button.
 GalleryPage *createRadioButtonPage();
+/// Page 37. The Switch.
+GalleryPage *createSwitchPage();
 
 } // namespace gallery
 

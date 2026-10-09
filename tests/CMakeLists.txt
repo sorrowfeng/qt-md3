@@ -807,6 +807,32 @@ set_tests_properties(TestMd3RadioButton PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3RadioButton)
 
+
+# TestMd3Switch — the Switch: MdSwitch over QCheckBox. The thumb's fast-spatial
+# travel+resize with the pressed SnapSpec, the instant colour resolution, the
+# disabled selected handle at full strength, the thumb-riding ripple and the
+# whole-rect touch target.
+add_executable(TestMd3Switch
+    TestMd3Switch.cpp
+)
+
+target_link_libraries(TestMd3Switch
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Switch COMMAND TestMd3Switch)
+set_tests_properties(TestMd3Switch PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Switch)
+
 # TestMd3Chip — the Chips family: MdChip over the four published exports
 # (assist / filter / input / suggestion), the flat and elevated kinds, the
 # pressed state-layer swap, the two-spacing arrangement and the weighted

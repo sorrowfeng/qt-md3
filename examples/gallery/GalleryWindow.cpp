@@ -456,6 +456,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createCheckboxPage(),
         createChipPage(),
         createRadioButtonPage(),
+        createSwitchPage(),
     };
 
     QStringList titles;
