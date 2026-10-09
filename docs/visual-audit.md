@@ -73,6 +73,7 @@ captured official screenshot.
 | Navigation drawer | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Tabs | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Checkbox | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Chips | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -809,6 +810,32 @@ The pixel probes in `TestMd3CheckBox` also caught the one trap this page's
 arithmetic hides: the check's second leg passes within a stroke width of the
 box centre, so a naive "centre pixel = fill" sample reads the check's
 `on-primary` instead. The probes sample above the path's topmost point.
+
+The official side-by-side comparison is the same standing as the rest of the
+matrix: m3.material.io is a client-side SPA with no server-rendered markup to
+diff, so the family stays `Needs visual QA` until the reference captures are
+taken.
+
+### Chips
+
+Page 35 (`Chips`) shows the four families flat, the elevated trio, the
+selection pair, the input avatar, the disabled/dragged row and two live
+chips. The page-35 smoke shot was read against the export's token values at
+the usual ~1.04 smoke scale:
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Four families | 32 px tall, corner-small pills; assist `on-surface` + `primary` icon, suggestion muted `on-surface-variant`, filter/input grey until selected | Yes — the four pills read distinctly, input carries the trailing `close` |
+| Elevated | `surface-container-low` fill with the level-1 resting shadow | Yes — the three pills lift off the band |
+| Selected | `secondary-container` fill, `on-secondary-container` content, no outline | Yes — both `Selected` pills purple, the flat outline gone |
+| Avatar | a 24 px corner-full circle displacing the leading icon slot | Yes — the dark circle before "Alex" |
+| Disabled | the selected container `on-surface` @ 0.12, content @ 0.38; the unselected flat one transparent with its outline at 0.12 | Yes — the two greyed pills, the selected one still filled faintly |
+| Dragged | level 4 shadow + the 0.16 state layer | Yes — the `Dragged` pill lifts visibly above its band |
+
+The pixel-probe standing of the family matches the checkbox's: the 1 px flat
+outline hugs the top edge (the stroke is inset half a width), so sampling at
+y = 0.5 rounds to the first empty row and a naive edge sample reads
+transparent — the test samples row 0.
 
 The official side-by-side comparison is the same standing as the rest of the
 matrix: m3.material.io is a client-side SPA with no server-rendered markup to

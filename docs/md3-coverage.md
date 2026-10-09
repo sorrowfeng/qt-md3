@@ -623,12 +623,63 @@ The `🚧` columns carry the same unfinished evidence as every other family,
 plus the library-wide RTL gap: a checkbox has nothing to mirror, but the
 focus-ring and state-layer code paths are shared with families that do.
 
+### Chips — four families, one export, and the pressed state-layer swap
+
+The chips are one export family in the coverage sense (`md.comp.chips`-shaped
+content split across four published prefixes: `assist-chip`, `filter-chip`,
+`input-chip`, `suggestion-chip` at export version 34.0.21) but four *behavioural*
+families: assist and suggestion are click-only, filter and input are
+selectable, and the two selectable ones disagree about the press.
+
+Six transcription notes are pinned by `TestMd3Chip` rather than smoothed:
+
+* **the pressed state-layer swap** — a filter chip's unselected press ripples
+  `on-secondary-container` (the colour the chip is about to earn) while a
+  selected press ripples `on-surface-variant`; input chips do not swap, both
+  sides press in the colour they have. Assist presses `on-surface`,
+  suggestion `on-surface-variant`.
+* **no colour animation.** Compose's `SelectableChipColors` resolve by state
+  and pass straight to the `Surface` — a selection's container/label change is
+  instant. The icons appearing and disappearing *do* animate
+  (`AnimatingChipContent`), a presence animation, not a colour one.
+* **the Expressive corner morph is opt-in upstream and not ported.** Compose's
+  second `SelectableChip` overload morphs between the `ChipsTokens` shapes
+  (unselected `corner-medium`, selected `corner-full`, pressed `corner-small`)
+  on the fast spatial spring — but only through the explicit `shapes`
+  parameter; the default overload and the export keep `container-shape:
+  corner-small` in every state. The classic family wins; the trio is recorded
+  in porting-todo.md.
+* **the avatar is a photo slot rendered as an icon.** The export sizes the
+  avatar (24 px, corner-full, input only) and fades it when disabled (0.38)
+  but publishes no colour — upstream it carries a caller-supplied image. Qt
+  has no image slot in this library, so the avatar paints an icon glyph inside
+  the 24 px circle; the divergence is recorded.
+* **the arrangement is this library's to run.** Compose hands the row to the
+  caller's `Row` and never reads its own spacing rows in the chip body — the
+  "published but unread" trap from the toolbars audit in its purest form. This
+  library lays out the chip itself, so `MdChip::boxes()` reads the
+  arrangement: the label is the weighted middle (a stretched chip widens it
+  and pins the trailing icon to the right padding), `HorizontalElementsPadding`
+  8 px, and filter/input tighten the gap beside a leading icon to 4 px
+  (`CompactHorizontalSpacing`).
+* **drag is a programmatic state** — the dragged rows (level 4 elevation, the
+  0.16 state layer, the dragged colour tables) resolve and paint, but nothing
+  runs a drag controller; `setDragged()` reports the state the way Compose's
+  `InteractionSource` would emit `Drag`. Input is flat only (no
+  `ElevatedInputChip` upstream), so its elevated kind mirrors the flat one;
+  the one flat elevation row anywhere is a *selected* filter rising to
+  level 1 on hover.
+
+The `🚧` columns carry the same unfinished evidence as every other family,
+plus the library-wide RTL gap: the chip's row layout does not mirror yet —
+recorded, not claimed.
+
 ## 1.6 Selection
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Checkbox | MdCheckBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Chips | MdChip | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Chips | MdChip | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Date pickers | MdDatePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Menus | MdMenu / MdMenuItem | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Radio button | MdRadioButton | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |

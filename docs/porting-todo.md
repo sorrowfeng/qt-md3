@@ -1458,6 +1458,62 @@ fix is current). The pinned divergences and gaps:
 * **RTL: not mirrored.** Nothing to mirror in the box itself, but the shared
   focus-ring and state-layer paths are not RTL-audited — the library-wide gap.
 
+#### Chips (ported)
+
+`MdChip` + `MdChipTokens` + `MdChipStyle`, locked by `TestMd3Chip` (21 slots)
+and by the page 35 gallery shot. Four published families over one widget:
+`assist-chip` / `filter-chip` / `input-chip` / `suggestion-chip` (export
+34.0.21), each flat and elevated (input flat only — there is no
+`ElevatedInputChip` upstream either, so its elevated kind mirrors the flat
+one). The pinned divergences and gaps:
+
+* **The Expressive corner morph is opt-in upstream and not ported.** Compose's
+  second `SelectableChip` overload morphs between the `ChipsTokens` shapes
+  (unselected `corner-medium`, selected `corner-full`, pressed
+  `corner-small`) on the fast spatial spring — but only through the explicit
+  `shapes` parameter; the default overload and the export keep
+  `container-shape: corner-small` in every state. The classic family wins;
+  the trio is carried in the token struct as comments for the record.
+* **No colour animation — matching Compose exactly.** `SelectableChipColors`
+  resolve by state and pass straight to the `Surface`, so a selection's
+  container/label change is instant. The icons appearing and disappearing do
+  animate (`AnimatingChipContent`), a presence animation this port also does
+  not run; both gaps are the same standing as the checkbox's interaction
+  colours.
+* **The avatar is a photo slot rendered as an icon.** The export sizes the
+  avatar (24 px, corner-full, input only) and fades it when disabled (0.38)
+  but publishes no colour — upstream it carries a caller-supplied image. Qt
+  has no image slot in this library, so the avatar paints an icon glyph
+  inside the 24 px circle in the leading-icon colour; the divergence is
+  recorded.
+* **The arrangement rows are read by this library's own layout.** Compose
+  hands the row to the caller's `Row` and never reads its spacing constants
+  inside the chip body — the "published but unread" trap from the toolbars
+  audit in its purest form (its own `ChipArrangement` is dead code in the
+  shared file). This library lays the chip out itself, so `MdChip::boxes()`
+  reads them: the label is the weighted middle (a stretched widget widens it
+  and pins the trailing icon to the right padding), `HorizontalElementsPadding`
+  8 px, and filter/input tighten the gap beside a leading icon to 4 px
+  (`CompactHorizontalSpacing`).
+* **Drag is a programmatic state.** The dragged rows (level 4 elevation, the
+  0.16 state layer, the dragged colour tables) resolve and paint, but nothing
+  runs a drag controller; `setDragged()` reports the state the way Compose's
+  `InteractionSource` would emit `Drag`.
+* **The pressed state-layer swap is filter's own.** An unselected filter
+  press ripples `on-secondary-container` (the colour the chip is about to
+  earn), a selected press `on-surface-variant`; input presses in the colour
+  it has on both sides — no swap. Assist/suggestion press
+  `on-surface`/`on-surface-variant`.
+* **The one flat elevation row anywhere is a selected filter's hover.** Flat
+  chips are level 0 in every other state; a *selected* filter rises to
+  level 1 on hover. The elevated families run the shared 1/2/1/1/4/0 ladder.
+* **The state layer has no resting row.** The export publishes state-layer
+  colours for hover/focus/pressed/dragged only — the enabled slot stays
+  absent, and the token tests pin the absence rather than smoothing it into
+  a colour.
+* **RTL: not mirrored.** The chip's row layout keeps the LTR placement under
+  an RTL layout direction — the library-wide gap.
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three
