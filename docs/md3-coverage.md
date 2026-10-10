@@ -761,6 +761,45 @@ The `🚧` columns carry the same unfinished evidence as every other family,
 plus the library-wide RTL gap: the thumb's travel mirrors under
 `placeRelative` upstream; this port has not audited an RTL layout direction.
 
+### Menus — one export, an inward ring, and a state layer that reads one side
+
+What `TestMd3Menu` pins, and why the port looks the way it does:
+
+* **the classic export only.** The Expressive menu families
+  (`StandardMenu` / `VibrantMenu` / `SegmentedMenu` — grouped menus with
+  per-position item shapes) are separate token sets upstream, not rows inside
+  this one; only `md.comp.menu.*` is ported.
+* **the state layer reads the unselected side for both selections.** The
+  export publishes one state-layer family (`on-surface` under the unselected
+  hover/focus/press states) and no selected rows at all — but Compose's
+  indication applies to selected items just the same, so the accessor never
+  consults the selected table for the layer.
+* **disabled + selected has no rows.** The selected container/label/icon
+  colours are published for the enabled interactions only; a disabled selected
+  item falls back to the unselected disabled rows (its container goes
+  transparent). Recorded, not smoothed.
+* **the focus indicator is inward.** The export's
+  `focus.indicator.outline.offset` is the system *inner* offset — the ring
+  draws inside the row (`offset + width/2` inset), opposite to every button
+  family. And it is `:focus-visible` only: the popup's own initial focus
+  (the `PopupFocusReason` landing) paints nothing.
+* **the open animation scales the paint, never the geometry.** Compose runs
+  scale 0.8 → 1.0 (fast spatial) and alpha 0 → 1 (fast effects) around the
+  anchor corner on a `graphicsLayer`. Qt cannot transform a child widget's
+  compositing through the parent's painter, so during the flight the real
+  children hide and the surface renders each of them into the transformed
+  painter (rendering the menu *itself* would recurse into the very paintEvent
+  — that defect is what the "recursive repaint" probe caught). When the
+  springs settle the children reappear.
+* **the divider interleaves by insertion order**, not after-the-items: rows
+  stack as added, with Compose's `HorizontalDividerPadding` (12 px each side,
+  2 px above and below).
+
+The `🚧` columns carry the same unfinished evidence as every other family:
+the theme column awaits the library-wide RTL audit (the menu does not mirror
+its padding or its arrow yet), and the visual audit chapter is written with
+the page-38 screenshot review still pending.
+
 ## 1.6 Selection
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
@@ -769,7 +808,7 @@ plus the library-wide RTL gap: the thumb's travel mirrors under
 | Chips | MdChip | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Radio button | MdRadioButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Date pickers | MdDatePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Menus | MdMenu / MdMenuItem | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Menus | MdMenu / MdMenuItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Sliders | MdSlider | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | Switch | MdSwitch | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Time pickers | MdTimePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |

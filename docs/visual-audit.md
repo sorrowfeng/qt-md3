@@ -76,6 +76,7 @@ captured official screenshot.
 | Chips | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Radio button | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Switch | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Menus | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 
@@ -887,6 +888,26 @@ The official side-by-side comparison is the same standing as the rest of the
 matrix: m3.material.io is a client-side SPA with no server-rendered markup to
 diff, so the family stays `Needs visual QA` until the reference captures are
 taken.
+
+### Menus
+
+Page 38 (`Menu`) shows the embedded surface (four rows, the second selected,
+a divider between the second and third, the fourth disabled) and the three
+row costumes (leading icon, cascading arrow, disabled). The page-38 smoke
+shot was read against the export's token values at the usual ~1.04 smoke
+scale:
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| Surface | a `surface-container` corner-extra-small block, level-2 shadow, 8 px above the first row and below the last | Yes — the grey rounded block with the soft shadow |
+| Selected row | a `secondary-container` row block with `on-secondary-container` text, 48 px tall, 12 px padding | Yes — the purple second row |
+| Divider | a 1 px `surface-variant` rule inset 12 px each side, 2 px above and below | Yes — the hairline between the second and third rows |
+| Disabled row | `on-surface` @ 0.38 text | Yes — the pale fourth row |
+| Row costumes | a 24 px leading icon 8 px from the text; the trailing `arrow_forward` in `on-surface-variant`; the disabled row's faded text | Yes — all three paint |
+
+The official side-by-side comparison shares the matrix's standing: the spec
+site is a client-side SPA, so the family stays `Needs visual QA` until the
+reference captures are taken.
 
 ## 2026-10 comparison re-check (official vs ported)
 

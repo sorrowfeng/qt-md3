@@ -1597,6 +1597,49 @@ spring, the pressed `SnapSpec`. The pinned divergences and gaps:
   mirrors); this port has not audited an RTL layout direction — the
   library-wide gap.
 
+`MdMenu` + `MdMenuItem` + `MdMenuTokens` + `MdMenuStyle`, locked by
+`TestMd3Menu` (16 slots) and by the page 38 gallery shot. The pinned
+divergences and gaps:
+
+* **The Expressive menu families are separate token sets, not ported.**
+  `StandardMenu` / `VibrantMenu` / `SegmentedMenu` — grouped menus with
+  per-position item shapes and their own motion — publish no rows inside
+  `md.comp.menu.*`; only the classic export is ported.
+* **The selected side has no state rows; the layer reads the unselected
+  side.** The export publishes the selected container/label/icon colours at
+  Enabled only, and no selected state-layer rows at all. Compose's indication
+  applies to selected items the same, so `stateLayerFor` always reads the
+  unselected table — recorded, not invented rows.
+* **Disabled + selected has no rows.** The accessors fall back to the
+  unselected disabled rows; a disabled selected item's container goes
+  transparent. Recorded, not smoothed.
+* **The focus ring is inward** — the export's
+  `focus.indicator.outline.offset` is the system *inner* offset, so the spec
+  reads the dedicated `inwardOffset` field (band at
+  `[offset, offset + width]` inside the row). Keyboard reasons only: the
+  popup's own `PopupFocusReason` landing paints nothing, matching
+  `:focus-visible`.
+* **The selected leading-icon swap is a presence animation upstream**
+  (expand/shrink horizontally + fade); this port swaps instantly. Recorded.
+* **No colour animation on the item** — the Expressive item animates its
+  container on fast effects; the export's classic rows resolve by state, the
+  classic wins.
+* **The open animation renders each child into the transformed painter.**
+  Compose scales a `graphicsLayer`; Qt cannot transform a child widget's
+  compositing through the parent's painter, and rendering the menu *itself*
+  inside its own paintEvent recurses ("recursive repaint detected"). During
+  the flight the children hide and the surface calls `render()` on each;
+  `render()` paints hidden widgets too. The geometry never changes
+  mid-flight.
+* **The divider interleaves by insertion order** (the first relayout stacked
+  dividers after every item — caught by the layout test before it shipped).
+* **The popup position may be adjusted by the window system** — the offscreen
+  plugin shifts popups by its frame margins, so the test asserts "at or below
+  the anchor, at or right of its left edge" rather than an exact point.
+* **`exec()` runs a plain event loop** on the `closed()` signal — Compose's
+  `DropdownMenu` exposes `onDismissed`; the port's `exec` mirrors
+  `QMenu::exec` instead. RTL: not mirrored (the library-wide gap).
+
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three
