@@ -154,17 +154,18 @@ Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is closed** — all
 twenty-one modules are implemented, and `ContrastLevel` is applied rather than
 stored, so reduced / standard / medium / high genuinely move the tones.
 
-Stage 1 §1.2 Actions through §1.5 Navigation are closed, and §1.6 Selection is
-under way. **Thirty-one of the thirty-six families are ported**: the eight
-Actions families (Buttons, Button groups, Icon buttons, FABs, Extended FABs,
-FAB menu, Split buttons, Segmented buttons), the five Communication families
-(Badges, Progress indicators, Loading indicator, Snackbar, Tooltips), the six
-Containment families (Cards, Dialogs, Bottom sheets, Side sheets, Carousel,
-Divider, Lists), the six Navigation families (App bars, Toolbars, Navigation
-bar, Navigation rail, Navigation drawer, Tabs) and five of the eight Selection
-families (Checkbox, Chips, Radio button, Switch, Menus). The remaining five are
-the Selection families **Date pickers, Sliders and Time pickers** and the
-§1.7 Text inputs families **Text fields and Search**.
+Stage 1 is complete: **all thirty-six families are ported.** §1.2 Actions
+(Buttons, Button groups, Icon buttons, FABs, Extended FABs, FAB menu, Split
+buttons, Segmented buttons), §1.3 Communication (Badges, Progress indicators,
+Loading indicator, Snackbar, Tooltips), §1.4 Containment (Cards, Dialogs,
+Bottom sheets, Side sheets, Carousel, Divider, Lists), §1.5 Navigation (App
+bars, Toolbars, Navigation bar, Navigation rail, Navigation drawer, Tabs),
+§1.6 Selection (Checkbox, Chips, Date pickers, Menus, Radio button, Sliders,
+Switch, Time pickers) and §1.7 Text inputs (Text fields, Search). The
+remaining library-wide gaps — the RTL audit, the visual QA passes against
+official captures, and MdTextArea as a separate multiline widget — are
+recorded in docs/porting-todo.md and the cross-cutting table in
+docs/md3-coverage.md.
 
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and
