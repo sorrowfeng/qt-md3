@@ -880,6 +880,31 @@ qt_md3_deploy_runtime(TestMd3Chip)
 # metric rows (the 360x524 container, the 120 px header, the 40 px date
 # cells, the 72x36 year cells), the date / year colour tables, the grid
 # maths and the range form's two endpoints.
+
+# TestMd3TextField — the Text fields family: MdTextField. The export's
+# metric rows (the 56 px container, the 24 px icons, the indicator heights
+# 1/1/2/1), the filled / outlined variants, the colour tables' state rows
+# and the error overlay, the label's float and the disabled opacities.
+add_executable(TestMd3TextField
+    TestMd3TextField.cpp
+)
+
+target_link_libraries(TestMd3TextField
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3TextField COMMAND TestMd3TextField)
+set_tests_properties(TestMd3TextField PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3TextField)
 add_executable(TestMd3DatePicker
     TestMd3DatePicker.cpp
 )

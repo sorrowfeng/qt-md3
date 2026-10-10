@@ -235,6 +235,8 @@ GalleryPage *createSliderPage();
 GalleryPage *createTimePickerPage();
 /// Page 41. Date pickers.
 GalleryPage *createDatePickerPage();
+/// Page 42. Text fields.
+GalleryPage *createTextFieldPage();
 
 } // namespace gallery
 

@@ -80,6 +80,7 @@ captured official screenshot.
 | Sliders | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Time pickers | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Date pickers | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Text fields | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 

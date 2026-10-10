@@ -1703,6 +1703,27 @@ divergences and gaps:
   hit test uses, so paint and hit can never disagree.
 * **The dialog chrome is the host's** — this family paints the picker face.
 * **RTL**: not mirrored (the library-wide gap).
+
+`MdTextField` + `MdTextFieldTokens` + `MdTextFieldStyle`, locked by
+`TestMd3TextField` (11 slots) and by the page 42 gallery shot. The pinned
+divergences and gaps:
+
+* **MdTextArea (the multiline form) is not yet a separate widget** — the
+  family row names both; the port carries the single-line MdTextField over
+  QLineEdit. The multiline contract is recorded as the next step.
+* **The ocus-active-indicator-thickness row reads the system 3 px** while
+  the indicator itself uses the 2 px ocus-active-indicator-height. The
+  export publishes both; each is read where it belongs.
+* **The outlined set's container colour row is absent** — ColorRole has no
+  Transparent member, so the outlined container keeps its Count row and the
+  paint treats an invalid slot as no fill (the 1 px outline is the container).
+* **The error state is one bool, not a colour table.** The export publishes a
+  full error overlay family; the port exposes error and resolves the error
+  rows when it is set.
+* **The filled container's corner-extra-small-top is painted as a clipped
+  rounded rect** — Qt has no per-corner top-only radius helper in the paint
+  path used here.
+* **RTL**: not mirrored (the library-wide gap).
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three
