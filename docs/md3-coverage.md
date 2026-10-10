@@ -807,7 +807,7 @@ the page-38 screenshot review still pending.
 | Checkbox | MdCheckBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Chips | MdChip | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Radio button | MdRadioButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Date pickers | MdDatePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Date pickers | MdDatePicker | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
 | Menus | MdMenu / MdMenuItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Sliders | MdSlider | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
 | Switch | MdSwitch | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |

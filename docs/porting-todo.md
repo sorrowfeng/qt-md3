@@ -1685,6 +1685,24 @@ divergences and gaps:
 * **The minutes face snaps to 5-minute slots** and the hours face to 1 —
   Compose's contract. The dial maths are the port's own (atan2 → slot).
 * **RTL**: not mirrored (the library-wide gap).
+
+`MdDatePicker` + `MdDatePickerTokens` + `MdDatePickerStyle`, locked by
+`TestMd3DatePicker` (11 slots) and by the page 41 gallery shot. The pinned
+divergences and gaps:
+
+* **The typo'd *-state-layer-opcaity rows are carried, not read** — the
+  correctly spelled *-opacity rows win.
+* **container-surface-tint-layer-color is carried, not drawn** — the
+  elevation paints through MdElevation.
+* **The docked variant (md.comp.date-picker-docked.*) is a separate
+  export** — only the modal set is ported here.
+* **The export publishes no disabled rows** for the date / year tables; the
+  accessors fall back to on-surface at 0.38.
+* **The grid is Monday-first** — the weekday row starts on Monday and the
+  day→slot mapping is the picker's dateAtCell contract, the same helper the
+  hit test uses, so paint and hit can never disagree.
+* **The dialog chrome is the host's** — this family paints the picker face.
+* **RTL**: not mirrored (the library-wide gap).
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

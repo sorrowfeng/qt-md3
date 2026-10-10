@@ -233,6 +233,8 @@ GalleryPage *createMenuPage();
 GalleryPage *createSliderPage();
 /// Page 40. Time pickers.
 GalleryPage *createTimePickerPage();
+/// Page 41. Date pickers.
+GalleryPage *createDatePickerPage();
 
 } // namespace gallery
 

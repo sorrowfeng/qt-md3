@@ -460,6 +460,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createMenuPage(),
         createSliderPage(),
         createTimePickerPage(),
+        createDatePickerPage(),
     };
 
     QStringList titles;

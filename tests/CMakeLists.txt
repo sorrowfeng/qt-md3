@@ -875,6 +875,31 @@ qt_md3_deploy_runtime(TestMd3Chip)
 # and 2 px track, the 96x80 / 114x80 time selectors, the 216x38 period
 # selector), the two selector colour tables, the dial's snapping and the
 # face / period switching.
+
+# TestMd3DatePicker — the Date pickers family: MdDatePicker. The export's
+# metric rows (the 360x524 container, the 120 px header, the 40 px date
+# cells, the 72x36 year cells), the date / year colour tables, the grid
+# maths and the range form's two endpoints.
+add_executable(TestMd3DatePicker
+    TestMd3DatePicker.cpp
+)
+
+target_link_libraries(TestMd3DatePicker
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3DatePicker COMMAND TestMd3DatePicker)
+set_tests_properties(TestMd3DatePicker PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3DatePicker)
 add_executable(TestMd3TimePicker
     TestMd3TimePicker.cpp
 )
