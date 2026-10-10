@@ -229,6 +229,8 @@ GalleryPage *createRadioButtonPage();
 GalleryPage *createSwitchPage();
 /// Page 38. The Menus family.
 GalleryPage *createMenuPage();
+/// Page 39. Sliders.
+GalleryPage *createSliderPage();
 
 } // namespace gallery
 

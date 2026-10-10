@@ -1640,6 +1640,34 @@ divergences and gaps:
   `DropdownMenu` exposes `onDismissed`; the port's `exec` mirrors
   `QMenu::exec` instead. RTL: not mirrored (the library-wide gap).
 
+
+`MdSlider` + `MdSliderTokens` + `MdSliderStyle`, locked by
+`TestMd3Slider` (14 slots) and by the page 39 gallery shot. The pinned
+divergences and gaps:
+
+* **inactive.track.color is secondary-container in the export** while the
+  material-web theming table claims surface-container-highest. The export
+  wins (it is the value layer of record); Compose's
+  SliderTokens.InactiveTrackColor agrees with the export.
+* **stop-indicator.trailing-space is 4 px in the export** and 6 dp in Compose
+  (SliderTokens.StopIndicatorTrailingSpace). The export wins.
+* **The handle is a vertical pill, not a circle** — 4 px wide, 44 px tall at the
+  base size. The width narrows to 2 px under focus and press and returns to
+  4 px on release; hover keeps 4 px. This is the export's own row set
+  (handle.width / ocus.handle.width / pressed.handle.width), not an
+  invention.
+* **The deprecated rows are carried, not read**: ctive-container-opacity,
+  inactive-container-opacity, label-container-height (read as the value
+  indicator's minimum size), the label.label-text.* family, state-layer-size,
+  with-overlap.*, the with-tick-marks.* opacities.
+* **The range slider is one widget, not two** — material-web ships ange with
+  alueStart / alueEnd on one element; this port carries the same pair.
+  Compose separates RangeSlider; the single-widget contract is the
+  material-web one.
+* **No colour animation** — the export's focus / hover / pressed rows all
+  resolve primary for the handle and the tracks, so there is nothing to
+  interpolate. The value label's reveal is the family's only motion.
+* **RTL**: not mirrored (the library-wide gap).
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

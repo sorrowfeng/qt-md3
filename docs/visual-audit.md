@@ -77,6 +77,7 @@ captured official screenshot.
 | Radio button | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Switch | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Menus | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Sliders | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 

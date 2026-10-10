@@ -864,6 +864,31 @@ qt_md3_deploy_runtime(TestMd3Chip)
 # scale+alpha open with children painted through the transform, the inward
 # keyboard-only focus ring, the state layer reading the unselected side for
 # both selections and the arrow-key walk.
+
+# TestMd3Slider — the Sliders family: MdSlider. The export's metric rows (the
+# 4 px pill handle with its per-state widths 4/4/2/2/4, the five Expressive
+# size rows), the colour tables' disabled opacities, the keyboard walk and the
+# range form's two handles.
+add_executable(TestMd3Slider
+    TestMd3Slider.cpp
+)
+
+target_link_libraries(TestMd3Slider
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Slider COMMAND TestMd3Slider)
+set_tests_properties(TestMd3Slider PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Slider)
 add_executable(TestMd3Menu
     TestMd3Menu.cpp
 )
