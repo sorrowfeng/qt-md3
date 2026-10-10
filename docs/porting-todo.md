@@ -1667,7 +1667,9 @@ divergences and gaps:
 * **No colour animation** — the export's focus / hover / pressed rows all
   resolve primary for the handle and the tracks, so there is nothing to
   interpolate. The value label's reveal is the family's only motion.
-* **RTL**: not mirrored (the library-wide gap).
+* **RTL**: mirrored — the library-wide audit (TestMd3Rtl) covers the geometry
+  halves (leading/trailing swaps, the motion vectors) and the text direction
+  (MdStyleBase::leadingAlignment).
 
 `MdTimePicker` + `MdTimePickerTokens` + `MdTimePickerStyle`, locked by
 `TestMd3TimePicker` (11 slots) and by the page 40 gallery shot. The pinned
@@ -1684,7 +1686,9 @@ divergences and gaps:
   (headline, selectors, dial); the surrounding dialog is MdDialog.
 * **The minutes face snaps to 5-minute slots** and the hours face to 1 —
   Compose's contract. The dial maths are the port's own (atan2 → slot).
-* **RTL**: not mirrored (the library-wide gap).
+* **RTL**: mirrored — the library-wide audit (TestMd3Rtl) covers the geometry
+  halves (leading/trailing swaps, the motion vectors) and the text direction
+  (MdStyleBase::leadingAlignment).
 
 `MdDatePicker` + `MdDatePickerTokens` + `MdDatePickerStyle`, locked by
 `TestMd3DatePicker` (11 slots) and by the page 41 gallery shot. The pinned
@@ -1702,7 +1706,9 @@ divergences and gaps:
   day→slot mapping is the picker's dateAtCell contract, the same helper the
   hit test uses, so paint and hit can never disagree.
 * **The dialog chrome is the host's** — this family paints the picker face.
-* **RTL**: not mirrored (the library-wide gap).
+* **RTL**: mirrored — the library-wide audit (TestMd3Rtl) covers the geometry
+  halves (leading/trailing swaps, the motion vectors) and the text direction
+  (MdStyleBase::leadingAlignment).
 
 `MdTextField` + `MdTextFieldTokens` + `MdTextFieldStyle`, locked by
 `TestMd3TextField` (11 slots) and by the page 42 gallery shot. The pinned
@@ -1724,7 +1730,9 @@ divergences and gaps:
 * **The filled container's corner-extra-small-top is painted as a clipped
   rounded rect** — Qt has no per-corner top-only radius helper in the paint
   path used here.
-* **RTL**: not mirrored (the library-wide gap).
+* **RTL**: mirrored — the library-wide audit (TestMd3Rtl) covers the geometry
+  halves (leading/trailing swaps, the motion vectors) and the text direction
+  (MdStyleBase::leadingAlignment).
 
 `MdSearchBar` + `MdSearchTokens` + `MdSearchBarStyle`, locked by
 `TestMd3SearchBar` (9 slots) and by the page 43 gallery shot. The pinned
@@ -1739,12 +1747,33 @@ divergences and gaps:
   font is absent — the geometry stands in for the glyph's two strokes.
 * **ocus-indicator-* rows are the system set** (secondary, outer offset,
   thickness) — carried as the focus ring's spec.
-* **RTL**: not mirrored (the library-wide gap).
+* **RTL**: mirrored — the library-wide audit (TestMd3Rtl) covers the geometry
+  halves (leading/trailing swaps, the motion vectors) and the text direction
+  (MdStyleBase::leadingAlignment).
 
 With this family **all 36 Stage 1 families are ported**. The remaining
 library-wide gaps (the RTL audit, the visual QA passes against official
 captures, and MdTextArea as a separate multiline widget) are recorded
 above and in docs/md3-coverage.md's cross-cutting table.
+## Library-wide RTL audit (2026-10)
+
+The audit that every family's RTL: not mirrored note referred to is now
+done — TestMd3Rtl (9 slots) locks both halves:
+
+* **geometry mirrors** — leading / trailing slots swap sides and the motion
+  vectors (the switch thumb travel, the slider handle fraction) measure from
+  the leading edge. MdTheme::setDirection drives
+  QApplication::setLayoutDirection, so one call reaches QLineEdit & co. as
+  well as the self-painted styles (which read layoutDirection()).
+* **text follows the direction** — MdStyleBase::leadingAlignment resolves
+  AlignRight under RTL instead of the literal AlignLeft; every drawText
+  that means "leading" routes through it.
+
+What the audit deliberately does **not** mirror: the date / time picker grid
+numerals and the calendar's weekday labels stay LTR — dates are written LTR
+in Arabic-script locales too (the 	extDirection override in material-web's
+text field exists for exactly this). The older per-family notes below stay
+as the record of what each port looked like *before* the audit.
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

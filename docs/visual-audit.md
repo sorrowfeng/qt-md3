@@ -914,6 +914,59 @@ The official side-by-side comparison shares the matrix's standing: the spec
 site is a client-side SPA, so the family stays `Needs visual QA` until the
 reference captures are taken.
 
+### Sliders
+
+Page 39 rendered at the usual ~1.04 smoke scale, sampled against the
+baseline light scheme. The band reads #FEF7FF (surface) with #6750A4
+(primary — the active track and handle) and #E8DEF8 (secondary-container —
+the inactive track). Both are the scheme's own rows: the port resolves the
+export's primary / secondary-container pair exactly, including the
+export-vs-theming-table divergence the audit was looking for.
+
+| Row | Arithmetic | Rendered |
+| --- | --- | --- |
+| active track | primary | Yes — #6750A4 bands |
+| inactive track | secondary-container | Yes — #E8DEF8 bands |
+| handle | primary vertical pill | Yes — the same primary band, 4 px wide |
+| size rows | tracks 16/24/40/56/96 px | Yes — five distinct band heights |
+
+The official side-by-side: an Edge capture of
+m3.material.io/components/sliders/specs (1440×2400) was taken for this
+check. The spec site renders its own dynamic scheme (the capture reads
+#F8F1F6 / #DCDAF5), so the comparison is geometric, not chromatic —
+the vertical-pill handle and the size ladder are the two things the capture
+confirms. The family stays Needs visual QA for the chromatic column until
+the reference captures share our scheme.
+
+### Time pickers
+
+Page 40 reads #ECE6F0 (surface-container-high — the container), #EADDFF
+(primary-container — the selected time selector) and #6750A4 (primary —
+the dial's selector track and handle). The 256 dp dial's
+surface-container-highest face shows as the #E6E0E9 band under the rim
+numbers.
+
+### Date pickers
+
+Page 41 reads #ECE6F0 (surface-container-high — the 360×524 container) with
+#49454F (on-surface — the day labels). The selected day's primary pill
+and today's 1 dp outline are both visible in the calendar grid.
+
+### Text fields
+
+Page 42 reads #E6E0E9 (surface-container-highest — the filled container)
+over #FEF7FF (surface). The outlined set's 1 px indicator is the
+#49454F-family hairline at the container edge.
+
+### Search
+
+Page 43 reads the #ECE6F0 band (surface-container-high — the 56 dp pill)
+with the leading search glyph in #49454F (on-surface).
+
+All five pages render non-blank at both window and full height; the
+arithmetic column is the token row, the rendered column is the pixel
+sample. The official chromatic comparison remains open — recorded per
+family above.
 ## 2026-10 comparison re-check (official vs ported)
 
 Triggered by the observation that the ported components "do not look
