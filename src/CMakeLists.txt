@@ -98,6 +98,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdTimePickerStyle.h
     styles/MdDatePickerStyle.h
     styles/MdTextFieldStyle.h
+    styles/MdTextAreaStyle.h
     styles/MdSearchBarStyle.h
     styles/MdMenuStyle.h
     styles/MdChipStyle.h
@@ -149,6 +150,7 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdTimePicker.h
     widgets/MdDatePicker.h
     widgets/MdTextField.h
+    widgets/MdTextArea.h
     widgets/MdSearchBar.h
     widgets/MdMenu.h
     widgets/MdChip.h
@@ -257,6 +259,7 @@ set(QT_MD3_SOURCES
     styles/MdTimePickerStyle.cpp
     styles/MdDatePickerStyle.cpp
     styles/MdTextFieldStyle.cpp
+    styles/MdTextAreaStyle.cpp
     styles/MdSearchBarStyle.cpp
     styles/MdMenuStyle.cpp
     styles/MdChipStyle.cpp
@@ -305,6 +308,7 @@ set(QT_MD3_SOURCES
     widgets/MdTimePicker.cpp
     widgets/MdDatePicker.cpp
     widgets/MdTextField.cpp
+    widgets/MdTextArea.cpp
     widgets/MdSearchBar.cpp
     widgets/MdMenu.cpp
     widgets/MdChip.cpp

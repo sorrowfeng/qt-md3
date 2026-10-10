@@ -1708,9 +1708,10 @@ divergences and gaps:
 `TestMd3TextField` (11 slots) and by the page 42 gallery shot. The pinned
 divergences and gaps:
 
-* **MdTextArea (the multiline form) is not yet a separate widget** — the
-  family row names both; the port carries the single-line MdTextField over
-  QLineEdit. The multiline contract is recorded as the next step.
+* **MdTextArea (the multiline form) is a separate widget over QPlainTextEdit**
+  sharing the text-field token set (the export publishes no text-area
+  namespace). The decoration paints through the Pattern A filter on the area
+  itself; the viewport stays transparent and paints the document on top.
 * **The ocus-active-indicator-thickness row reads the system 3 px** while
   the indicator itself uses the 2 px ocus-active-indicator-height. The
   export publishes both; each is read where it belongs.

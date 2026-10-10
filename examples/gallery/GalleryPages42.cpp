@@ -16,6 +16,7 @@
 #include "GalleryPages.h"
 
 #include "core/MdTextFieldTokens.h"
+#include "widgets/MdTextArea.h"
 #include "widgets/MdTextField.h"
 
 #include "I18n.h"
@@ -181,6 +182,33 @@ void TextFieldPage::build(GalleryContext &context)
         err->setError(true);
         addRow({{QStringLiteral("a"), err}});
         context.detail(L("错误态 + 辅助文字", "error + supporting text"));
+        context.space(16.0);
+    }
+
+    // --- multiline: MdTextArea ---------------------------------------------
+    context.section(L("多行：MdTextArea", "Multiline: MdTextArea"));
+    context.paragraph(L(
+        "同一套 token 服务两个形态（导出无 text-area 命名空间）。标签同样浮动；容器包住"
+        "整个多行正文，指示条在最后一行之下。rows 是正文行数（默认 2）。",
+        "One token set serves both forms (the export publishes no text-area namespace)."
+        " The label floats the same way; the container wraps the whole multiline body"
+        " with the indicator under the last line. rows is the body's line count (default"
+        " 2)."));
+
+    {
+        auto *shortArea = new md::MdTextArea(this);
+        shortArea->hide();
+        shortArea->setLabelText(QStringLiteral("Short"));
+        shortArea->setRows(2);
+        auto *tallArea = new md::MdTextArea(this);
+        tallArea->hide();
+        tallArea->setLabelText(QStringLiteral("Tall"));
+        tallArea->setSupportingText(QStringLiteral("rows = 6"));
+        tallArea->setRows(6);
+        const QRectF band = context.band(200.0);
+        m_slots.append(TextFieldSlot{shortArea, QRectF(band.left(), band.top(), 280.0, 96.0)});
+        m_slots.append(TextFieldSlot{tallArea, QRectF(band.left() + 304.0, band.top(), 280.0, 200.0)});
+        context.detail(L("rows = 2 �� rows = 6", "rows = 2 �� rows = 6"));
         context.space(16.0);
     }
 

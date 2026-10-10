@@ -890,6 +890,30 @@ qt_md3_deploy_runtime(TestMd3Chip)
 # rows (the 56 px container, the 24 px icons at the 16 px side spaces, the
 # 30 px avatar / 48 px target), the three surfaces' shapes, the state-layer
 # rows and the search-requested signal.
+
+# TestMd3TextArea — the multiline text field: MdTextArea. The shared
+# text-field token set serving both forms, the rows contract, the floating
+# label and the error overlay.
+add_executable(TestMd3TextArea
+    TestMd3TextArea.cpp
+)
+
+target_link_libraries(TestMd3TextArea
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3TextArea COMMAND TestMd3TextArea)
+set_tests_properties(TestMd3TextArea PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3TextArea)
 add_executable(TestMd3SearchBar
     TestMd3SearchBar.cpp
 )
