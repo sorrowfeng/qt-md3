@@ -1724,6 +1724,26 @@ divergences and gaps:
   rounded rect** — Qt has no per-corner top-only radius helper in the paint
   path used here.
 * **RTL**: not mirrored (the library-wide gap).
+
+`MdSearchBar` + `MdSearchTokens` + `MdSearchBarStyle`, locked by
+`TestMd3SearchBar` (9 slots) and by the page 43 gallery shot. The pinned
+divergences and gaps:
+
+* **MdSearchView (the docked / full-screen surfaces) is carried as surface
+  rows on the same widget** — MdSearchSurface switches the shape and
+  container height. The view's results list is the host's.
+* **container-surface-tint-layer-color is carried, not drawn** — the
+  elevation paints through MdElevation.
+* **The leading search glyph is painted as circle + handle** when the icon
+  font is absent — the geometry stands in for the glyph's two strokes.
+* **ocus-indicator-* rows are the system set** (secondary, outer offset,
+  thickness) — carried as the focus ring's spec.
+* **RTL**: not mirrored (the library-wide gap).
+
+With this family **all 36 Stage 1 families are ported**. The remaining
+library-wide gaps (the RTL audit, the visual QA passes against official
+captures, and MdTextArea as a separate multiline widget) are recorded
+above and in docs/md3-coverage.md's cross-cutting table.
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

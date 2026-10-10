@@ -885,6 +885,31 @@ qt_md3_deploy_runtime(TestMd3Chip)
 # metric rows (the 56 px container, the 24 px icons, the indicator heights
 # 1/1/2/1), the filled / outlined variants, the colour tables' state rows
 # and the error overlay, the label's float and the disabled opacities.
+
+# TestMd3SearchBar — the Search family: MdSearchBar. The export's metric
+# rows (the 56 px container, the 24 px icons at the 16 px side spaces, the
+# 30 px avatar / 48 px target), the three surfaces' shapes, the state-layer
+# rows and the search-requested signal.
+add_executable(TestMd3SearchBar
+    TestMd3SearchBar.cpp
+)
+
+target_link_libraries(TestMd3SearchBar
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3SearchBar COMMAND TestMd3SearchBar)
+set_tests_properties(TestMd3SearchBar PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3SearchBar)
 add_executable(TestMd3TextField
     TestMd3TextField.cpp
 )

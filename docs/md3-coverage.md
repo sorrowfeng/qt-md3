@@ -818,7 +818,7 @@ the page-38 screenshot review still pending.
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Text fields | MdTextField / MdTextArea | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
-| Search | MdSearchBar / MdSearchView | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Search | MdSearchBar / MdSearchView | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
 
 ## Cross-cutting items
 
