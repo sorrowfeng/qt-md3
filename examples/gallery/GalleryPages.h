@@ -231,6 +231,8 @@ GalleryPage *createSwitchPage();
 GalleryPage *createMenuPage();
 /// Page 39. Sliders.
 GalleryPage *createSliderPage();
+/// Page 40. Time pickers.
+GalleryPage *createTimePickerPage();
 
 } // namespace gallery
 

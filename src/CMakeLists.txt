@@ -43,6 +43,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdRadioButtonTokens.h
     core/MdSwitchTokens.h
     core/MdSliderTokens.h
+    core/MdTimePickerTokens.h
     core/MdMenuTokens.h
     core/MdChipTokens.h
     core/MdDividerTokens.h
@@ -91,6 +92,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdRadioButtonStyle.h
     styles/MdSwitchStyle.h
     styles/MdSliderStyle.h
+    styles/MdTimePickerStyle.h
     styles/MdMenuStyle.h
     styles/MdChipStyle.h
     styles/MdChildBox.h
@@ -138,6 +140,7 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdRadioButton.h
     widgets/MdSwitch.h
     widgets/MdSlider.h
+    widgets/MdTimePicker.h
     widgets/MdMenu.h
     widgets/MdChip.h
     widgets/MdDivider.h
@@ -195,6 +198,7 @@ set(QT_MD3_SOURCES
     core/MdRadioButtonTokens.cpp
     core/MdSwitchTokens.cpp
     core/MdSliderTokens.cpp
+    core/MdTimePickerTokens.cpp
     core/MdMenuTokens.cpp
     core/MdChipTokens.cpp
     core/MdDividerTokens.cpp
@@ -238,6 +242,7 @@ set(QT_MD3_SOURCES
     styles/MdRadioButtonStyle.cpp
     styles/MdSwitchStyle.cpp
     styles/MdSliderStyle.cpp
+    styles/MdTimePickerStyle.cpp
     styles/MdMenuStyle.cpp
     styles/MdChipStyle.cpp
     styles/MdChildBox.cpp
@@ -282,6 +287,7 @@ set(QT_MD3_SOURCES
     widgets/MdRadioButton.cpp
     widgets/MdSwitch.cpp
     widgets/MdSlider.cpp
+    widgets/MdTimePicker.cpp
     widgets/MdMenu.cpp
     widgets/MdChip.cpp
     widgets/MdDivider.cpp

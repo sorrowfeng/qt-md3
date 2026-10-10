@@ -1668,6 +1668,23 @@ divergences and gaps:
   resolve primary for the handle and the tracks, so there is nothing to
   interpolate. The value label's reveal is the family's only motion.
 * **RTL**: not mirrored (the library-wide gap).
+
+`MdTimePicker` + `MdTimePickerTokens` + `MdTimePickerStyle`, locked by
+`TestMd3TimePicker` (11 slots) and by the page 40 gallery shot. The pinned
+divergences and gaps:
+
+* **clock-dial.color.ignore / clock-dial.shape.ignore are the typo'd
+  deprecated pair** — carried, not read; clock-dial.color / shape win.
+* **surface-tint-layer-color is carried, not drawn** — the container's level
+  3 elevation paints through MdElevation, the project's standing rule for
+  tonal surfaces.
+* **The export publishes no disabled rows** for either selector family; the
+  accessors fall back to on-surface at 0.38.
+* **The dialog chrome is the host's.** This family paints the picker face
+  (headline, selectors, dial); the surrounding dialog is MdDialog.
+* **The minutes face snaps to 5-minute slots** and the hours face to 1 —
+  Compose's contract. The dial maths are the port's own (atan2 → slot).
+* **RTL**: not mirrored (the library-wide gap).
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

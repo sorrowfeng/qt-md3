@@ -78,6 +78,7 @@ captured official screenshot.
 | Switch | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Menus | `Needs visual QA` | `Needs visual QA` | All | See below. |
 | Sliders | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Time pickers | `Needs visual QA` | `Needs visual QA` | All | See below. |
 
 ### Badges
 

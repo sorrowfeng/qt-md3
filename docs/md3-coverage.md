@@ -811,7 +811,7 @@ the page-38 screenshot review still pending.
 | Menus | MdMenu / MdMenuItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
 | Sliders | MdSlider | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
 | Switch | MdSwitch | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Time pickers | MdTimePicker | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| Time pickers | MdTimePicker | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
 
 ## 1.7 Text inputs
 

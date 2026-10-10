@@ -869,6 +869,32 @@ qt_md3_deploy_runtime(TestMd3Chip)
 # 4 px pill handle with its per-state widths 4/4/2/2/4, the five Expressive
 # size rows), the colour tables' disabled opacities, the keyboard walk and the
 # range form's two handles.
+
+# TestMd3TimePicker — the Time pickers family: MdTimePicker. The export's
+# metric rows (the 256 px dial, the 48 px selector handle on an 8 px centre
+# and 2 px track, the 96x80 / 114x80 time selectors, the 216x38 period
+# selector), the two selector colour tables, the dial's snapping and the
+# face / period switching.
+add_executable(TestMd3TimePicker
+    TestMd3TimePicker.cpp
+)
+
+target_link_libraries(TestMd3TimePicker
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3TimePicker COMMAND TestMd3TimePicker)
+set_tests_properties(TestMd3TimePicker PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3TimePicker)
 add_executable(TestMd3Slider
     TestMd3Slider.cpp
 )
