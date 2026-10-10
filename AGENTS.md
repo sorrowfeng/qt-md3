@@ -154,30 +154,17 @@ Version `0.1.0`. **Stage 1 Batch 0 (the foundation modules) is closed** — all
 twenty-one modules are implemented, and `ContrastLevel` is applied rather than
 stored, so reduced / standard / medium / high genuinely move the tones.
 
-Stage 1 §1.2 Actions is complete and §1.3 Communication is under way:
-**`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`,
-`MdFabMenu`, `MdSplitButton` and `MdSegmentedButton` are done** —
-Buttons (5 colour styles × 5 Expressive sizes × 2 shapes, leading/trailing
-icons, soft-disabled, live states), Button groups (standard / connected, five
-sizes, four selection modes, round / square, horizontal / vertical, arrow-key
-navigation), Icon buttons (4 styles × 5 sizes × 2 shapes × 3 padding tracks,
-toggle form with the selected colour families and swapped selected corners),
-FABs (4 colour sets × 3 sizes × lowered / raised, the one Actions family with
-a real shadow), extended FABs (6 colour sets × 3 sizes × lowered / raised,
-content-derived width) and FAB menus (3 colour groups × anchor FAB + close
-button + up to six staggered items, Compose-sourced reveal motion) split
-buttons (button-family colour rows over its own metric rows, five sizes, the
-inner-corner morph with the trailing-selected 50%) and segmented buttons (one
-outlined set, segments overlapping by the outline width, itemShape ends, the
-check scale-in on a reserved icon slot) — as is **`MdBadge` + `MdBadgedBox`**
-(one token set, two forms decided by content, no state rows at all, Compose-
-sourced anchoring with the overhang reserved for Qt clipping) and
-**`MdProgressIndicator`** (the merged linear+circular family, determinate
-gap/stop-indicator/buffer geometry, the MDC-heritage indeterminate keyframes
-pinned as pure functions, four-color riding the deprecated sets; wave rows
-carried but not rendered — the registered gap) — which is `10 / 36` families:
-**all of §1.2** plus two §1.3 Communication families. The remaining §1.3
-families are the loading indicator, snackbars and tooltips.
+Stage 1 §1.2 Actions through §1.5 Navigation are closed, and §1.6 Selection is
+under way. **Thirty-one of the thirty-six families are ported**: the eight
+Actions families (Buttons, Button groups, Icon buttons, FABs, Extended FABs,
+FAB menu, Split buttons, Segmented buttons), the five Communication families
+(Badges, Progress indicators, Loading indicator, Snackbar, Tooltips), the six
+Containment families (Cards, Dialogs, Bottom sheets, Side sheets, Carousel,
+Divider, Lists), the six Navigation families (App bars, Toolbars, Navigation
+bar, Navigation rail, Navigation drawer, Tabs) and five of the eight Selection
+families (Checkbox, Chips, Radio button, Switch, Menus). The remaining five are
+the Selection families **Date pickers, Sliders and Time pickers** and the
+§1.7 Text inputs families **Text fields and Search**.
 
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and
