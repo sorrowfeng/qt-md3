@@ -227,6 +227,8 @@ GalleryPage *createChipPage();
 GalleryPage *createRadioButtonPage();
 /// Page 37. The Switch.
 GalleryPage *createSwitchPage();
+/// Page 38. The Menus family.
+GalleryPage *createMenuPage();
 
 } // namespace gallery
 

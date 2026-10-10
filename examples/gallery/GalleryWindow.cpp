@@ -457,6 +457,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createChipPage(),
         createRadioButtonPage(),
         createSwitchPage(),
+        createMenuPage(),
     };
 
     QStringList titles;

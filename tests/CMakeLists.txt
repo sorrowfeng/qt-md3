@@ -858,6 +858,33 @@ set_tests_properties(TestMd3Chip PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Chip)
 
+# TestMd3Menu — the Menus family: MdMenu + MdMenuItem. The classic item's
+# geometry (48 px rows, 112/280 width clamps), the insertion-ordered layout
+# with the 8 px vertical padding and the divider's 12/2 insets, the popup's
+# scale+alpha open with children painted through the transform, the inward
+# keyboard-only focus ring, the state layer reading the unselected side for
+# both selections and the arrow-key walk.
+add_executable(TestMd3Menu
+    TestMd3Menu.cpp
+)
+
+target_link_libraries(TestMd3Menu
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Menu COMMAND TestMd3Menu)
+set_tests_properties(TestMd3Menu PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Menu)
+
 # TestMd3Navigation — the Navigation family: MdNavigationBar (both published
 # families — the baseline `navigation-bar` one and the flexible `nav-bar` one,
 # which coexist in a single export version) and its MdNavigationBarItem
