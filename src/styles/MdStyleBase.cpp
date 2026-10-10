@@ -149,6 +149,34 @@ void MdStyleBase::unregisterPaintFilter(const QMetaObject *metaObject)
     MdPaintFilterHub::instance()->remove(metaObject);
 }
 
+bool MdStyleBase::isRtl(const QWidget *widget)
+{
+    if (widget != nullptr) {
+        return widget->layoutDirection() == Qt::RightToLeft;
+    }
+    return QApplication::layoutDirection() == Qt::RightToLeft;
+}
+
+qreal MdStyleBase::mirroredX(qreal x, qreal width)
+{
+    return width - x;
+}
+
+QRectF MdStyleBase::mirroredRect(const QRectF &rect, qreal width)
+{
+    return QRectF(width - rect.right(), rect.y(), rect.width(), rect.height());
+}
+
+Qt::Alignment MdStyleBase::leadingAlignment(const QWidget *widget)
+{
+    return isRtl(widget) ? Qt::AlignRight : Qt::AlignLeft;
+}
+
+Qt::Alignment MdStyleBase::trailingAlignment(const QWidget *widget)
+{
+    return isRtl(widget) ? Qt::AlignLeft : Qt::AlignRight;
+}
+
 bool MdStyleBase::hasPaintFilter(const QMetaObject *metaObject)
 {
     return MdPaintFilterHub::instance()->contains(metaObject);

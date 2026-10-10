@@ -92,6 +92,25 @@ public:
     /// True when a filter is registered for exactly this type.
     static bool hasPaintFilter(const QMetaObject *metaObject);
 
+    /// True when the widget (or the application) lays out right-to-left.
+    /// The theme's setDirection drives QApplication::setLayoutDirection, so
+    /// this reads the same value the built-in Qt painting does.
+    static bool isRtl(const QWidget *widget);
+
+    /// Mirror one x coordinate inside width — the geometry half of the
+    /// leading/trailing swap. isualRect does the same for a whole rect.
+    static qreal mirroredX(qreal x, qreal width);
+
+    /// A rect mirrored inside width, for leading/trailing slot swaps.
+    static QRectF mirroredRect(const QRectF &rect, qreal width);
+
+    /// The leading text alignment for one widget: AlignRight under RTL,
+    /// AlignLeft otherwise. Use it instead of the literal AlignLeft so
+    /// text follows the layout direction (the one rule the RTL audit turns
+    /// on). 	railingAlignment is its mirror.
+    static Qt::Alignment leadingAlignment(const QWidget *widget);
+    static Qt::Alignment trailingAlignment(const QWidget *widget);
+
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;
 

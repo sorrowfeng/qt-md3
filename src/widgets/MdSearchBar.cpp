@@ -42,8 +42,12 @@ void MdSearchBar::setSurface(MdSearchSurface surface)
 QRectF MdSearchBar::leadingIconRect() const
 {
     const MdSearchTokens &tokens = searchTokens();
-    return QRectF(tokens.leadingSpace, (rect().height() - tokens.iconSize) / 2.0,
-                  tokens.iconSize, tokens.iconSize);
+    const QRectF r(tokens.leadingSpace, (rect().height() - tokens.iconSize) / 2.0,
+                   tokens.iconSize, tokens.iconSize);
+    // The leading icon rides the *leading* edge — the right side under RTL.
+    return layoutDirection() == Qt::RightToLeft
+        ? QRectF(rect().width() - r.right(), r.y(), r.width(), r.height())
+        : r;
 }
 
 QRectF MdSearchBar::containerRect() const

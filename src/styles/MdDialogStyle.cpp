@@ -197,7 +197,7 @@ void MdDialogStyle::paintDialog(QPainter &painter, const MdDialog &dialog,
     if (layout.titleRect.isValid()) {
         painter.setPen(theme.color(tokens.headlineColor));
         painter.setFont(MdTypeScale::font(tokens.headlineStyle));
-        painter.drawText(layout.titleRect, Qt::AlignLeft | Qt::AlignVCenter, dialog.title());
+        painter.drawText(layout.titleRect, MdStyleBase::leadingAlignment(&dialog) | Qt::AlignVCenter, dialog.title());
     }
     if (layout.textRect.isValid()) {
         painter.setPen(theme.color(tokens.supportingTextColor));

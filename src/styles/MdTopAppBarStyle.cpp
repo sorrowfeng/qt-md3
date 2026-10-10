@@ -95,7 +95,7 @@ qreal wrappedHeight(const QString &text, const QFont &font, qreal width)
     }
     const QFontMetrics metrics(font);
     const QRect bounds = metrics.boundingRect(QRect(0, 0, int(qMax<qreal>(width, 1.0)), 10000),
-                                              int(Qt::AlignLeft | Qt::TextWordWrap), text);
+                                              int(MdStyleBase::leadingAlignment(nullptr) | Qt::TextWordWrap), text);
     return qMax<qreal>(bounds.height(), qreal(metrics.height()));
 }
 
@@ -189,7 +189,7 @@ void drawClippedText(QPainter &painter, const QRectF &clip, const QRectF &rect, 
     painter.setOpacity(qBound(0.0, alpha, 1.0));
     painter.setPen(colour);
     painter.setFont(font);
-    painter.drawText(rect, int(Qt::AlignLeft | Qt::AlignTop), text);
+    painter.drawText(rect, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop), text);
     painter.restore();
 }
 

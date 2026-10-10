@@ -46,7 +46,7 @@ qreal wrappedHeight(const QString &text, TypeStyle style, qreal width)
     }
     const QFontMetrics metrics(fontFor(style));
     const QRect bounds = metrics.boundingRect(QRect(0, 0, int(width), 10000),
-                                              int(Qt::AlignLeft | Qt::TextWordWrap), text);
+                                              int(MdStyleBase::leadingAlignment(nullptr) | Qt::TextWordWrap), text);
     return qMax<qreal>(bounds.height(), qreal(metrics.height()));
 }
 
@@ -512,7 +512,7 @@ void MdListItemStyle::paintListItem(QPainter &painter, const MdListItem &item,
     painter.setPen(QPen(disabled ? contentColour(disabledRow.labelText, disabledRow.labelTextOpacity)
                                  : theme.color(row.labelText),
                         0.0));
-    const int headlineFlags = int(Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap);
+    const int headlineFlags = int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter | Qt::TextWordWrap);
     painter.drawText(layout.headline, headlineFlags, item.headline());
 
     if (layout.overline.isValid()) {
@@ -520,7 +520,7 @@ void MdListItemStyle::paintListItem(QPainter &painter, const MdListItem &item,
         painter.setPen(QPen(disabled ? contentColour(disabledRow.overline, disabledRow.overlineOpacity)
                                      : theme.color(row.overline),
                             0.0));
-        painter.drawText(layout.overline, int(Qt::AlignLeft | Qt::AlignVCenter), item.overline());
+        painter.drawText(layout.overline, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter), item.overline());
     }
 
     if (layout.supporting.isValid()) {
@@ -529,7 +529,7 @@ void MdListItemStyle::paintListItem(QPainter &painter, const MdListItem &item,
                                                      disabledRow.supportingTextOpacity)
                                      : theme.color(row.supportingText),
                             0.0));
-        painter.drawText(layout.supporting, int(Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap),
+        painter.drawText(layout.supporting, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop | Qt::TextWordWrap),
                          item.supporting());
     }
 
@@ -540,7 +540,7 @@ void MdListItemStyle::paintListItem(QPainter &painter, const MdListItem &item,
                                      disabledRow.trailingSupportingTextOpacity)
                      : theme.color(row.trailingSupportingText),
             0.0));
-        painter.drawText(layout.trailingSupporting, int(Qt::AlignLeft | Qt::AlignVCenter),
+        painter.drawText(layout.trailingSupporting, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter),
                          item.trailingSupporting());
     }
 

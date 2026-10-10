@@ -200,7 +200,7 @@ void MdNavigationDrawerItemStyle::paintNavigationDrawerItem(
             painter.setPen(textColour);
             painter.setBrush(Qt::NoBrush);
             painter.setFont(item.labelFont());
-            painter.drawText(boxes.label, int(Qt::AlignVCenter | Qt::AlignLeft), item.label());
+            painter.drawText(boxes.label, int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(&item)), item.label());
         }
     }
 

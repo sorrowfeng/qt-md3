@@ -128,7 +128,7 @@ void MdTextFieldStyle::paintTextField(QPainter &painter, const MdTextField &fiel
             labelColour = MdTheme::instance().color(ColorRole::OnSurfaceVariant);
         }
         painter.setPen(labelColour);
-        painter.drawText(field.labelRect(), Qt::AlignLeft | Qt::AlignVCenter, field.labelText());
+        painter.drawText(field.labelRect(), MdStyleBase::leadingAlignment(&field) | Qt::AlignVCenter, field.labelText());
     }
 
     // 4 — the supporting text.
@@ -145,7 +145,7 @@ void MdTextFieldStyle::paintTextField(QPainter &painter, const MdTextField &fiel
         painter.drawText(QRectF(field.containerRect().left() + 16.0,
                                 field.containerRect().bottom() + 4.0,
                                 field.containerRect().width() - 32.0, 16.0),
-                         Qt::AlignLeft | Qt::AlignVCenter, field.supportingText());
+                         MdStyleBase::leadingAlignment(&field) | Qt::AlignVCenter, field.supportingText());
     }
 
     painter.restore();

@@ -209,8 +209,13 @@ QRectF MdSwitch::trackRect() const
 QRectF MdSwitch::thumbRect() const
 {
     const QRectF track = trackRect();
-    return QRectF(track.left() + m_thumbOffset, track.center().y() - m_thumbDiameter / 2.0,
-                  m_thumbDiameter, m_thumbDiameter);
+    // The thumb travels from the leading edge — the right side under RTL, so
+    // the offset measures from left() in LTR and from right() in RTL.
+    const qreal x = layoutDirection() == Qt::RightToLeft
+        ? track.right() - m_thumbOffset - m_thumbDiameter
+        : track.left() + m_thumbOffset;
+    return QRectF(x, track.center().y() - m_thumbDiameter / 2.0, m_thumbDiameter,
+                  m_thumbDiameter);
 }
 
 QRectF MdSwitch::stateLayerRect() const

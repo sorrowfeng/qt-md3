@@ -894,6 +894,30 @@ qt_md3_deploy_runtime(TestMd3Chip)
 # TestMd3TextArea — the multiline text field: MdTextArea. The shared
 # text-field token set serving both forms, the rows contract, the floating
 # label and the error overlay.
+
+# TestMd3Rtl — the library-wide RTL audit: geometry mirrors (leading /
+# trailing swaps, the motion vectors) and text direction
+# (MdStyleBase::leadingAlignment).
+add_executable(TestMd3Rtl
+    TestMd3Rtl.cpp
+)
+
+target_link_libraries(TestMd3Rtl
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Rtl COMMAND TestMd3Rtl)
+set_tests_properties(TestMd3Rtl PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Rtl)
 add_executable(TestMd3TextArea
     TestMd3TextArea.cpp
 )

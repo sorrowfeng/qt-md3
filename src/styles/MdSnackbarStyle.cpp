@@ -322,7 +322,7 @@ void MdSnackbarStyle::paintSnackbar(QPainter *painter,
                           actionFont, tokens.iconSize, tokens);
         painter->setFont(supportingFont);
         painter->setPen(theme.color(tokens.supportingTextColor));
-        painter->drawText(layout.textRect, Qt::AlignLeft | Qt::AlignTop, message);
+        painter->drawText(layout.textRect, MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop, message);
         actionRect = layout.actionRect;
         actionHitRect = layout.actionHitRect;
         dismissRect = layout.dismissRect;
@@ -333,7 +333,7 @@ void MdSnackbarStyle::paintSnackbar(QPainter *painter,
                          tokens.iconSize, tokens);
         painter->setFont(supportingFont);
         painter->setPen(theme.color(tokens.supportingTextColor));
-        painter->drawText(layout.textRect, Qt::AlignLeft | Qt::AlignTop, message);
+        painter->drawText(layout.textRect, MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop, message);
         actionRect = layout.actionRect;
         actionHitRect = layout.actionHitRect;
         dismissRect = layout.dismissRect;

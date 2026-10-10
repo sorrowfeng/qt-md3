@@ -94,7 +94,7 @@ void MdTimePickerStyle::paintTimePicker(QPainter &painter, const MdTimePicker &p
         painter.setPen(MdTheme::instance().color(tokens.headlineColor));
         const QRectF headline(picker.rect().left() + 24.0, picker.rect().top() + 12.0,
                               picker.rect().width() - 48.0, 20.0);
-        painter.drawText(headline, Qt::AlignLeft | Qt::AlignVCenter,
+        painter.drawText(headline, MdStyleBase::leadingAlignment(&picker) | Qt::AlignVCenter,
                          QStringLiteral("Select time"));
     }
 

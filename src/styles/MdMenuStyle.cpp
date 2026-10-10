@@ -175,12 +175,17 @@ void MdMenuStyle::paintMenuItem(QPainter &painter, const MdMenuItem &item,
 
     // 3. The content row: 12 px horizontal padding, 24 px icons spaced 8 px
     //    from the label, the trailing icon right-aligned.
+    const bool rtl = item.layoutDirection() == Qt::RightToLeft;
     const qreal pad = tokens.itemHorizontalPadding;
     const QColor iconColour = resolveSlot(tokens.iconFor(selection, state));
     qreal x = pad;
+    auto mirror = [&](const QRectF &r) {
+        return rtl ? QRectF(item.width() - r.right(), r.y(), r.width(), r.height()) : r;
+    };
     if (!item.leadingIconName().isEmpty()) {
-        MdIcon::paint(&painter, QRectF(x, (item.height() - tokens.iconSize) / 2.0,
-                                       tokens.iconSize, tokens.iconSize),
+        MdIcon::paint(&painter,
+                      mirror(QRectF(x, (item.height() - tokens.iconSize) / 2.0,
+                                    tokens.iconSize, tokens.iconSize)),
                       item.leadingIconName(), iconColour, item.iconSet(), item.iconFamily());
         x += tokens.iconSize + tokens.itemIconTextSpacing;
     }
@@ -191,8 +196,9 @@ void MdMenuStyle::paintMenuItem(QPainter &painter, const MdMenuItem &item,
         painter.setPen(labelColour);
         painter.setFont(MdTypeScale::font(tokens.labelTextType, TypeEmphasis::Baseline,
                                           MdTheme::instance().scriptCategory()));
-        painter.drawText(QRectF(x, 0, item.width() - pad - trailingWidth - x, item.height()),
-                         int(Qt::AlignVCenter | Qt::AlignLeft), item.text());
+        painter.drawText(mirror(QRectF(x, 0, item.width() - pad - trailingWidth - x,
+                                      item.height())),
+                         int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(&item)), item.text());
     }
     if (!item.trailingIconName().isEmpty()) {
         const QColor trailingColour = resolveSlot(
@@ -200,9 +206,9 @@ void MdMenuStyle::paintMenuItem(QPainter &painter, const MdMenuItem &item,
                 ? MdNavigationColourSlot{tokens.cascadingIndicatorColor, 1.0}
                 : tokens.iconFor(selection, state));
         MdIcon::paint(&painter,
-                      QRectF(item.width() - pad - tokens.iconSize,
-                             (item.height() - tokens.iconSize) / 2.0, tokens.iconSize,
-                             tokens.iconSize),
+                      mirror(QRectF(item.width() - pad - tokens.iconSize,
+                                    (item.height() - tokens.iconSize) / 2.0, tokens.iconSize,
+                                    tokens.iconSize)),
                       item.trailingIconName(), trailingColour, item.iconSet(),
                       item.iconFamily());
     }

@@ -255,7 +255,7 @@ void MdExtendedFabStyle::paintExtendedFab(QPainter &painter, const MdExtendedFab
             painter.setFont(layout.labelFont);
             painter.setPen(contentColour);
             painter.setBrush(Qt::NoBrush);
-            painter.drawText(layout.label, Qt::AlignVCenter | Qt::AlignLeft, fab.text());
+            painter.drawText(layout.label, Qt::AlignVCenter | MdStyleBase::leadingAlignment(&fab), fab.text());
         }
     }
 

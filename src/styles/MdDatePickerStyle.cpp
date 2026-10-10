@@ -77,7 +77,7 @@ void MdDatePickerStyle::paintDatePicker(QPainter &painter, const MdDatePicker &p
         const QFont headlineFont = MdTypeScale::font(TypeStyle::HeadlineLarge);
         painter.setFont(headlineFont);
         painter.setPen(MdTheme::instance().color(tokens.headerHeadlineColor));
-        painter.drawText(header.adjusted(16.0, 8.0, -16.0, -40.0), Qt::AlignLeft | Qt::AlignVCenter,
+        painter.drawText(header.adjusted(16.0, 8.0, -16.0, -40.0), MdStyleBase::leadingAlignment(&picker) | Qt::AlignVCenter,
                          picker.selectedDate().isValid()
                              ? picker.selectedDate().toString(QStringLiteral("ddd, MMM d"))
                              : QStringLiteral("Select date"));
@@ -86,7 +86,7 @@ void MdDatePickerStyle::paintDatePicker(QPainter &painter, const MdDatePicker &p
         painter.setFont(supportingFont);
         painter.setPen(MdTheme::instance().color(tokens.headerSupportingColor));
         painter.drawText(header.adjusted(16.0, header.height() - 48.0, -16.0, -8.0),
-                         Qt::AlignLeft | Qt::AlignVCenter,
+                         MdStyleBase::leadingAlignment(&picker) | Qt::AlignVCenter,
                          picker.displayedMonth().toString(QStringLiteral("MMMM yyyy")));
     }
 
@@ -112,7 +112,7 @@ void MdDatePickerStyle::paintDatePicker(QPainter &painter, const MdDatePicker &p
             painter.setPen(MdTheme::instance().color(tokens.monthSubheadColor));
             painter.drawText(QRectF(picker.headerRect().left(), picker.headerRect().bottom() + 24.0,
                                     picker.headerRect().width(), 20.0),
-                             Qt::AlignLeft | Qt::AlignVCenter,
+                             MdStyleBase::leadingAlignment(&picker) | Qt::AlignVCenter,
                              picker.displayedMonth().toString(QStringLiteral("MMMM yyyy")));
         }
 

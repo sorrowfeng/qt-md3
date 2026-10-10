@@ -364,7 +364,7 @@ void MdTooltipStyle::paintTooltip(QPainter *painter,
             plainLayout(containerRect, text, MdTypeScale::font(tokens.plainTextStyle), tokens);
         painter->setFont(MdTypeScale::font(tokens.plainTextStyle));
         painter->setPen(theme.color(tokens.plainTextColor));
-        painter->drawText(layout.textRect, Qt::AlignLeft | Qt::AlignTop, text);
+        painter->drawText(layout.textRect, MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop, text);
     } else {
         const RichLayout layout = richLayout(
             containerRect, title, text, actionLabel, MdTypeScale::font(tokens.richSubheadStyle),
@@ -373,11 +373,11 @@ void MdTooltipStyle::paintTooltip(QPainter *painter,
         if (layout.subheadRect.isValid()) {
             painter->setFont(MdTypeScale::font(tokens.richSubheadStyle));
             painter->setPen(theme.color(tokens.richSubheadColor));
-            painter->drawText(layout.subheadRect, Qt::AlignLeft | Qt::AlignTop, title);
+            painter->drawText(layout.subheadRect, MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop, title);
         }
         painter->setFont(MdTypeScale::font(tokens.richTextStyle));
         painter->setPen(theme.color(tokens.richTextColor));
-        painter->drawText(layout.textRect, Qt::AlignLeft | Qt::AlignTop, text);
+        painter->drawText(layout.textRect, MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop, text);
 
         if (layout.actionRect.isValid()) {
             const QPainterPath actionClip = MdShape::roundedRect(

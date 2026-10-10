@@ -248,7 +248,7 @@ void MdFabMenuStyle::paintItem(QPainter &painter, const MdFabMenuItem &item,
             painter.setFont(layout.labelFont);
             painter.setPen(contentColour);
             painter.setBrush(Qt::NoBrush);
-            painter.drawText(layout.label, Qt::AlignVCenter | Qt::AlignLeft, item.text());
+            painter.drawText(layout.label, Qt::AlignVCenter | MdStyleBase::leadingAlignment(&item), item.text());
         }
     }
 

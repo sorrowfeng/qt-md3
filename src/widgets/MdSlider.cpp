@@ -179,7 +179,11 @@ QRectF MdSlider::handleRect(bool startHandle) const
     const qreal value = (m_range && startHandle) ? m_valueStart
                         : m_range                    ? m_valueEnd
                                                      : m_value;
-    const qreal centre = track.left() + fractionOf(value) * track.width();
+    // The handle rides the fraction measured from the leading edge — the right
+    // side under RTL, so the travel mirrors.
+    const bool rtl = layoutDirection() == Qt::RightToLeft;
+    const qreal centre = rtl ? track.right() - fractionOf(value) * track.width()
+                             : track.left() + fractionOf(value) * track.width();
     const qreal width = animatedHandleWidth();
     const qreal height = tokens.handleHeight;
     return QRectF(centre - width / 2.0, (rect().height() - height) / 2.0, width, height);
@@ -269,7 +273,9 @@ qreal MdSlider::valueAt(qreal x) const
     if (track.width() <= 0.0) {
         return m_min;
     }
-    const qreal f = qBound(0.0, (x - track.left()) / track.width(), 1.0);
+    const bool rtl = layoutDirection() == Qt::RightToLeft;
+    const qreal f = qBound(0.0, rtl ? (track.right() - x) / track.width()
+                                   : (x - track.left()) / track.width(), 1.0);
     return snap(m_min + f * (m_max - m_min));
 }
 

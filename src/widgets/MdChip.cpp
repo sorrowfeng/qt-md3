@@ -202,13 +202,18 @@ MdChip::Boxes MdChip::boxes() const
     // The *natural* size keeps the content-only width for `sizeHint()`.
     const qreal w = qMax<qreal>(naturalW, qreal(width()));
 
+    // Leading and trailing swap sides under RTL: the leading slot starts at
+    // the *layout* start edge, the trailing slot stays pinned to the end.
+    const bool rtl = layoutDirection() == Qt::RightToLeft;
     const qreal innerLeft = t.contentPadding;
     qreal x = innerLeft;
     if (out.hasAvatar) {
-        out.avatar = QRectF(x, (h - avatar.height()) / 2.0, avatar.width(), avatar.height());
+        const QRectF r(x, (h - avatar.height()) / 2.0, avatar.width(), avatar.height());
+        out.avatar = rtl ? QRectF(w - r.right(), r.y(), r.width(), r.height()) : r;
         x += avatar.width() + leadingSpacing;
     } else if (out.hasLeadingIcon) {
-        out.leadingIcon = QRectF(x, (h - icon.height()) / 2.0, icon.width(), icon.height());
+        const QRectF r(x, (h - icon.height()) / 2.0, icon.width(), icon.height());
+        out.leadingIcon = rtl ? QRectF(w - r.right(), r.y(), r.width(), r.height()) : r;
         x += icon.width() + leadingSpacing;
     }
     // The label is the weighted middle: it runs to the trailing slot's start
@@ -218,13 +223,14 @@ MdChip::Boxes MdChip::boxes() const
                                                        - trailingSpacing
                                                  : w - t.contentPadding;
     if (!text().isEmpty()) {
-        out.label = QRectF(x, (h - labelSize.height()) / 2.0, qMax<qreal>(0.0, labelRight - x),
-                           labelSize.height());
+        const QRectF r(x, (h - labelSize.height()) / 2.0, qMax<qreal>(0.0, labelRight - x),
+                       labelSize.height());
+        out.label = rtl ? QRectF(w - r.right(), r.y(), r.width(), r.height()) : r;
     }
     if (out.hasTrailingIcon) {
-        out.trailingIcon =
-            QRectF(w - t.contentPadding - trailing.width(), (h - trailing.height()) / 2.0,
-                   trailing.width(), trailing.height());
+        const QRectF r(w - t.contentPadding - trailing.width(),
+                       (h - trailing.height()) / 2.0, trailing.width(), trailing.height());
+        out.trailingIcon = rtl ? QRectF(w - r.right(), r.y(), r.width(), r.height()) : r;
     }
     out.naturalSize = QSizeF(naturalW, h);
     return out;

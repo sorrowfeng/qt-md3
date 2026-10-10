@@ -127,7 +127,7 @@ void MdTextAreaStyle::paintTextArea(QPainter &painter, const MdTextArea &area,
             labelColour = MdTheme::instance().color(ColorRole::OnSurfaceVariant);
         }
         painter.setPen(labelColour);
-        painter.drawText(area.labelRect(), Qt::AlignLeft | Qt::AlignVCenter, area.labelText());
+        painter.drawText(area.labelRect(), MdStyleBase::leadingAlignment(&area) | Qt::AlignVCenter, area.labelText());
     }
 
     // 4 — the supporting text.
@@ -144,7 +144,7 @@ void MdTextAreaStyle::paintTextArea(QPainter &painter, const MdTextArea &area,
         painter.drawText(QRectF(area.containerRect().left() + 16.0,
                                 area.containerRect().bottom() + 4.0,
                                 area.containerRect().width() - 32.0, 16.0),
-                         Qt::AlignLeft | Qt::AlignVCenter, area.supportingText());
+                         MdStyleBase::leadingAlignment(&area) | Qt::AlignVCenter, area.supportingText());
     }
 
     painter.restore();

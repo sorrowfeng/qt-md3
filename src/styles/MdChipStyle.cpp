@@ -242,7 +242,7 @@ void MdChipStyle::paintChip(QPainter &painter,
             painter.setBrush(Qt::NoBrush);
             painter.setFont(MdTypeScale::font(tokens.labelTextType, TypeEmphasis::Baseline,
                                               MdTheme::instance().scriptCategory()));
-            painter.drawText(boxes.label, int(Qt::AlignVCenter | Qt::AlignLeft), chip.text());
+            painter.drawText(boxes.label, int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(&chip)), chip.text());
         }
     }
 

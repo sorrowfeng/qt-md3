@@ -2,6 +2,20 @@
 
 #include "MdTypeScale.h"
 
+#include <QtWidgets/QApplication>
+
+namespace {
+/// QApplication::setLayoutDirection covers the whole widget tree, so a
+/// direction change reaches QLineEdit & co. as well as the self-painted
+/// styles (which read widget->layoutDirection()).
+void applyLayoutDirection(Qt::LayoutDirection direction)
+{
+    if (qApp != nullptr) {
+        qApp->setLayoutDirection(direction);
+    }
+}
+} // namespace
+
 namespace md {
 
 MdTheme &MdTheme::instance()
@@ -112,6 +126,7 @@ void MdTheme::setDirection(Qt::LayoutDirection direction)
         return;
     }
     applyChange([this, direction] { m_direction = direction; });
+    applyLayoutDirection(direction);
     emit directionChanged(m_direction);
 }
 
