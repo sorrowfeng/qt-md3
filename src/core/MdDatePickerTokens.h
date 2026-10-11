@@ -32,7 +32,8 @@
 // * **`container-surface-tint-layer-color` is carried, not drawn** — the
 //   elevation paints through `MdElevation`.
 // * **The docked variant (`md.comp.date-picker-docked.*`) is a separate
-//   export** — only the modal set is ported here.
+//   export** — it lives in `MdDatePickerDockedTokens` and is selected through
+//   `MdDatePickerVariant::Docked`. Only the modal rows are *this* struct.
 // * **The dialog chrome is the host's** — this family paints the picker face.
 
 #include "MdNavigationBarTokens.h" // MdNavigationColourSlot
@@ -46,6 +47,17 @@ namespace md {
 enum class MdDatePickerFace {
     Calendar,
     Years,
+    Count,
+};
+
+/// Which published variant the picker renders.
+enum class MdDatePickerVariant {
+    /// `md.comp.date-picker-modal.*` — the dialog face (360×524, 120 px
+    /// header, 40 px cells).
+    Modal,
+    /// `md.comp.date-picker-docked.*` — the inline panel (360×456, 64 px
+    /// header with month / year menu buttons, 48 px cells).
+    Docked,
     Count,
 };
 

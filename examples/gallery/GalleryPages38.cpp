@@ -19,10 +19,12 @@
 
 #include "GalleryPages.h"
 
+#include "widgets/MdExpressiveMenu.h"
 #include "widgets/MdMenu.h"
 
 #include "I18n.h"
 
+#include <QtCore/QHash>
 #include <QtCore/QVector>
 #include <QtWidgets/QSizePolicy>
 
@@ -62,9 +64,11 @@ private:
 
     md::MdMenu *surfaceMenu();
     md::MdMenuItem *rowItem(int index);
+    md::MdExpressiveMenu *expressiveMenu(md::MdExpressiveMenuVariant variant);
 
     md::MdMenu *m_menu = nullptr;
     QVector<md::MdMenuItem *> m_rows;
+    QHash<int, md::MdExpressiveMenu *> m_expressive;
     QVector<MenuSlot> m_slots;
 };
 
@@ -125,6 +129,30 @@ md::MdMenuItem *MenuPage::rowItem(int index)
         m_rows.append(item);
     }
     return m_rows.at(index);
+}
+
+/// The Expressive surfaces are banked the same way — one per variant, shown
+/// as plain children so the settled rows are the live component.
+md::MdExpressiveMenu *MenuPage::expressiveMenu(md::MdExpressiveMenuVariant variant)
+{
+    const int key = int(variant);
+    const auto found = m_expressive.constFind(key);
+    if (found != m_expressive.constEnd()) {
+        return found.value();
+    }
+    auto *menu = new md::MdExpressiveMenu(this);
+    menu->setWindowFlags(Qt::Widget);
+    menu->setVariant(variant);
+    menu->addItem(QStringLiteral("First item"));
+    menu->addItem(QStringLiteral("Second item (selected)"));
+    menu->items().at(1)->setSelected(true);
+    menu->addDivider();
+    menu->addItem(QStringLiteral("Third item"));
+    menu->addItem(QStringLiteral("A disabled fourth item"));
+    menu->items().at(3)->setEnabled(false);
+    menu->show();
+    m_expressive.insert(key, menu);
+    return menu;
 }
 
 QString MenuPage::title() const
@@ -207,6 +235,42 @@ void MenuPage::build(GalleryContext &context)
         context.space(16.0);
     }
 
+    // --- Expressive: Standard + Vibrant -----------------------------------------
+    context.section(L("Expressive 菜单族", "The Expressive menu family"));
+    context.paragraph(L(
+        "Expressive 菜单是独立的令牌集（md.comp.menus.*），与经典 md.comp.* 不共享"
+        "几何：行高 44dp、行距 2dp、组内边距 2dp、容器 corner-large。Standard 以 "
+        "surface-container-low 为底、on-surface 文字；Vibrant 以 tertiary-container "
+        "为底、on-tertiary-container 文字，且未选中图标在悬停/焦点/按下时抬升到 "
+        "tertiary。选中行分别填 tertiary-container / tertiary。",
+        "The Expressive menus are a separate token set (md.comp.menus.*) sharing no "
+        "geometry with the classic md.comp.menu.*: 44dp rows, 2dp gap, 2dp group "
+        "padding, a corner-large container. Standard sits on surface-container-low "
+        "with on-surface content; Vibrant sits on tertiary-container with "
+        "on-tertiary-container content, and its unselected icons lift to tertiary "
+        "under hover / focus / press. The selected row fills tertiary-container / "
+        "tertiary respectively."));
+    {
+        const qreal pitch = 220.0;
+        const md::MdExpressiveMenu *sample =
+            expressiveMenu(md::MdExpressiveMenuVariant::Standard);
+        const qreal rowHeight = sample->height();
+        const QRectF band = context.band(rowHeight);
+        qreal x = band.left();
+        for (md::MdExpressiveMenuVariant variant :
+             {md::MdExpressiveMenuVariant::Standard, md::MdExpressiveMenuVariant::Vibrant}) {
+            md::MdExpressiveMenu *menu = expressiveMenu(variant);
+            const QSize menuSize = menu->size();
+            m_slots.append(MenuSlot{menu, QRectF(x, band.top(), qreal(menuSize.width()),
+                                                 qreal(menuSize.height()))});
+            x += pitch;
+        }
+        context.detail(L("左：Standard · 右：Vibrant（第二行选中，第四行禁用）",
+                         "left: Standard · right: Vibrant (the second row selected, the "
+                         "fourth disabled)"));
+        context.space(16.0);
+    }
+
     // --- what this page is pinned to -----------------------------------------
     context.section(L("本页锁定的令牌事实", "Token facts this page is pinned to"));
     context.paragraph(L(
@@ -239,12 +303,14 @@ void MenuPage::build(GalleryContext &context)
                      "focus only (Tab/Backtab/shortcuts)"));
     context.detail(L("打开动画：scale 0.8→1.0（快速空间弹簧）+ alpha 0→1（快速效果弹簧），"
                      "绕锚角（Below = 左上角）；飞行中真实子控件隐藏、由表面经变换渲染 · "
-                     "Expressive 菜单族（Standard/Vibrant/Segmented）是独立令牌集，未移植",
+                     "Expressive 菜单族（Standard/Vibrant）已移植；Segmented 在最新 sass "
+                     "导出中缺席，未移植",
                      "the open animation: scale 0.8→1.0 (fast spatial) + alpha 0→1 (fast "
                      "effects) around the anchor corner (Below = top-start); the real "
                      "children hide for the flight and render through the surface's "
-                     "transform · the Expressive menu families (Standard/Vibrant/"
-                     "Segmented) are separate token sets, not ported"));
+                     "transform · the Expressive menu family (Standard/Vibrant) is "
+                     "ported; Segmented is absent from the latest sass export and is "
+                     "not invented"));
     context.space(8.0);
 }
 

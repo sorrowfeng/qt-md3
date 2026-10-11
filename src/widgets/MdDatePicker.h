@@ -1,20 +1,29 @@
 #ifndef MD_DATE_PICKER_H
 #define MD_DATE_PICKER_H
 
-// MdDatePicker — the MD3 date picker, `md.comp.date-picker-modal.*` (34.0.21).
+// MdDatePicker — the MD3 date picker, modal (`md.comp.date-picker-modal.*`)
+// and docked (`md.comp.date-picker-docked.*`) at export 34.0.21.
 //
-// The picker face: a header row (the selected date's headline plus the
-// supporting text that switches to the year list), the weekday row, the
-// month subhead and the calendar grid of 40 px date cells. Two faces
-// (`MdDatePickerFace`): the calendar grid and the year list.
+// The picker face: a header row, the weekday row, the month subhead and the
+// calendar grid of date cells. Two faces (`MdDatePickerFace`): the calendar
+// grid and the year list. Two variants (`MdDatePickerVariant`):
+//
+//   * **Modal** — 360×524, a 120 px header (headline + supporting text that
+//     switches to the year list), 40 px date cells, corner-extra-large.
+//   * **Docked** — 360×456, a 64 px header carrying the month / year menu
+//     buttons, 48 px date cells with a 40 px state-layer pill, corner-large.
+//     An inline panel: no dialog chrome, and no year face — the year is a
+//     menu button.
 //
 // Selection is one `QDate`. The selected cell fills with primary / on-primary;
 // today carries the 1 px primary outline; the range form fills the in-range
 // days with secondary-container / on-secondary-container.
 //
-// The container is surface-container-high at level 3 with corner-extra-large —
-// the picker paints its own face; the surrounding dialog is `MdDialog`'s.
+// The container is surface-container-high at level 3; the picker paints its
+// own face — the surrounding dialog is `MdDialog`'s (modal) or nothing
+// (docked).
 
+#include "core/MdDatePickerDockedTokens.h"
 #include "core/MdDatePickerTokens.h"
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
@@ -36,6 +45,7 @@ class QT_MD3_EXPORT MdDatePicker : public QWidget
     Q_PROPERTY(QDate rangeStart READ rangeStart WRITE setRangeStart NOTIFY rangeStartChanged)
     Q_PROPERTY(QDate rangeEnd READ rangeEnd WRITE setRangeEnd NOTIFY rangeEndChanged)
     Q_PROPERTY(md::MdDatePickerFace face READ face WRITE setFace NOTIFY faceChanged)
+    Q_PROPERTY(md::MdDatePickerVariant variant READ variant WRITE setVariant NOTIFY variantChanged)
 
 public:
     explicit MdDatePicker(QWidget *parent = nullptr);
@@ -60,13 +70,26 @@ public:
     MdDatePickerFace face() const { return m_face; }
     void setFace(MdDatePickerFace face);
 
+    /// Modal (the dialog face) or Docked (the inline panel).
+    MdDatePickerVariant variant() const { return m_variant; }
+    void setVariant(MdDatePickerVariant variant);
+
     // --- geometry -----------------------------------------------------------
-    /// The header's rect (the headline + supporting text row).
+    /// The header's rect (modal: the headline + supporting text row; docked:
+    /// the month / year menu-button row).
     QRectF headerRect() const;
-    /// The 40 px date cell for one grid slot (`row` 0..5, `col` 0..6).
+    /// The date cell for one grid slot (`row` 0..5, `col` 0..6). Modal cells
+    /// are 40×40; docked cells are 48×48.
     QRectF dateCellRect(int row, int col) const;
-    /// The year cell rect in the year list (`index` 0-based).
+    /// The state-layer pill inside a date cell (modal: the whole cell; docked:
+    /// a 40×40 corner-full pill centred in the 48×48 cell).
+    QRectF dateStateLayerRect(int row, int col) const;
+    /// The year cell rect in the year list (`index` 0-based). Modal only —
+    /// docked has no year face; its year is a menu button.
     QRectF yearCellRect(int index) const;
+    /// Docked only: the month / year menu-button rects inside the header.
+    QRectF monthMenuButtonRect() const;
+    QRectF yearMenuButtonRect() const;
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
@@ -82,6 +105,9 @@ public:
 
     const MdDatePickerTokens &datePickerTokens() const;
     void setDatePickerTokens(const MdDatePickerTokens &tokens);
+    /// The docked half's rows (`md.comp.date-picker-docked.*`).
+    const MdDatePickerDockedTokens &datePickerDockedTokens() const;
+    void setDatePickerDockedTokens(const MdDatePickerDockedTokens &tokens);
 
     MdComponentTokens &componentTokens()
     {
@@ -97,6 +123,7 @@ signals:
     void rangeStartChanged(const QDate &date);
     void rangeEndChanged(const QDate &date);
     void faceChanged(md::MdDatePickerFace face);
+    void variantChanged(md::MdDatePickerVariant variant);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -115,12 +142,15 @@ private:
     QDate m_rangeStart;
     QDate m_rangeEnd;
     MdDatePickerFace m_face = MdDatePickerFace::Calendar;
+    MdDatePickerVariant m_variant = MdDatePickerVariant::Modal;
 
     bool m_hovered = false;
     bool m_focusIsKeyboard = false;
 
     mutable MdDatePickerTokens m_tokens;
     mutable bool m_tokensDirty = true;
+    mutable MdDatePickerDockedTokens m_dockedTokens;
+    mutable bool m_dockedTokensDirty = true;
     MdComponentTokens m_componentTokens;
 };
 

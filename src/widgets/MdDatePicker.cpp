@@ -2,6 +2,8 @@
 
 #include "styles/MdDatePickerStyle.h"
 
+#include "widgets/MdMenu.h"
+
 #include <QtGui/QFocusEvent>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
@@ -80,16 +82,46 @@ void MdDatePicker::setFace(MdDatePickerFace face)
     update();
 }
 
+void MdDatePicker::setVariant(MdDatePickerVariant variant)
+{
+    if (variant == m_variant) {
+        return;
+    }
+    m_variant = variant;
+    // Docked has no year face — the year is a menu button.
+    if (variant == MdDatePickerVariant::Docked && m_face == MdDatePickerFace::Years) {
+        setFace(MdDatePickerFace::Calendar);
+    }
+    updateGeometry();
+    update();
+    emit variantChanged(m_variant);
+}
+
 // --- geometry ---------------------------------------------------------------
 
 QRectF MdDatePicker::headerRect() const
 {
+    if (m_variant == MdDatePickerVariant::Docked) {
+        const MdDatePickerDockedTokens &tokens = datePickerDockedTokens();
+        return QRectF(0.0, 0.0, tokens.containerWidth, tokens.headerHeight);
+    }
     const MdDatePickerTokens &tokens = datePickerTokens();
     return QRectF(8.0, 8.0, tokens.containerWidth - 16.0, tokens.headerHeight);
 }
 
 QRectF MdDatePicker::dateCellRect(int row, int col) const
 {
+    if (m_variant == MdDatePickerVariant::Docked) {
+        const MdDatePickerDockedTokens &tokens = datePickerDockedTokens();
+        // The export publishes no grid gap row: the 48 px cell is the slot
+        // and the 40 px state layer is the pill centred inside it.
+        const qreal cellW = tokens.dateCellWidth;
+        const qreal cellH = tokens.dateCellHeight;
+        const qreal gridTop = headerRect().bottom() + 32.0; // weekday row band
+        const qreal gridWidth = 7.0 * cellW;
+        const qreal left = (tokens.containerWidth - gridWidth) / 2.0;
+        return QRectF(left + col * cellW, gridTop + row * cellH, cellW, cellH);
+    }
     const MdDatePickerTokens &tokens = datePickerTokens();
     const qreal gridTop = headerRect().bottom() + 24.0 + 24.0; // weekday row + month subhead
     const qreal cell = tokens.dateCellSize;
@@ -97,6 +129,19 @@ QRectF MdDatePicker::dateCellRect(int row, int col) const
     const qreal gridWidth = 7.0 * cell + 6.0 * gap;
     const qreal left = 8.0 + (tokens.containerWidth - 16.0 - gridWidth) / 2.0;
     return QRectF(left + col * (cell + gap), gridTop + row * (cell + gap), cell, cell);
+}
+
+QRectF MdDatePicker::dateStateLayerRect(int row, int col) const
+{
+    const QRectF cell = dateCellRect(row, col);
+    if (m_variant == MdDatePickerVariant::Docked) {
+        const MdDatePickerDockedTokens &tokens = datePickerDockedTokens();
+        const qreal w = tokens.dateStateLayerWidth;
+        const qreal h = tokens.dateStateLayerHeight;
+        return QRectF(cell.left() + (cell.width() - w) / 2.0,
+                      cell.top() + (cell.height() - h) / 2.0, w, h);
+    }
+    return cell;
 }
 
 QRectF MdDatePicker::yearCellRect(int index) const
@@ -109,8 +154,27 @@ QRectF MdDatePicker::yearCellRect(int index) const
                   top + row * (tokens.yearHeight + 8.0), tokens.yearWidth, tokens.yearHeight);
 }
 
+QRectF MdDatePicker::monthMenuButtonRect() const
+{
+    const MdDatePickerDockedTokens &tokens = datePickerDockedTokens();
+    // Two 40 px pills in the 64 px header, 12 px apart, 16 px side insets.
+    const qreal y = (tokens.headerHeight - tokens.menuButtonHeight) / 2.0;
+    return QRectF(16.0, y, 140.0, tokens.menuButtonHeight);
+}
+
+QRectF MdDatePicker::yearMenuButtonRect() const
+{
+    const MdDatePickerDockedTokens &tokens = datePickerDockedTokens();
+    const qreal y = (tokens.headerHeight - tokens.menuButtonHeight) / 2.0;
+    return QRectF(16.0 + 140.0 + 12.0, y, 100.0, tokens.menuButtonHeight);
+}
+
 QSize MdDatePicker::sizeHint() const
 {
+    if (m_variant == MdDatePickerVariant::Docked) {
+        const MdDatePickerDockedTokens &tokens = datePickerDockedTokens();
+        return QSize(int(tokens.containerWidth), int(tokens.containerHeight));
+    }
     const MdDatePickerTokens &tokens = datePickerTokens();
     return QSize(int(tokens.containerWidth), int(tokens.containerHeight));
 }
@@ -135,6 +199,22 @@ void MdDatePicker::setDatePickerTokens(const MdDatePickerTokens &tokens)
 {
     m_tokens = tokens;
     m_tokensDirty = false;
+    update();
+}
+
+const MdDatePickerDockedTokens &MdDatePicker::datePickerDockedTokens() const
+{
+    if (m_dockedTokensDirty) {
+        m_dockedTokens = MdDatePickerDockedTokens::resolve();
+        m_dockedTokensDirty = false;
+    }
+    return m_dockedTokens;
+}
+
+void MdDatePicker::setDatePickerDockedTokens(const MdDatePickerDockedTokens &tokens)
+{
+    m_dockedTokens = tokens;
+    m_dockedTokensDirty = false;
     update();
 }
 
@@ -175,8 +255,50 @@ void MdDatePicker::mousePressEvent(QMouseEvent *event)
     }
     const QPointF pos = event->position();
 
-    // The header's supporting text switches to the year face.
-    if (m_face == MdDatePickerFace::Calendar && headerRect().adjusted(0.0, 40.0, 0.0, 0.0).contains(pos)) {
+    // Docked: the header's two menu buttons. The dropdown reuses the classic
+    // `MdMenu` surface (recorded divergence — the docked `menu.list-item.*`
+    // rows have no dedicated widget).
+    if (m_variant == MdDatePickerVariant::Docked) {
+        if (monthMenuButtonRect().contains(pos)) {
+            auto *menu = new MdMenu(nullptr);
+            menu->setAttribute(Qt::WA_DeleteOnClose);
+            for (int month = 1; month <= 12; ++month) {
+                const QString name =
+                    QDate(2000, month, 1).toString(QStringLiteral("MMMM"));
+                MdMenuItem *item = menu->addItem(name);
+                item->setSelected(month == m_displayed.month());
+                connect(item, &QAbstractButton::clicked, menu, [this, month, menu] {
+                    setDisplayedMonth(QDate(m_displayed.year(), month, 1));
+                    menu->close();
+                });
+            }
+            menu->popup(QRect(mapToGlobal(monthMenuButtonRect().topLeft().toPoint()),
+                              monthMenuButtonRect().size().toSize()));
+            return;
+        }
+        if (yearMenuButtonRect().contains(pos)) {
+            auto *menu = new MdMenu(nullptr);
+            menu->setAttribute(Qt::WA_DeleteOnClose);
+            const int baseYear = m_displayed.year();
+            for (int offset = -3; offset <= 3; ++offset) {
+                const int year = baseYear + offset;
+                MdMenuItem *item = menu->addItem(QString::number(year));
+                item->setSelected(year == m_displayed.year());
+                connect(item, &QAbstractButton::clicked, menu, [this, year, menu] {
+                    setDisplayedMonth(QDate(year, m_displayed.month(), 1));
+                    menu->close();
+                });
+            }
+            menu->popup(QRect(mapToGlobal(yearMenuButtonRect().topLeft().toPoint()),
+                              yearMenuButtonRect().size().toSize()));
+            return;
+        }
+    }
+
+    // The header's supporting text switches to the year face (modal only —
+    // docked has no year face).
+    if (m_variant == MdDatePickerVariant::Modal && m_face == MdDatePickerFace::Calendar
+        && headerRect().adjusted(0.0, 40.0, 0.0, 0.0).contains(pos)) {
         setFace(MdDatePickerFace::Years);
         return;
     }

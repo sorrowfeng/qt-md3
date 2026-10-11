@@ -25,7 +25,8 @@
 // the `:focus-visible` kind — mouse hovering does not draw the ring.
 //
 // The Expressive menu families (`StandardMenu` / `VibrantMenu` /
-// `SegmentedMenu`) are separate upstream token sets and are not ported.
+// `SegmentedMenu`) are separate upstream token sets and are ported as
+// `MdExpressiveMenu` / `MdExpressiveMenuItem` alongside this widget.
 
 #include "core/MdMenuTokens.h"
 #include "core/MdQtCompat.h"

@@ -218,3 +218,22 @@ machine (not only `--dump-dom`). Detach the process instead:
 - Bump `--virtual-time-budget` to 20000 and `WaitForExit` to 50000 on retries.
 - m3.material.io plural slugs work: `text-fields`, `date-pickers`, `time-pickers`, `dialogs`.
 - material-web.dev pages are heavier and succeed more often on the first try.
+
+## m3.material.io sample images (2026-10-11)
+
+Overview samples are lazy-blurred placeholders until the figure `<img>`
+loads. Those figures live on `firebasestorage.googleapis.com` and need
+this machine's proxy for TLS:
+
+`ash
+curl --proxy http://127.0.0.1:7890 --ssl-no-revoke -o fig.png '<firebase-url>'
+`
+
+Then inject as a data-URL (or recapture with Edge + the same proxy). Plain
+`--proxy-server=direct://` loads the HTML but leaves figures empty.
+
+Canonical slugs: `floating-action-button` (not fabs/fab), `icon-buttons`
+(plural). `/specs` samples stay blurred; use `/overview`.
+
+Playwright `Read` can scramble parallel image reads ¡ª self-labeled
+composite sheets (`FILE:<slug>` banner) are reliable for visual QA.

@@ -21,6 +21,7 @@
 //      selected primary / on-primary, unselected on-surface-variant.
 
 #include "MdStyleBase.h"
+#include "core/MdDatePickerDockedTokens.h"
 #include "core/MdDatePickerTokens.h"
 #include "core/QtMd3Export.h"
 
@@ -44,6 +45,10 @@ public:
 
     static void paintDatePicker(QPainter &painter, const MdDatePicker &picker,
                                 const MdDatePickerTokens &tokens);
+    /// The docked face (`md.comp.date-picker-docked.*`): a 360×456
+    /// corner-large panel with the 64 px menu-button header and 48 px cells.
+    static void paintDatePickerDocked(QPainter &painter, const MdDatePicker &picker,
+                                      const MdDatePickerDockedTokens &tokens);
 
     void drawWidget(QPainter *painter, QWidget *widget) override;
 };

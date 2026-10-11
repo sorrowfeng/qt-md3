@@ -31,8 +31,9 @@
 //
 // * **The Expressive menu families are separate token sets** (`StandardMenu`,
 //   `VibrantMenu`, `SegmentedMenu` — grouped menus with per-position item
-//   shapes). Only the classic `md.comp.menu.*` export is ported; the Expressive
-//   sets are recorded in porting-todo.
+//   shapes). Only the classic `md.comp.menu.*` export is *this* struct; the
+//   Expressive sets live in `MdExpressiveMenuTokens` and are selected through
+//   `MdExpressiveMenuVariant`.
 // * **Disabled + selected has no rows.** The export publishes the selected
 //   container/label/icon colours for the enabled interactions only; a disabled
 //   selected item falls back to the unselected disabled rows (its container

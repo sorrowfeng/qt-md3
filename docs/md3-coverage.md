@@ -765,10 +765,12 @@ plus the library-wide RTL gap: the thumb's travel mirrors under
 
 What `TestMd3Menu` pins, and why the port looks the way it does:
 
-* **the classic export only.** The Expressive menu families
-  (`StandardMenu` / `VibrantMenu` / `SegmentedMenu` — grouped menus with
-  per-position item shapes) are separate token sets upstream, not rows inside
-  this one; only `md.comp.menu.*` is ported.
+* **the classic export is `MdMenu`; the Expressive family is
+  `MdExpressiveMenu`.** The Expressive menu families (`StandardMenu` /
+  `VibrantMenu` — grouped menus with per-position item shapes) are separate
+  token sets upstream, not rows inside this one. They are ported as
+  `MdExpressiveMenu` + `MdExpressiveMenuTokens` (`md.comp.menus.*`);
+  `SegmentedMenu` is absent from the latest sass export and is not invented.
 * **the state layer reads the unselected side for both selections.** The
   export publishes one state-layer family (`on-surface` under the unselected
   hover/focus/press states) and no selected rows at all — but Compose's

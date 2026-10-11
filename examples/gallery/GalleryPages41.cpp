@@ -139,6 +139,28 @@ void DatePickerPage::build(GalleryContext &context)
     context.detail(L("2026 年 6 月 15 日", "June 15, 2026"));
     context.space(16.0);
 
+    // --- the docked face ----------------------------------------------------
+    context.section(L("停靠（内联）面板", "The docked (inline) panel"));
+    context.paragraph(L(
+        "docked 变体是独立的导出（md.comp.date-picker-docked.*）：360×456 容器"
+        "（surface-container-high @ level3、corner-large），64dp 头部只放月份/年份"
+        "两个 40dp 菜单按钮（corner-full、18dp 图标），日期格 48dp、状态层是格内 "
+        "40dp 的 corner-full 药丸。没有对话框铬——它是内联面板。导出**不发布** "
+        "focus-indicator 行，已记录而非估算。",
+        "The docked variant is a separate export (md.comp.date-picker-docked.*): a "
+        "360×456 container (surface-container-high @ level3, corner-large), a 64dp "
+        "header carrying only the month / year 40dp menu buttons (corner-full, 18dp "
+        "icons), and 48dp date cells whose state layer is a 40dp corner-full pill "
+        "inside the cell. No dialog chrome — it is an inline panel. The export "
+        "publishes **no** focus-indicator rows; recorded, not estimated."));
+    auto *docked = dp(QStringLiteral("docked"));
+    docked->setVariant(md::MdDatePickerVariant::Docked);
+    docked->setSelectedDate(QDate(2026, 6, 15));
+    docked->setDisplayedMonth(QDate(2026, 6, 1));
+    addPicker(QStringLiteral("docked"));
+    context.detail(L("2026 年 6 月 15 日 · 停靠变体", "June 15, 2026 · docked variant"));
+    context.space(16.0);
+
     // --- range ------------------------------------------------------------
     context.section(L("区间选择", "Range selection"));
     context.paragraph(L(
@@ -174,11 +196,14 @@ void DatePickerPage::build(GalleryContext &context)
                      "on-secondary-container"));
     context.detail(L("周行从周一开始 · 日→槽映射是 dateAtCell 契约 · 弃用行携带不读"
                      "（*-state-layer-opcaity 拼写行、container-surface-tint-layer-color）"
-                     "· docked 变体是另一个导出，未移植",
+                     "· docked 变体已移植（360×456、64dp 头部、48dp 日期格 / 40dp "
+                     "状态层、corner-large；无 focus-indicator 行）",
                      "the weekday row starts on Monday · the day→slot mapping is the "
                      "dateAtCell contract · deprecated rows carried, not read (the "
                      "*-state-layer-opcaity typo rows, container-surface-tint-layer-"
-                     "color) · the docked variant is a separate export, not ported"));
+                     "color) · the docked variant is ported (360×456, 64dp header, "
+                     "48dp date cells / 40dp state layer, corner-large; no "
+                     "focus-indicator rows)"));
     context.space(8.0);
 }
 

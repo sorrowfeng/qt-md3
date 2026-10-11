@@ -1,4 +1,4 @@
-# qt-md3 tests.
+﻿# qt-md3 tests.
 #
 # As in the example directory, the Qt runtime is deployed next to the binaries
 # so `ctest` works from a plain shell rather than only from one that happens to
@@ -45,8 +45,7 @@ qt_md3_deploy_runtime(TestMd3Tokens)
 #
 # Two independent references are involved and they verify different things:
 # the vendored md.sys.color sets pin the *static baseline*
-# (MdColorScheme::baseline), and resources/tokens/mcu-scheme-expectations.txt —
-# flattened from material-color-utilities' own Swift tests — pins the *dynamic
+# (MdColorScheme::baseline), and resources/tokens/mcu-scheme-expectations.txt 鈥?# flattened from material-color-utilities' own Swift tests 鈥?pins the *dynamic
 # solver* across nine variants, both modes and three contrast levels.
 add_executable(TestMd3Contrast
     TestMd3Contrast.cpp
@@ -151,7 +150,7 @@ set_tests_properties(TestMd3Button PROPERTIES
 qt_md3_deploy_runtime(TestMd3Button)
 
 # MdButtonGroup, the second Stage 1 component. A group publishes no colour at
-# all — everything it contributes is spacing, shape and a selection model — so
+# all 鈥?everything it contributes is spacing, shape and a selection model 鈥?so
 # the checks here are the token table, the geometry measured on real widgets,
 # and the four selection modes that differ from each other by one behaviour
 # each.
@@ -358,7 +357,7 @@ set_tests_properties(TestMd3ProgressIndicator PROPERTIES
 qt_md3_deploy_runtime(TestMd3ProgressIndicator)
 
 # MdLoadingIndicator, the third Communication family: the Expressive
-# token-only export (34.0.21) plus the Compose-port behaviour — the shape
+# token-only export (34.0.21) plus the Compose-port behaviour 鈥?the shape
 # engine (graphics-shapes port), the radial morph, the spring/morph-grid
 # pure functions, the determinate sweep and the non-interactivity contract.
 add_executable(TestMd3LoadingIndicator
@@ -383,8 +382,7 @@ set_tests_properties(TestMd3LoadingIndicator PROPERTIES
 qt_md3_deploy_runtime(TestMd3LoadingIndicator)
 
 # MdSnackbar, the fourth Communication family: the 34.0.21 export (one set,
-# no variants, both elements' state rows) plus the Compose-port behaviour —
-# the one-row/new-line measure policies, the keyboard activation contract and
+# no variants, both elements' state rows) plus the Compose-port behaviour 鈥?# the one-row/new-line measure policies, the keyboard activation contract and
 # the host's queue/duration/transition rules.
 add_executable(TestMd3Snackbar
     TestMd3Snackbar.cpp
@@ -514,7 +512,7 @@ set_tests_properties(TestMd3NoQss TestMd3CoveragePolicy TestMd3SourceEncoding
 # --- Windows runtime deployment ---------------------------------------------
 # A dynamically linked executable starts only when every DLL it imports sits
 # beside it. Nothing in the source, in the compiler or in the rest of this file
-# notices a missing one — the first version of cmake/QtMd3Deploy.cmake deployed
+# notices a missing one 鈥?the first version of cmake/QtMd3Deploy.cmake deployed
 # the modules the gallery links and left out Qt6Test.dll, at which point five of
 # the six suites above could not launch, and the only reason it was caught at
 # all was that CTest ran them with an empty PATH by accident.
@@ -523,7 +521,7 @@ set_tests_properties(TestMd3NoQss TestMd3CoveragePolicy TestMd3SourceEncoding
 # reduced to the Windows directories, and QT_PLUGIN_PATH / QT_QPA_PLATFORM
 # cleared so that a Qt-aware shell cannot mask an incomplete deployment. They
 # cover both a unit-test binary and the example application because the two
-# resolve different Qt module sets — the example does not link Qt6::Test, so a
+# resolve different Qt module sets 鈥?the example does not link Qt6::Test, so a
 # gate on either one alone would miss half the failure.
 if(WIN32 AND QT_MD3_DEPLOY_EXAMPLE)
     # A quoted argument keeps the `;` inside PATH from being read as a list
@@ -627,7 +625,7 @@ set_tests_properties(TestMd3Carousel PROPERTIES
 qt_md3_deploy_runtime(TestMd3Carousel)
 
 # MdDivider, the Containment family's grouping hairline: the two-row export
-# (thickness 1px / outline-variant — the smallest token table in the library),
+# (thickness 1px / outline-variant 鈥?the smallest token table in the library),
 # the non-interactivity contract, the four inset modes (with the RTL inline
 # mirroring), the vertical form and the device-pixel-aligned rendering.
 add_executable(TestMd3Divider
@@ -677,7 +675,7 @@ set_tests_properties(TestMd3List PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3List)
 
-# TestMd3AppBar — the App bars family: MdTopAppBar + MdBottomAppBar. The token
+# TestMd3AppBar 鈥?the App bars family: MdTopAppBar + MdBottomAppBar. The token
 # tables for the common set, the five size sets and the bottom app bar; the
 # derived 16 px edge distance; the two-row row split and the title push; the
 # colour transition table; the three scroll behaviours' consumption arithmetic;
@@ -703,7 +701,7 @@ set_tests_properties(TestMd3AppBar PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3AppBar)
 
-# TestMd3Toolbar — the Toolbars family: MdDockedToolbar + MdFloatingToolbar. The
+# TestMd3Toolbar 鈥?the Toolbars family: MdDockedToolbar + MdFloatingToolbar. The
 # five token sets, the docked row's centred 32 px spacing and whole-height
 # collapse, the floating pill's progress-driven length, its leading/trailing
 # visibility rule, the action button's strip and 56/80 size sets, and the
@@ -729,7 +727,7 @@ set_tests_properties(TestMd3Toolbar PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Toolbar)
 
-# TestMd3Tabs — the Tabs family: MdTabs (both published families, fixed and
+# TestMd3Tabs 鈥?the Tabs family: MdTabs (both published families, fixed and
 # scrollable) and its MdTab children. The families' indicator heights and
 # shapes, the content-width rule, the centring divergence, the spatial spring,
 # the scrollable edge padding / minimum width / auto-centre scroll, the
@@ -755,7 +753,7 @@ set_tests_properties(TestMd3Tabs PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Tabs)
 
-# TestMd3CheckBox — the Checkbox: MdCheckBox over QCheckBox. The two
+# TestMd3CheckBox 鈥?the Checkbox: MdCheckBox over QCheckBox. The two
 # state-layer special cases (unselected pressed primary, selected pressed
 # on-surface), the check path's Compose fractions, the snap-delay undo, the
 # indeterminate gravitation, the disabled snap, the error variant and the
@@ -782,7 +780,7 @@ set_tests_properties(TestMd3CheckBox PROPERTIES
 qt_md3_deploy_runtime(TestMd3CheckBox)
 
 
-# TestMd3RadioButton — the Radio button: MdRadioButton over QRadioButton. The
+# TestMd3RadioButton 鈥?the Radio button: MdRadioButton over QRadioButton. The
 # pressed state-layer special cases (unselected pressed primary, selected
 # pressed on-surface), the dot's fast-spatial scale, the colour fade, the
 # disabled snap, the native group exclusivity and the circular focus ring.
@@ -808,7 +806,7 @@ set_tests_properties(TestMd3RadioButton PROPERTIES
 qt_md3_deploy_runtime(TestMd3RadioButton)
 
 
-# TestMd3Switch — the Switch: MdSwitch over QCheckBox. The thumb's fast-spatial
+# TestMd3Switch 鈥?the Switch: MdSwitch over QCheckBox. The thumb's fast-spatial
 # travel+resize with the pressed SnapSpec, the instant colour resolution, the
 # disabled selected handle at full strength, the thumb-riding ripple and the
 # whole-rect touch target.
@@ -833,7 +831,7 @@ set_tests_properties(TestMd3Switch PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Switch)
 
-# TestMd3Chip — the Chips family: MdChip over the four published exports
+# TestMd3Chip 鈥?the Chips family: MdChip over the four published exports
 # (assist / filter / input / suggestion), the flat and elevated kinds, the
 # pressed state-layer swap, the two-spacing arrangement and the weighted
 # label's trailing slot.
@@ -858,44 +856,44 @@ set_tests_properties(TestMd3Chip PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Chip)
 
-# TestMd3Menu — the Menus family: MdMenu + MdMenuItem. The classic item's
+# TestMd3Menu 鈥?the Menus family: MdMenu + MdMenuItem. The classic item's
 # geometry (48 px rows, 112/280 width clamps), the insertion-ordered layout
 # with the 8 px vertical padding and the divider's 12/2 insets, the popup's
 # scale+alpha open with children painted through the transform, the inward
 # keyboard-only focus ring, the state layer reading the unselected side for
 # both selections and the arrow-key walk.
 
-# TestMd3Slider — the Sliders family: MdSlider. The export's metric rows (the
+# TestMd3Slider 鈥?the Sliders family: MdSlider. The export's metric rows (the
 # 4 px pill handle with its per-state widths 4/4/2/2/4, the five Expressive
 # size rows), the colour tables' disabled opacities, the keyboard walk and the
 # range form's two handles.
 
-# TestMd3TimePicker — the Time pickers family: MdTimePicker. The export's
+# TestMd3TimePicker 鈥?the Time pickers family: MdTimePicker. The export's
 # metric rows (the 256 px dial, the 48 px selector handle on an 8 px centre
 # and 2 px track, the 96x80 / 114x80 time selectors, the 216x38 period
 # selector), the two selector colour tables, the dial's snapping and the
 # face / period switching.
 
-# TestMd3DatePicker — the Date pickers family: MdDatePicker. The export's
+# TestMd3DatePicker 鈥?the Date pickers family: MdDatePicker. The export's
 # metric rows (the 360x524 container, the 120 px header, the 40 px date
 # cells, the 72x36 year cells), the date / year colour tables, the grid
 # maths and the range form's two endpoints.
 
-# TestMd3TextField — the Text fields family: MdTextField. The export's
+# TestMd3TextField 鈥?the Text fields family: MdTextField. The export's
 # metric rows (the 56 px container, the 24 px icons, the indicator heights
 # 1/1/2/1), the filled / outlined variants, the colour tables' state rows
 # and the error overlay, the label's float and the disabled opacities.
 
-# TestMd3SearchBar — the Search family: MdSearchBar. The export's metric
+# TestMd3SearchBar 鈥?the Search family: MdSearchBar. The export's metric
 # rows (the 56 px container, the 24 px icons at the 16 px side spaces, the
 # 30 px avatar / 48 px target), the three surfaces' shapes, the state-layer
 # rows and the search-requested signal.
 
-# TestMd3TextArea — the multiline text field: MdTextArea. The shared
+# TestMd3TextArea 鈥?the multiline text field: MdTextArea. The shared
 # text-field token set serving both forms, the rows contract, the floating
 # label and the error overlay.
 
-# TestMd3Rtl — the library-wide RTL audit: geometry mirrors (leading /
+# TestMd3Rtl 鈥?the library-wide RTL audit: geometry mirrors (leading /
 # trailing swaps, the motion vectors) and text direction
 # (MdStyleBase::leadingAlignment).
 add_executable(TestMd3Rtl
@@ -1059,8 +1057,58 @@ set_tests_properties(TestMd3Menu PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Menu)
 
-# TestMd3Navigation — the Navigation family: MdNavigationBar (both published
-# families — the baseline `navigation-bar` one and the flexible `nav-bar` one,
+# TestMd3ExpressiveMenu — the Expressive menus family: MdExpressiveMenu +
+# MdExpressiveMenuItem. The shared 44 px / gap-2 / group-padding-2 geometry,
+# the corner-large surface and active shape, the Standard vs Vibrant colour
+# rows, the per-position item shapes and the keyboard-only focus ring.
+add_executable(TestMd3ExpressiveMenu
+    TestMd3ExpressiveMenu.cpp
+)
+
+target_link_libraries(TestMd3ExpressiveMenu
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3ExpressiveMenu COMMAND TestMd3ExpressiveMenu)
+set_tests_properties(TestMd3ExpressiveMenu PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3ExpressiveMenu)
+
+# TestMd3DatePickerDocked — the docked date picker face. The export's metric
+# rows (the 360x456 container, the 64 px header, the 48 px date cells with
+# the 40 px state layer, the 40 px menu buttons), the date / menu-button
+# colour tables and the variant switch on MdDatePicker.
+add_executable(TestMd3DatePickerDocked
+    TestMd3DatePickerDocked.cpp
+)
+
+target_link_libraries(TestMd3DatePickerDocked
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3DatePickerDocked COMMAND TestMd3DatePickerDocked)
+set_tests_properties(TestMd3DatePickerDocked PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3DatePickerDocked)
+
+# TestMd3Navigation 鈥?the Navigation family: MdNavigationBar (both published
+# families 鈥?the baseline `navigation-bar` one and the flexible `nav-bar` one,
 # which coexist in a single export version) and its MdNavigationBarItem
 # children. The two-family separation, the behaviour-won item gap, the Centered
 # band fractions, the fill-the-slot placement rule, the width-only pill
@@ -1086,7 +1134,7 @@ set_tests_properties(TestMd3Navigation PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Navigation)
 
-# TestMd3InteractionSmoke �� cross-component pointer/keyboard smoke. The
+# TestMd3InteractionSmoke — cross-component pointer/keyboard smoke. The
 # per-family suites pin tokens, geometry and paint; this one drives real
 # QTest input at the controls a gallery visitor actually clicks and types
 # into, so a control that looks right but refuses interaction fails here.

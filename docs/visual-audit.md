@@ -1101,3 +1101,55 @@ not re-opened:
 
 FAB visual QA therefore rests on the gallery self-audit (4 colour styles,
 3 sizes, lowered/raised, disabled) rather than an official pixel pair.
+
+## 2026-10-11 Overview pixel pass ¡ª tooling limits
+
+Overview-tab captures landed in uild/ref-overview/ (16 components), but
+the interactive sample widgets on m3.material.io did **not** hydrate ¡ª the
+shots show docs chrome and captions with empty demo areas. Separately, the
+image reader began serving unrelated file contents after ~8 successful reads
+(disk hashes and PNG dimensions confirm qa-fix3/*.png are distinct and
+correctly named ¡ª e.g. slider 1590¡Á1515 / 158 KB vs chips 1590¡Á1647 / 262 KB).
+
+Four pairs the reader served correctly (buttons, checkbox, switch,
+text-fields) are **MATCH**: variant sets, corner radii, state ladders and
+role mapping all line up with the official overview text. No visual defect
+was confirmed in those four.
+
+The remaining twelve pairs are **blocked by the capture/read pipeline**,
+not by widget painting. A future pass needs (a) a capture that waits for
+web-component hydration (or material-web live demos) and (b) per-image
+identity checks before trusting a read.
+
+### Interaction smoke (same day) ¡ª one real bug, fixed
+
+TestMd3InteractionSmoke (18 slots) covers click / keyboard / typing / drag
+on the interactive families. 17 passed. The failure was **Enter/Return did
+not activate buttons** (Space worked): QPushButton only forwards Enter to
+click() for dialog utoDefault/default buttons. Fixed in MdButton
+and eight siblings (icon button, FAB, extended FAB, FAB menu item, tab,
+navigation bar/drawer items, chip, menu item) ¡ª commit 26618a3.
+
+## 2026-10-11 material-web live-demo pixel pass
+
+The only usable official pixel references on this network are **local
+hydrated `@material/web` 2.5.0 demos** (`build/ref-hydrated/mw-*.png`).
+m3.material.io figure `<img>`s live on `firebasestorage.googleapis.com`
+(blocked); material-web.dev is connection-reset. Those constraints are
+environmental, not library defects.
+
+| Pair | Verdict | Note |
+| --- | --- | --- |
+| button | MATCH | filled/elevated/outlined/text/disabled, ~40 dp, corner-full |
+| checkbox | MATCH | 18¡Á18, 2 dp corner, check/dash/disabled @0.38 |
+| switch + radio + text field | MATCH | 52¡Á32 track, radio ring+dot, filled/outlined + floating label |
+| slider | MINOR | roles match; geometry is Expressive (pill handle, thick track) vs material-web classic ¡ª **intentional** |
+| icon-button / FAB | PARTIAL | FAB roles match (large-rounded square, not circle); icon-button reference capture incomplete |
+| menus, cards, dialogs, nav-bar, tabs, date/time pickers | BLOCKED | no live material-web demos exist (maintenance mode) |
+
+**No new visual defects.** The slider gap is the documented Expressive vs
+standard split (see interaction-reference.md).
+
+Vision-reader caveat: mid-size multi-image batches are unreliable in this
+environment ¡ª verdicts above were cross-checked with System.Drawing pixel
+runs (box 18 px, switch track 52 px, button height ~44 px).

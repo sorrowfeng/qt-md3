@@ -1601,10 +1601,22 @@ spring, the pressed `SnapSpec`. The pinned divergences and gaps:
 `TestMd3Menu` (16 slots) and by the page 38 gallery shot. The pinned
 divergences and gaps:
 
-* **The Expressive menu families are separate token sets, not ported.**
-  `StandardMenu` / `VibrantMenu` / `SegmentedMenu` — grouped menus with
-  per-position item shapes and their own motion — publish no rows inside
-  `md.comp.menu.*`; only the classic export is ported.
+* **The Expressive menu families are ported as `MdExpressiveMenu`.**
+  `StandardMenu` / `VibrantMenu` — grouped menus with per-position item shapes
+  and their own geometry (44 px items, gap 2, group padding 2, corner-large
+  container) — live in `md.comp.menus.*`, a disjoint namespace from the
+  classic `md.comp.menu.*`. They are ported as `MdExpressiveMenu` +
+  `MdExpressiveMenuItem` + `MdExpressiveMenuTokens` +
+  `MdExpressiveMenuStyle`, locked by `TestMd3ExpressiveMenu`, and shown on
+  gallery page 38. Remaining gaps in this family:
+  * **SegmentedMenu is absent from the latest sass export** (Standard +
+    Vibrant only). Not invented — recorded.
+  * **The horizontal / horizontal-icon-only layouts** (`horizontal.container.
+    shape: corner-full`, 12/6 item spaces) are a separate geometry family and
+    are not ported. Recorded.
+  * **The Expressive open motion** — the provided export carries no motion
+    rows for this family; the popup opens without the classic scale+alpha
+    flight. Recorded.
 * **The selected side has no state rows; the layer reads the unselected
   side.** The export publishes the selected container/label/icon colours at
   Enabled only, and no selected state-layer rows at all. Compose's indication
@@ -1698,8 +1710,20 @@ divergences and gaps:
   correctly spelled *-opacity rows win.
 * **container-surface-tint-layer-color is carried, not drawn** — the
   elevation paints through MdElevation.
-* **The docked variant (md.comp.date-picker-docked.*) is a separate
-  export** — only the modal set is ported here.
+* **The docked variant (md.comp.date-picker-docked.*) is ported** as
+  `MdDatePickerVariant::Docked` on the same `MdDatePicker`, with
+  `MdDatePickerDockedTokens` carrying the export rows and
+  `MdDatePickerStyle::paintDatePickerDocked` painting the face. Geometry:
+  360×456 container (corner-large), 64 px header with the month / year menu
+  buttons, 48 px date cells with a 40 px state-layer pill. Locked by
+  `TestMd3DatePickerDocked` and shown on gallery page 41. Remaining gaps:
+  * **The export publishes no focus-indicator rows** for this family. The
+    rows are absent, not estimated — the docked face paints no focus ring of
+    its own. Recorded.
+  * **The month / year dropdown reuses the classic `MdMenu` surface** (the
+    docked `menu.list-item.*` rows have no dedicated widget). Recorded.
+  * **The export publishes no grid gap row** — the 48 px cell is the slot and
+    the 40 px pill is centred inside it (4 px inset every side).
 * **The export publishes no disabled rows** for the date / year tables; the
   accessors fall back to on-surface at 0.38.
 * **The grid is Monday-first** — the weekday row starts on Monday and the

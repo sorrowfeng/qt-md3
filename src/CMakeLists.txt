@@ -45,9 +45,11 @@ set(QT_MD3_CORE_HEADERS
     core/MdSliderTokens.h
     core/MdTimePickerTokens.h
     core/MdDatePickerTokens.h
+    core/MdDatePickerDockedTokens.h
     core/MdTextFieldTokens.h
     core/MdSearchTokens.h
     core/MdMenuTokens.h
+    core/MdExpressiveMenuTokens.h
     core/MdChipTokens.h
     core/MdDividerTokens.h
     core/MdListTokens.h
@@ -101,6 +103,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdTextAreaStyle.h
     styles/MdSearchBarStyle.h
     styles/MdMenuStyle.h
+    styles/MdExpressiveMenuStyle.h
     styles/MdChipStyle.h
     styles/MdChildBox.h
     styles/MdDividerStyle.h
@@ -153,6 +156,7 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdTextArea.h
     widgets/MdSearchBar.h
     widgets/MdMenu.h
+    widgets/MdExpressiveMenu.h
     widgets/MdChip.h
     widgets/MdDivider.h
     widgets/MdList.h
@@ -211,9 +215,11 @@ set(QT_MD3_SOURCES
     core/MdSliderTokens.cpp
     core/MdTimePickerTokens.cpp
     core/MdDatePickerTokens.cpp
+    core/MdDatePickerDockedTokens.cpp
     core/MdTextFieldTokens.cpp
     core/MdSearchTokens.cpp
     core/MdMenuTokens.cpp
+    core/MdExpressiveMenuTokens.cpp
     core/MdChipTokens.cpp
     core/MdDividerTokens.cpp
     core/MdListTokens.cpp
@@ -262,6 +268,7 @@ set(QT_MD3_SOURCES
     styles/MdTextAreaStyle.cpp
     styles/MdSearchBarStyle.cpp
     styles/MdMenuStyle.cpp
+    styles/MdExpressiveMenuStyle.cpp
     styles/MdChipStyle.cpp
     styles/MdChildBox.cpp
     styles/MdDividerStyle.cpp
@@ -311,6 +318,7 @@ set(QT_MD3_SOURCES
     widgets/MdTextArea.cpp
     widgets/MdSearchBar.cpp
     widgets/MdMenu.cpp
+    widgets/MdExpressiveMenu.cpp
     widgets/MdChip.cpp
     widgets/MdDivider.cpp
     widgets/MdList.cpp
