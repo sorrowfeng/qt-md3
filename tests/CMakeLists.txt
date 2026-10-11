@@ -1,4 +1,4 @@
-﻿# qt-md3 tests.
+# qt-md3 tests.
 #
 # As in the example directory, the Qt runtime is deployed next to the binaries
 # so `ctest` works from a plain shell rather than only from one that happens to
@@ -103,6 +103,7 @@ set(QT_MD3_PRIMITIVE_TESTS
     TestMd3FocusRing
     TestMd3Icon
     TestMd3StyleBase
+    TestMd3ScrollBarStyle
 )
 
 foreach(primitive IN LISTS QT_MD3_PRIMITIVE_TESTS)

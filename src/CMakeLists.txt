@@ -97,6 +97,7 @@ set(QT_MD3_STYLE_HEADERS
     styles/MdRadioButtonStyle.h
     styles/MdSwitchStyle.h
     styles/MdSliderStyle.h
+    styles/MdScrollBarStyle.h
     styles/MdTimePickerStyle.h
     styles/MdDatePickerStyle.h
     styles/MdTextFieldStyle.h
@@ -262,6 +263,7 @@ set(QT_MD3_SOURCES
     styles/MdRadioButtonStyle.cpp
     styles/MdSwitchStyle.cpp
     styles/MdSliderStyle.cpp
+    styles/MdScrollBarStyle.cpp
     styles/MdTimePickerStyle.cpp
     styles/MdDatePickerStyle.cpp
     styles/MdTextFieldStyle.cpp

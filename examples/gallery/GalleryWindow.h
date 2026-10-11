@@ -17,6 +17,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QWidget>
 
+class QScrollArea;
 class QStackedWidget;
 
 namespace gallery {
@@ -36,6 +37,12 @@ public:
     int currentIndex() const { return m_current; }
     void setCurrentIndex(int index);
 
+    /// Height needed to show every item with the nav's internal padding. The
+    /// surrounding QScrollArea sizes against this so the rail can scroll when
+    /// the page list outgrows the window.
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+
 signals:
     void currentChanged(int index);
 
@@ -52,6 +59,8 @@ protected:
 private:
     QRectF itemRect(int index) const;
     int itemAt(const QPointF &position) const;
+    int contentHeight() const;
+    void ensureCurrentItemVisible();
 
     QStringList m_titles;
     QVector<md::MdRippleController *> m_ripples;
@@ -135,6 +144,9 @@ private:
     GalleryHeader *m_header = nullptr;
     QStackedWidget *m_stack = nullptr;
     QVector<GalleryPage *> m_pages;
+    /// Scroll areas that host the nav rail and each page. Kept so the MD3
+    /// scrollbar chrome can be installed once and refreshed with the theme.
+    QVector<QScrollArea *> m_scrollers;
 };
 
 } // namespace gallery

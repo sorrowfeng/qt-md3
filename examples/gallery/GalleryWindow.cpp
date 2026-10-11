@@ -2,6 +2,7 @@
 
 #include "GalleryPage.h"
 #include "GalleryPages.h"
+#include "styles/MdScrollBarStyle.h"
 #include "styles/MdStyleBase.h"
 
 #include <QtGui/QFontMetricsF>
@@ -11,6 +12,7 @@
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QScrollArea>
+#include <QtWidgets/QScrollBar>
 #include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QVBoxLayout>
 
@@ -45,8 +47,10 @@ GalleryNav::GalleryNav(QWidget *parent)
 {
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
-    setMinimumWidth(kNavWidth);
-    setMaximumWidth(kNavWidth);
+    // Width is owned by the wrapping QScrollArea (fixed at kNavWidth); the
+    // nav itself must be free to narrow by the scrollbar strip without
+    // triggering a horizontal bar, so only the width hint is published.
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 }
 
 void GalleryNav::setItems(const QStringList &titles)
@@ -61,6 +65,7 @@ void GalleryNav::setItems(const QStringList &titles)
         m_ripples.append(ripple);
     }
     m_current = qBound(0, m_current, qMax(titles.size() - 1, 0));
+    updateGeometry();
     update();
 }
 
@@ -72,7 +77,44 @@ void GalleryNav::setCurrentIndex(int index)
     }
     m_current = clamped;
     update();
+    ensureCurrentItemVisible();
     emit currentChanged(clamped);
+}
+
+QSize GalleryNav::sizeHint() const
+{
+    return QSize(int(kNavWidth), contentHeight());
+}
+
+QSize GalleryNav::minimumSizeHint() const
+{
+    // Height is the full content list so the surrounding scroll area always
+    // offers a vertical bar once the page list outgrows the window. Width
+    // stays flexible: the scroll area may shrink the rail by the scrollbar
+    // strip, and forcing kNavWidth here would trade that for a horizontal bar.
+    return QSize(int(kNavWidth * 0.75), contentHeight());
+}
+
+int GalleryNav::contentHeight() const
+{
+    // 16 top pad + one row per item + 16 bottom pad (matches itemRect).
+    return int(16.0 + m_titles.size() * kNavItemHeight + 16.0);
+}
+
+void GalleryNav::ensureCurrentItemVisible()
+{
+    if (m_titles.isEmpty()) {
+        return;
+    }
+    // The nav is hosted in a QScrollArea (viewport is the direct parent).
+    auto *viewport = parentWidget();
+    auto *area = viewport ? qobject_cast<QScrollArea *>(viewport->parentWidget()) : nullptr;
+    if (!area) {
+        return;
+    }
+    const QRect item = itemRect(m_current).toAlignedRect();
+    const int margin = int(kNavItemHeight / 2.0);
+    area->ensureVisible(item.center().x(), item.center().y(), margin, margin);
 }
 
 QRectF GalleryNav::itemRect(int index) const
@@ -401,7 +443,21 @@ GalleryWindow::GalleryWindow(QWidget *parent)
     row->setSpacing(0);
 
     m_nav = new GalleryNav(central);
-    row->addWidget(m_nav);
+    // The rail is taller than a normal window once every Stage 1 family is
+    // listed, so it lives in a scroll area rather than being clipped.
+    auto *navScroll = new QScrollArea(central);
+    navScroll->setWidget(m_nav);
+    navScroll->setWidgetResizable(true);
+    navScroll->setFrameShape(QFrame::NoFrame);
+    navScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    navScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    navScroll->setMinimumWidth(int(kNavWidth));
+    navScroll->setMaximumWidth(int(kNavWidth));
+    navScroll->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    // The nav paints its own surface; keep the scroll area chrome out of the way.
+    navScroll->viewport()->setAutoFillBackground(false);
+    row->addWidget(navScroll);
+    m_scrollers.append(navScroll);
 
     auto *right = new QWidget(central);
     auto *column = new QVBoxLayout(right);
@@ -466,6 +522,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
     };
 
     QStringList titles;
+    md::MdScrollBarStyle *scrollStyle = md::MdScrollBarStyle::shared();
     for (GalleryPage *page : pages) {
         // Each page scrolls independently; the page reports its own height.
         auto *scroll = new QScrollArea(m_stack);
@@ -473,11 +530,24 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         scroll->setFrameShape(QFrame::NoFrame);
         scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         scroll->setWidget(page);
+        scroll->setStyle(scrollStyle);
+        if (QScrollBar *vbar = scroll->verticalScrollBar()) {
+            vbar->setStyle(scrollStyle);
+        }
+        if (QScrollBar *hbar = scroll->horizontalScrollBar()) {
+            hbar->setStyle(scrollStyle);
+        }
         m_stack->addWidget(scroll);
+        m_scrollers.append(scroll);
         m_pages.append(page);
         titles.append(page->title());
     }
     m_nav->setItems(titles);
+    // Install the same overlay chrome on the nav rail's bar.
+    navScroll->setStyle(scrollStyle);
+    if (QScrollBar *navBar = navScroll->verticalScrollBar()) {
+        navBar->setStyle(scrollStyle);
+    }
 
     connect(m_nav, &GalleryNav::currentChanged, this, [this](int index) {
         m_stack->setCurrentIndex(index);
@@ -584,6 +654,18 @@ void GalleryWindow::onThemeChanged()
     for (GalleryPage *page : m_pages) {
         page->updateGeometry();
         page->update();
+    }
+    for (QScrollArea *scroller : m_scrollers) {
+        if (!scroller) {
+            continue;
+        }
+        scroller->update();
+        if (QScrollBar *bar = scroller->verticalScrollBar()) {
+            bar->update();
+        }
+        if (QScrollBar *bar = scroller->horizontalScrollBar()) {
+            bar->update();
+        }
     }
 }
 
