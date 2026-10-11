@@ -128,6 +128,9 @@ private slots:
     void datePickerPageClickSelectsDate();
     void searchPageTypingEntersText();
     void sheetHostDismissPreservesScrollBar();
+    void showcaseMailPageClickSelects();
+    void showcaseMusicPageClickEmits();
+    void showcaseSettingsPageClickToggles();
 
     // Diagnostic: every enabled interactive child of a page must be the
     // hit-test winner at its own centre. Reports the first cover/geometry
@@ -878,6 +881,117 @@ void TestMd3GalleryClick::sheetHostDismissPreservesScrollBar()
         QCOMPARE(bar->value(), scrollBefore);
     }
 }
+
+// ---------------------------------------------------------------------------
+// Showcase screen click probes
+// ---------------------------------------------------------------------------
+
+void TestMd3GalleryClick::showcaseMailPageClickSelects()
+{
+    const int page = pageIndexBySlug(QStringLiteral("showcase-mail"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    const QList<MdListItem *> items = liveWidgets<MdListItem>(*m_window, page);
+    QVERIFY2(!items.isEmpty(), "showcase-mail page has no live MdListItem children");
+
+    MdListItem *target = nullptr;
+    for (MdListItem *item : items) {
+        if (item->isEnabled() && item->isVisible() && !item->geometry().isEmpty()
+            && item->isInteractive()) {
+            target = item;
+            break;
+        }
+    }
+    QVERIFY(target != nullptr);
+
+    const QPoint global = target->mapToGlobal(target->rect().center());
+    QWidget *hit = hitAt(global);
+    QVERIFY2(!isCoveredByForeignWidget(hit, target),
+             qPrintable(QStringLiteral("showcase-mail: %1 is covered by %2")
+                            .arg(target->metaObject()->className(),
+                                 hit ? hit->metaObject()->className()
+                                     : QStringLiteral("null"))));
+
+    QSignalSpy spy(target, &MdListItem::activated);
+    clickCentre(target);
+    QVERIFY(spy.count() >= 1);
+}
+
+void TestMd3GalleryClick::showcaseMusicPageClickEmits()
+{
+    const int page = pageIndexBySlug(QStringLiteral("showcase-music"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    const QList<MdIconButton *> buttons = liveWidgets<MdIconButton>(*m_window, page);
+    QVERIFY2(!buttons.isEmpty(), "showcase-music page has no live MdIconButton children");
+
+    // Prefer the primary transport control (the filled one); fall back to any.
+    MdIconButton *target = nullptr;
+    for (MdIconButton *button : buttons) {
+        if (button->isEnabled() && button->isVisible() && !button->geometry().isEmpty()
+            && button->variant() == md::IconButtonVariant::Filled) {
+            target = button;
+            break;
+        }
+    }
+    if (target == nullptr) {
+        for (MdIconButton *button : buttons) {
+            if (button->isEnabled() && button->isVisible() && !button->geometry().isEmpty()) {
+                target = button;
+                break;
+            }
+        }
+    }
+    QVERIFY(target != nullptr);
+
+    const QPoint global = target->mapToGlobal(target->rect().center());
+    QWidget *hit = hitAt(global);
+    QVERIFY2(!isCoveredByForeignWidget(hit, target),
+             qPrintable(QStringLiteral("showcase-music: %1 is covered by %2")
+                            .arg(target->metaObject()->className(),
+                                 hit ? hit->metaObject()->className()
+                                     : QStringLiteral("null"))));
+
+    QSignalSpy spy(target, &QAbstractButton::clicked);
+    clickCentre(target);
+    QCOMPARE(spy.count(), 1);
+}
+
+void TestMd3GalleryClick::showcaseSettingsPageClickToggles()
+{
+    const int page = pageIndexBySlug(QStringLiteral("showcase-settings"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    const QList<MdSwitch *> switches = liveWidgets<MdSwitch>(*m_window, page);
+    QVERIFY2(!switches.isEmpty(), "showcase-settings page has no live MdSwitch children");
+
+    MdSwitch *target = nullptr;
+    for (MdSwitch *sw : switches) {
+        if (sw->isEnabled() && sw->isVisible() && !sw->geometry().isEmpty()) {
+            target = sw;
+            break;
+        }
+    }
+    QVERIFY(target != nullptr);
+
+    const QPoint global = target->mapToGlobal(target->rect().center());
+    QWidget *hit = hitAt(global);
+    QVERIFY2(!isCoveredByForeignWidget(hit, target),
+             qPrintable(QStringLiteral("showcase-settings: %1 is covered by %2")
+                            .arg(target->metaObject()->className(),
+                                 hit ? hit->metaObject()->className()
+                                     : QStringLiteral("null"))));
+
+    const bool before = target->isChecked();
+    QSignalSpy spy(target, &QAbstractButton::toggled);
+    clickCentre(target);
+    QVERIFY(spy.count() >= 1);
+    QVERIFY(target->isChecked() != before);
+}
+
 void TestMd3GalleryClick::hitTestSweep()
 {
     // Representative interactive families. Each entry: slug fragment and the

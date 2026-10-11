@@ -1208,6 +1208,9 @@ add_executable(TestMd3GalleryClick
     ${GALLERY_DIR}/GalleryPages41.cpp
     ${GALLERY_DIR}/GalleryPages42.cpp
     ${GALLERY_DIR}/GalleryPages43.cpp
+    ${GALLERY_DIR}/GalleryPages44.cpp
+    ${GALLERY_DIR}/GalleryPages45.cpp
+    ${GALLERY_DIR}/GalleryPages46.cpp
     ${GALLERY_DIR}/GalleryWindow.cpp
 )
 

@@ -240,6 +240,21 @@ GalleryPage *createTextFieldPage();
 /// Page 43. Search.
 GalleryPage *createSearchPage();
 
+// ---------------------------------------------------------------------------
+// Showcase screens
+// ---------------------------------------------------------------------------
+//
+// Product-style compositions of already-ported families. Not component
+// grids: each page is one believable screen (inbox, now-playing, preferences)
+// assembled from real Md* widgets.
+
+/// Showcase 鈥?Mail / Inbox.
+GalleryPage *createShowcaseMailPage();
+/// Showcase 鈥?Music player.
+GalleryPage *createShowcaseMusicPage();
+/// Showcase 鈥?Settings.
+GalleryPage *createShowcaseSettingsPage();
+
 } // namespace gallery
 
 #endif // GALLERY_PAGES_H

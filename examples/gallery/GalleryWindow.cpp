@@ -519,6 +519,9 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createDatePickerPage(),
         createTextFieldPage(),
         createSearchPage(),
+        createShowcaseMailPage(),
+        createShowcaseMusicPage(),
+        createShowcaseSettingsPage(),
     };
 
     QStringList titles;
