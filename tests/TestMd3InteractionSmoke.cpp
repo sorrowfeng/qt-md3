@@ -18,6 +18,7 @@
 #include "widgets/MdTextField.h"
 #include "widgets/MdSwitch.h"
 
+#include <QtGui/QMouseEvent>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
 
@@ -29,6 +30,27 @@ void showAndExpose(QWidget &widget)
 {
     widget.show();
     QVERIFY(QTest::qWaitForWindowExposed(&widget));
+}
+
+/// Send a genuine press / move / release drag in widget-local coordinates.
+/// Qt 5's QTest::mouseMove only teleports the cursor (QCursor::setPos) and
+/// never synthesises a MouseMove — under QT_QPA_PLATFORM=offscreen that
+/// yields no event at all, so the slider never sees the drag. These events
+/// are exactly what a real left-button drag delivers through QPA.
+void dragSequence(QWidget &widget, const QPoint &from, const QPoint &to)
+{
+    QMouseEvent press(QEvent::MouseButtonPress, QPointF(from),
+                      QPointF(widget.mapToGlobal(from)), Qt::LeftButton,
+                      Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(&widget, &press);
+    QMouseEvent move(QEvent::MouseMove, QPointF(to),
+                     QPointF(widget.mapToGlobal(to)), Qt::LeftButton,
+                     Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(&widget, &move);
+    QMouseEvent release(QEvent::MouseButtonRelease, QPointF(to),
+                        QPointF(widget.mapToGlobal(to)), Qt::LeftButton,
+                        Qt::NoButton, Qt::NoModifier);
+    QApplication::sendEvent(&widget, &release);
 }
 
 } // namespace
@@ -57,6 +79,7 @@ private slots:
 
     // 4. MdSlider
     void sliderMousePressAndMoveUpdatesValue();
+    void sliderGenuineDragSequenceUpdatesValue();
     void sliderArrowKeysStepValue();
 
     // 5. MdTextField
@@ -235,13 +258,34 @@ void TestMd3InteractionSmoke::sliderMousePressAndMoveUpdatesValue()
     QVERIFY(pressed > 0.0);
     QVERIFY(pressed < 25.0);
 
-    // Drag toward the trailing end; value must follow the pointer.
-    QTest::mouseMove(&slider, QPoint(200, 24));
+    // Qt 5 QTest::mouseMove only teleports the cursor (QCursor::setPos) and
+    // synthesises no MouseMove — under offscreen the slider never sees the
+    // drag. Deliver the move a real left-button drag produces instead.
+    QMouseEvent dragMove(QEvent::MouseMove, QPointF(200, 24),
+                         QPointF(slider.mapToGlobal(QPoint(200, 24))),
+                         Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(&slider, &dragMove);
     const qreal moved = slider.value();
     QVERIFY(moved > pressed);
     QVERIFY(moved > 75.0);
 
     QTest::mouseRelease(&slider, Qt::LeftButton, Qt::NoModifier, QPoint(200, 24));
+}
+
+void TestMd3InteractionSmoke::sliderGenuineDragSequenceUpdatesValue()
+{
+    // Full press / move / release as the windowing system delivers them
+    // during a real left-button drag — independent of QTest::mouseMove.
+    MdSlider slider;
+    slider.setMin(0.0);
+    slider.setMax(100.0);
+    slider.setStep(0.0);
+    slider.resize(240, 48);
+    showAndExpose(slider);
+
+    QCOMPARE(slider.value(), 0.0);
+    dragSequence(slider, QPoint(30, 24), QPoint(200, 24));
+    QVERIFY(slider.value() > 75.0);
 }
 
 void TestMd3InteractionSmoke::sliderArrowKeysStepValue()

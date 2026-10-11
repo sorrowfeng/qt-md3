@@ -7,6 +7,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QStyleOption>
 
 namespace md {
@@ -410,7 +411,12 @@ void MdSlider::mousePressEvent(QMouseEvent *event)
 
 void MdSlider::mouseMoveEvent(QMouseEvent *event)
 {
-    if (!m_pressed || isEffectivelyDisabled()) {
+    // m_pressed covers our own press. Also accept a move that carries (or
+    // the application reports) a held left button — a genuine drag — so a
+    // synthesised move that omitted the button flag still tracks.
+    const bool leftDown = (event->buttons() & Qt::LeftButton)
+                          || (QApplication::mouseButtons() & Qt::LeftButton);
+    if ((!m_pressed && !leftDown) || isEffectivelyDisabled()) {
         return;
     }
     setActiveFromPoint(mousePosition(event));
