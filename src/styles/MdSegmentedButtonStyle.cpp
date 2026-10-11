@@ -134,6 +134,7 @@ MdSegmentedButtonStyle::Layout MdSegmentedButtonStyle::layoutFor(
     for (int i = 1; i < count; ++i) {
         total += widths.at(i) - tokens.outlineWidth;
     }
+    layout.naturalWidth = total;
     layout.contentWidth = qMax<qreal>(inner.width(), total);
 
     const qreal base = tokens.baseCornerRadius();

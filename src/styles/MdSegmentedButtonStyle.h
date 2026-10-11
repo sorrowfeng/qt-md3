@@ -50,8 +50,14 @@ public:
     struct Layout
     {
         qreal inset = 0.0;
-        /// Total content width: the segments' union, overlap-adjusted.
+        /// Total content width: the segments' union, overlap-adjusted, and
+        /// never narrower than the widget's inner width (paint fills).
         qreal contentWidth = 0.0;
+        /// Rect-independent natural width of the segment row. sizeHint() must
+        /// use this: contentWidth widens to the current widget width, which
+        /// would make sizeHint() chase the widget and leave the segments
+        /// unable to hit-test at the centre of an oversized control.
+        qreal naturalWidth = 0.0;
         QVector<SegmentLayout> segments;
     };
 

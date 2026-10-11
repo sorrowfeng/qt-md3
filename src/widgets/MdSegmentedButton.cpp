@@ -300,7 +300,10 @@ QSize MdSegmentedButton::sizeHint() const
     const MdSegmentedButtonStyle::Layout layout =
         MdSegmentedButtonStyle::layoutFor(*this, resolved);
     const qreal inset = MdSegmentedButtonStyle::focusRingInset(resolved);
-    const qreal width = 2.0 * inset + layout.contentWidth;
+    // naturalWidth, not contentWidth: contentWidth widens to the current
+    // widget rect, which would make sizeHint() at least as wide as the widget
+    // and leave the segment row unable to receive clicks at the centre.
+    const qreal width = 2.0 * inset + layout.naturalWidth;
     const qreal height = 2.0 * inset + resolved.containerHeight;
     return QSize(int(std::ceil(width)), int(std::ceil(height)));
 }

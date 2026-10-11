@@ -159,14 +159,21 @@ void TabsPage::build(GalleryContext &context)
         {"star", "收藏", "Starred", "star"},
         {"delete", "已删", "Trash", "delete"},
     };
-    auto addDestinationRow = [&](md::MdTabs *row, const QString &prefix, bool withIcons) {
-        row->clearTabs();
+    auto addDestinationRow = [&](md::MdTabs *row, const QString &prefix, bool withIcons) -> bool {
+        // Populate once: build() runs from paintEvent, and QAbstractButton::
+        // mousePressEvent repaints synchronously. A clear+re-add here reparents
+        // the tab mid-click and drops the press. Return whether this call seeded
+        // the row so the demo's initial selection is not re-applied over a click.
+        if (row->count() > 0) {
+            return false;
+        }
         for (const Destination &destination : destinations) {
             md::MdTab *destinationTab = tab(prefix + QStringLiteral("-") + QString::fromUtf8(destination.id),
                                             L(destination.zh, destination.en),
                                             withIcons ? destination.icon : QString());
             row->addTab(destinationTab);
         }
+        return true;
     };
 
     // --- the two families ------------------------------------------------------
@@ -203,8 +210,9 @@ void TabsPage::build(GalleryContext &context)
         for (const FamilyRow &family : rows) {
             md::MdTabs *rowTabs = row(QString::fromUtf8(family.id));
             rowTabs->setVariant(family.variant);
-            addDestinationRow(rowTabs, QString::fromUtf8(family.id), family.withIcons);
-            rowTabs->setCurrentIndex(0);
+            if (addDestinationRow(rowTabs, QString::fromUtf8(family.id), family.withIcons)) {
+                rowTabs->setCurrentIndex(0);
+            }
             m_slots.append(TabsSlot{rowTabs, context.band(rowTabs->sizeHint().height())});
             context.detail(L(family.noteZh, family.noteEn));
             context.space(16.0);
@@ -228,8 +236,9 @@ void TabsPage::build(GalleryContext &context)
     {
         md::MdTabs *rowTabs = row(QStringLiteral("row-icon-label"));
         rowTabs->setVariant(md::MdTabsVariant::Primary);
-        addDestinationRow(rowTabs, QStringLiteral("row-icon-label"), true);
-        rowTabs->setCurrentIndex(2);
+        if (addDestinationRow(rowTabs, QStringLiteral("row-icon-label"), true)) {
+            rowTabs->setCurrentIndex(2);
+        }
         m_slots.append(TabsSlot{rowTabs, context.band(rowTabs->sizeHint().height())});
         context.space(16.0);
     }
@@ -254,7 +263,8 @@ void TabsPage::build(GalleryContext &context)
         md::MdTabs *rowTabs = row(QStringLiteral("row-scrollable"));
         rowTabs->setVariant(md::MdTabsVariant::Primary);
         rowTabs->setLayout(md::MdTabsLayout::Scrollable);
-        rowTabs->clearTabs();
+        const bool scrollableSeeded = rowTabs->count() == 0;
+        if (scrollableSeeded) {
         const QVector<Destination> many = {
             {"mail", "邮件", "Mail", "mail"},
             {"edit", "草稿", "Drafts", "edit"},
@@ -267,11 +277,17 @@ void TabsPage::build(GalleryContext &context)
             rowTabs->addTab(tab(QStringLiteral("row-scrollable-") + QString::fromUtf8(destination.id),
                                 L(destination.zh, destination.en), destination.icon));
         }
-        rowTabs->setCurrentIndex(0);
+        }
+        if (scrollableSeeded) {
+            rowTabs->setCurrentIndex(0);
+        }
         m_slots.append(TabsSlot{rowTabs, context.band(rowTabs->sizeHint().height())});
         // The auto-centre runs on the event loop; selecting the last tab here
-        // lets the screenshot catch it settled.
-        rowTabs->setCurrentIndex(5);
+        // lets the screenshot catch it settled. Seed once so a rebuild does not
+        // undo a click.
+        if (scrollableSeeded) {
+            rowTabs->setCurrentIndex(5);
+        }
         context.space(16.0);
     }
 
@@ -289,14 +305,16 @@ void TabsPage::build(GalleryContext &context)
     {
         md::MdTabs *rowTabs = row(QStringLiteral("row-leading"));
         rowTabs->setVariant(md::MdTabsVariant::Primary);
-        addDestinationRow(rowTabs, QStringLiteral("row-leading"), true);
+        const bool leadingSeeded = addDestinationRow(rowTabs, QStringLiteral("row-leading"), true);
         for (const Destination &destination : destinations) {
             md::MdTab *destinationTab =
                 tab(QStringLiteral("row-leading-") + QString::fromUtf8(destination.id),
                     L(destination.zh, destination.en), destination.icon);
             destinationTab->setIconPosition(md::MdTabIconPosition::Start);
         }
-        rowTabs->setCurrentIndex(1);
+        if (leadingSeeded) {
+            rowTabs->setCurrentIndex(1);
+        }
         m_slots.append(TabsSlot{rowTabs, context.band(rowTabs->sizeHint().height())});
         context.space(16.0);
     }

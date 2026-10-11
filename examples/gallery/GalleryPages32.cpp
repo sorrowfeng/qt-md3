@@ -156,8 +156,12 @@ void NavigationDrawerPage::build(GalleryContext &context)
         {"starred", "星标", "Starred", "star", ""},
         {"archive", "归档", "Archive", "menu", ""},
     };
-    auto addDestinationColumn = [&](md::MdNavigationDrawer *sheet, const QString &prefix) {
-        sheet->clearItems();
+    auto addDestinationColumn = [&](md::MdNavigationDrawer *sheet, const QString &prefix) -> bool {
+        // Populate once: build() runs from paintEvent, and a button's mousePressEvent repaints synchronously.
+        // clear+re-add mid-click drops the press.
+        if (sheet->count() > 0) {
+            return false;
+        }
         for (const Destination &destination : destinations) {
             md::MdNavigationDrawerItem *destinationItem =
                 item(prefix + QStringLiteral("-") + QString::fromUtf8(destination.id),
@@ -165,6 +169,7 @@ void NavigationDrawerPage::build(GalleryContext &context)
             destinationItem->setBadge(QString::fromUtf8(destination.badge));
             sheet->addItem(destinationItem);
         }
+        return true;
     };
 
     // --- the standard drawer -------------------------------------------------
@@ -189,8 +194,9 @@ void NavigationDrawerPage::build(GalleryContext &context)
         sheet->setVariant(md::MdNavigationDrawerVariant::Standard);
         sheet->setHeadline(L("邮件", "Mail"));
         sheet->setDividerVisible(true);
-        addDestinationColumn(sheet, QStringLiteral("drawer-standard"));
-        sheet->setCurrentIndex(0);
+        if (addDestinationColumn(sheet, QStringLiteral("drawer-standard"))) {
+            sheet->setCurrentIndex(0);
+        }
         m_slots.append(NavSlot{sheet, context.band(qreal(sheet->sizeHint().height()))});
         context.detail(L("Standard · surface / level0 · headline + 分隔线 · 首项带 badge 24",
                          "Standard · surface / level0 · headline + divider · first item with badge 24"));
@@ -223,8 +229,9 @@ void NavigationDrawerPage::build(GalleryContext &context)
         sheet->setVariant(md::MdNavigationDrawerVariant::Modal);
         sheet->setHeadline(L("邮件", "Mail"));
         sheet->setDividerVisible(false);
-        addDestinationColumn(sheet, QStringLiteral("drawer-modal"));
-        sheet->setCurrentIndex(2);
+        if (addDestinationColumn(sheet, QStringLiteral("drawer-modal"))) {
+            sheet->setCurrentIndex(2);
+        }
         m_slots.append(NavSlot{sheet, context.band(qreal(sheet->sizeHint().height()))});
         context.detail(L("Modal · surface-container-low / level1 · scrim 承载在 token 上",
                          "Modal · surface-container-low / level1 · the scrim carried on the tokens"));

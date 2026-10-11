@@ -67,6 +67,9 @@ private:
 
     QHash<QString, md::MdRadioButton *> m_radios;
     QVector<RadioSlot> m_slots;
+    /// build() is re-entrant (paintEvent runs it). Demo selection is seeded once
+    /// so a later pass cannot undo a click's setChecked.
+    bool m_demoStateApplied = false;
     /// One group per section: without these every radio on the page would
     /// share the page parent's autoExclusive group, and checking the disabled
     /// sample would silently uncheck the selected sample above it.
@@ -131,12 +134,18 @@ void RadioButtonPage::build(GalleryContext &context)
         if (radios.isEmpty()) {
             return;
         }
-        auto *group = new QButtonGroup(this);
-        group->setExclusive(true);
-        for (const auto &entry : radios) {
-            group->addButton(entry.second);
+        // One exclusive group per section row, created once. build() is
+        // re-entrant and runs from paintEvent; QAbstractButton::mousePressEvent
+        // repaints synchronously. Minting a fresh QButtonGroup every pass moves
+        // the radios mid-click and leaves the press unchecked.
+        if (radios.first().second->group() == nullptr) {
+            auto *group = new QButtonGroup(this);
+            group->setExclusive(true);
+            for (const auto &entry : radios) {
+                group->addButton(entry.second);
+            }
+            m_groups.append(group);
         }
-        m_groups.append(group);
 
         const qreal pitch = 64.0;
         const qreal bandHeight = radios.first().second->sizeHint().height();
@@ -165,7 +174,9 @@ void RadioButtonPage::build(GalleryContext &context)
     {
         auto *plain = radio(QStringLiteral("plain-unchecked"));
         auto *checked = radio(QStringLiteral("plain-checked"));
-        checked->setChecked(true);
+        if (!m_demoStateApplied) {
+            checked->setChecked(true);
+        }
         auto *grouped = radio(QStringLiteral("plain-sibling"));
         addRow({{QStringLiteral("a"), plain},
                 {QStringLiteral("b"), checked},
@@ -193,7 +204,9 @@ void RadioButtonPage::build(GalleryContext &context)
         auto *unchecked = radio(QStringLiteral("disabled-unchecked"));
         unchecked->setEnabled(false);
         auto *checked = radio(QStringLiteral("disabled-checked"));
-        checked->setChecked(true);
+        if (!m_demoStateApplied) {
+            checked->setChecked(true);
+        }
         checked->setEnabled(false);
         addRow({{QStringLiteral("a"), unchecked}, {QStringLiteral("b"), checked}});
         context.detail(L("未选 · 选中（全部禁用）", "unselected · selected (all disabled)"));
@@ -271,6 +284,7 @@ void RadioButtonPage::build(GalleryContext &context)
                      "setChecked(false) is silently ignored by Qt; the only deselection "
                      "path is a sibling's check"));
     context.space(8.0);
+    m_demoStateApplied = true;
 }
 
 void RadioButtonPage::placeChildren()

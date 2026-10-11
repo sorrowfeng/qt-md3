@@ -1159,3 +1159,77 @@ set_tests_properties(TestMd3InteractionSmoke PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3InteractionSmoke)
+
+# TestMd3GalleryClick ¡ª gallery-shell click probe. Unlike TestMd3InteractionSmoke
+# (standalone widgets), this instantiates the real GalleryWindow and drives the
+# banked page children, so stacking / placement / hit-testing faults in the
+# shell fail here. Links the example gallery sources directly.
+set(GALLERY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../examples/gallery)
+
+add_executable(TestMd3GalleryClick
+    TestMd3GalleryClick.cpp
+    ${GALLERY_DIR}/GalleryPage.cpp
+    ${GALLERY_DIR}/GalleryPages.cpp
+    ${GALLERY_DIR}/GalleryPages2.cpp
+    ${GALLERY_DIR}/GalleryPages3.cpp
+    ${GALLERY_DIR}/GalleryPages4.cpp
+    ${GALLERY_DIR}/GalleryPages5.cpp
+    ${GALLERY_DIR}/GalleryPages6.cpp
+    ${GALLERY_DIR}/GalleryPages7.cpp
+    ${GALLERY_DIR}/GalleryPages8.cpp
+    ${GALLERY_DIR}/GalleryPages9.cpp
+    ${GALLERY_DIR}/GalleryPages10.cpp
+    ${GALLERY_DIR}/GalleryPages11.cpp
+    ${GALLERY_DIR}/GalleryPages12.cpp
+    ${GALLERY_DIR}/GalleryPages17.cpp
+    ${GALLERY_DIR}/GalleryPages18.cpp
+    ${GALLERY_DIR}/GalleryPages19.cpp
+    ${GALLERY_DIR}/GalleryPages20.cpp
+    ${GALLERY_DIR}/GalleryPages21.cpp
+    ${GALLERY_DIR}/GalleryPages22.cpp
+    ${GALLERY_DIR}/GalleryPages23.cpp
+    ${GALLERY_DIR}/GalleryPages24.cpp
+    ${GALLERY_DIR}/GalleryPages25.cpp
+    ${GALLERY_DIR}/GalleryPages26.cpp
+    ${GALLERY_DIR}/GalleryPages27.cpp
+    ${GALLERY_DIR}/GalleryPages28.cpp
+    ${GALLERY_DIR}/GalleryPages29.cpp
+    ${GALLERY_DIR}/GalleryPages30.cpp
+    ${GALLERY_DIR}/GalleryPages31.cpp
+    ${GALLERY_DIR}/GalleryPages32.cpp
+    ${GALLERY_DIR}/GalleryPages33.cpp
+    ${GALLERY_DIR}/GalleryPages34.cpp
+    ${GALLERY_DIR}/GalleryPages35.cpp
+    ${GALLERY_DIR}/GalleryPages36.cpp
+    ${GALLERY_DIR}/GalleryPages37.cpp
+    ${GALLERY_DIR}/GalleryPages38.cpp
+    ${GALLERY_DIR}/GalleryPages39.cpp
+    ${GALLERY_DIR}/GalleryPages40.cpp
+    ${GALLERY_DIR}/GalleryPages41.cpp
+    ${GALLERY_DIR}/GalleryPages42.cpp
+    ${GALLERY_DIR}/GalleryPages43.cpp
+    ${GALLERY_DIR}/GalleryWindow.cpp
+)
+
+target_include_directories(TestMd3GalleryClick
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/../examples
+        ${GALLERY_DIR}
+)
+
+target_link_libraries(TestMd3GalleryClick
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3GalleryClick COMMAND TestMd3GalleryClick)
+set_tests_properties(TestMd3GalleryClick PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3GalleryClick)

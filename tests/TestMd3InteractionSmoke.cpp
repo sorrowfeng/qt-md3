@@ -9,8 +9,10 @@
 #include "core/MdTheme.h"
 #include "widgets/MdButton.h"
 #include "widgets/MdCheckBox.h"
+#include "widgets/MdChip.h"
 #include "widgets/MdIconButton.h"
 #include "widgets/MdMenu.h"
+#include "widgets/MdSegmentedButton.h"
 #include "widgets/MdSlider.h"
 #include "widgets/MdTab.h"
 #include "widgets/MdTabs.h"
@@ -98,6 +100,14 @@ private slots:
 
     // 9. MdTab
     void tabClickSelects();
+
+    // 10. MdChip
+    void chipClickTogglesWhenCheckable();
+    void chipDisabledDoesNotEmit();
+
+    // 11. MdSegmentedButton
+    void segmentedButtonClickSelects();
+    void segmentedSingleChoiceClearsPrevious();
 };
 
 void TestMd3InteractionSmoke::initTestCase()
@@ -436,6 +446,87 @@ void TestMd3InteractionSmoke::tabClickSelects()
     QVERIFY(!tabs.tabAt(0)->isSelected());
     QCOMPARE(spy.count(), 1);
     QCOMPARE(spy.first().first().toInt(), 2);
+}
+
+// ---------------------------------------------------------------------------
+// 10. MdChip
+// ---------------------------------------------------------------------------
+
+void TestMd3InteractionSmoke::chipClickTogglesWhenCheckable()
+{
+    MdChip chip(QStringLiteral("Filter"));
+    chip.setCheckable(true);
+    chip.resize(chip.sizeHint());
+    showAndExpose(chip);
+
+    QVERIFY(!chip.isChecked());
+    QSignalSpy spy(&chip, &QAbstractButton::clicked);
+    QTest::mouseClick(&chip, Qt::LeftButton, Qt::NoModifier, chip.rect().center());
+    QCOMPARE(spy.count(), 1);
+    QVERIFY(chip.isChecked());
+
+    QTest::mouseClick(&chip, Qt::LeftButton, Qt::NoModifier, chip.rect().center());
+    QCOMPARE(spy.count(), 2);
+    QVERIFY(!chip.isChecked());
+}
+
+void TestMd3InteractionSmoke::chipDisabledDoesNotEmit()
+{
+    MdChip chip(QStringLiteral("Off"));
+    chip.setCheckable(true);
+    chip.setEnabled(false);
+    chip.resize(chip.sizeHint());
+    showAndExpose(chip);
+
+    QSignalSpy spy(&chip, &QAbstractButton::clicked);
+    QTest::mouseClick(&chip, Qt::LeftButton, Qt::NoModifier, chip.rect().center());
+    QCOMPARE(spy.count(), 0);
+    QVERIFY(!chip.isChecked());
+}
+
+// ---------------------------------------------------------------------------
+// 11. MdSegmentedButton
+// ---------------------------------------------------------------------------
+
+void TestMd3InteractionSmoke::segmentedButtonClickSelects()
+{
+    MdSegmentedButton button(QStringList{QStringLiteral("A"), QStringLiteral("B"),
+                                         QStringLiteral("C")});
+    button.setSingleChoice(true);
+    button.resize(button.sizeHint());
+    showAndExpose(button);
+
+    QCOMPARE(button.segmentCount(), 3);
+    QVERIFY(!button.isChecked(1));
+
+    QSignalSpy activated(&button, &MdSegmentedButton::segmentActivated);
+    QSignalSpy checked(&button, &MdSegmentedButton::segmentChecked);
+    // Click the middle third of the row.
+    const QPoint mid(button.width() / 2, button.height() / 2);
+    QTest::mouseClick(&button, Qt::LeftButton, Qt::NoModifier, mid);
+    QVERIFY2(activated.count() >= 1 || checked.count() >= 1,
+             "Segment click produced neither segmentActivated nor segmentChecked");
+    QVERIFY(button.isChecked(1));
+    QCOMPARE(button.checkedIndex(), 1);
+}
+
+void TestMd3InteractionSmoke::segmentedSingleChoiceClearsPrevious()
+{
+    MdSegmentedButton button(QStringList{QStringLiteral("A"), QStringLiteral("B"),
+                                         QStringLiteral("C")});
+    button.setSingleChoice(true);
+    button.resize(button.sizeHint());
+    showAndExpose(button);
+
+    button.setChecked(0, true);
+    QVERIFY(button.isChecked(0));
+
+    // Click the last segment's third of the row.
+    const QPoint last(button.width() * 5 / 6, button.height() / 2);
+    QTest::mouseClick(&button, Qt::LeftButton, Qt::NoModifier, last);
+    QVERIFY(button.isChecked(2));
+    QVERIFY(!button.isChecked(0));
+    QCOMPARE(button.checkedIndex(), 2);
 }
 
 QTEST_MAIN(TestMd3InteractionSmoke)

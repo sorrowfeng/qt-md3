@@ -178,13 +178,18 @@ void NavigationRailPage::build(GalleryContext &context)
         {"star", "星标", "Starred", "star"},
         {"trash", "已删除", "Trash", "delete"},
     };
-    auto addDestinationColumn = [&](md::MdNavigationRail *column, const QString &prefix) {
-        column->clearItems();
+    auto addDestinationColumn = [&](md::MdNavigationRail *column, const QString &prefix) -> bool {
+        // Populate once: build() runs from paintEvent, and a button's mousePressEvent repaints synchronously.
+        // clear+re-add mid-click drops the press.
+        if (column->count() > 0) {
+            return false;
+        }
         for (const Destination &destination : destinations) {
             column->addItem(
                 item(prefix + QStringLiteral("-") + QString::fromUtf8(destination.id),
                      L(destination.zh, destination.en), destination.icon));
         }
+        return true;
     };
 
     // --- the two families, collapsed ------------------------------------------
@@ -228,8 +233,9 @@ void NavigationRailPage::build(GalleryContext &context)
             column->setExpanded(false);
             column->setHeader(fab(QString::fromUtf8(row.id) + QStringLiteral("-fab"),
                                   QStringLiteral("add")));
-            addDestinationColumn(column, QString::fromUtf8(row.id));
-            column->setCurrentIndex(0);
+            if (addDestinationColumn(column, QString::fromUtf8(row.id))) {
+                column->setCurrentIndex(0);
+            }
             m_slots.append(NavSlot{column, band.translated(row.x, 0.0)});
         }
         for (const FamilyRow &row : rows) {
@@ -260,8 +266,9 @@ void NavigationRailPage::build(GalleryContext &context)
         column->setVariant(md::MdNavigationRailVariant::Flexible);
         column->setModal(false);
         column->setHeader(fab(QStringLiteral("rail-expanded-fab"), QStringLiteral("add")));
-        addDestinationColumn(column, QStringLiteral("rail-expanded"));
-        column->setCurrentIndex(0);
+        if (addDestinationColumn(column, QStringLiteral("rail-expanded"))) {
+            column->setCurrentIndex(0);
+        }
         column->setExpanded(true);
         const QRectF band = context.band(kRailBandHeight);
         m_slots.append(NavSlot{column, band.translated(120.0, 0.0)});
@@ -289,8 +296,9 @@ void NavigationRailPage::build(GalleryContext &context)
         column->setVariant(md::MdNavigationRailVariant::Flexible);
         column->setModal(true);
         column->setHeader(nullptr);
-        addDestinationColumn(column, QStringLiteral("rail-modal"));
-        column->setCurrentIndex(0);
+        if (addDestinationColumn(column, QStringLiteral("rail-modal"))) {
+            column->setCurrentIndex(0);
+        }
         column->setExpanded(true);
         const QRectF band = context.band(kRailBandHeight);
         m_slots.append(NavSlot{column, band.translated(120.0, 0.0)});

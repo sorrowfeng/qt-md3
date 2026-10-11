@@ -165,12 +165,17 @@ void NavigationBarPage::build(GalleryContext &context)
         {"mail", "邮件", "Mail", "mail"},
         {"settings", "设置", "Settings", "settings"},
     };
-    auto addDestinationRow = [&](md::MdNavigationBar *bar, const QString &prefix) {
-        bar->clearItems();
+    auto addDestinationRow = [&](md::MdNavigationBar *bar, const QString &prefix) -> bool {
+        // Populate once: build() runs from paintEvent, and a button's mousePressEvent repaints synchronously.
+        // clear+re-add mid-click drops the press.
+        if (bar->count() > 0) {
+            return false;
+        }
         for (const Destination &destination : destinations) {
             bar->addItem(item(prefix + QStringLiteral("-") + QString::fromUtf8(destination.id),
                               L(destination.zh, destination.en), destination.icon));
         }
+        return true;
     };
 
     // --- the two families ----------------------------------------------------
@@ -209,8 +214,9 @@ void NavigationBarPage::build(GalleryContext &context)
             md::MdNavigationBar *rowBar = bar(QString::fromUtf8(row.id));
             rowBar->setVariant(row.variant);
             rowBar->setArrangement(md::MdNavigationBarArrangement::EqualWeight);
-            addDestinationRow(rowBar, QString::fromUtf8(row.id));
-            rowBar->setCurrentIndex(0);
+            if (addDestinationRow(rowBar, QString::fromUtf8(row.id))) {
+                rowBar->setCurrentIndex(0);
+            }
             m_slots.append(NavSlot{rowBar, context.band(rowBar->sizeHint().height())});
             context.detail(L(row.noteZh, row.noteEn));
             context.space(16.0);
@@ -248,8 +254,9 @@ void NavigationBarPage::build(GalleryContext &context)
             md::MdNavigationBar *rowBar = bar(QString::fromUtf8(row.id));
             rowBar->setVariant(md::MdNavigationBarVariant::Flexible);
             rowBar->setArrangement(row.arrangement);
-            addDestinationRow(rowBar, QString::fromUtf8(row.id));
-            rowBar->setCurrentIndex(1);
+            if (addDestinationRow(rowBar, QString::fromUtf8(row.id))) {
+                rowBar->setCurrentIndex(1);
+            }
             m_slots.append(NavSlot{rowBar, context.band(rowBar->sizeHint().height())});
             context.space(16.0);
         }
@@ -278,12 +285,16 @@ void NavigationBarPage::build(GalleryContext &context)
         // The bar owns its items' arrangement — the `itemLayout` property is
         // what `applyToItem` pushes — so the switch happens here, not per item.
         rowBar->setItemLayout(md::MdNavigationItemIconPosition::Start);
-        rowBar->clearItems();
-        for (const Destination &destination : destinations) {
-            rowBar->addItem(item(QStringLiteral("bar-start-") + QString::fromUtf8(destination.id),
-                                 L(destination.zh, destination.en), destination.icon));
+        // Populate once: build() is re-entrant and a button press repaints the
+        // page synchronously, so clear+re-add here drops the in-flight click.
+        const bool barStartSeeded = rowBar->count() == 0;
+        if (barStartSeeded) {
+            for (const Destination &destination : destinations) {
+                rowBar->addItem(item(QStringLiteral("bar-start-") + QString::fromUtf8(destination.id),
+                                     L(destination.zh, destination.en), destination.icon));
+            }
+            rowBar->setCurrentIndex(0);
         }
-        rowBar->setCurrentIndex(0);
         m_slots.append(NavSlot{rowBar, context.band(rowBar->sizeHint().height())});
         context.space(8.0);
     }
