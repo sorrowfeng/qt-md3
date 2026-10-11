@@ -2,6 +2,7 @@
 .claude/
 .agents/
 .cursor/
+.workbuddy/
 
 # Build output
 build/
