@@ -65,10 +65,13 @@ private:
     md::MdMenu *surfaceMenu();
     md::MdMenuItem *rowItem(int index);
     md::MdExpressiveMenu *expressiveMenu(md::MdExpressiveMenuVariant variant);
+    /// The horizontal bar demos: a text bar and the icon-only variant.
+    md::MdExpressiveMenu *horizontalMenu(bool iconOnly);
 
     md::MdMenu *m_menu = nullptr;
     QVector<md::MdMenuItem *> m_rows;
     QHash<int, md::MdExpressiveMenu *> m_expressive;
+    QHash<int, md::MdExpressiveMenu *> m_horizontal;
     QVector<MenuSlot> m_slots;
 };
 
@@ -152,6 +155,37 @@ md::MdExpressiveMenu *MenuPage::expressiveMenu(md::MdExpressiveMenuVariant varia
     menu->items().at(3)->setEnabled(false);
     menu->show();
     m_expressive.insert(key, menu);
+    return menu;
+}
+
+/// The horizontal bars are banked the same way. `iconOnly` selects the
+/// `horizontal.icon-only.*` spaces (gap 4, 16 px item boxes).
+md::MdExpressiveMenu *MenuPage::horizontalMenu(bool iconOnly)
+{
+    const int key = iconOnly ? 1 : 0;
+    const auto found = m_horizontal.constFind(key);
+    if (found != m_horizontal.constEnd()) {
+        return found.value();
+    }
+    auto *menu = new md::MdExpressiveMenu(this);
+    menu->setWindowFlags(Qt::Widget);
+    menu->setVariant(md::MdExpressiveMenuVariant::Standard);
+    menu->setOrientation(md::MdExpressiveMenuOrientation::Horizontal);
+    menu->setIconOnly(iconOnly);
+    if (iconOnly) {
+        for (const char *icon : {"delete", "edit", "star", "share"}) {
+            auto *item = new md::MdExpressiveMenuItem(menu);
+            item->setLeadingIconName(QString::fromUtf8(icon));
+            menu->addItem(item);
+        }
+    } else {
+        menu->addItem(QStringLiteral("First item"));
+        menu->addItem(QStringLiteral("Second item (selected)"));
+        menu->items().at(1)->setSelected(true);
+        menu->addItem(QStringLiteral("Third item"));
+    }
+    menu->show();
+    m_horizontal.insert(key, menu);
     return menu;
 }
 
@@ -271,6 +305,37 @@ void MenuPage::build(GalleryContext &context)
         context.space(16.0);
     }
 
+    // --- Expressive: horizontal / icon-only ---------------------------------------
+    context.section(L("Expressive 横向菜单", "The Expressive horizontal menus"));
+    context.paragraph(L(
+        "横向排布读 horizontal.* 行：容器 corner-full（胶囊）、上下各 8dp；项之间 12dp，"
+        "项内左右 12dp、上下 6dp。纯图标版读 horizontal.icon-only.*：项间距 4dp，"
+        "项内 16dp 的方形图标盒（20dp 图标 → 52dp 项）。导出没有 "
+        "horizontal.menu-item.height，横截面由内容加上下间距推得。",
+        "The horizontal arrangement reads the horizontal.* rows: a corner-full "
+        "(pill) container with 8dp top/bottom, 12dp between items and 12/6dp "
+        "inside each one. The icon-only variant reads horizontal.icon-only.*: "
+        "4dp between items, a 16dp square icon box (20dp icon → a 52dp item). "
+        "The export publishes no horizontal.menu-item.height, so the cross "
+        "extent is derived from the content plus the top/bottom spaces."));
+    {
+        const QRectF band = context.band(68.0);
+        md::MdExpressiveMenu *textBar = horizontalMenu(/*iconOnly=*/false);
+        md::MdExpressiveMenu *iconBar = horizontalMenu(/*iconOnly=*/true);
+        const QSize textSize = textBar->size();
+        const QSize iconSize = iconBar->size();
+        m_slots.append(MenuSlot{textBar, QRectF(band.left(), band.top(), qreal(textSize.width()),
+                                                qreal(textSize.height()))});
+        m_slots.append(MenuSlot{
+            iconBar,
+            QRectF(band.left() + textSize.width() + 24.0, band.top(), qreal(iconSize.width()),
+                   qreal(iconSize.height()))});
+        context.detail(L("左：横向文本栏（第二项选中） · 右：纯图标栏",
+                         "left: the horizontal text bar (the second item selected) · "
+                         "right: the icon-only bar"));
+        context.space(16.0);
+    }
+
     // --- what this page is pinned to -----------------------------------------
     context.section(L("本页锁定的令牌事实", "Token facts this page is pinned to"));
     context.paragraph(L(
@@ -311,6 +376,13 @@ void MenuPage::build(GalleryContext &context)
                      "transform · the Expressive menu family (Standard/Vibrant) is "
                      "ported; Segmented is absent from the latest sass export and is "
                      "not invented"));
+    context.detail(L("横向：容器 corner-full、上下 8dp · 项间 12dp · 项内 12/6dp · "
+                     "hover/focus/pressed corner-medium，选中 corner-full · "
+                     "纯图标：间距 4dp、项内 16dp（52dp 方形项）",
+                     "horizontal: a corner-full container with 8dp top/bottom · 12dp "
+                     "between items · 12/6dp inside each · hover/focus/pressed "
+                     "corner-medium, selected corner-full · icon-only: 4dp gap, 16dp "
+                     "item spaces (a 52dp square item)"));
     context.space(8.0);
 }
 

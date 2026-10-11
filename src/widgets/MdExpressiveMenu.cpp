@@ -71,6 +71,26 @@ void MdExpressiveMenuItem::setIconFamily(MdIconFamily family)
     update();
 }
 
+void MdExpressiveMenuItem::setOrientation(MdExpressiveMenuOrientation orientation)
+{
+    if (m_orientation == orientation) {
+        return;
+    }
+    m_orientation = orientation;
+    updateGeometry();
+    update();
+}
+
+void MdExpressiveMenuItem::setIconOnly(bool iconOnly)
+{
+    if (m_iconOnly == iconOnly) {
+        return;
+    }
+    m_iconOnly = iconOnly;
+    updateGeometry();
+    update();
+}
+
 void MdExpressiveMenuItem::setSelected(bool selected)
 {
     if (m_selected == selected) {
@@ -126,20 +146,64 @@ void MdExpressiveMenuItem::setTrailingSupportingText(const QString &text)
 QSize MdExpressiveMenuItem::sizeHint() const
 {
     const MdExpressiveMenuTokens &t = menuTokens();
+    const MdExpressiveMenuLayoutMetrics m = t.layoutMetricsFor(m_orientation, m_iconOnly);
     const QFontMetricsF labelMeasure(MdTypeScale::font(
         t.labelTextType, TypeEmphasis::Baseline, MdTheme::instance().scriptCategory()));
+
+    // The icon-only variant is a square icon button: the published
+    // `horizontal.icon-only.menu-item.*-space` around the icon, no label gap.
+    if (m_iconOnly && m_orientation == MdExpressiveMenuOrientation::Horizontal) {
+        const qreal iconExtent = !m_leadingIconName.isEmpty()
+            ? t.leadingIconSize
+            : (!m_trailingIconName.isEmpty() ? t.trailingIconSize : t.leadingIconSize);
+        return QSize(int(std::ceil(m.itemLeadingSpace + iconExtent + m.itemTrailingSpace)),
+                     int(std::ceil(m.itemTopSpace + iconExtent + m.itemBottomSpace)));
+    }
+
     const qreal textWidth = text().isEmpty() ? 0.0 : std::ceil(labelMeasure.horizontalAdvance(text()));
-    qreal content = t.itemLeadingSpace + textWidth + t.itemTrailingSpace;
+    qreal content = m.itemLeadingSpace + textWidth + m.itemTrailingSpace;
     if (!m_leadingIconName.isEmpty()) {
-        content += t.leadingIconSize + t.itemIconTextSpacing;
+        content += t.leadingIconSize + m.itemIconTextSpacing;
     }
     if (!m_trailingIconName.isEmpty()) {
-        content += t.trailingIconSize + t.itemIconTextSpacing;
+        content += t.trailingIconSize + m.itemIconTextSpacing;
     }
     if (!m_trailingSupportingText.isEmpty()) {
         content += std::ceil(labelMeasure.horizontalAdvance(m_trailingSupportingText))
-            + t.itemIconTextSpacing;
+            + m.itemIconTextSpacing;
     }
+
+    if (m_orientation == MdExpressiveMenuOrientation::Horizontal) {
+        // No `horizontal.menu-item.height` row: the cross extent is the
+        // content's own height plus the published top/bottom spaces.
+        qreal contentHeight = 0.0;
+        if (!text().isEmpty()) {
+            contentHeight = qMax<qreal>(
+                contentHeight,
+                MdTypeScale::lineHeight(t.labelTextType, TypeEmphasis::Baseline,
+                                        MdTheme::instance().scriptCategory()));
+        }
+        if (!m_supportingText.isEmpty()) {
+            contentHeight = qMax<qreal>(
+                contentHeight,
+                MdTypeScale::lineHeight(t.supportingTextType, TypeEmphasis::Baseline,
+                                        MdTheme::instance().scriptCategory()));
+        }
+        if (!m_leadingIconName.isEmpty()) {
+            contentHeight = qMax(contentHeight, t.leadingIconSize);
+        }
+        if (!m_trailingIconName.isEmpty()) {
+            contentHeight = qMax(contentHeight, t.trailingIconSize);
+        }
+        if (contentHeight <= 0.0) {
+            // An empty row still needs an extent; the icon box is the
+            // smallest published one.
+            contentHeight = t.leadingIconSize;
+        }
+        return QSize(int(std::ceil(content)),
+                     int(std::ceil(m.itemTopSpace + contentHeight + m.itemBottomSpace)));
+    }
+
     return QSize(int(std::ceil(content)), int(std::ceil(t.itemHeight)));
 }
 
@@ -188,7 +252,13 @@ void MdExpressiveMenuItem::mousePressEvent(QMouseEvent *event)
 {
     if (m_ripple != nullptr) {
         m_ripple->setBounds(QSizeF(qreal(width()), qreal(height())));
-        m_ripple->press(QPointF(event->pos()));
+        // Touch is delayed by TOUCH_DELAY_MS so a scroll can cancel it; mouse
+        // presses stay immediate (material-web's ripple handler).
+        if (event->source() == Qt::MouseEventSynthesizedByQt) {
+            m_ripple->pressTouch(QPointF(event->pos()));
+        } else {
+            m_ripple->press(QPointF(event->pos()));
+        }
     }
     QAbstractButton::mousePressEvent(event);
 }
@@ -320,6 +390,30 @@ void MdExpressiveMenu::setVariant(MdExpressiveMenuVariant variant)
     emit variantChanged(m_variant);
 }
 
+void MdExpressiveMenu::setOrientation(MdExpressiveMenuOrientation orientation)
+{
+    if (orientation == m_orientation) {
+        return;
+    }
+    m_orientation = orientation;
+    pushTokensToItems();
+    relayout();
+    update();
+    emit orientationChanged(m_orientation);
+}
+
+void MdExpressiveMenu::setIconOnly(bool iconOnly)
+{
+    if (iconOnly == m_iconOnly) {
+        return;
+    }
+    m_iconOnly = iconOnly;
+    pushTokensToItems();
+    relayout();
+    update();
+    emit iconOnlyChanged(m_iconOnly);
+}
+
 MdExpressiveMenuItem *MdExpressiveMenu::addItem(const QString &text)
 {
     auto *item = new MdExpressiveMenuItem(this);
@@ -331,6 +425,8 @@ MdExpressiveMenuItem *MdExpressiveMenu::addItem(const QString &text)
 void MdExpressiveMenu::addItem(MdExpressiveMenuItem *item)
 {
     item->setParent(this);
+    item->setOrientation(m_orientation);
+    item->setIconOnly(m_iconOnly);
     item->applyVariant(m_variant);
     item->show();
     m_items.append(item);
@@ -351,6 +447,8 @@ void MdExpressiveMenu::addDivider()
 void MdExpressiveMenu::pushTokensToItems()
 {
     for (MdExpressiveMenuItem *item : m_items) {
+        item->setOrientation(m_orientation);
+        item->setIconOnly(m_iconOnly);
         item->applyVariant(m_variant);
     }
 }
@@ -358,6 +456,45 @@ void MdExpressiveMenu::pushTokensToItems()
 void MdExpressiveMenu::relayout()
 {
     const MdExpressiveMenuTokens &t = menuTokens();
+    const MdExpressiveMenuLayoutMetrics m = t.layoutMetricsFor(m_orientation, m_iconOnly);
+
+    if (m_orientation == MdExpressiveMenuOrientation::Horizontal) {
+        // Items left-to-right. `horizontal.container.top/bottom-space` is the
+        // cross inset; the main axis has no published container row and sits
+        // flush, which nests the first/last item's corner-full cap exactly
+        // inside the container's.
+        qreal rowCross = 0.0;
+        for (QWidget *row : m_rows) {
+            if (auto *item = qobject_cast<MdExpressiveMenuItem *>(row)) {
+                rowCross = qMax(rowCross, qreal(item->sizeHint().height()));
+            }
+        }
+        qreal x = m.containerLeadingSpace;
+        bool firstRow = true;
+        for (QWidget *row : m_rows) {
+            if (!firstRow) {
+                x += m.itemGap;
+            }
+            firstRow = false;
+            if (auto *item = qobject_cast<MdExpressiveMenuItem *>(row)) {
+                const QSize hint = item->sizeHint();
+                item->setGeometry(int(std::ceil(x)), int(std::ceil(m.containerTopSpace)),
+                                  hint.width(), hint.height());
+                x += hint.width();
+            } else {
+                // A divider in the bar is a 1 px vertical rule spanning the
+                // row's cross extent.
+                row->setGeometry(int(std::ceil(x)), int(std::ceil(m.containerTopSpace)), 1,
+                                 int(std::ceil(rowCross)));
+                x += 1.0;
+            }
+        }
+        x += m.containerTrailingSpace;
+        resize(int(std::ceil(x)),
+               int(std::ceil(m.containerTopSpace + rowCross + m.containerBottomSpace)));
+        return;
+    }
+
     qreal contentWidth = 0.0;
     for (MdExpressiveMenuItem *item : m_items) {
         contentWidth = qMax(contentWidth, qreal(item->sizeHint().width()));
@@ -366,26 +503,27 @@ void MdExpressiveMenu::relayout()
         contentWidth = 160.0;
     }
 
-    // `group.padding: 2px` around the whole stack, `gap: 2px` between rows.
-    qreal y = t.groupPadding;
+    // `group.padding` around the whole stack, `gap` between rows.
+    qreal y = m.containerTopSpace;
     bool firstRow = true;
     for (QWidget *row : m_rows) {
         if (!firstRow) {
-            y += t.itemGap;
+            y += m.itemGap;
         }
         firstRow = false;
         if (auto *item = qobject_cast<MdExpressiveMenuItem *>(row)) {
-            item->setGeometry(int(t.groupPadding), int(y),
+            item->setGeometry(int(m.containerLeadingSpace), int(y),
                               int(std::ceil(contentWidth)), int(t.itemHeight));
             y += t.itemHeight;
         } else {
-            row->setGeometry(int(t.groupPadding + t.itemLeadingSpace), int(y),
-                             int(std::ceil(contentWidth - 2.0 * t.itemLeadingSpace)), 1);
+            row->setGeometry(int(m.containerLeadingSpace + m.itemLeadingSpace), int(y),
+                             int(std::ceil(contentWidth - 2.0 * m.itemLeadingSpace)), 1);
             y += 1.0;
         }
     }
-    y += t.groupPadding;
-    resize(int(std::ceil(contentWidth + 2.0 * t.groupPadding)), int(std::ceil(y)));
+    y += m.containerBottomSpace;
+    resize(int(std::ceil(contentWidth + m.containerLeadingSpace + m.containerTrailingSpace)),
+           int(std::ceil(y)));
 }
 
 void MdExpressiveMenu::popup(const QRect &anchorRect)
@@ -440,13 +578,30 @@ void MdExpressiveMenu::keyPressEvent(QKeyEvent *event)
         return -1;
     }();
 
+    // The arrow pair matches the bar's axis: Up/Down in a column, Left/Right
+    // in a row. Both still wrap.
+    int step = 0;
     switch (event->key()) {
     case Qt::Key_Down:
-    case Qt::Key_Up: {
-        if (rows.isEmpty()) {
-            break;
-        }
-        const int step = event->key() == Qt::Key_Down ? 1 : -1;
+        step = m_orientation == MdExpressiveMenuOrientation::Vertical ? 1 : 0;
+        break;
+    case Qt::Key_Up:
+        step = m_orientation == MdExpressiveMenuOrientation::Vertical ? -1 : 0;
+        break;
+    case Qt::Key_Right:
+        step = m_orientation == MdExpressiveMenuOrientation::Horizontal ? 1 : 0;
+        break;
+    case Qt::Key_Left:
+        step = m_orientation == MdExpressiveMenuOrientation::Horizontal ? -1 : 0;
+        break;
+    case Qt::Key_Escape:
+        closeAndAccept();
+        event->accept();
+        return;
+    default:
+        break;
+    }
+    if (step != 0 && !rows.isEmpty()) {
         int next = focusedIndex;
         for (int n = 0; n < rows.size(); ++n) {
             next = (next + step + rows.size()) % rows.size();
@@ -458,21 +613,15 @@ void MdExpressiveMenu::keyPressEvent(QKeyEvent *event)
         event->accept();
         return;
     }
-    case Qt::Key_Escape:
-        closeAndAccept();
-        event->accept();
-        return;
-    default:
-        break;
-    }
     QWidget::keyPressEvent(event);
 }
 
 void MdExpressiveMenu::mousePressEvent(QMouseEvent *event)
 {
     const MdExpressiveMenuTokens &t = menuTokens();
-    if (!rect().adjusted(int(t.groupPadding), int(t.groupPadding), -int(t.groupPadding),
-                         -int(t.groupPadding))
+    const MdExpressiveMenuLayoutMetrics m = t.layoutMetricsFor(m_orientation, m_iconOnly);
+    if (!rect().adjusted(int(m.containerLeadingSpace), int(m.containerTopSpace),
+                         -int(m.containerTrailingSpace), -int(m.containerBottomSpace))
              .contains(event->pos())) {
         closeAndAccept();
         return;

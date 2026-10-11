@@ -204,6 +204,92 @@ ShapeCorner MdExpressiveMenuTokens::itemShapeFor(int index, int count, bool sele
     return itemShape;
 }
 
+ShapeCorner MdExpressiveMenuTokens::horizontalItemShapeFor(MdExpressiveMenuSelection selection,
+                                                           MdNavigationItemState state,
+                                                           bool iconOnly) const
+{
+    const bool selected = selection == MdExpressiveMenuSelection::Selected;
+    if (selected) {
+        // `horizontal.icon-only.menu-item.selected.shape` publishes one shape
+        // with no state rows — the icon-only selected item is always a pill.
+        if (iconOnly) {
+            return horizontalIconOnlySelectedShape;
+        }
+        switch (state) {
+        case MdNavigationItemState::Pressed:
+            return horizontalItemSelectedPressedShape;
+        case MdNavigationItemState::Hovered:
+            return horizontalItemSelectedHoveredShape;
+        case MdNavigationItemState::Focused:
+            return horizontalItemSelectedFocusedShape;
+        default:
+            // No resting selected row on the text side. All three published
+            // interaction rows are corner-full, so the side is a pill in
+            // every sourced state; the resting fallback takes the same corner.
+            return horizontalItemSelectedPressedShape;
+        }
+    }
+    switch (state) {
+    case MdNavigationItemState::Pressed:
+        return horizontalItemPressedShape;
+    case MdNavigationItemState::Hovered:
+        return horizontalItemHoveredShape;
+    case MdNavigationItemState::Focused:
+        return horizontalItemFocusedShape;
+    default:
+        // No resting unselected row either; the three interaction rows are
+        // all corner-medium, so the side's single shape is corner-medium.
+        return horizontalItemHoveredShape;
+    }
+}
+
+MdExpressiveMenuLayoutMetrics MdExpressiveMenuTokens::layoutMetricsFor(
+    MdExpressiveMenuOrientation orientation, bool iconOnly) const
+{
+    MdExpressiveMenuLayoutMetrics metrics;
+    if (orientation == MdExpressiveMenuOrientation::Horizontal) {
+        if (iconOnly) {
+            metrics.itemLeadingSpace = horizontalIconOnlyItemLeadingSpace;
+            metrics.itemTrailingSpace = horizontalIconOnlyItemTrailingSpace;
+            metrics.itemTopSpace = horizontalIconOnlyItemTopSpace;
+            metrics.itemBottomSpace = horizontalIconOnlyItemBottomSpace;
+            metrics.itemGap = horizontalIconOnlyGap;
+        } else {
+            metrics.itemLeadingSpace = horizontalItemLeadingSpace;
+            metrics.itemTrailingSpace = horizontalItemTrailingSpace;
+            metrics.itemTopSpace = horizontalItemTopSpace;
+            metrics.itemBottomSpace = horizontalItemBottomSpace;
+            metrics.itemGap = horizontalItemBetweenSpace;
+        }
+        // Icon → label stays the published `menu-item.between-space` (the
+        // horizontal export reuses the same 12 px under `between-space` as
+        // the inter-item gap, so both readings land on 12 at this version).
+        metrics.itemIconTextSpacing = itemIconTextSpacing;
+        // The export publishes no leading/trailing container row on this
+        // axis; 0 is what nests the first/last item's corner-full cap exactly
+        // inside the container's (see the header).
+        metrics.containerLeadingSpace = 0.0;
+        metrics.containerTrailingSpace = 0.0;
+        metrics.containerTopSpace = horizontalContainerTopSpace;
+        metrics.containerBottomSpace = horizontalContainerBottomSpace;
+        metrics.containerShape = horizontalContainerShape;
+        return metrics;
+    }
+
+    metrics.itemLeadingSpace = itemLeadingSpace;
+    metrics.itemTrailingSpace = itemTrailingSpace;
+    metrics.itemTopSpace = itemTopSpace;
+    metrics.itemBottomSpace = itemBottomSpace;
+    metrics.itemIconTextSpacing = itemIconTextSpacing;
+    metrics.itemGap = itemGap;
+    metrics.containerLeadingSpace = groupPadding;
+    metrics.containerTrailingSpace = groupPadding;
+    metrics.containerTopSpace = groupPadding;
+    metrics.containerBottomSpace = groupPadding;
+    metrics.containerShape = containerShape;
+    return metrics;
+}
+
 MdExpressiveMenuTokens MdExpressiveMenuTokens::resolve(MdExpressiveMenuVariant variant,
                                                        const MdComponentTokens *overrides)
 {
@@ -225,6 +311,32 @@ MdExpressiveMenuTokens MdExpressiveMenuTokens::resolve(MdExpressiveMenuVariant v
         lengthOverride(overrides, plainKeys("menus", "menu-item.leading-space"), 16.0);
     tokens.itemTrailingSpace =
         lengthOverride(overrides, plainKeys("menus", "menu-item.trailing-space"), 16.0);
+
+    // Horizontal / horizontal-icon-only geometry (`horizontal.*` rows).
+    tokens.horizontalContainerTopSpace =
+        lengthOverride(overrides, plainKeys("menus", "horizontal.container.top-space"), 8.0);
+    tokens.horizontalContainerBottomSpace =
+        lengthOverride(overrides, plainKeys("menus", "horizontal.container.bottom-space"), 8.0);
+    tokens.horizontalItemBetweenSpace =
+        lengthOverride(overrides, plainKeys("menus", "horizontal.menu-item.between-space"), 12.0);
+    tokens.horizontalItemLeadingSpace =
+        lengthOverride(overrides, plainKeys("menus", "horizontal.menu-item.leading-space"), 12.0);
+    tokens.horizontalItemTrailingSpace =
+        lengthOverride(overrides, plainKeys("menus", "horizontal.menu-item.trailing-space"), 12.0);
+    tokens.horizontalItemTopSpace =
+        lengthOverride(overrides, plainKeys("menus", "horizontal.menu-item.top-space"), 6.0);
+    tokens.horizontalItemBottomSpace =
+        lengthOverride(overrides, plainKeys("menus", "horizontal.menu-item.bottom-space"), 6.0);
+    tokens.horizontalIconOnlyGap =
+        lengthOverride(overrides, plainKeys("menus", "horizontal.icon-only.gap"), 4.0);
+    tokens.horizontalIconOnlyItemLeadingSpace = lengthOverride(
+        overrides, plainKeys("menus", "horizontal.icon-only.menu-item.leading-space"), 16.0);
+    tokens.horizontalIconOnlyItemTrailingSpace = lengthOverride(
+        overrides, plainKeys("menus", "horizontal.icon-only.menu-item.trailing-space"), 16.0);
+    tokens.horizontalIconOnlyItemTopSpace = lengthOverride(
+        overrides, plainKeys("menus", "horizontal.icon-only.menu-item.top-space"), 16.0);
+    tokens.horizontalIconOnlyItemBottomSpace = lengthOverride(
+        overrides, plainKeys("menus", "horizontal.icon-only.menu-item.bottom-space"), 16.0);
 
     fillDisabledOpacities(&tokens);
 

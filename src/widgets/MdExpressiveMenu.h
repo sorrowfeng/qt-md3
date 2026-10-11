@@ -23,6 +23,9 @@
 //   * **the corner-large surface** with the per-position item shapes
 //     (selected / first / last → corner-medium, middle → corner-extra-small,
 //     pressed → corner-large);
+//   * **the horizontal / horizontal-icon-only layouts** — the `horizontal.*`
+//     rows: a corner-full pill surface, items left-to-right with 12 between
+//     and 6/12 item spaces (icon-only: gap 4, 16 px spaces);
 //   * **the two colour families** — Standard (surface-container-low base) and
 //     Vibrant (tertiary-container base, with the icon interaction lift);
 //   * **`:focus-visible` keyboard focus** on the inward secondary ring.
@@ -31,8 +34,6 @@
 //
 //   * **SegmentedMenu** — the latest sass export publishes Standard + Vibrant
 //     only; the third family is not invented;
-//   * **the horizontal / icon-only layouts** — a separate geometry family
-//     (`horizontal.container.shape: corner-full`);
 //   * **the Expressive open motion** — the provided export carries no motion
 //     rows for this family; the popup opens without a flight.
 
@@ -101,6 +102,17 @@ public:
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
 
+    // --- layout orientation -------------------------------------------------------
+    /// The axis the owning menu arranges its items along. Pushed by
+    /// `MdExpressiveMenu`; it selects the `horizontal.*` spaces in
+    /// `sizeHint()` and the horizontal shapes in the paint.
+    MdExpressiveMenuOrientation orientation() const { return m_orientation; }
+    void setOrientation(MdExpressiveMenuOrientation orientation);
+    /// The horizontal icon-only variant (`horizontal.icon-only.*`). Ignored
+    /// when `orientation` is Vertical.
+    bool isIconOnly() const { return m_iconOnly; }
+    void setIconOnly(bool iconOnly);
+
     // --- tokens --------------------------------------------------------------------
     const MdExpressiveMenuTokens &menuTokens() const;
     void setMenuTokens(const MdExpressiveMenuTokens &tokens);
@@ -154,6 +166,8 @@ private:
     QString m_trailingSupportingText;
     md::MdIconSet m_iconSet = MdIconSet::MaterialSymbols;
     md::MdIconFamily m_iconFamily = MdIconFamily::Outlined;
+    MdExpressiveMenuOrientation m_orientation = MdExpressiveMenuOrientation::Vertical;
+    bool m_iconOnly = false;
 
     mutable MdExpressiveMenuTokens m_tokens;
     mutable bool m_tokensDirty = true;
@@ -176,6 +190,12 @@ class QT_MD3_EXPORT MdExpressiveMenu : public QWidget
     /// The colour family (`Standard` / `Vibrant`).
     Q_PROPERTY(md::MdExpressiveMenuVariant variant READ variant WRITE setVariant NOTIFY
                    variantChanged)
+    /// The axis items are arranged along (`Vertical` / `Horizontal`).
+    Q_PROPERTY(md::MdExpressiveMenuOrientation orientation READ orientation WRITE setOrientation
+                   NOTIFY orientationChanged)
+    /// The horizontal icon-only variant (`horizontal.icon-only.*`). Ignored
+    /// when `orientation` is Vertical.
+    Q_PROPERTY(bool iconOnly READ isIconOnly WRITE setIconOnly NOTIFY iconOnlyChanged)
 
 public:
     explicit MdExpressiveMenu(QWidget *parent = nullptr);
@@ -184,6 +204,12 @@ public:
     // --- variant -------------------------------------------------------------------
     MdExpressiveMenuVariant variant() const { return m_variant; }
     void setVariant(MdExpressiveMenuVariant variant);
+
+    // --- orientation ----------------------------------------------------------------
+    MdExpressiveMenuOrientation orientation() const { return m_orientation; }
+    void setOrientation(MdExpressiveMenuOrientation orientation);
+    bool isIconOnly() const { return m_iconOnly; }
+    void setIconOnly(bool iconOnly);
 
     // --- content -------------------------------------------------------------------
     /// Takes ownership; appends an item row.
@@ -212,6 +238,8 @@ public:
 
 signals:
     void variantChanged(md::MdExpressiveMenuVariant variant);
+    void orientationChanged(md::MdExpressiveMenuOrientation orientation);
+    void iconOnlyChanged(bool iconOnly);
     /// Emitted after the menu closed (outside click, Esc or an activation).
     void closed();
 
@@ -236,6 +264,8 @@ private:
     QList<QWidget *> m_rows;
 
     MdExpressiveMenuVariant m_variant = MdExpressiveMenuVariant::Standard;
+    MdExpressiveMenuOrientation m_orientation = MdExpressiveMenuOrientation::Vertical;
+    bool m_iconOnly = false;
 
     mutable MdExpressiveMenuTokens m_tokens;
     mutable bool m_tokensDirty = true;

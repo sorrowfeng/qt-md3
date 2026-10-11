@@ -4,18 +4,20 @@
 // MdExpressiveMenuStyle — the paint of the Expressive menu surface and its
 // items (`md.comp.menus.*`).
 //
-// The **surface** paints the variant's container colour as a corner-large
-// rounded rect with the level-2 shadow.
+// The **surface** paints the variant's container colour with the level-2
+// shadow, at the layout's corner: `container.shape` (corner-large) in the
+// column, `horizontal.container.shape` (corner-full) in the bar.
 //
 // The **item** paints, in order:
 //
 //   1. the item container at its per-position shape (selected / first / last
-//      → corner-medium, middle → corner-extra-small, pressed → corner-large);
+//      → corner-medium, middle → corner-extra-small, pressed → corner-large
+//      in the column; the `horizontal.menu-item.*.shape` rows in the bar);
 //   2. the variant's state layer (hover / keyboard focus flat; the press is
 //      the ripple's);
 //   3. the content — the 20 px leading icon, the label (label-large), the
 //      optional body-small supporting line and the trailing icon / trailing
-//      supporting text;
+//      supporting text, inset by the layout's item spaces;
 //   4. the **inward** secondary focus ring, keyboard-only.
 
 #include "MdStyleBase.h"

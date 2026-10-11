@@ -23,6 +23,7 @@
 #include "widgets/MdExpressiveMenu.h"
 
 #include <QtGui/QImage>
+#include <QtGui/QKeyEvent>
 #include <QtGui/QPainter>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
@@ -63,14 +64,21 @@ private slots:
     void cleanup();
 
     void sharedGeometryMatchesTheExport();
+    void horizontalGeometryMatchesTheExport();
+    void iconOnlyGeometryMatchesTheExport();
     void standardColoursMatchTheExport();
     void vibrantColoursMatchTheExport();
     void itemShapesFollowPositionAndSelection();
+    void horizontalItemShapesMatchTheExport();
     void itemGeometryUsesTheSharedSpacing();
     void menuLayoutAppliesGapAndGroupPadding();
+    void horizontalMenuLaysItemsLeftToRight();
+    void iconOnlyMenuUsesTheIconOnlySpaces();
+    void horizontalArrowsWalkTheBar();
     void selectedPaintsTheVariantContainer();
     void focusRingIsKeyboardOnly();
     void variantSwitchesTheTokenSet();
+    void orientationAndIconOnlyAreMetaProperties();
     void renderSmoke();
     void metaProperties();
 };
@@ -115,6 +123,73 @@ void TestMd3ExpressiveMenu::sharedGeometryMatchesTheExport()
     QCOMPARE(t.focusIndicatorColor, ColorRole::Secondary);
     QCOMPARE(t.focusIndicatorInnerOffset, 3.0);
     QCOMPARE(t.focusIndicatorThickness, 3.0);
+}
+
+void TestMd3ExpressiveMenu::horizontalGeometryMatchesTheExport()
+{
+    const MdExpressiveMenuTokens t =
+        MdExpressiveMenuTokens::resolve(MdExpressiveMenuVariant::Standard);
+    const MdExpressiveMenuLayoutMetrics m =
+        t.layoutMetricsFor(MdExpressiveMenuOrientation::Horizontal);
+
+    // _md-comp-menus.scss `horizontal.*` at 34.0.21.
+    QCOMPARE(t.horizontalContainerShape, ShapeCorner::Full);
+    QCOMPARE(t.horizontalContainerTopSpace, 8.0);
+    QCOMPARE(t.horizontalContainerBottomSpace, 8.0);
+    QCOMPARE(t.horizontalItemBetweenSpace, 12.0);
+    QCOMPARE(t.horizontalItemLeadingSpace, 12.0);
+    QCOMPARE(t.horizontalItemTrailingSpace, 12.0);
+    QCOMPARE(t.horizontalItemTopSpace, 6.0);
+    QCOMPARE(t.horizontalItemBottomSpace, 6.0);
+
+    // The metrics the layout and paint actually read.
+    QCOMPARE(m.itemLeadingSpace, 12.0);
+    QCOMPARE(m.itemTrailingSpace, 12.0);
+    QCOMPARE(m.itemTopSpace, 6.0);
+    QCOMPARE(m.itemBottomSpace, 6.0);
+    QCOMPARE(m.itemGap, 12.0);
+    QCOMPARE(m.containerTopSpace, 8.0);
+    QCOMPARE(m.containerBottomSpace, 8.0);
+    // No published leading/trailing container row: the bar sits flush so the
+    // first/last item's corner-full cap nests exactly inside the container's.
+    QCOMPARE(m.containerLeadingSpace, 0.0);
+    QCOMPARE(m.containerTrailingSpace, 0.0);
+    QCOMPARE(m.containerShape, ShapeCorner::Full);
+
+    // The vertical metrics are untouched by the horizontal resolve.
+    QCOMPARE(m.itemIconTextSpacing, 12.0);
+    const MdExpressiveMenuLayoutMetrics vertical =
+        t.layoutMetricsFor(MdExpressiveMenuOrientation::Vertical);
+    QCOMPARE(vertical.itemGap, 2.0);
+    QCOMPARE(vertical.itemLeadingSpace, 16.0);
+    QCOMPARE(vertical.itemTopSpace, 8.0);
+    QCOMPARE(vertical.containerTopSpace, 2.0);
+    QCOMPARE(vertical.containerShape, ShapeCorner::Large);
+}
+
+void TestMd3ExpressiveMenu::iconOnlyGeometryMatchesTheExport()
+{
+    const MdExpressiveMenuTokens t =
+        MdExpressiveMenuTokens::resolve(MdExpressiveMenuVariant::Standard);
+
+    // _md-comp-menus.scss `horizontal.icon-only.*` at 34.0.21.
+    QCOMPARE(t.horizontalIconOnlyGap, 4.0);
+    QCOMPARE(t.horizontalIconOnlyItemLeadingSpace, 16.0);
+    QCOMPARE(t.horizontalIconOnlyItemTrailingSpace, 16.0);
+    QCOMPARE(t.horizontalIconOnlyItemTopSpace, 16.0);
+    QCOMPARE(t.horizontalIconOnlyItemBottomSpace, 16.0);
+    QCOMPARE(t.horizontalIconOnlySelectedShape, ShapeCorner::Full);
+
+    const MdExpressiveMenuLayoutMetrics m =
+        t.layoutMetricsFor(MdExpressiveMenuOrientation::Horizontal, /*iconOnly=*/true);
+    QCOMPARE(m.itemLeadingSpace, 16.0);
+    QCOMPARE(m.itemTrailingSpace, 16.0);
+    QCOMPARE(m.itemTopSpace, 16.0);
+    QCOMPARE(m.itemBottomSpace, 16.0);
+    QCOMPARE(m.itemGap, 4.0);
+    QCOMPARE(m.containerTopSpace, 8.0);
+    QCOMPARE(m.containerBottomSpace, 8.0);
+    QCOMPARE(m.containerShape, ShapeCorner::Full);
 }
 
 void TestMd3ExpressiveMenu::standardColoursMatchTheExport()
@@ -198,6 +273,38 @@ void TestMd3ExpressiveMenu::itemShapesFollowPositionAndSelection()
     QCOMPARE(t.itemShapeFor(2, 5, false, true), ShapeCorner::Large);
 }
 
+void TestMd3ExpressiveMenu::horizontalItemShapesMatchTheExport()
+{
+    const MdExpressiveMenuTokens t =
+        MdExpressiveMenuTokens::resolve(MdExpressiveMenuVariant::Standard);
+    const auto unselected = MdExpressiveMenuSelection::Unselected;
+    const auto selected = MdExpressiveMenuSelection::Selected;
+    const auto enabled = MdNavigationItemState::Enabled;
+    const auto hovered = MdNavigationItemState::Hovered;
+    const auto focused = MdNavigationItemState::Focused;
+    const auto pressed = MdNavigationItemState::Pressed;
+
+    // `horizontal.menu-item.hovered/focused/pressed.shape: corner-medium`.
+    QCOMPARE(t.horizontalItemShapeFor(unselected, hovered, false), ShapeCorner::Medium);
+    QCOMPARE(t.horizontalItemShapeFor(unselected, focused, false), ShapeCorner::Medium);
+    QCOMPARE(t.horizontalItemShapeFor(unselected, pressed, false), ShapeCorner::Medium);
+
+    // `horizontal.menu-item.selected.*.shape: corner-full`.
+    QCOMPARE(t.horizontalItemShapeFor(selected, hovered, false), ShapeCorner::Full);
+    QCOMPARE(t.horizontalItemShapeFor(selected, focused, false), ShapeCorner::Full);
+    QCOMPARE(t.horizontalItemShapeFor(selected, pressed, false), ShapeCorner::Full);
+
+    // `horizontal.icon-only.menu-item.selected.shape: corner-full` — no state
+    // rows, so the icon-only selected item is a pill in every state.
+    QCOMPARE(t.horizontalItemShapeFor(selected, enabled, true), ShapeCorner::Full);
+    QCOMPARE(t.horizontalItemShapeFor(selected, pressed, true), ShapeCorner::Full);
+
+    // Resting has no published row on the text side; it takes the side's
+    // uniform interaction corner (medium / full). Recorded in porting-todo.
+    QCOMPARE(t.horizontalItemShapeFor(unselected, enabled, false), ShapeCorner::Medium);
+    QCOMPARE(t.horizontalItemShapeFor(selected, enabled, false), ShapeCorner::Full);
+}
+
 void TestMd3ExpressiveMenu::itemGeometryUsesTheSharedSpacing()
 {
     MdExpressiveMenuItem item(QStringLiteral("A fairly long menu label"));
@@ -224,6 +331,98 @@ void TestMd3ExpressiveMenu::menuLayoutAppliesGapAndGroupPadding()
 
     // group-padding 2 below the last row.
     QCOMPARE(qreal(menu.height() - (items.at(2)->y() + items.at(2)->height())), 2.0);
+}
+
+void TestMd3ExpressiveMenu::horizontalMenuLaysItemsLeftToRight()
+{
+    MdExpressiveMenu menu;
+    menu.setOrientation(MdExpressiveMenuOrientation::Horizontal);
+    menu.addItem(QStringLiteral("One"));
+    menu.addItem(QStringLiteral("Two"));
+    menu.addItem(QStringLiteral("Three"));
+
+    const QList<MdExpressiveMenuItem *> items = menu.items();
+    QCOMPARE(items.size(), 3);
+
+    // Items sit left-to-right with `horizontal.menu-item.between-space` (12)
+    // between them, flush to the leading edge (no published container row).
+    QCOMPARE(qreal(items.at(0)->x()), 0.0);
+    QCOMPARE(qreal(items.at(1)->x()) - qreal(items.at(0)->x() + items.at(0)->width()), 12.0);
+    QCOMPARE(qreal(items.at(2)->x()) - qreal(items.at(1)->x() + items.at(1)->width()), 12.0);
+    QCOMPARE(qreal(menu.width() - (items.at(2)->x() + items.at(2)->width())), 0.0);
+
+    // `horizontal.container.top/bottom-space` (8) around the row.
+    QCOMPARE(qreal(items.at(0)->y()), 8.0);
+    QCOMPARE(qreal(menu.height() - (items.at(0)->y() + items.at(0)->height())), 8.0);
+
+    // The item's cross extent is content + `horizontal.menu-item.top/bottom-
+    // space` (6) — the export publishes no `horizontal.menu-item.height`.
+    QCOMPARE(items.at(0)->height(), items.at(0)->sizeHint().height());
+    QVERIFY(items.at(0)->height() >= 12); // at least the two 6 px spaces
+    QCOMPARE(items.at(0)->y(), items.at(1)->y());
+}
+
+void TestMd3ExpressiveMenu::iconOnlyMenuUsesTheIconOnlySpaces()
+{
+    MdExpressiveMenu menu;
+    menu.setOrientation(MdExpressiveMenuOrientation::Horizontal);
+    menu.setIconOnly(true);
+
+    auto *first = new MdExpressiveMenuItem(QStringLiteral("irrelevant"), &menu);
+    first->setText(QString());
+    first->setLeadingIconName(QStringLiteral("delete"));
+    menu.addItem(first);
+    auto *second = new MdExpressiveMenuItem(QStringLiteral("irrelevant"), &menu);
+    second->setText(QString());
+    second->setLeadingIconName(QStringLiteral("edit"));
+    menu.addItem(second);
+
+    const QList<MdExpressiveMenuItem *> items = menu.items();
+    QCOMPARE(items.size(), 2);
+
+    // The icon-only item is the 20 px icon in its 16 px box: 52 x 52.
+    QCOMPARE(items.at(0)->width(), 52);
+    QCOMPARE(items.at(0)->height(), 52);
+
+    // `horizontal.icon-only.gap` (4) between items.
+    QCOMPARE(qreal(items.at(1)->x()) - qreal(items.at(0)->x() + items.at(0)->width()), 4.0);
+
+    // Container top/bottom 8 still applies.
+    QCOMPARE(qreal(items.at(0)->y()), 8.0);
+    QCOMPARE(qreal(menu.height() - (items.at(0)->y() + items.at(0)->height())), 8.0);
+    QCOMPARE(menu.height(), 8 + 52 + 8);
+}
+
+void TestMd3ExpressiveMenu::horizontalArrowsWalkTheBar()
+{
+    // Focus only sticks on a realised widget, so the menu is embedded as a
+    // plain child the way gallery page 38 does.
+    MdExpressiveMenu menu;
+    menu.setWindowFlags(Qt::Widget);
+    menu.setOrientation(MdExpressiveMenuOrientation::Horizontal);
+    menu.addItem(QStringLiteral("One"));
+    menu.addItem(QStringLiteral("Two"));
+    menu.addItem(QStringLiteral("Three"));
+    menu.resize(menu.sizeHint());
+    menu.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&menu));
+
+    const QList<MdExpressiveMenuItem *> items = menu.items();
+    items.at(0)->setFocus(Qt::TabFocusReason);
+    QVERIFY(items.at(0)->hasFocus());
+
+    // Left/Right walks the bar.
+    QKeyEvent right(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier);
+    QApplication::sendEvent(&menu, &right);
+    QVERIFY(items.at(1)->hasFocus());
+    QKeyEvent left(QEvent::KeyPress, Qt::Key_Left, Qt::NoModifier);
+    QApplication::sendEvent(&menu, &left);
+    QVERIFY(items.at(0)->hasFocus());
+
+    // Up/Down is the column's pair and does not move in a bar.
+    QKeyEvent down(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier);
+    QApplication::sendEvent(&menu, &down);
+    QVERIFY(items.at(0)->hasFocus());
 }
 
 void TestMd3ExpressiveMenu::selectedPaintsTheVariantContainer()
@@ -273,6 +472,34 @@ void TestMd3ExpressiveMenu::variantSwitchesTheTokenSet()
     QCOMPARE(item->menuTokens().containerColor, ColorRole::TertiaryContainer);
 }
 
+void TestMd3ExpressiveMenu::orientationAndIconOnlyAreMetaProperties()
+{
+    MdExpressiveMenu menu;
+    QCOMPARE(menu.orientation(), MdExpressiveMenuOrientation::Vertical);
+    QVERIFY(!menu.isIconOnly());
+
+    QSignalSpy orientationSpy(&menu, &MdExpressiveMenu::orientationChanged);
+    menu.setOrientation(MdExpressiveMenuOrientation::Horizontal);
+    QCOMPARE(orientationSpy.count(), 1);
+    QCOMPARE(menu.orientation(), MdExpressiveMenuOrientation::Horizontal);
+
+    QSignalSpy iconOnlySpy(&menu, &MdExpressiveMenu::iconOnlyChanged);
+    menu.setIconOnly(true);
+    QCOMPARE(iconOnlySpy.count(), 1);
+    QVERIFY(menu.isIconOnly());
+
+    // Setting the same value again is a no-op.
+    menu.setOrientation(MdExpressiveMenuOrientation::Horizontal);
+    menu.setIconOnly(true);
+    QCOMPARE(orientationSpy.count(), 1);
+    QCOMPARE(iconOnlySpy.count(), 1);
+
+    // New items inherit the menu's layout.
+    auto *item = menu.addItem(QStringLiteral("Row"));
+    QCOMPARE(item->orientation(), MdExpressiveMenuOrientation::Horizontal);
+    QVERIFY(item->isIconOnly());
+}
+
 void TestMd3ExpressiveMenu::renderSmoke()
 {
     MdExpressiveMenu menu;
@@ -291,6 +518,8 @@ void TestMd3ExpressiveMenu::metaProperties()
     MdExpressiveMenu menu;
     const QMetaObject *meta = menu.metaObject();
     QVERIFY(meta->indexOfProperty("variant") >= 0);
+    QVERIFY(meta->indexOfProperty("orientation") >= 0);
+    QVERIFY(meta->indexOfProperty("iconOnly") >= 0);
 
     QSignalSpy spy(&menu, &MdExpressiveMenu::variantChanged);
     menu.setVariant(MdExpressiveMenuVariant::Vibrant);

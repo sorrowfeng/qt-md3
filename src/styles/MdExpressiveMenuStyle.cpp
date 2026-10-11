@@ -135,6 +135,9 @@ void MdExpressiveMenuStyle::paintMenuItem(QPainter &painter, const MdExpressiveM
         : MdExpressiveMenuSelection::Unselected;
 
     const QRectF itemRect(QPointF(0, 0), QSizeF(item.width(), item.height()));
+    const bool horizontal = item.orientation() == MdExpressiveMenuOrientation::Horizontal;
+    const MdExpressiveMenuLayoutMetrics layout =
+        tokens.layoutMetricsFor(item.orientation(), item.isIconOnly());
 
     // The row's shape inside its group. `item.parent()` is the menu when the
     // row is owned by one; standalone rows fall back to the neutral shape.
@@ -148,8 +151,10 @@ void MdExpressiveMenuStyle::paintMenuItem(QPainter &painter, const MdExpressiveM
             index = 0;
         }
     }
-    const ShapeCorner shape = tokens.itemShapeFor(index, count, item.isSelected(),
-                                                  state == MdNavigationItemState::Pressed);
+    const ShapeCorner shape =
+        horizontal ? tokens.horizontalItemShapeFor(selection, state, item.isIconOnly())
+                   : tokens.itemShapeFor(index, count, item.isSelected(),
+                                         state == MdNavigationItemState::Pressed);
     const qreal radius = itemRadius(tokens, shape, itemRect.size());
 
     // 1. The item container. Unselected rows carry the variant base (usually
@@ -199,7 +204,7 @@ void MdExpressiveMenuStyle::paintMenuItem(QPainter &painter, const MdExpressiveM
     //    label (label-large) and the optional supporting / trailing text.
     const bool rtl = item.layoutDirection() == Qt::RightToLeft;
     const QColor iconColour = resolveSlot(tokens.iconFor(selection, state));
-    qreal x = tokens.itemLeadingSpace;
+    qreal x = layout.itemLeadingSpace;
     auto mirror = [&](const QRectF &r) {
         return rtl ? QRectF(item.width() - r.right(), r.y(), r.width(), r.height()) : r;
     };
@@ -209,12 +214,12 @@ void MdExpressiveMenuStyle::paintMenuItem(QPainter &painter, const MdExpressiveM
                       mirror(QRectF(x, (item.height() - tokens.leadingIconSize) / 2.0,
                                     tokens.leadingIconSize, tokens.leadingIconSize)),
                       item.leadingIconName(), iconColour, item.iconSet(), item.iconFamily());
-        x += tokens.leadingIconSize + tokens.itemIconTextSpacing;
+        x += tokens.leadingIconSize + layout.itemIconTextSpacing;
     }
 
-    qreal trailingWidth = tokens.itemTrailingSpace;
+    qreal trailingWidth = layout.itemTrailingSpace;
     if (!item.trailingIconName().isEmpty()) {
-        trailingWidth += tokens.trailingIconSize + tokens.itemIconTextSpacing;
+        trailingWidth += tokens.trailingIconSize + layout.itemIconTextSpacing;
     }
     if (!item.trailingSupportingText().isEmpty()) {
         const QFont trailingFont = MdTypeScale::font(tokens.trailingSupportingTextType,
@@ -222,7 +227,7 @@ void MdExpressiveMenuStyle::paintMenuItem(QPainter &painter, const MdExpressiveM
                                                      MdTheme::instance().scriptCategory());
         const QFontMetricsF trailingMeasure(trailingFont);
         trailingWidth += trailingMeasure.horizontalAdvance(item.trailingSupportingText())
-            + tokens.itemIconTextSpacing;
+            + layout.itemIconTextSpacing;
     }
 
     const QColor labelColour = resolveSlot(tokens.labelFor(selection, state));
@@ -263,7 +268,7 @@ void MdExpressiveMenuStyle::paintMenuItem(QPainter &painter, const MdExpressiveM
             const qreal w = trailingMeasure.horizontalAdvance(item.trailingSupportingText());
             painter.setPen(trailingColour);
             painter.setFont(trailingFont);
-            painter.drawText(mirror(QRectF(item.width() - tokens.itemTrailingSpace - w, 0, w,
+            painter.drawText(mirror(QRectF(item.width() - layout.itemTrailingSpace - w, 0, w,
                                            item.height())),
                              int(Qt::AlignVCenter), item.trailingSupportingText());
         }
@@ -271,7 +276,7 @@ void MdExpressiveMenuStyle::paintMenuItem(QPainter &painter, const MdExpressiveM
 
     if (!item.trailingIconName().isEmpty()) {
         MdIcon::paint(&painter,
-                      mirror(QRectF(item.width() - tokens.itemTrailingSpace - tokens.trailingIconSize,
+                      mirror(QRectF(item.width() - layout.itemTrailingSpace - tokens.trailingIconSize,
                                     (item.height() - tokens.trailingIconSize) / 2.0,
                                     tokens.trailingIconSize, tokens.trailingIconSize)),
                       item.trailingIconName(), iconColour, item.iconSet(), item.iconFamily());
@@ -297,7 +302,11 @@ void MdExpressiveMenuStyle::paintMenu(QPainter &painter, MdExpressiveMenu &menu,
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     const QRectF surfaceRect(QPointF(0, 0), QSizeF(menu.width(), menu.height()));
-    const qreal radius = MdShape::resolvedRadius(tokens.containerShape, surfaceRect.size());
+    // `container.shape` (corner-large) in the column; `horizontal.container.
+    // shape` (corner-full) in the bar.
+    const MdExpressiveMenuLayoutMetrics layout =
+        tokens.layoutMetricsFor(menu.orientation(), menu.isIconOnly());
+    const qreal radius = MdShape::resolvedRadius(layout.containerShape, surfaceRect.size());
 
     // The level-2 shadow under the surface.
     MdElevation::drawShadowDp(&painter, surfaceRect, radius, int(tokens.containerElevation),

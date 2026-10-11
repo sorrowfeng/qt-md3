@@ -249,6 +249,7 @@ private:
     bool m_focusIsKeyboard = false;
 
     bool m_hasPressPosition = false;
+    bool m_pressIsTouch = false;
     QPointF m_pressPosition;
 };
 

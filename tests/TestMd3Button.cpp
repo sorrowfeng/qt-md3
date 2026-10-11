@@ -23,6 +23,7 @@
 
 #include <QtGui/QFontDatabase>
 #include <QtGui/QImage>
+#include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
 #include <QtGui/QPixmap>
 #include <QtTest/QtTest>
@@ -124,6 +125,7 @@ private slots:
     void displayTextStripsMnemonics();
     void softDisabledStaysFocusableButIgnoresPointerAndKeyboard();
     void pressMorphsTheContainerTowardsThePressedShape();
+    void touchPressDelaysTheRippleByTouchDelayMs();
     void pointerFocusShowsNoFocusIndicatorButKeyboardFocusDoes();
     void everyCombinationRendersSomething();
     void lightAndDarkPaintDifferentContainers();
@@ -613,6 +615,54 @@ void TestMd3Button::pressMorphsTheContainerTowardsThePressedShape()
 
     QTest::mouseRelease(&button, Qt::LeftButton, Qt::NoModifier, button.rect().center());
     QTRY_VERIFY_WITH_TIMEOUT(near(button.pressMorph(), 0.0, 0.02), 2000);
+
+    button.hide();
+}
+
+void TestMd3Button::touchPressDelaysTheRippleByTouchDelayMs()
+{
+    // material-web delays the ripple on a *touch* press by TOUCH_DELAY_MS so a
+    // swipe/scroll that begins on the button cancels it instead of flashing.
+    // Mouse presses stay immediate — that path is what every other button test
+    // already exercises.
+    MdButton button(QStringLiteral("Touch"));
+    button.resize(button.sizeHint());
+    button.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&button));
+    QVERIFY(button.rippleController() != nullptr);
+
+    // Mouse: the ripple is live as soon as pressed() lands.
+    QTest::mousePress(&button, Qt::LeftButton, Qt::NoModifier, button.rect().center());
+    QVERIFY(button.rippleController()->isActive());
+    QVERIFY(!button.rippleController()->isTouchPending());
+    QTest::mouseRelease(&button, Qt::LeftButton, Qt::NoModifier, button.rect().center());
+    button.rippleController()->cancel();
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // QMouseEvent::setSource is Qt 6-only; the delay itself is pinned by
+    // TestMd3Ripple on both kits.
+    QSKIP("QMouseEvent::setSource requires Qt 6");
+#else
+    // Touch (Qt synthesises the mouse press from a finger tap with this
+    // source): pending, not painted, until TOUCH_DELAY_MS runs out.
+    const QPoint centre = button.rect().center();
+    const QPointF localPos(centre);
+    const QPointF globalPos = button.mapToGlobal(centre);
+    QMouseEvent press(QEvent::MouseButtonPress, localPos, localPos, globalPos, Qt::LeftButton,
+                      Qt::LeftButton, Qt::NoModifier, Qt::MouseEventSynthesizedByQt);
+    QApplication::sendEvent(&button, &press);
+    QVERIFY(button.rippleController()->isTouchPending());
+    QVERIFY(!button.rippleController()->isActive());
+
+    // Released inside the delay — the scroll-disambiguation win: no ripple.
+    QMouseEvent release(QEvent::MouseButtonRelease, localPos, localPos, globalPos, Qt::LeftButton,
+                        Qt::NoButton, Qt::NoModifier, Qt::MouseEventSynthesizedByQt);
+    QApplication::sendEvent(&button, &release);
+    QVERIFY(!button.rippleController()->isTouchPending());
+    QVERIFY(!button.rippleController()->isActive());
+    QTest::qWait(MdRipple::TouchDelayMs + 50);
+    QVERIFY(!button.rippleController()->isActive());
+#endif
 
     button.hide();
 }

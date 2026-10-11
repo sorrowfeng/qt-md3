@@ -229,6 +229,24 @@ Text inputs, then the M3 Expressive cross-cutting pass.
       spring 28 px → 12 px (medium) and back on `spring-fast-spatial`
       (1400 / 0.9), and the release fades over 375 ms linear.
 
+      * **Touch presses are delayed by 150 ms** (`TOUCH_DELAY_MS` in
+        material-web `ripple/internal/ripple.ts`), so a swipe/scroll that
+        begins on the control cancels the ripple instead of flashing it.
+        `MdRippleController::pressTouch()` / `pressTouchCentered()` start a
+        single-shot `MdRipple::TouchDelayMs` timer; `release()` / `cancel()`
+        inside the window clear the pending start and paint nothing. Mouse
+        and keyboard presses stay immediate. `MdButton` routes
+        `Qt::MouseEventSynthesizedByQt` presses (Qt's synthesised mouse event
+        from a finger tap / TouchBegin) through the delayed path;
+        `MdExpressiveMenuItem` does the same. Pinned by `TestMd3Ripple`
+        (`touchPressWaitsOutTouchDelayMs`,
+        `touchReleaseBeforeTheDelaySuppressesTheRipple`,
+        `touchCancelBeforeTheDelaySuppressesTheRipple`,
+        `immediatePressSupersedesAPendingTouch`) and `TestMd3Button`
+        (`touchPressDelaysTheRippleByTouchDelayMs`). The other widgets that
+        own a ripple keep the immediate path for now — recorded as an
+        incremental adoption, not a divergence.
+
 - [x] **`MdButtonGroup`** — standard and connected variants, all five Expressive
       sizes, four selection modes (none / single / multiple / required), round
       and square shapes, horizontal and vertical orientation, live arrow-key
@@ -1608,12 +1626,32 @@ divergences and gaps:
   classic `md.comp.menu.*`. They are ported as `MdExpressiveMenu` +
   `MdExpressiveMenuItem` + `MdExpressiveMenuTokens` +
   `MdExpressiveMenuStyle`, locked by `TestMd3ExpressiveMenu`, and shown on
-  gallery page 38. Remaining gaps in this family:
+  gallery page 38. Notes and remaining gaps in this family:
   * **SegmentedMenu is absent from the latest sass export** (Standard +
     Vibrant only). Not invented — recorded.
-  * **The horizontal / horizontal-icon-only layouts** (`horizontal.container.
-    shape: corner-full`, 12/6 item spaces) are a separate geometry family and
-    are not ported. Recorded.
+  * **The horizontal / horizontal-icon-only layouts are ported.** The
+    `horizontal.*` and `horizontal.icon-only.*` rows (container corner-full,
+    8 top/bottom, 12 between and 12/6 item spaces; icon-only gap 4 and 16 px
+    item boxes) resolve through `MdExpressiveMenuTokens::layoutMetricsFor()`
+    and `horizontalItemShapeFor()`, laid out by
+    `MdExpressiveMenu::setOrientation(Horizontal)` / `setIconOnly(true)`.
+    Two gaps inside that family are recorded rather than invented:
+    * the export publishes **no `horizontal.menu-item.height`** — the item's
+      cross extent is derived from its content (icon / label line-height)
+      plus the published top/bottom spaces;
+    * the export publishes **no resting shape row on the text side** (only
+      `horizontal.menu-item.*.shape` interaction rows and
+      `horizontal.icon-only.menu-item.selected.shape`) — resting falls back
+      to the side's uniform interaction corner (medium unselected /
+      full selected).
+    The container's leading/trailing space has no row either; 0 is what nests
+    the first/last item's corner-full cap exactly inside the container's cap
+    (`containerR − itemR = containerTopSpace`), so the omission is load-bearing
+    rather than a gap. Pinned by `TestMd3ExpressiveMenu`
+    (`horizontalGeometryMatchesTheExport`, `iconOnlyGeometryMatchesTheExport`,
+    `horizontalItemShapesMatchTheExport`, `horizontalMenuLaysItemsLeftToRight`,
+    `iconOnlyMenuUsesTheIconOnlySpaces`, `horizontalArrowsWalkTheBar`) and
+    shown on gallery page 38.
   * **The Expressive open motion** — the provided export carries no motion
     rows for this family; the popup opens without the classic scale+alpha
     flight. Recorded.

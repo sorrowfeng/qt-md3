@@ -29,10 +29,14 @@
 // ## Divergences pinned here rather than smoothed
 //
 // * **SegmentedMenu is absent from the export** — recorded, not invented.
-// * **The horizontal / horizontal-icon-only layouts are a separate geometry
-//   family** (`horizontal.container.shape: corner-full`, 12/6 item spaces).
-//   Only the default vertical layout is carried; the horizontal rows are
-//   recorded in porting-todo.
+// * **The horizontal / horizontal-icon-only layouts** are carried as their own
+//   `horizontal.*` / `horizontal.icon-only.*` rows and resolved by
+//   `layoutMetricsFor()` / `horizontalItemShapeFor()` rather than mixed into
+//   the vertical fields. Two gaps in that family are recorded in
+//   porting-todo: the export publishes no `horizontal.menu-item.height` (the
+//   item's cross extent is derived from its content + the published top/bottom
+//   spaces) and no resting shape row on the text side (only the interaction
+//   rows and the icon-only resting selected row exist).
 // * **`menu-item.first/last-child.inner-corner.corner-size` is corner-extra-
 //   small** — the Expressive group's inner corners. Carried as
 //   `innerCornerSize` and read by the group-shape resolver.
@@ -69,6 +73,48 @@ enum class MdExpressiveMenuSelection {
 
 constexpr int expressiveMenuSelectionCount = int(MdExpressiveMenuSelection::Count);
 
+/// Which axis `MdExpressiveMenu` arranges its items along.
+enum class MdExpressiveMenuOrientation {
+    /// The stacked column — `menu-item.height`, `gap`, `group.padding`.
+    Vertical,
+    /// The horizontal bar — `horizontal.*` rows; with `iconOnly` the
+    /// `horizontal.icon-only.*` ones instead.
+    Horizontal,
+    Count,
+};
+
+constexpr int expressiveMenuOrientationCount = int(MdExpressiveMenuOrientation::Count);
+
+/// Effective row / container geometry for one layout orientation.
+///
+/// `Vertical` reads `menu-item.*`, `gap` and `group.padding`. `Horizontal`
+/// reads `horizontal.*` (`horizontal.icon-only.*` when `iconOnly`). Every
+/// number is a published row; nothing here is estimated.
+struct QT_MD3_EXPORT MdExpressiveMenuLayoutMetrics
+{
+    /// Item-internal padding.
+    qreal itemLeadingSpace = 16.0;
+    qreal itemTrailingSpace = 16.0;
+    qreal itemTopSpace = 8.0;
+    qreal itemBottomSpace = 8.0;
+    /// Icon → label gap inside the item (`menu-item.between-space`).
+    qreal itemIconTextSpacing = 12.0;
+    /// Gap between adjacent rows (Vertical `gap`) or items (Horizontal
+    /// `horizontal.menu-item.between-space` / `horizontal.icon-only.gap`).
+    qreal itemGap = 2.0;
+    /// Container inset around the group. Vertical is `group.padding` on all
+    /// four sides; Horizontal is `horizontal.container.top/bottom-space` on
+    /// the cross axis and **0** on the main axis — the export publishes no
+    /// leading/trailing container row, and 0 is what nests the first/last
+    /// item's corner-full cap exactly inside the container's cap.
+    qreal containerLeadingSpace = 2.0;
+    qreal containerTrailingSpace = 2.0;
+    qreal containerTopSpace = 2.0;
+    qreal containerBottomSpace = 2.0;
+    /// The menu surface's corner (`container.shape` / `horizontal.container.shape`).
+    ShapeCorner containerShape = ShapeCorner::Large;
+};
+
 /// One resolved Expressive menu. Colour tables are indexed
 /// `[selection][interaction]`.
 struct QT_MD3_EXPORT MdExpressiveMenuTokens
@@ -96,6 +142,44 @@ struct QT_MD3_EXPORT MdExpressiveMenuTokens
     /// `menu-item.top-space: 8px`, `bottom-space: 8px`.
     qreal itemTopSpace = 8.0;
     qreal itemBottomSpace = 8.0;
+
+    // --- horizontal layout (`_md-comp-menus.scss` `horizontal.*`) ----------------------
+    /// `horizontal.container.shape: corner-full` — the horizontal surface is
+    /// a pill, not the vertical corner-large box.
+    ShapeCorner horizontalContainerShape = ShapeCorner::Full;
+    /// `horizontal.container.top-space` / `bottom-space: 8px`.
+    qreal horizontalContainerTopSpace = 8.0;
+    qreal horizontalContainerBottomSpace = 8.0;
+    /// `horizontal.menu-item.between-space: 12px` — the gap between items.
+    qreal horizontalItemBetweenSpace = 12.0;
+    /// `horizontal.menu-item.leading-space` / `trailing-space: 12px`.
+    qreal horizontalItemLeadingSpace = 12.0;
+    qreal horizontalItemTrailingSpace = 12.0;
+    /// `horizontal.menu-item.top-space` / `bottom-space: 6px`.
+    qreal horizontalItemTopSpace = 6.0;
+    qreal horizontalItemBottomSpace = 6.0;
+
+    // --- horizontal icon-only (`horizontal.icon-only.*`) ---------------------------------
+    /// `horizontal.icon-only.gap: 4px` — the gap between icon-only items.
+    qreal horizontalIconOnlyGap = 4.0;
+    /// `horizontal.icon-only.menu-item.leading/trailing/top/bottom-space: 16px`.
+    qreal horizontalIconOnlyItemLeadingSpace = 16.0;
+    qreal horizontalIconOnlyItemTrailingSpace = 16.0;
+    qreal horizontalIconOnlyItemTopSpace = 16.0;
+    qreal horizontalIconOnlyItemBottomSpace = 16.0;
+
+    // --- horizontal item shapes ---------------------------------------------------------
+    /// `horizontal.menu-item.hovered/focused/pressed.shape: corner-medium`.
+    ShapeCorner horizontalItemHoveredShape = ShapeCorner::Medium;
+    ShapeCorner horizontalItemFocusedShape = ShapeCorner::Medium;
+    ShapeCorner horizontalItemPressedShape = ShapeCorner::Medium;
+    /// `horizontal.menu-item.selected.hovered/focused/pressed.shape: corner-full`.
+    ShapeCorner horizontalItemSelectedHoveredShape = ShapeCorner::Full;
+    ShapeCorner horizontalItemSelectedFocusedShape = ShapeCorner::Full;
+    ShapeCorner horizontalItemSelectedPressedShape = ShapeCorner::Full;
+    /// `horizontal.icon-only.menu-item.selected.shape: corner-full` — the
+    /// family's only resting selected shape row.
+    ShapeCorner horizontalIconOnlySelectedShape = ShapeCorner::Full;
 
     // --- per-position item shapes ----------------------------------------------------
     /// `menu-item.shape: corner-extra-small` (the neutral middle row).
@@ -197,6 +281,21 @@ struct QT_MD3_EXPORT MdExpressiveMenuTokens
     /// corners; otherwise the neutral extra-small. `active` (pressed) morphs
     /// to `activeContainerShape`.
     ShapeCorner itemShapeFor(int index, int count, bool selected, bool active) const;
+
+    /// The item's shape in the **horizontal** layout.
+    ///
+    /// Reads the `horizontal.menu-item.*.shape` interaction rows and the
+    /// `horizontal.icon-only.menu-item.selected.shape` resting row. The export
+    /// publishes no resting row on the text side; resting falls back to the
+    /// family's uniform shape on that side (all three interaction rows are
+    /// the same corner). Recorded in porting-todo.
+    ShapeCorner horizontalItemShapeFor(MdExpressiveMenuSelection selection,
+                                       MdNavigationItemState state, bool iconOnly) const;
+
+    /// The row/container geometry for `orientation` (and the horizontal
+    /// icon-only variant). Every value is a published row.
+    MdExpressiveMenuLayoutMetrics layoutMetricsFor(MdExpressiveMenuOrientation orientation,
+                                                   bool iconOnly = false) const;
 
     static MdExpressiveMenuTokens resolve(MdExpressiveMenuVariant variant,
                                           const MdComponentTokens *overrides = nullptr);

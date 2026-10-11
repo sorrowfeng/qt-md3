@@ -69,6 +69,11 @@ public:
     static constexpr int MinimumPressMs = 225;
     /// Fade-out after release (`opacity 375ms linear` in _ripple.scss).
     static constexpr int FadeOutMs = 375;
+    /// Touch presses wait this long before the ripple starts, so a swipe or
+    /// scroll that begins on the component cancels it instead of flashing a
+    /// ripple. `TOUCH_DELAY_MS` in material-web `ripple/internal/ripple.ts`.
+    /// Mouse and keyboard presses are not delayed.
+    static constexpr int TouchDelayMs = 150;
     /// The circle starts at this fraction of the component's longest side.
     static constexpr qreal InitialOriginScale = 0.2;
     /// Overhang added to the corner-to-corner hypotenuse.
@@ -167,6 +172,10 @@ public:
 
     const MdRipple::Geometry &geometry() const { return m_geometry; }
 
+    /// True while a touch press is waiting out `MdRipple::TouchDelayMs` and
+    /// the ripple has not started yet.
+    bool isTouchPending() const { return m_touchPending; }
+
     /// Frame for the current instant.
     ///
     /// Returns an invalid frame while the controller is idle, so painting on
@@ -174,13 +183,25 @@ public:
     MdRippleFrame currentFrame() const;
 
 public slots:
-    /// Begin a ripple at `position` (widget coordinates).
+    /// Begin a ripple at `position` (widget coordinates). Immediate — the
+    /// mouse and keyboard path.
     void press(const QPointF &position);
-    /// Keyboard activation: begin at the centre of the bounds.
+    /// Keyboard activation: begin at the centre of the bounds. Immediate.
     void pressCentered();
-    /// Begin the fade-out.
+    /// Begin a ripple at `position` after `MdRipple::TouchDelayMs`.
+    ///
+    /// The delay is material-web's swipe/scroll disambiguation: a touch press
+    /// that turns into a scroll before the timer fires must show no ripple at
+    /// all, so `release()` / `cancel()` arriving first clear the pending start
+    /// and nothing is painted. A new `pressTouch` restarts the delay with the
+    /// new position; an immediate `press` replaces the pending one.
+    void pressTouch(const QPointF &position);
+    /// Touch activation: delayed, then centred.
+    void pressTouchCentered();
+    /// Begin the fade-out. Also drops a pending touch press without ever
+    /// starting its ripple — the disambiguation win.
     void release();
-    /// Drop the ripple immediately.
+    /// Drop the ripple (or the pending touch press) immediately.
     void cancel();
 
 signals:
@@ -189,17 +210,23 @@ signals:
 
 private:
     void onTick();
+    void onTouchTimeout();
     void refreshGeometry();
+    void clearTouchPress();
 
     QTimer *m_timer = nullptr;
+    QTimer *m_touchTimer = nullptr;
     QSizeF m_bounds;
     QColor m_contentColor;
     QPainterPath m_clipPath;
     MdRipple::Geometry m_geometry;
     QPointF m_pressPosition;
+    QPointF m_touchPosition;
     int m_elapsedMs = 0;
     int m_releasedAtMs = -1;
     bool m_active = false;
+    bool m_touchPending = false;
+    bool m_touchCentered = false;
 };
 
 } // namespace md

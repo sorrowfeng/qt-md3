@@ -32,6 +32,10 @@ private slots:
     void fadeOutIsLinearOver375ms();
     void paintsInsideClipPathOnly();
     void controllerTracksPressAndRelease();
+    void touchPressWaitsOutTouchDelayMs();
+    void touchReleaseBeforeTheDelaySuppressesTheRipple();
+    void touchCancelBeforeTheDelaySuppressesTheRipple();
+    void immediatePressSupersedesAPendingTouch();
 };
 
 void TestMd3Ripple::constantsMatchMaterialWeb()
@@ -40,6 +44,7 @@ void TestMd3Ripple::constantsMatchMaterialWeb()
     QCOMPARE(MdRipple::PressGrowMs, 450);
     QCOMPARE(MdRipple::MinimumPressMs, 225);
     QCOMPARE(MdRipple::FadeOutMs, 375);
+    QCOMPARE(MdRipple::TouchDelayMs, 150); // TOUCH_DELAY_MS
     QVERIFY(qFuzzyCompare(MdRipple::InitialOriginScale, 0.2));
     QVERIFY(qFuzzyCompare(MdRipple::Padding, 10.0));
     QVERIFY(qFuzzyCompare(MdRipple::SoftEdgeMinimumSize, 75.0));
@@ -243,6 +248,100 @@ void TestMd3Ripple::controllerTracksPressAndRelease()
     controller.press(QPointF(0.0, 0.0));
     QVERIFY(!controller.isActive());
     QVERIFY(!controller.currentFrame().valid);
+}
+
+void TestMd3Ripple::touchPressWaitsOutTouchDelayMs()
+{
+    MdRippleController controller;
+    controller.setBounds(QSizeF(100.0, 40.0));
+
+    // Before the delay expires there is a pending touch but nothing painted.
+    controller.pressTouch(QPointF(10.0, 10.0));
+    QVERIFY(controller.isTouchPending());
+    QVERIFY(!controller.isActive());
+    QVERIFY(!controller.currentFrame().valid);
+
+    // Past the delay the ripple is live from the press point.
+    QTRY_VERIFY_WITH_TIMEOUT(controller.isActive(), MdRipple::TouchDelayMs + 250);
+    QVERIFY(!controller.isTouchPending());
+    QVERIFY(controller.currentFrame().valid);
+
+    // The centred variant behaves the same and starts in the middle.
+    controller.cancel();
+    controller.pressTouchCentered();
+    QVERIFY(controller.isTouchPending());
+    QVERIFY(!controller.isActive());
+    QTRY_VERIFY_WITH_TIMEOUT(controller.isActive(), MdRipple::TouchDelayMs + 250);
+    const MdRippleFrame frame = controller.currentFrame();
+    QVERIFY(frame.valid);
+    QVERIFY(std::abs(frame.center.x() - 50.0) < 1.0);
+    QVERIFY(std::abs(frame.center.y() - 20.0) < 1.0);
+}
+
+void TestMd3Ripple::touchReleaseBeforeTheDelaySuppressesTheRipple()
+{
+    MdRippleController controller;
+    controller.setBounds(QSizeF(100.0, 40.0));
+
+    // The swipe/scroll disambiguation win: a release inside TOUCH_DELAY_MS
+    // clears the pending start and the ripple never appears.
+    controller.pressTouch(QPointF(10.0, 10.0));
+    QVERIFY(controller.isTouchPending());
+    controller.release();
+    QVERIFY(!controller.isTouchPending());
+    QVERIFY(!controller.isActive());
+
+    // Well past the delay: still nothing, and no repaint was requested for a
+    // visual that never existed.
+    QTest::qWait(MdRipple::TouchDelayMs + 100);
+    QVERIFY(!controller.isActive());
+    QVERIFY(!controller.currentFrame().valid);
+}
+
+void TestMd3Ripple::touchCancelBeforeTheDelaySuppressesTheRipple()
+{
+    MdRippleController controller;
+    controller.setBounds(QSizeF(100.0, 40.0));
+
+    controller.pressTouch(QPointF(10.0, 10.0));
+    QVERIFY(controller.isTouchPending());
+    controller.cancel();
+    QVERIFY(!controller.isTouchPending());
+    QVERIFY(!controller.isActive());
+
+    QTest::qWait(MdRipple::TouchDelayMs + 100);
+    QVERIFY(!controller.isActive());
+    QVERIFY(!controller.currentFrame().valid);
+
+    // Releasing after a cancelled pending touch is still a no-op.
+    controller.release();
+    QVERIFY(!controller.isActive());
+}
+
+void TestMd3Ripple::immediatePressSupersedesAPendingTouch()
+{
+    MdRippleController controller;
+    controller.setBounds(QSizeF(100.0, 40.0));
+
+    // A mouse press during the touch delay starts immediately and replaces
+    // the pending one — the mouse path is not delayed.
+    controller.pressTouch(QPointF(10.0, 10.0));
+    QVERIFY(controller.isTouchPending());
+    controller.press(QPointF(80.0, 30.0));
+    QVERIFY(!controller.isTouchPending());
+    QVERIFY(controller.isActive());
+    QVERIFY(controller.currentFrame().valid);
+    QVERIFY(std::abs(controller.currentFrame().center.x() - 80.0) < 1.0);
+
+    // A second touch press restarts the delay rather than stacking.
+    controller.cancel();
+    controller.pressTouch(QPointF(5.0, 5.0));
+    QVERIFY(controller.isTouchPending());
+    controller.pressTouch(QPointF(9.0, 9.0));
+    QVERIFY(controller.isTouchPending());
+    QVERIFY(!controller.isActive());
+    QTest::qWait(MdRipple::TouchDelayMs + 100);
+    QVERIFY(controller.isActive());
 }
 
 QTEST_MAIN(TestMd3Ripple)

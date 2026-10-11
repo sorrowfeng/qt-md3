@@ -33,7 +33,7 @@ is that record.
 | Ripple timing | grow 450 ms, min press 225 ms, fade 375 ms, initial scale 0.2, padding 10, soft edge 75/0.35, `EASING.STANDARD` | Identical constants (`MdRipple`) | 一致 |
 | Focus ring | `md-focus-ring`, keyboard-only (`:focus-visible` semantics) | `hasKeyboardFocus()` gating by `focusInEvent` reason | 一致 |
 | Container shape on press | Static (`container-shape` token, never changes) | Morphs rest → pressed shape per size (8/8/12/16/16 px), `spring-fast-spatial` (1400 / 0.9) | 有意分歧，Expressive |
-| Touch handling | `TOUCH_DELAY_MS = 150` before starting ripple (swipe/scroll disambiguation) | Mouse-only for now; touch delay not implemented | 已知缺口，记入 porting-todo |
+| Touch handling | `TOUCH_DELAY_MS = 150` before starting ripple (swipe/scroll disambiguation) | Same: `MdRipple::TouchDelayMs` on `pressTouch()`, mouse presses stay immediate | 一致 |
 | Elevation on hover/press (elevated/filled) | Elevation level tokens transitioned by CSS | Token-driven elevation levels in style layer | 一致 |
 
 ## Per-variant ripple / pressed-layer colour map
@@ -71,7 +71,7 @@ Matches material-web's token wiring and our token table:
 
 Source-of-truth constants re-verified against the implementation and the
 motion test suite (TestMd3Ripple / TestMd3Button / TestMd3ButtonGroup /
-TestMd3CheckBox / TestMd3Dialog / TestMd3AppBar �� all green):
+TestMd3CheckBox / TestMd3Dialog / TestMd3AppBar �� all green):
 
 | Constant | Documented | Implemented | Verdict |
 | --- | --- | --- | --- |
@@ -85,5 +85,16 @@ TestMd3CheckBox / TestMd3Dialog / TestMd3AppBar �� all green):
 | Dialog fade | effects-fast spring | `TestMd3Dialog` | agree |
 | App-bar scroll colour | FastOutLinearInEasing then Oklab | `TestMd3AppBar` + pixel audit | agree |
 
-**Touch delay (150 ms) remains unimplemented** �� the standing gap already
-recorded above. No new motion defects.
+**Touch delay is implemented.** `MdRippleController::pressTouch()` /
+`pressTouchCentered()` wait out `MdRipple::TouchDelayMs` (150 ms, material-web
+`ripple/internal/ripple.ts` `TOUCH_DELAY_MS`) before starting the ripple; a
+`release()` or `cancel()` inside the window clears the pending start and paints
+nothing, which is the swipe/scroll disambiguation win. Mouse and keyboard
+presses stay immediate. `MdButton` and `MdExpressiveMenuItem` route a touch
+press (`Qt::MouseEventSynthesizedByQt`, i.e. the mouse event Qt synthesises
+from a finger tap / TouchBegin) through the delayed path. Pinned by
+`TestMd3Ripple` (`touchPressWaitsOutTouchDelayMs`,
+`touchReleaseBeforeTheDelaySuppressesTheRipple`,
+`touchCancelBeforeTheDelaySuppressesTheRipple`,
+`immediatePressSupersedesAPendingTouch`) and
+`TestMd3Button` (`touchPressDelaysTheRippleByTouchDelayMs`).

@@ -182,10 +182,19 @@ void MdRipple::paint(QPainter *painter,
 MdRippleController::MdRippleController(QObject *parent)
     : QObject(parent)
     , m_timer(new QTimer(this))
+    , m_touchTimer(new QTimer(this))
 {
     m_timer->setInterval(kTickMs);
     m_timer->setTimerType(Qt::PreciseTimer);
     connect(m_timer, &QTimer::timeout, this, &MdRippleController::onTick);
+
+    // material-web's TOUCH_DELAY_MS: a touch press waits before the ripple
+    // starts so a swipe/scroll can cancel it first. Single-shot: the delay
+    // applies once per press, not as a cadence.
+    m_touchTimer->setSingleShot(true);
+    m_touchTimer->setInterval(MdRipple::TouchDelayMs);
+    m_touchTimer->setTimerType(Qt::PreciseTimer);
+    connect(m_touchTimer, &QTimer::timeout, this, &MdRippleController::onTouchTimeout);
 }
 
 MdRippleController::~MdRippleController() = default;
@@ -227,6 +236,9 @@ void MdRippleController::refreshGeometry()
 
 void MdRippleController::press(const QPointF &position)
 {
+    // An immediate press supersedes any pending touch delay.
+    clearTouchPress();
+
     refreshGeometry();
     if (!m_geometry.isValid()) {
         return;
@@ -244,8 +256,32 @@ void MdRippleController::pressCentered()
     press(QPointF(m_bounds.width() / 2.0, m_bounds.height() / 2.0));
 }
 
+void MdRippleController::pressTouch(const QPointF &position)
+{
+    // Restart the delay on a repeat: the newest touch position wins, and the
+    // ripple must not start until the finger has been still for TouchDelayMs.
+    m_touchPosition = position;
+    m_touchCentered = false;
+    m_touchPending = true;
+    m_touchTimer->start();
+}
+
+void MdRippleController::pressTouchCentered()
+{
+    m_touchPosition = QPointF(m_bounds.width() / 2.0, m_bounds.height() / 2.0);
+    m_touchCentered = true;
+    m_touchPending = true;
+    m_touchTimer->start();
+}
+
 void MdRippleController::release()
 {
+    // A release that lands inside the touch delay is the swipe/scroll
+    // disambiguation win: drop the pending start and paint nothing at all.
+    if (m_touchPending) {
+        clearTouchPress();
+        return;
+    }
     if (!m_active || m_releasedAtMs >= 0) {
         return;
     }
@@ -260,7 +296,9 @@ void MdRippleController::release()
 
 void MdRippleController::cancel()
 {
+    clearTouchPress();
     if (!m_active) {
+        // A cancelled pending touch left no visual behind, so no repaint.
         return;
     }
     m_timer->stop();
@@ -268,6 +306,28 @@ void MdRippleController::cancel()
     m_releasedAtMs = -1;
     m_elapsedMs = 0;
     emit repaintRequested();
+}
+
+void MdRippleController::clearTouchPress()
+{
+    m_touchPending = false;
+    m_touchCentered = false;
+    m_touchTimer->stop();
+}
+
+void MdRippleController::onTouchTimeout()
+{
+    if (!m_touchPending) {
+        return;
+    }
+    const QPointF position = m_touchPosition;
+    const bool centered = m_touchCentered;
+    clearTouchPress();
+    if (centered) {
+        pressCentered();
+    } else {
+        press(position);
+    }
 }
 
 MdRippleFrame MdRippleController::currentFrame() const

@@ -255,10 +255,16 @@ void MdButton::mousePressEvent(QMouseEvent *event)
 
     m_pressPosition = event->pos() - containerRect().topLeft();
     m_hasPressPosition = true;
+    // Qt synthesises the mouse press from a touch (TouchBegin / a finger tap)
+    // with this source; material-web delays the ripple by TOUCH_DELAY_MS on
+    // exactly those so a swipe/scroll can cancel it first. Mouse presses stay
+    // immediate.
+    m_pressIsTouch = event->source() == Qt::MouseEventSynthesizedByQt;
     // QAbstractButton::mousePressEvent emits pressed() synchronously, which is
     // what lets onPressed() know whether a pointer position is available.
     QPushButton::mousePressEvent(event);
     m_hasPressPosition = false;
+    m_pressIsTouch = false;
 }
 
 void MdButton::mouseReleaseEvent(QMouseEvent *event)
@@ -406,10 +412,17 @@ void MdButton::onPressed()
     if (m_ripple) {
         if (m_hasPressPosition) {
             m_ripple->setBounds(containerRect().size());
-            m_ripple->press(m_pressPosition);
+            if (m_pressIsTouch) {
+                // Touch: start after TOUCH_DELAY_MS so a scroll that begins
+                // here cancels the ripple instead of flashing it.
+                m_ripple->pressTouch(m_pressPosition);
+            } else {
+                m_ripple->press(m_pressPosition);
+            }
         } else {
             // Keyboard activation: no pointer position exists, so the ripple
-            // starts from the middle of the container.
+            // starts from the middle of the container. Keyboard is never a
+            // touch, so it stays immediate.
             m_ripple->setBounds(containerRect().size());
             m_ripple->pressCentered();
         }
