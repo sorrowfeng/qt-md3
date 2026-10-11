@@ -11,6 +11,14 @@ namespace md {
 MdSearchBar::MdSearchBar(QWidget *parent)
     : QLineEdit(parent)
 {
+    // Same rule as MdTextField: the style paints the pill on this widget, so
+    // QLineEdit's default Base fill must not show through (it is light even
+    // in dark mode).
+    setAutoFillBackground(false);
+    QPalette pal = palette();
+    pal.setColor(QPalette::Base, Qt::transparent);
+    pal.setColor(QPalette::Window, Qt::transparent);
+    setPalette(pal);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 }
 

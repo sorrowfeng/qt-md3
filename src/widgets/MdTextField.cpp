@@ -22,6 +22,16 @@ qreal approach(qreal current, qreal target, qreal rate)
 MdTextField::MdTextField(QWidget *parent)
     : QLineEdit(parent)
 {
+    // The decoration paints on the widget itself. QLineEdit's own paintEvent
+    // fills QPalette::Base first — in dark mode that default is still light,
+    // and the disabled row's on-surface @ 0.04 cannot cover it (the field
+    // came out a white slab). Keep the chrome transparent so only the style's
+    // container shows. Same rule as MdTextArea's viewport.
+    setAutoFillBackground(false);
+    QPalette pal = palette();
+    pal.setColor(QPalette::Base, Qt::transparent);
+    pal.setColor(QPalette::Window, Qt::transparent);
+    setPalette(pal);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     connect(this, &QLineEdit::textChanged, this, [this](const QString &) {
         emit populatedChanged(isPopulated());

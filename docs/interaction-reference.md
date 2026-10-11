@@ -66,3 +66,24 @@ Matches material-web's token wiring and our token table:
   table above â€” `:focus-visible` gating, ripple colour from pressed
   state-layer role, removal of the flat pressed layer. See
   `docs/porting-todo.md` â†’ Buttons â†’ Interaction-fidelity audit.
+
+## 2026-10-11 motion fidelity re-check
+
+Source-of-truth constants re-verified against the implementation and the
+motion test suite (TestMd3Ripple / TestMd3Button / TestMd3ButtonGroup /
+TestMd3CheckBox / TestMd3Dialog / TestMd3AppBar ¡ª all green):
+
+| Constant | Documented | Implemented | Verdict |
+| --- | --- | --- | --- |
+| Ripple grow | 450 ms | `MdRipple` | agree |
+| Ripple min press | 225 ms | `MdRipple` | agree |
+| Ripple fade | 375 ms | `MdRipple` | agree |
+| Ripple initial scale / padding / soft edge | 0.2 / 10 / 75 @ 0.35 | `MdRipple` | agree |
+| Ripple easing | `EASING.STANDARD` | `MdRipple` | agree |
+| Press morph spring | spring-fast-spatial 1400 / 0.9 | button, icon-button, button-group, split, segmented tokens | agree |
+| Check draw-in / dash morph | spatial default spring | `TestMd3CheckBox` | agree |
+| Dialog fade | effects-fast spring | `TestMd3Dialog` | agree |
+| App-bar scroll colour | FastOutLinearInEasing then Oklab | `TestMd3AppBar` + pixel audit | agree |
+
+**Touch delay (150 ms) remains unimplemented** ¡ª the standing gap already
+recorded above. No new motion defects.
