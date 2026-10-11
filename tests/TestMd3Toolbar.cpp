@@ -274,8 +274,12 @@ void TestMd3Toolbar::colourSchemeTables()
 
 void TestMd3Toolbar::disabledWinsOverSelected()
 {
+    // Keep the resolved tokens alive: schemeFor() returns a reference into
+    // them, and binding it to a temporary's member was a use-after-scope
+    // (caught by ASan on the Qt 5 Debug job).
+    const MdFloatingToolbarTokens tokens = MdFloatingToolbarTokens::resolve();
     const MdToolbarScheme &standard =
-        MdFloatingToolbarTokens::resolve().schemeFor(MdToolbarColorScheme::Standard);
+        tokens.schemeFor(MdToolbarColorScheme::Standard);
 
     const MdToolbarItemColours &disabledUnselected =
         standard.item(false, MdToolbarItemState::Disabled);

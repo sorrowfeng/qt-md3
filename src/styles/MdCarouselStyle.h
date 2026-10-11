@@ -75,7 +75,7 @@ public:
     };
 
     /// The counts and sizes one arrangement of items resolves to.
-    struct Arrangement
+    struct QT_MD3_EXPORT Arrangement
     {
         int priority = 0;
         qreal smallSize = 0.0;

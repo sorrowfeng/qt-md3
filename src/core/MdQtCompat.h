@@ -52,7 +52,15 @@ using MdEnterEvent = QEvent;
 
 inline QPointF mousePosition(const QMouseEvent *event)
 {
-    return event->localPos();
+    // QTest::mousePress / mouseMove on Qt 5 fill pos() reliably but can
+    // leave localPos() at (0, 0) for synthesised events, which made
+    // MdSlider's drag see no movement. Prefer the non-null reading.
+    const QPointF local = event->localPos();
+    const QPointF pos = QPointF(event->pos());
+    if (local.isNull() && !pos.isNull()) {
+        return pos;
+    }
+    return local;
 }
 
 /// Qt 5 has no position on the enter event; the cursor's widget mapping is

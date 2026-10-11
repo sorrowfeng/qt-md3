@@ -419,8 +419,11 @@ void TestMd3Navigation::tokenOverridesReachTheFamilies()
     // pill's padding is derived from it rather than stored.
     global.setValue(QStringLiteral("md.comp.nav-bar-item-vertical.active-indicator.width"),
                     QStringLiteral("48"));
+    // Keep the resolved tokens alive: forVariant() returns a reference into
+    // them (use-after-scope under ASan otherwise).
+    const MdNavigationBarTokens overrideTokens = MdNavigationBarTokens::resolve();
     const MdNavigationBarVariantTokens &flexible =
-        MdNavigationBarTokens::resolve().forVariant(MdNavigationBarVariant::Flexible);
+        overrideTokens.forVariant(MdNavigationBarVariant::Flexible);
     QCOMPARE(flexible.activeIndicatorWidth, 48.0);
     QCOMPARE(flexible.indicatorHorizontalPadding(), 12.0);
 
