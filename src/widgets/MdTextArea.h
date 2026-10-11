@@ -19,6 +19,8 @@
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
 
+#include "core/MdQtCompat.h"
+
 #include <QtWidgets/QPlainTextEdit>
 
 namespace md {
@@ -98,7 +100,7 @@ signals:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
-    void enterEvent(QEnterEvent *event) override;
+    void enterEvent(MdEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;

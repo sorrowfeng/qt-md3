@@ -32,7 +32,6 @@
 #include "styles/MdMenuStyle.h"
 #include "widgets/MdMenu.h"
 
-#include <QtGui/QEnterEvent>
 #include <QtGui/QFontMetrics>
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
@@ -376,7 +375,7 @@ void TestMd3Menu::hoverPaintsTheStateLayer()
 
     // The hover layer paints only through the real event path (Qt5 offscreen
     // does not synthesize enter on mouseMove).
-    QEnterEvent enter(QPointF(30, 30), QPointF(30, 30), QPointF(30, 30));
+    QEvent enter(QEvent::Enter);
     QApplication::sendEvent(&item, &enter);
     QVERIFY(item.isHovered());
     QCOMPARE(MdMenuStyle::stateFor(item), MdNavigationItemState::Hovered);

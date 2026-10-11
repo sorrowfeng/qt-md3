@@ -254,7 +254,7 @@ void TestMd3Slider::valueIndicatorReveals()
     QCOMPARE(slider.labelReveal(), 0.0);
 
     // Hovering drives the reveal target; the tick loop settles it.
-    QEnterEvent enter(QPointF(120, 24), QPointF(120, 24), QPointF(120, 24));
+    QEvent enter(QEvent::Enter);
     QApplication::sendEvent(&slider, &enter);
     QTRY_VERIFY_WITH_TIMEOUT(slider.labelReveal() > 0.5, 500);
 }

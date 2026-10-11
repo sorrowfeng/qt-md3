@@ -107,7 +107,7 @@ void MdSearchBar::mousePressEvent(QMouseEvent *event)
     emit activated();
 }
 
-void MdSearchBar::enterEvent(QEnterEvent *event)
+void MdSearchBar::enterEvent(MdEnterEvent *event)
 {
     QLineEdit::enterEvent(event);
     m_hovered = true;

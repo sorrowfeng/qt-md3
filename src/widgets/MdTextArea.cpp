@@ -210,7 +210,7 @@ void MdTextArea::resizeEvent(QResizeEvent *event)
     update();
 }
 
-void MdTextArea::enterEvent(QEnterEvent *event)
+void MdTextArea::enterEvent(MdEnterEvent *event)
 {
     QPlainTextEdit::enterEvent(event);
     m_hovered = true;

@@ -196,7 +196,7 @@ void MdTextField::resizeEvent(QResizeEvent *event)
     update();
 }
 
-void MdTextField::enterEvent(QEnterEvent *event)
+void MdTextField::enterEvent(MdEnterEvent *event)
 {
     QLineEdit::enterEvent(event);
     m_hovered = true;

@@ -228,7 +228,7 @@ void MdTimePicker::mousePressEvent(QMouseEvent *event)
     if (isEffectivelyDisabled()) {
         return;
     }
-    const QPointF pos = event->position();
+    const QPointF pos = mousePosition(event);
 
     // Mode switching: the time selectors and the period selector take clicks.
     if (timeSelectorRect(true).contains(pos) && m_face != MdTimePickerFace::Hours) {
@@ -259,7 +259,7 @@ void MdTimePicker::mouseMoveEvent(QMouseEvent *event)
     if (!m_dragging || isEffectivelyDisabled()) {
         return;
     }
-    applyDialPosition(event->position());
+    applyDialPosition(mousePosition(event));
 }
 
 void MdTimePicker::mouseReleaseEvent(QMouseEvent *event)
@@ -268,7 +268,7 @@ void MdTimePicker::mouseReleaseEvent(QMouseEvent *event)
     m_dragging = false;
 }
 
-void MdTimePicker::enterEvent(QEnterEvent *event)
+void MdTimePicker::enterEvent(MdEnterEvent *event)
 {
     QWidget::enterEvent(event);
     m_hovered = true;

@@ -6,7 +6,6 @@
 #include "styles/MdCardStyle.h"
 #include "widgets/MdCard.h"
 
-#include <QtGui/QEnterEvent>
 #include <QtGui/QMouseEvent>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
@@ -213,7 +212,7 @@ void TestMd3Card::statePriority()
     QCOMPARE(MdCardStyle::stateFor(card), MdCardState::Pressed);
     QTest::mouseRelease(&card, Qt::LeftButton, {}, QPoint(50, 50));
 
-    QEnterEvent enter(QPointF(1, 1), QPointF(1, 1), QPointF(1, 1));
+    QEvent enter(QEvent::Enter);
     QApplication::sendEvent(&card, &enter);
     QVERIFY(card.isHovered());
     QCOMPARE(MdCardStyle::stateFor(card), MdCardState::Hovered);
@@ -287,7 +286,7 @@ void TestMd3Card::elevationAnimation()
     card.setClickable(true);
     QVERIFY(closeTo(card.currentShadowDp(), MdElevation::shadowDp(ElevationLevel::Level1)));
 
-    QEnterEvent enter(QPointF(1, 1), QPointF(1, 1), QPointF(1, 1));
+    QEvent enter(QEvent::Enter);
     QApplication::sendEvent(&card, &enter);
     QVERIFY(card.isElevationAnimating());
     QTest::qWait(320);

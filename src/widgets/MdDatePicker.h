@@ -25,6 +25,7 @@
 
 #include "core/MdDatePickerDockedTokens.h"
 #include "core/MdDatePickerTokens.h"
+#include "core/MdQtCompat.h"
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
 
@@ -128,7 +129,7 @@ signals:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
-    void enterEvent(QEnterEvent *event) override;
+    void enterEvent(MdEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;

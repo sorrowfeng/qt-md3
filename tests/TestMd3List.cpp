@@ -16,7 +16,6 @@
 #include "widgets/MdList.h"
 #include "widgets/MdListItem.h"
 
-#include <QtGui/QEnterEvent>
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
 #include <QtTest/QtTest>
@@ -477,7 +476,7 @@ void TestMd3List::interactionStatesPaintLayers()
     // tests drive it directly rather than with QTest::mouseMove, which does not
     // synthesise an enter under the offscreen plugin on Qt 5 — the same
     // approach TestMd3Card and TestMd3SplitButton take.
-    QEnterEvent enter(QPointF(4, 4), QPointF(4, 4), QPointF(4, 4));
+    QEvent enter(QEvent::Enter);
     QEvent leave(QEvent::Leave);
 
     // A non-interactive item ignores hover entirely.

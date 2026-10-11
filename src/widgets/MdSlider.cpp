@@ -402,7 +402,7 @@ void MdSlider::mousePressEvent(QMouseEvent *event)
     }
     m_pressed = true;
     emit sliderPressed();
-    setActiveFromPoint(event->position());
+    setActiveFromPoint(mousePosition(event));
     retargetAnimations();
     m_handleWidth = m_handleWidthTarget;
     update();
@@ -413,7 +413,7 @@ void MdSlider::mouseMoveEvent(QMouseEvent *event)
     if (!m_pressed || isEffectivelyDisabled()) {
         return;
     }
-    setActiveFromPoint(event->position());
+    setActiveFromPoint(mousePosition(event));
 }
 
 void MdSlider::mouseReleaseEvent(QMouseEvent *event)
@@ -428,7 +428,7 @@ void MdSlider::mouseReleaseEvent(QMouseEvent *event)
     update();
 }
 
-void MdSlider::enterEvent(QEnterEvent *event)
+void MdSlider::enterEvent(MdEnterEvent *event)
 {
     QWidget::enterEvent(event);
     m_hovered = true;

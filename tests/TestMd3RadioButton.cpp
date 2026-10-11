@@ -307,7 +307,7 @@ void TestMd3RadioButton::hoverPaintsTheStateLayer()
 
     // The hover layer paints only through the real event path (Qt5 offscreen
     // does not synthesize enter on mouseMove).
-    QEnterEvent enter(QPointF(24, 24), QPointF(24, 24), QPointF(24, 24));
+    QEvent enter(QEvent::Enter);
     QApplication::sendEvent(&button, &enter);
     QVERIFY(button.isHovered());
     const QColor layer = pixelColorAt(button, QPointF(24.0, 6.0));

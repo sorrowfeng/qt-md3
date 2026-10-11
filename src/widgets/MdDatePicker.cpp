@@ -253,7 +253,7 @@ void MdDatePicker::mousePressEvent(QMouseEvent *event)
     if (isEffectivelyDisabled()) {
         return;
     }
-    const QPointF pos = event->position();
+    const QPointF pos = mousePosition(event);
 
     // Docked: the header's two menu buttons. The dropdown reuses the classic
     // `MdMenu` surface (recorded divergence — the docked `menu.list-item.*`
@@ -341,7 +341,7 @@ void MdDatePicker::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void MdDatePicker::enterEvent(QEnterEvent *event)
+void MdDatePicker::enterEvent(MdEnterEvent *event)
 {
     QWidget::enterEvent(event);
     m_hovered = true;

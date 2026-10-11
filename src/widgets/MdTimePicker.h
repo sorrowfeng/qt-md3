@@ -16,6 +16,7 @@
 // the picker paints its own face; the surrounding dialog is `MdDialog`'s.
 
 #include "core/MdTimePickerTokens.h"
+#include "core/MdQtCompat.h"
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
 
@@ -88,7 +89,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-    void enterEvent(QEnterEvent *event) override;
+    void enterEvent(MdEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
