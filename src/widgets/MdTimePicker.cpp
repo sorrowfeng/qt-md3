@@ -93,10 +93,14 @@ QRectF MdTimePicker::selectorHandleRect() const
 QRectF MdTimePicker::timeSelectorRect(bool start) const
 {
     const MdTimePickerTokens &tokens = timePickerTokens();
+    // Centre the *whole* row — hours, gap, minutes, and (in 12h mode) the
+    // AM/PM column — so the period pill cannot run past the dialog edge.
+    const qreal period = m_24h ? 0.0 : (24.0 + tokens.periodVerticalWidth);
     const qreal total = m_24h ? tokens.timeSelector24hWidth
-                              : 2.0 * tokens.timeSelectorWidth + 24.0;
+                              : 2.0 * tokens.timeSelectorWidth + 24.0 + period;
     const qreal left = (rect().width() - total) / 2.0;
-    const qreal y = 16.0;
+    // Below the "Select time" headline (label-medium at y+12, 20 tall).
+    const qreal y = 44.0;
     if (m_24h) {
         return QRectF(left, y, tokens.timeSelector24hWidth, tokens.timeSelectorHeight);
     }
@@ -108,18 +112,27 @@ QRectF MdTimePicker::timeSelectorRect(bool start) const
 QRectF MdTimePicker::periodSelectorRect(bool am) const
 {
     const MdTimePickerTokens &tokens = timePickerTokens();
-    const QRectF hours = timeSelectorRect(true);
-    const qreal x = hours.right() + (m_24h ? 0.0 : 24.0) + (m_24h ? 0.0 : 24.0);
-    const qreal half = tokens.periodHeight / 2.0;
-    return am ? QRectF(x, hours.top(), tokens.periodWidth / 2.0, tokens.periodHeight)
-              : QRectF(x, hours.top() + half, tokens.periodWidth / 2.0, tokens.periodHeight);
+    // [hours 24 gap] [minutes 24 gap] [period] — the period sits past the
+    // minutes field, not just past the hours field (the first revision added
+    // only the gaps and parked AM/PM on top of the minute digits).
+    //
+    // The export's *vertical* slot is 52×80 (AM above PM). The first
+    // revision sliced the horizontal 216×38 in half and stacked that, which
+    // needed 348 px of row and overflowed the dialog.
+    const QRectF minutes = timeSelectorRect(false);
+    const qreal x = minutes.right() + 24.0;
+    const qreal w = tokens.periodVerticalWidth;
+    const qreal h = tokens.periodVerticalHeight / 2.0;
+    return am ? QRectF(x, minutes.top(), w, h)
+              : QRectF(x, minutes.top() + h, w, h);
 }
 
 QSize MdTimePicker::sizeHint() const
 {
     const MdTimePickerTokens &tokens = timePickerTokens();
     return QSize(int(tokens.dialSize + 32.0),
-                 int(16.0 + tokens.timeSelectorHeight + 16.0 + tokens.dialSize + 16.0));
+                 int(12.0 + 20.0 + 12.0 + tokens.timeSelectorHeight + 16.0 + tokens.dialSize
+                     + 16.0));
 }
 
 QSize MdTimePicker::minimumSizeHint() const

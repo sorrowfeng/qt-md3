@@ -166,8 +166,8 @@ void SliderPage::build(GalleryContext &context)
                 {QStringLiteral("d"), large},
                 {QStringLiteral("e"), xlarge}},
                180.0);
-        context.detail(L("xsmall �� small �� medium �� large �� xlarge",
-                         "xsmall �� small �� medium �� large �� xlarge"));
+        context.detail(L("xsmall · small · medium · large · xlarge",
+                         "xsmall · small · medium · large · xlarge"));
         context.space(16.0);
     }
 
@@ -190,7 +190,7 @@ void SliderPage::build(GalleryContext &context)
         ticked->setTicks(true);
         ticked->setValue(50.0);
         addRow({{QStringLiteral("a"), plain}, {QStringLiteral("b"), ticked}});
-        context.detail(L("离散 �� 离散 + 刻度", "discrete �� discrete + ticks"));
+        context.detail(L("离散 · 离散 + 刻度", "discrete · discrete + ticks"));
         context.space(16.0);
     }
 
@@ -208,7 +208,7 @@ void SliderPage::build(GalleryContext &context)
         range->setValueStart(25.0);
         range->setValueEnd(75.0);
         addRow({{QStringLiteral("a"), range}});
-        context.detail(L("25 �� 75", "25 �� 75"));
+        context.detail(L("25 – 75", "25 – 75"));
         context.space(16.0);
     }
 
@@ -229,8 +229,8 @@ void SliderPage::build(GalleryContext &context)
         labelledStep->setStep(5.0);
         labelledStep->setValue(65.0);
         addRow({{QStringLiteral("a"), labelled}, {QStringLiteral("b"), labelledStep}});
-        context.detail(L("连续 + 标签 �� 离散 + 标签（悬停/聚焦/按压可见）",
-                         "continuous + label �� discrete + label (hover/focus/press)"));
+        context.detail(L("连续 + 标签 · 离散 + 标签（悬停/聚焦/按压可见）",
+                         "continuous + label · discrete + label (hover/focus/press)"));
         context.space(16.0);
     }
 
@@ -256,11 +256,11 @@ void SliderPage::build(GalleryContext &context)
         "下面每一行都由 TestMd3Slider 直接断言，动一行就变红。",
         "Every line below is asserted directly by TestMd3Slider; moving one turns it "
         "red."));
-    context.detail(L("手柄宽 4dp，hover 4dp、focus/pressed 2dp、disabled 4dp �� 状态层 40dp �� "
-                     "停靠点 4dp（trailing-space 4dp）�� 刻度 2dp �� 标签下间距 12dp、最小 28dp",
+    context.detail(L("手柄宽 4dp，hover 4dp、focus/pressed 2dp、disabled 4dp · 状态层 40dp · "
+                     "停靠点 4dp（trailing-space 4dp）· 刻度 2dp · 标签下间距 12dp、最小 28dp",
                      "the handle is 4dp wide — hover 4dp, focus/pressed 2dp, disabled 4dp — "
-                     "the state layer 40dp �� stop indicators 4dp (trailing-space 4dp) �� "
-                     "tick marks 2dp �� the label sits 12dp above, minimum 28dp"));
+                     "the state layer 40dp · stop indicators 4dp (trailing-space 4dp) · "
+                     "tick marks 2dp · the label sits 12dp above, minimum 28dp"));
     context.detail(L("尺寸行：轨道 16/24/40/56/96dp、手柄 44/44/44/68/108dp、端头圆角 "
                      "8/8/12/16/28dp、图标 0/0/24/24/32dp",
                      "the size rows: tracks 16/24/40/56/96dp, handles 44/44/44/68/108dp, "
@@ -273,11 +273,11 @@ void SliderPage::build(GalleryContext &context)
                      "theming table's surface-container-highest), the handle primary; "
                      "disabled on-surface @0.38 / @0.12 / @0.38"));
     context.detail(L("值标签：inverse-surface 容器 + inverse-on-surface 文字（label-large），"
-                     "duration-short2 + emphasized 从手柄缩放展开 �� 手柄阴影 level1 �� "
+                     "duration-short2 + emphasized 从手柄缩放展开 · 手柄阴影 level1 · "
                      "disabled level0",
                      "the value label: inverse-surface container + inverse-on-surface text "
                      "(label-large), scaling in from the handle on duration-short2 + "
-                     "emphasized �� the handle's shadow level1 �� level0 disabled"));
+                     "emphasized · the handle's shadow level1 · level0 disabled"));
     context.space(8.0);
 }
 

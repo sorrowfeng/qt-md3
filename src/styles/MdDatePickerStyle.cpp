@@ -85,13 +85,31 @@ void MdDatePickerStyle::paintDatePicker(QPainter &painter, const MdDatePicker &p
         const QFont supportingFont = MdTypeScale::font(TypeStyle::LabelLarge);
         painter.setFont(supportingFont);
         painter.setPen(MdTheme::instance().color(tokens.headerSupportingColor));
+        // The header's supporting line is the *year* — it is the year-face
+        // toggle in M3, not the month. The month lives once, in the calendar
+        // subhead below; painting it here too doubled every "June 2026".
         painter.drawText(header.adjusted(16.0, header.height() - 48.0, -16.0, -8.0),
                          MdStyleBase::leadingAlignment(&picker) | Qt::AlignVCenter,
-                         picker.displayedMonth().toString(QStringLiteral("MMMM yyyy")));
+                         picker.face() == MdDatePickerFace::Years
+                             ? QStringLiteral("Select year")
+                             : QString::number(picker.displayedMonth().year()));
     }
 
     if (picker.face() == MdDatePickerFace::Calendar) {
-        // 3 — the weekday row.
+        // 3 — the month subhead sits *above* the weekday row (M3's order:
+        // month, then Mon…Sun, then the day grid). The first revision parked
+        // it under the weekdays and on top of week row 1.
+        {
+            const QFont subheadFont = MdTypeScale::font(TypeStyle::TitleSmall);
+            painter.setFont(subheadFont);
+            painter.setPen(MdTheme::instance().color(tokens.monthSubheadColor));
+            painter.drawText(QRectF(picker.headerRect().left(), picker.headerRect().bottom() + 4.0,
+                                    picker.headerRect().width(), 20.0),
+                             MdStyleBase::leadingAlignment(&picker) | Qt::AlignVCenter,
+                             picker.displayedMonth().toString(QStringLiteral("MMMM yyyy")));
+        }
+
+        // 4 — the weekday row.
         {
             const QFont weekdayFont = MdTypeScale::font(TypeStyle::BodyLarge);
             painter.setFont(weekdayFont);
@@ -99,21 +117,10 @@ void MdDatePickerStyle::paintDatePicker(QPainter &painter, const MdDatePicker &p
             static const char *kDays[7] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
             for (int col = 0; col < 7; ++col) {
                 const QRectF cell = picker.dateCellRect(-1, col);
-                painter.drawText(QRectF(cell.left(), picker.headerRect().bottom() + 4.0,
+                painter.drawText(QRectF(cell.left(), picker.headerRect().bottom() + 28.0,
                                         cell.width(), 20.0),
                                  Qt::AlignCenter, QLatin1String(kDays[col]));
             }
-        }
-
-        // 4 — the month subhead.
-        {
-            const QFont subheadFont = MdTypeScale::font(TypeStyle::TitleSmall);
-            painter.setFont(subheadFont);
-            painter.setPen(MdTheme::instance().color(tokens.monthSubheadColor));
-            painter.drawText(QRectF(picker.headerRect().left(), picker.headerRect().bottom() + 24.0,
-                                    picker.headerRect().width(), 20.0),
-                             MdStyleBase::leadingAlignment(&picker) | Qt::AlignVCenter,
-                             picker.displayedMonth().toString(QStringLiteral("MMMM yyyy")));
         }
 
         // 5 — the calendar grid. The style resolves each slot through the

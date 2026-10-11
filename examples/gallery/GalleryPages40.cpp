@@ -169,22 +169,22 @@ void TimePickerPage::build(GalleryContext &context)
         "下面每一行都由 TestMd3TimePicker 直接断言，动一行就变红。",
         "Every line below is asserted directly by TestMd3TimePicker; moving one turns it "
         "red."));
-    context.detail(L("表盘 256dp �� 选择手柄 48dp �� 中心 8dp �� 轨道 2dp（全 primary）�� "
-                     "时间选择器 96×80 / 24h 114×80 �� AM/PM 216×38（outlined）",
-                     "the dial 256dp �� the selector handle 48dp �� the centre 8dp �� the "
-                     "track 2dp (all primary) �� time selectors 96×80 / 24h 114×80 �� the "
+    context.detail(L("表盘 256dp · 选择手柄 48dp · 中心 8dp · 轨道 2dp（全 primary）· "
+                     "时间选择器 96×80 / 24h 114×80 · AM/PM 216×38（outlined）",
+                     "the dial 256dp · the selector handle 48dp · the centre 8dp · the "
+                     "track 2dp (all primary) · time selectors 96×80 / 24h 114×80 · the "
                      "period selector 216×38 (outlined)"));
-    context.detail(L("容器 surface-container-high @ level3、corner-extra-large �� 表盘 "
-                     "surface-container-highest �� 选中 primary-container / "
+    context.detail(L("容器 surface-container-high @ level3、corner-extra-large · 表盘 "
+                     "surface-container-highest · 选中 primary-container / "
                      "tertiary-container",
-                     "the container surface-container-high @ level3, corner-extra-large �� "
-                     "the dial surface-container-highest �� selected primary-container / "
+                     "the container surface-container-high @ level3, corner-extra-large · "
+                     "the dial surface-container-highest · selected primary-container / "
                      "tertiary-container"));
-    context.detail(L("表盘吸附：小时到 1、分钟到 5 分钟槽 �� 导出不发布禁用行（回退 "
-                     "on-surface @0.38）�� 弃用行携带不读（clock-dial.color.ignore / "
+    context.detail(L("表盘吸附：小时到 1、分钟到 5 分钟槽 · 导出不发布禁用行（回退 "
+                     "on-surface @0.38）· 弃用行携带不读（clock-dial.color.ignore / "
                      "shape.ignore、surface-tint-layer-color）",
-                     "the dial snaps: hours to 1, minutes to 5-minute slots �� the export "
-                     "publishes no disabled rows (falling back to on-surface @0.38) �� "
+                     "the dial snaps: hours to 1, minutes to 5-minute slots · the export "
+                     "publishes no disabled rows (falling back to on-surface @0.38) · "
                      "deprecated rows carried, not read (clock-dial.color.ignore / "
                      "shape.ignore, surface-tint-layer-color)"));
     context.space(8.0);

@@ -167,7 +167,7 @@ void SearchPage::build(GalleryContext &context)
                 {QStringLiteral("b"), docked},
                 {QStringLiteral("c"), fullScreen}},
                220.0);
-        context.detail(L("栏 �� 停靠视图 �� 全屏视图", "bar �� docked �� full-screen"));
+        context.detail(L("栏 · 停靠视图 · 全屏视图", "bar · docked · full-screen"));
         context.space(16.0);
     }
 
@@ -177,19 +177,19 @@ void SearchPage::build(GalleryContext &context)
         "下面每一行都由 TestMd3SearchBar 直接断言，动一行就变红。",
         "Every line below is asserted directly by TestMd3SearchBar; moving one turns it "
         "red."));
-    context.detail(L("容器 56dp（全屏 72dp）�� 图标 24dp �� 侧距 16dp �� 头像 30dp / 目标 "
-                     "48dp �� 状态层 0.08 / 0.12",
-                     "the container 56dp (72dp full-screen) �� icons 24dp �� side spaces "
-                     "16dp �� the avatar 30dp / target 48dp �� the state layer 0.08 / "
+    context.detail(L("容器 56dp（全屏 72dp）· 图标 24dp · 侧距 16dp · 头像 30dp / 目标 "
+                     "48dp · 状态层 0.08 / 0.12",
+                     "the container 56dp (72dp full-screen) · icons 24dp · side spaces "
+                     "16dp · the avatar 30dp / target 48dp · the state layer 0.08 / "
                      "0.12"));
-    context.detail(L("三面形状：栏 corner-full �� 停靠 corner-extra-large �� 全屏 "
-                     "corner-none �� 停靠/全屏背景 surface-container-low、分隔线 outline",
-                     "the three shapes: bar corner-full �� docked corner-extra-large �� "
-                     "full-screen corner-none �� the docked/full-screen background "
+    context.detail(L("三面形状：栏 corner-full · 停靠 corner-extra-large · 全屏 "
+                     "corner-none · 停靠/全屏背景 surface-container-low、分隔线 outline",
+                     "the three shapes: bar corner-full · docked corner-extra-large · "
+                     "full-screen corner-none · the docked/full-screen background "
                      "surface-container-low, the divider outline"));
-    context.detail(L("点击发出 activated() �� Enter 发出 searchRequested(text) �� "
+    context.detail(L("点击发出 activated() · Enter 发出 searchRequested(text) · "
                      "surface-tint-layer-color 携带不画（海拔走 MdElevation）",
-                     "clicking emits activated() �� Enter emits searchRequested(text) �� "
+                     "clicking emits activated() · Enter emits searchRequested(text) · "
                      "surface-tint-layer-color carried, not drawn (the elevation paints "
                      "through MdElevation)"));
     context.space(8.0);

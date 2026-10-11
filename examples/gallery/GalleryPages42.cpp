@@ -60,8 +60,10 @@ private:
     void placeChildren();
 
     md::MdTextField *tf(const QString &id);
+    md::MdTextArea *area(const QString &id);
 
     QHash<QString, md::MdTextField *> m_fields;
+    QHash<QString, md::MdTextArea *> m_areas;
     QVector<TextFieldSlot> m_slots;
 };
 
@@ -110,6 +112,20 @@ md::MdTextField *TextFieldPage::tf(const QString &id)
     return created;
 }
 
+/// Banked: build() is re-entrant, and creating a MdTextArea on every pass
+/// would leave the previous instance painting beneath (the menu page's rule).
+md::MdTextArea *TextFieldPage::area(const QString &id)
+{
+    const auto found = m_areas.constFind(id);
+    if (found != m_areas.constEnd()) {
+        return found.value();
+    }
+    auto *created = new md::MdTextArea(this);
+    created->hide();
+    m_areas.insert(id, created);
+    return created;
+}
+
 void TextFieldPage::build(GalleryContext &context)
 {
     m_slots.clear();
@@ -146,7 +162,7 @@ void TextFieldPage::build(GalleryContext &context)
         outlined->setVariant(md::MdTextFieldVariant::Outlined);
         outlined->setLabelText(QStringLiteral("Outlined"));
         addRow({{QStringLiteral("a"), filled}, {QStringLiteral("b"), outlined}});
-        context.detail(L("filled �� outlined", "filled �� outlined"));
+        context.detail(L("filled · outlined", "filled · outlined"));
         context.space(16.0);
     }
 
@@ -165,7 +181,7 @@ void TextFieldPage::build(GalleryContext &context)
         filledField->setLabelText(QStringLiteral("Populated"));
         filledField->setText(QStringLiteral("hello"));
         addRow({{QStringLiteral("a"), rest}, {QStringLiteral("b"), filledField}});
-        context.detail(L("静止 �� 已填充", "resting �� populated"));
+        context.detail(L("静止 · 已填充", "resting · populated"));
         context.space(16.0);
     }
 
@@ -196,19 +212,17 @@ void TextFieldPage::build(GalleryContext &context)
         " 2)."));
 
     {
-        auto *shortArea = new md::MdTextArea(this);
-        shortArea->hide();
+        auto *shortArea = area(QStringLiteral("short-area"));
         shortArea->setLabelText(QStringLiteral("Short"));
         shortArea->setRows(2);
-        auto *tallArea = new md::MdTextArea(this);
-        tallArea->hide();
+        auto *tallArea = area(QStringLiteral("tall-area"));
         tallArea->setLabelText(QStringLiteral("Tall"));
         tallArea->setSupportingText(QStringLiteral("rows = 6"));
         tallArea->setRows(6);
         const QRectF band = context.band(200.0);
         m_slots.append(TextFieldSlot{shortArea, QRectF(band.left(), band.top(), 280.0, 96.0)});
         m_slots.append(TextFieldSlot{tallArea, QRectF(band.left() + 304.0, band.top(), 280.0, 200.0)});
-        context.detail(L("rows = 2 �� rows = 6", "rows = 2 �� rows = 6"));
+        context.detail(L("rows = 2 · rows = 6", "rows = 2 · rows = 6"));
         context.space(16.0);
     }
 
@@ -234,21 +248,21 @@ void TextFieldPage::build(GalleryContext &context)
         "下面每一行都由 TestMd3TextField 直接断言，动一行就变红。",
         "Every line below is asserted directly by TestMd3TextField; moving one turns it "
         "red."));
-    context.detail(L("容器 56dp �� 图标 24dp �� 指示条 1/1/2/1dp（静止/悬停/聚焦/禁用）�� "
-                     "容器圆角 4dp（filled 只圆顶部）�� 禁用容器 0.04、内容 0.38",
-                     "the container 56dp �� icons 24dp �� the indicator 1/1/2/1dp "
-                     "(rest/hover/focus/disabled) �� the container radius 4dp (filled top "
-                     "only) �� disabled container 0.04, content 0.38"));
-    context.detail(L("颜色按状态直解：指示条 on-surface-variant �� on-surface �� primary �� "
+    context.detail(L("容器 56dp · 图标 24dp · 指示条 1/1/2/1dp（静止/悬停/聚焦/禁用）· "
+                     "容器圆角 4dp（filled 只圆顶部）· 禁用容器 0.04、内容 0.38",
+                     "the container 56dp · icons 24dp · the indicator 1/1/2/1dp "
+                     "(rest/hover/focus/disabled) · the container radius 4dp (filled top "
+                     "only) · disabled container 0.04, content 0.38"));
+    context.detail(L("颜色按状态直解：指示条 on-surface-variant · on-surface · primary · "
                      "标签聚焦 primary、error 全家 error",
-                     "colours resolve by state: the indicator on-surface-variant �� "
-                     "on-surface �� primary �� the label primary under focus, the error "
+                     "colours resolve by state: the indicator on-surface-variant · "
+                     "on-surface · primary · the label primary under focus, the error "
                      "family all error"));
-    context.detail(L("标签浮动：body-large 静止 → body-small 填充/聚焦 �� 两套共享一个"
-                     "结构 �� 导出的 focus-active-indicator-thickness 读系统 3dp 行，"
+    context.detail(L("标签浮动：body-large 静止 → body-small 填充/聚焦 · 两套共享一个"
+                     "结构 · 导出的 focus-active-indicator-thickness 读系统 3dp 行，"
                      "指示条本身用 2dp 的 focus 行",
                      "the label floats: body-large resting → body-small populated/focused "
-                     "�� the two sets share one structure �� the export's "
+                     "· the two sets share one structure · the export's "
                      "focus-active-indicator-thickness reads the system 3dp row while the "
                      "indicator itself uses the 2dp focus row"));
     context.space(8.0);

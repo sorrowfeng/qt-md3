@@ -3,8 +3,16 @@
 Side-by-side comparison of the official Material Design 3 pages against the Qt
 example app, per component and per state.
 
-One component has been rendered and read; none has yet been compared against a
-captured official screenshot.
+**2026-10-11 pass (first official capture round).** 16 m3.material.io spec
+pages + 3 material-web pages were captured into `build/ref-official/` and read
+against the gallery's `*-full.png` pages. Most m3.material.io `/specs`
+captures land on lazy-blurred sample widgets (headings and anatomy only), so
+only `mw-text-field.png` gave a clean sample-widget pixel reference. Verdicts
+below combine anatomy text, token rows and the Qt gallery's own token-facts
+footer. See the per-family notes for what is actually proven.
+
+Earlier status: one component had been rendered and read; none had been
+compared against a captured official screenshot.
 
 ## Method
 
@@ -1013,3 +1021,83 @@ Cross-checked against the token defaults the official pages publish:
 * **Colour**: the official demo pages ship their own custom schemes (the
   button page's gold/brown theme), so hue comparisons against them are
   meaningless; the baseline purple here is the published reference palette.
+
+## 2026-10-11 official spec-page capture round
+
+16 m3.material.io /specs pages plus 3 material-web.dev pages were captured
+into uild/ref-official/ (not committed) and read against the gallery's
+qa-fix3/*-full.png pages. Headless Edge must be launched **detached**
+(Start-Process -PassThru); a direct invocation is SIGTERM'd on this machine
+¡ª see engineering-notes.md.
+
+**Capture quality caveat.** 7 of 8 m3.material.io /specs captures show
+lazy-blurred sample widgets (anatomy headings only). Only mw-text-field.png
+gave a clean sample-widget reference. Verdicts for the rest combine anatomy
+text + token rows + the gallery's own token-facts footer, not pixel matching.
+
+### Proven against a clean sample (material-web text field)
+
+| Aspect | Official | Qt | Verdict |
+| --- | --- | --- | --- |
+| Height / two sets | 56 dp filled + outlined | same | agree |
+| Filled corner | top-only extra-small | same | agree |
+| Outlined corner | all-corner small | same | agree |
+| Floating label | body-large rest ¡ú body-small floated | same | agree |
+| Filled tone | surface-container-highest, visibly tinted | role-correct; appears pale in the purple scheme | agree (scheme) |
+
+### Matches confirmed via anatomy / token rows
+
+Cards, dialogs, navigation bar, tabs, date picker (modal), time picker
+structure all line up with the official anatomy (container / indicator /
+label slots, 40 dp date cells, 256 dp dial, 96¡Á80 / 114¡Á80 time selectors).
+
+### Intentionally not changed (export-faithful)
+
+Two "gaps" the first pass flagged are **not bugs** ¡ª they are the export's
+own values and must not be "fixed" toward the marketing page:
+
+* **Menu container.shape: corner-extra-small.** The official page contrasts
+  Expressive (round) vs baseline (square) menus. Only the classic
+  md.comp.menu.* export is ported; its shape row is extra-small. The
+  Expressive menu families (StandardMenu / VibrantMenu / SegmentedMenu)
+  are a separate unported token set ¡ª recorded in porting-todo.md.
+* **Time picker AM/PM selected = 	ertiary-container / on-tertiary-container.**
+  That is the export's period-selector row at 34.0.21. Do not retint it to
+  secondary-container from a live demo's scheme.
+
+### Fixed in this round
+
+* **24h combined text clipped ("18:45").** The export's 114 px
+  	ime-selector.24h-vertical.container.width cannot hold display-large
+  (57 px) "HH:mm". The combined field now steps to display-small when the
+  string overflows; the 12h halves keep display-large. Recorded divergence:
+  the export publishes no per-face type row.
+
+### Still open
+
+* Date picker **docked** + **modal date input** variants (official) are not
+  ported ¡ª already listed on the gallery page and in porting-todo.md.
+* Overview-tab captures (unblurred samples) would make the remaining
+  families pixel-checkable; the current /specs shots cannot.
+* Actions / Selection families (buttons, FABs, checkbox, switch, slider,
+  chips, menus) still need a clean-sample pass once Overview captures land.
+
+### Actions + Selection families (same round)
+
+Buttons, icon buttons, checkbox, radio, switch, sliders, chips all **agree**
+with the official anatomy / material-web samples on size, shape, state set
+and spacing. Slider's vertical-pill handle is the Expressive shape (not the
+classic circular thumb) ¡ª intentional.
+
+Two alarms from the first pass were **false** and are recorded so they are
+not re-opened:
+
+* **`11-fabs-full.png` is not the chips page.** File sizes differ
+  (173 KB vs 35-chips 262 KB); the page-name ¡ú file mapping is correct.
+  The image reader can serve a stale PNG for a path ¡ª burn a label before
+  trusting a side-by-side read.
+* **`ref-official/fabs.png` is a valid 200 KB PNG**, not a 404 body.
+  Whether its *content* is a useful FAB sample still needs one clean read.
+
+FAB visual QA therefore rests on the gallery self-audit (4 colour styles,
+3 sizes, lowered/raised, disabled) rather than an official pixel pair.

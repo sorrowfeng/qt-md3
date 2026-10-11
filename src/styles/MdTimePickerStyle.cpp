@@ -7,6 +7,7 @@
 
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
+#include <QtGui/QFontMetrics>
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 #include <QtMath>
@@ -112,7 +113,21 @@ void MdTimePickerStyle::paintTimePicker(QPainter &painter, const MdTimePicker &p
             painter.setBrush(container);
             painter.drawRoundedRect(rect, tokens.timeSelectorRadius, tokens.timeSelectorRadius);
         }
-        const QFont font = MdTypeScale::font(TypeStyle::DisplayLarge);
+        // 12h halves are two digits and sit comfortably in display-large.
+        // The 24h combined field is "HH:mm" (five glyphs) in the export's
+        // 114 px box — display-large (57 px) overflows and clips the last
+        // digit, so the combined field steps down until it fits. Recorded
+        // divergence: the export publishes no per-face type row.
+        const QFont font = [&] {
+            if (!picker.is24h()) {
+                return MdTypeScale::font(TypeStyle::DisplayLarge);
+            }
+            const QFontMetricsF fm(MdTypeScale::font(TypeStyle::DisplayLarge));
+            if (fm.horizontalAdvance(text) <= rect.width() - 16.0) {
+                return MdTypeScale::font(TypeStyle::DisplayLarge);
+            }
+            return MdTypeScale::font(TypeStyle::DisplaySmall);
+        }();
         painter.setFont(font);
         painter.setPen(MdTheme::instance().color(selected ? ColorRole::OnPrimaryContainer
                                                           : ColorRole::OnSurface));
@@ -139,14 +154,18 @@ void MdTimePickerStyle::paintTimePicker(QPainter &painter, const MdTimePicker &p
         const QRectF pm = picker.periodSelectorRect(false);
         const bool isPm = picker.period() == MdTimePeriod::Pm;
         auto paintPeriod = [&](const QRectF &rect, const QString &text, bool selected) {
-            const MdNavigationColourSlot &slot =
-                selected ? tokens.periodSelected[int(MdTimeSelectorState::Enabled)]
-                         : tokens.periodUnselected[int(MdTimeSelectorState::Enabled)];
-            const QColor container = resolveSlot(slot);
-            painter.setPen(Qt::NoPen);
-            if (container.isValid()) {
-                painter.setBrush(container);
-                painter.drawRoundedRect(rect, tokens.periodRadius, tokens.periodRadius);
+            // Only the selected cell paints a container (tertiary-container).
+            // The unselected row's `on-surface-variant` is the *text* colour —
+            // painting it as a fill laid a dark slab over the minute field.
+            if (selected) {
+                const MdNavigationColourSlot &slot =
+                    tokens.periodSelected[int(MdTimeSelectorState::Enabled)];
+                const QColor container = resolveSlot(slot);
+                if (container.isValid()) {
+                    painter.setPen(Qt::NoPen);
+                    painter.setBrush(container);
+                    painter.drawRoundedRect(rect, tokens.periodRadius, tokens.periodRadius);
+                }
             }
             painter.setFont(MdTypeScale::font(TypeStyle::TitleMedium));
             painter.setPen(MdTheme::instance().color(selected ? ColorRole::OnTertiaryContainer

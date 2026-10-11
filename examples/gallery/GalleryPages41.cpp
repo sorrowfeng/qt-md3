@@ -153,7 +153,7 @@ void DatePickerPage::build(GalleryContext &context)
     range->setSelectedDate(QDate(2026, 6, 15));
     range->setDisplayedMonth(QDate(2026, 6, 1));
     addPicker(QStringLiteral("range"));
-    context.detail(L("2026 年 6 月 10 日 �� 20 日", "June 10 �� 20, 2026"));
+    context.detail(L("2026 年 6 月 10 日 – 20 日", "June 10 – 20, 2026"));
     context.space(16.0);
 
     // --- what this page is pinned to -----------------------------------------
@@ -162,23 +162,23 @@ void DatePickerPage::build(GalleryContext &context)
         "下面每一行都由 TestMd3DatePicker 直接断言，动一行就变红。",
         "Every line below is asserted directly by TestMd3DatePicker; moving one turns it "
         "red."));
-    context.detail(L("容器 360×524 �� 头部 120dp �� 日期格 40dp �� 年份格 72×36dp �� "
-                     "今天描边 1dp �� 区间指示 40dp",
-                     "the container 360×524 �� the header 120dp �� date cells 40dp �� "
-                     "year cells 72×36dp �� the today outline 1dp �� the range indicator "
+    context.detail(L("容器 360×524 · 头部 120dp · 日期格 40dp · 年份格 72×36dp · "
+                     "今天描边 1dp · 区间指示 40dp",
+                     "the container 360×524 · the header 120dp · date cells 40dp · "
+                     "year cells 72×36dp · the today outline 1dp · the range indicator "
                      "40dp"));
     context.detail(L("颜色按状态直解：选中 primary / on-primary、今天 primary、未选中 "
                      "on-surface、区间 secondary-container / on-secondary-container",
                      "colours resolve by state: selected primary / on-primary, today "
                      "primary, unselected on-surface, the range secondary-container / "
                      "on-secondary-container"));
-    context.detail(L("周行从周一开始 �� 日→槽映射是 dateAtCell 契约 �� 弃用行携带不读"
+    context.detail(L("周行从周一开始 · 日→槽映射是 dateAtCell 契约 · 弃用行携带不读"
                      "（*-state-layer-opcaity 拼写行、container-surface-tint-layer-color）"
-                     "�� docked 变体是另一个导出，未移植",
-                     "the weekday row starts on Monday �� the day→slot mapping is the "
-                     "dateAtCell contract �� deprecated rows carried, not read (the "
+                     "· docked 变体是另一个导出，未移植",
+                     "the weekday row starts on Monday · the day→slot mapping is the "
+                     "dateAtCell contract · deprecated rows carried, not read (the "
                      "*-state-layer-opcaity typo rows, container-surface-tint-layer-"
-                     "color) �� the docked variant is a separate export, not ported"));
+                     "color) · the docked variant is a separate export, not ported"));
     context.space(8.0);
 }
 

@@ -197,3 +197,24 @@ rewritten from its counterparts.
   about one attempt in four succeeds â€” retry alone. Lower page sections are
   lazy-loaded: give a tall viewport, raise `--virtual-time-budget`, or switch
   `--user-data-dir` on retry.
+
+## Headless Edge capture update (2026-10-11)
+
+Direct `& msedge.exe --screenshot ...` is SIGTERM'd from PowerShell on this
+machine (not only `--dump-dom`). Detach the process instead:
+
+`powershell
+ = Start-Process -FilePath 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' 
+  -ArgumentList '--headless','--disable-gpu','--hide-scrollbars','--window-size=1440,2000',
+    '--screenshot=C:/abs/out.png','--virtual-time-budget=20000',
+    '--user-data-dir=C:/abs/profile-N','--proxy-server=direct://',
+    'https://m3.material.io/components/<slug>/specs' 
+  -PassThru -WindowStyle Hidden
+.WaitForExit(50000)
+`
+
+- Success rate is roughly 1-in-2¨C3 with the detached launch (better than 1-in-4).
+- Always a **fresh** `--user-data-dir` per attempt; reuse correlates with hang/kill.
+- Bump `--virtual-time-budget` to 20000 and `WaitForExit` to 50000 on retries.
+- m3.material.io plural slugs work: `text-fields`, `date-pickers`, `time-pickers`, `dialogs`.
+- material-web.dev pages are heavier and succeed more often on the first try.

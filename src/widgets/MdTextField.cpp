@@ -106,7 +106,10 @@ bool MdTextField::isPopulated() const
 
 QRectF MdTextField::containerRect() const
 {
-    return QRectF(rect());
+    // Same rule as MdTextArea: the supporting line is painted just below the
+    // container, so the container must leave that band inside the widget.
+    const qreal supporting = m_supporting.isEmpty() ? 0.0 : 20.0;
+    return QRectF(0.0, 0.0, rect().width(), rect().height() - supporting);
 }
 
 QRectF MdTextField::labelRect() const

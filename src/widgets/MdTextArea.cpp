@@ -22,6 +22,12 @@ qreal approach(qreal current, qreal target, qreal rate)
 MdTextArea::MdTextArea(QWidget *parent)
     : QPlainTextEdit(parent)
 {
+    // Pattern A: the decoration is painted by MdPaintFilterHub on this
+    // widget's own Paint event. shared() is what installs that filter —
+    // without this call the area is a bare QPlainTextEdit (no container,
+    // no floating label, no indicator), which is exactly what the gallery's
+    // multiline pair looked like.
+    MdTextAreaStyle::shared();
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -114,7 +120,11 @@ bool MdTextArea::isPopulated() const
 
 QRectF MdTextArea::containerRect() const
 {
-    return QRectF(rect());
+    // Reserve the supporting-text band *inside* the widget: the style paints
+    // supporting text at container.bottom() + 4, and Qt clips to the widget
+    // rect — if the container is the whole rect that line never appears.
+    const qreal supporting = m_supporting.isEmpty() ? 0.0 : 20.0;
+    return QRectF(0.0, 0.0, rect().width(), rect().height() - supporting);
 }
 
 QRectF MdTextArea::labelRect() const
