@@ -11,6 +11,7 @@
 #include <cmath>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QFontMetricsF>
+#include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 
 namespace md {
@@ -340,6 +341,34 @@ void MdChip::focusOutEvent(QFocusEvent *event)
         m_focusRing->stop();
     }
     update();
+}
+
+void MdChip::keyPressEvent(QKeyEvent *event)
+{
+    if (isEffectivelyDisabled()) {
+        switch (event->key()) {
+        case Qt::Key_Space:
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            event->accept();
+            return;
+        default:
+            break;
+        }
+    }
+    switch (event->key()) {
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
+        // QAbstractButton's ButtonPressKeys theme hint is Space/Select only.
+        // M3 wants Enter to activate like Space (DoD: Space/Enter/Esc/arrow
+        // keys) — the chip families document Space *and* Enter as click.
+        click();
+        event->accept();
+        return;
+    default:
+        break;
+    }
+    QAbstractButton::keyPressEvent(event);
 }
 
 void MdChip::changeEvent(QEvent *event)

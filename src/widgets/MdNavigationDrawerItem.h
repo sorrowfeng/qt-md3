@@ -33,6 +33,8 @@
 #include <QtGui/QFont>
 #include <QtWidgets/QPushButton>
 
+class QKeyEvent;
+
 namespace md {
 
 class MdFocusRingController;
@@ -145,6 +147,7 @@ protected:
     void leaveEvent(QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
     void changeEvent(QEvent *event) override;
 
 private slots:

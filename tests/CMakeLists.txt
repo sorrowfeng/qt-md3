@@ -1085,3 +1085,28 @@ set_tests_properties(TestMd3Navigation PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3Navigation)
+
+# TestMd3InteractionSmoke ¡ª cross-component pointer/keyboard smoke. The
+# per-family suites pin tokens, geometry and paint; this one drives real
+# QTest input at the controls a gallery visitor actually clicks and types
+# into, so a control that looks right but refuses interaction fails here.
+add_executable(TestMd3InteractionSmoke
+    TestMd3InteractionSmoke.cpp
+)
+
+target_link_libraries(TestMd3InteractionSmoke
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3InteractionSmoke COMMAND TestMd3InteractionSmoke)
+set_tests_properties(TestMd3InteractionSmoke PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3InteractionSmoke)

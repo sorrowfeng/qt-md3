@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <QtGui/QFocusEvent>
+#include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 #include <QtCore/QTimer>
 
@@ -345,6 +346,35 @@ void MdIconButton::focusOutEvent(QFocusEvent *event)
         m_focusRing->stop();
     }
     update();
+}
+
+void MdIconButton::keyPressEvent(QKeyEvent *event)
+{
+    if (isEffectivelyDisabled()) {
+        switch (event->key()) {
+        case Qt::Key_Space:
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            event->accept();
+            return;
+        default:
+            break;
+        }
+    }
+    switch (event->key()) {
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
+        // QPushButton only activates on Enter for autoDefault/default dialog
+        // buttons; every other button falls through to QAbstractButton, whose
+        // ButtonPressKeys theme hint is Space/Select only. M3 wants Enter to
+        // activate like Space (DoD: Space/Enter/Esc/arrow keys).
+        click();
+        event->accept();
+        return;
+    default:
+        break;
+    }
+    QPushButton::keyPressEvent(event);
 }
 
 void MdIconButton::changeEvent(QEvent *event)

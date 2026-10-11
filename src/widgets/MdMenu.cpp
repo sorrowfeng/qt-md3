@@ -217,6 +217,34 @@ void MdMenuItem::focusOutEvent(QFocusEvent *event)
     update();
 }
 
+void MdMenuItem::keyPressEvent(QKeyEvent *event)
+{
+    if (isEffectivelyDisabled()) {
+        switch (event->key()) {
+        case Qt::Key_Space:
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            event->accept();
+            return;
+        default:
+            break;
+        }
+    }
+    switch (event->key()) {
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
+        // QAbstractButton's ButtonPressKeys theme hint is Space/Select only.
+        // M3 wants Enter to activate like Space (DoD: Space/Enter/Esc/arrow
+        // keys) — the menu documents Enter/Space as item activation.
+        click();
+        event->accept();
+        return;
+    default:
+        break;
+    }
+    QAbstractButton::keyPressEvent(event);
+}
+
 void MdMenuItem::changeEvent(QEvent *event)
 {
     QAbstractButton::changeEvent(event);
