@@ -29,6 +29,15 @@ QColor resolveSlot(const MdNavigationColourSlot &slot)
     return colour;
 }
 
+/// The container path, inset half a pixel so the outline stroke is not
+/// clipped by the widget rect (a stroke on the raw rect left the top and
+/// side edges open).
+QPainterPath containerPath(const QRectF &rect, qreal radius)
+{
+    return MdShape::roundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5),
+                                {radius, radius, radius, radius});
+}
+
 } // namespace
 
 MdDatePickerStyle::MdDatePickerStyle(QObject *parent)
@@ -69,15 +78,22 @@ void MdDatePickerStyle::paintDatePicker(QPainter &painter, const MdDatePicker &p
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing, true);
 
-    // 1 — the container.
+    // 1 — the container: surface-container-high at level 3, corner-extra-
+    //     large, with a complete outline so the panel edge is visible
+    //     against the page (the fill alone left the border "open").
     {
         const QRectF bounds = QRectF(picker.rect()).adjusted(8.0, 8.0, -8.0, -8.0);
+        const QPainterPath path = containerPath(bounds, tokens.containerRadius);
         MdElevation::drawShadowDp(&painter, bounds, tokens.containerRadius,
                                   int(tokens.containerElevation),
                                   MdTheme::instance().color(ColorRole::Shadow));
         painter.setPen(Qt::NoPen);
         painter.setBrush(MdTheme::instance().color(tokens.containerColor));
-        painter.drawRoundedRect(bounds, tokens.containerRadius, tokens.containerRadius);
+        painter.drawPath(path);
+        // The 1 px outline closes the border around the whole container.
+        painter.setPen(QPen(MdTheme::instance().color(ColorRole::OutlineVariant), 1.0));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawPath(path);
     }
 
     // 2 — the header.
@@ -169,6 +185,21 @@ void MdDatePickerStyle::paintDatePicker(QPainter &painter, const MdDatePicker &p
                                             tokens.dateCellSize / 2.0);
                 }
 
+                // Pressed state layer — a pointer press must show feedback
+                // on the cell under the cursor (md.sys.state 0.12).
+                if (picker.pressedCell() == row * 7 + col) {
+                    const QColor pressed = resolveSlot(
+                        tokens.dateSelected[int(MdDatePickerState::Pressed)]);
+                    QColor layer = pressed.isValid() ? pressed
+                                                     : MdTheme::instance().color(ColorRole::Primary);
+                    layer.setAlphaF(qBound(0.0, layer.alphaF(), 1.0) * 0.12);
+                    painter.setPen(Qt::NoPen);
+                    painter.setBrush(layer);
+                    painter.drawRoundedRect(picker.dateStateLayerRect(row, col),
+                                            tokens.dateCellSize / 2.0,
+                                            tokens.dateCellSize / 2.0);
+                }
+
                 const QFont labelFont = MdTypeScale::font(TypeStyle::BodyLarge);
                 painter.setFont(labelFont);
                 const QColor label = isSelected
@@ -212,14 +243,19 @@ void MdDatePickerStyle::paintDatePickerDocked(QPainter &painter, const MdDatePic
 
     const QRectF panel(0.0, 0.0, tokens.containerWidth, tokens.containerHeight);
 
-    // 1 — the container: surface-container-high at level 3, corner-large.
+    // 1 — the container: surface-container-high at level 3, corner-large,
+    //     with a complete outline so the panel edge is visible.
     {
         const qreal radius = MdShape::resolvedRadius(tokens.containerShape, panel.size());
+        const QPainterPath path = containerPath(panel, radius);
         MdElevation::drawShadowDp(&painter, panel, radius, int(tokens.containerElevation),
                                   MdTheme::instance().color(ColorRole::Shadow));
         painter.setPen(Qt::NoPen);
         painter.setBrush(MdTheme::instance().color(tokens.containerColor));
-        painter.drawRoundedRect(panel, radius, radius);
+        painter.drawPath(path);
+        painter.setPen(QPen(MdTheme::instance().color(ColorRole::OutlineVariant), 1.0));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawPath(path);
     }
 
     // 2 — the 64 px header's two menu buttons (month / year).
@@ -297,6 +333,14 @@ void MdDatePickerStyle::paintDatePickerDocked(QPainter &painter, const MdDatePic
                 painter.setPen(QPen(MdTheme::instance().color(tokens.dateTodayColor),
                                     tokens.dateTodayOutlineWidth));
                 painter.setBrush(Qt::NoBrush);
+                painter.drawRoundedRect(pill, pillRadius, pillRadius);
+            }
+
+            if (picker.pressedCell() == row * 7 + col) {
+                QColor layer = MdTheme::instance().color(ColorRole::Primary);
+                layer.setAlphaF(layer.alphaF() * 0.12);
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(layer);
                 painter.drawRoundedRect(pill, pillRadius, pillRadius);
             }
 

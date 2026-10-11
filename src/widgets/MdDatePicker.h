@@ -103,6 +103,9 @@ public:
     bool isHovered() const { return m_hovered; }
     bool hasKeyboardFocus() const { return hasFocus() && m_focusIsKeyboard; }
     bool isEffectivelyDisabled() const { return !isEnabled(); }
+    /// Pressed date-cell slot as `row * 7 + col`, or -1 when nothing is
+    /// pressed. The style paints the pressed state layer from this.
+    int pressedCell() const { return m_pressedCell; }
 
     const MdDatePickerTokens &datePickerTokens() const;
     void setDatePickerTokens(const MdDatePickerTokens &tokens);
@@ -129,6 +132,7 @@ signals:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     void enterEvent(MdEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
@@ -136,7 +140,6 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
-
     QDate m_selected;
     QDate m_displayed = QDate::currentDate();
     bool m_range = false;
@@ -147,6 +150,9 @@ private:
 
     bool m_hovered = false;
     bool m_focusIsKeyboard = false;
+    /// Pressed date-cell slot (row*7+col), or -1. Drives the pressed state
+    /// layer so a click shows feedback instead of a dead press.
+    int m_pressedCell = -1;
 
     mutable MdDatePickerTokens m_tokens;
     mutable bool m_tokensDirty = true;

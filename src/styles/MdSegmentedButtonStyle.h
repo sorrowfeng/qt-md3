@@ -51,12 +51,12 @@ public:
     {
         qreal inset = 0.0;
         /// Total content width: the segments' union, overlap-adjusted, and
-        /// never narrower than the widget's inner width (paint fills).
+        /// never narrower than the widget's inner width (the row grows to
+        /// fill a stretched control so every pixel is a hit target).
         qreal contentWidth = 0.0;
         /// Rect-independent natural width of the segment row. sizeHint() must
         /// use this: contentWidth widens to the current widget width, which
-        /// would make sizeHint() chase the widget and leave the segments
-        /// unable to hit-test at the centre of an oversized control.
+        /// would make sizeHint() chase the widget.
         qreal naturalWidth = 0.0;
         QVector<SegmentLayout> segments;
     };

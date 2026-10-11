@@ -306,7 +306,12 @@ void MdDatePicker::mousePressEvent(QMouseEvent *event)
         for (int i = 0; i < 12; ++i) {
             if (yearCellRect(i).contains(pos)) {
                 const int year = m_displayed.year() - 6 + i;
-                setDisplayedMonth(QDate(year, m_displayed.month(), 1));
+                // Picking a year is part of choosing a date: move the
+                // selection into that year, not just the browsed month.
+                const QDate current = m_selected.isValid() ? m_selected : QDate::currentDate();
+                const int day = qMin(current.day(), QDate(year, current.month(), 1).daysInMonth());
+                setDisplayedMonth(QDate(year, current.month(), 1));
+                setSelectedDate(QDate(year, current.month(), day));
                 setFace(MdDatePickerFace::Calendar);
                 return;
             }
@@ -319,6 +324,12 @@ void MdDatePicker::mousePressEvent(QMouseEvent *event)
             const QRectF cell = dateCellRect(row, col);
             if (!cell.contains(pos)) {
                 continue;
+            }
+            // Press feedback: latch the cell so the style paints the
+            // pressed state layer for the duration of the press.
+            if (m_pressedCell != row * 7 + col) {
+                m_pressedCell = row * 7 + col;
+                update();
             }
             const QDate date = dateAtCell(row, col);
             if (!date.isValid()) {
@@ -339,6 +350,16 @@ void MdDatePicker::mousePressEvent(QMouseEvent *event)
             return;
         }
     }
+}
+
+void MdDatePicker::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_UNUSED(event)
+    if (m_pressedCell < 0) {
+        return;
+    }
+    m_pressedCell = -1;
+    update();
 }
 
 void MdDatePicker::enterEvent(MdEnterEvent *event)

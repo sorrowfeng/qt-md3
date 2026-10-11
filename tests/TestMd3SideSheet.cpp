@@ -18,6 +18,8 @@
 #include <QtGui/QPainter>
 #include <QtTest/QTest>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QScrollBar>
 
 #include <cmath>
 
@@ -77,6 +79,7 @@ private slots:
 
     // --- host -------------------------------------------------------------------
     void hostShowAndEscape();
+    void hostPreservesScrollLayout();
     void hostScrimClick();
 };
 
@@ -431,6 +434,91 @@ void TestMd3SideSheet::hostShowAndEscape()
     QVERIFY(!host.isVisible());
 }
 
+
+namespace {
+
+/// Gallery-shaped page: height-for-width content living in a QScrollArea
+/// with widgetResizable, the same shell the sheet demo pages sit in.
+class SideScrollStabilityPage : public QWidget
+{
+public:
+    explicit SideScrollStabilityPage(QWidget *parent = nullptr)
+        : QWidget(parent)
+    {
+        QSizePolicy policy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+        policy.setHeightForWidth(true);
+        setSizePolicy(policy);
+        resize(400, 1200);
+    }
+
+    int heightForWidth(int width) const override
+    {
+        return qMax(1200, width * 3);
+    }
+
+    QSize sizeHint() const override
+    {
+        return QSize(qMax(width(), 400), heightForWidth(qMax(width(), 400)));
+    }
+
+    QSize minimumSizeHint() const override { return QSize(320, 200); }
+};
+
+} // namespace
+
+void TestMd3SideSheet::hostPreservesScrollLayout()
+{
+    // Overlays must not reflow their host page: showing and dismissing a
+    // modal side sheet host has to leave the scroll area's scrollbar geometry
+    // and the scroll value exactly where they were.
+    QScrollArea scroll;
+    scroll.setWidgetResizable(true);
+    scroll.setFrameShape(QFrame::NoFrame);
+    scroll.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll.resize(420, 320);
+    auto *page = new SideScrollStabilityPage;
+    scroll.setWidget(page);
+    scroll.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&scroll));
+    QTest::qWait(50);
+
+    QScrollBar *bar = scroll.verticalScrollBar();
+    QVERIFY(bar->maximum() > 0);
+    bar->setValue(bar->maximum() / 2);
+    QTest::qWait(30);
+
+    auto *host = new MdSideSheetHost(page);
+    host->sheet()->resize(260, 200);
+    QCOMPARE(host->geometry(), page->rect());
+    QCOMPARE(host->sizeHint(), QSize(0, 0));
+    QCOMPARE(host->minimumSizeHint(), QSize(0, 0));
+    QVERIFY(host->sizePolicy().horizontalPolicy() == QSizePolicy::Ignored);
+    QVERIFY(host->sizePolicy().verticalPolicy() == QSizePolicy::Ignored);
+
+    const int scrollBefore = bar->value();
+    const QRect barBefore = bar->geometry();
+    const QSize pageBefore = page->size();
+    const QRect pageGeoBefore = page->geometry();
+    const QSize hintBefore = page->sizeHint();
+
+    host->show();
+    QTest::qWait(700);
+    QVERIFY(host->isShowing());
+    QCOMPARE(page->size(), pageBefore);
+    QCOMPARE(page->geometry(), pageGeoBefore);
+    QCOMPARE(page->sizeHint(), hintBefore);
+    QCOMPARE(bar->geometry(), barBefore);
+
+    host->dismiss();
+    QTest::qWait(900);
+    QVERIFY(!host->isShowing());
+    QVERIFY(!host->isVisible());
+    QCOMPARE(page->size(), pageBefore);
+    QCOMPARE(page->geometry(), pageGeoBefore);
+    QCOMPARE(page->sizeHint(), hintBefore);
+    QCOMPARE(bar->geometry(), barBefore);
+    QCOMPARE(bar->value(), scrollBefore);
+}
 void TestMd3SideSheet::hostScrimClick()
 {
     QWidget parent;

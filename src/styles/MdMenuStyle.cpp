@@ -246,13 +246,29 @@ void MdMenuStyle::paintMenu(QPainter &painter, MdMenu &menu, const MdMenuTokens 
         painter.setOpacity(alpha);
     }
 
-    // 1. The level-2 shadow and the surface fill.
+    // 1. The level-2 shadow, the surface fill and the container outline.
+    // The outline is a 1 px stroke on the *full* container rect (inset half a
+    // pixel so the stroke is not clipped by the widget edge) — previously the
+    // surface filled the rounded path but never stroked it, so the menu had
+    // no complete edge against a same-coloured page.
     MdElevation::drawShadowDp(&painter, surfaceRect, radius,
                               MdElevation::shadowDp(tokens.containerElevation),
                               MdTheme::instance().color(tokens.containerShadowColor));
     painter.setPen(Qt::NoPen);
     painter.setBrush(MdTheme::instance().color(tokens.containerColor));
     painter.drawPath(surfacePath);
+    {
+        const QColor outline = MdTheme::instance().color(ColorRole::OutlineVariant);
+        if (outline.isValid() && outline.alpha() > 0) {
+            QPen pen(outline);
+            pen.setWidthF(1.0);
+            pen.setJoinStyle(Qt::RoundJoin);
+            painter.setPen(pen);
+            painter.setBrush(Qt::NoBrush);
+            painter.drawPath(MdStyleBase::crispRoundedRectPath(
+                surfaceRect.adjusted(0.5, 0.5, -0.5, -0.5), radii));
+        }
+    }
 
     // 2. The children through the transform. Compose scales graphically —
     //    the popup's geometry never changes mid-flight. Each child renders

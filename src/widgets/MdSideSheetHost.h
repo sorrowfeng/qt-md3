@@ -36,6 +36,7 @@
 #include "MdSideSheet.h"
 
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QPointer>
 #include <QtWidgets/QWidget>
 
 class QTimer;
@@ -72,6 +73,10 @@ public:
     /// The scrim transition is running while true.
     bool isTransitioning() const { return m_phase != Phase::Idle; }
 
+    // Overlays sit by setGeometry and must not feed a parent layout.
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+
 signals:
     /// The sheet was asked to go away (Escape, scrim click, drag to hidden).
     /// Emitted at request time, before the slide-out completes.
@@ -94,12 +99,14 @@ private:
     void layoutSheet();
     void startTransition(Phase phase);
     void onTransitionTick();
+    void restoreFocus();
 
     MdSideSheet *m_sheet = nullptr;
     QTimer *m_transitionTimer = nullptr;
     QElapsedTimer m_transitionClock;
     Phase m_phase = Phase::Idle;
     qreal m_scrimAlpha = 0.0;
+    QPointer<QWidget> m_previousFocus;
 };
 
 } // namespace md

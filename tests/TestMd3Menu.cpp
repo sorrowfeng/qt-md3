@@ -301,9 +301,14 @@ void TestMd3Menu::menuLayoutInterleavesRowsWithPadding()
 
     const MdMenuTokens t = menu.menuTokens();
     const int width = menu.width();
+    // Rows sit inside the 1 px container outline so a selected fill cannot
+    // paint over the edge stroke.
+    constexpr int kOutlineInset = 1;
+    const int rowWidth = width - 2 * kOutlineInset;
 
     // The 8 px padding above the first row; rows stack in insertion order.
-    QCOMPARE(first->geometry(), QRect(0, int(t.containerVerticalPadding), width, int(t.itemHeight)));
+    QCOMPARE(first->geometry(),
+             QRect(kOutlineInset, int(t.containerVerticalPadding), rowWidth, int(t.itemHeight)));
 
     const int dividerTop = int(t.containerVerticalPadding + t.itemHeight);
     // The divider is the only row 1 px tall.
@@ -317,12 +322,13 @@ void TestMd3Menu::menuLayoutInterleavesRowsWithPadding()
     }
     QVERIFY(divider != nullptr);
     QCOMPARE(divider->geometry(),
-             QRect(int(t.dividerHorizontalPadding), dividerTop,
-                   width - 2 * int(t.dividerHorizontalPadding), int(t.dividerHeight)));
+             QRect(kOutlineInset + int(t.dividerHorizontalPadding), dividerTop,
+                   rowWidth - 2 * int(t.dividerHorizontalPadding), int(t.dividerHeight)));
 
     // The divider row consumes 1 px + 2 x 2 px of vertical space.
     const int secondTop = dividerTop + int(t.dividerHeight) + 2 * int(t.dividerVerticalPadding);
-    QCOMPARE(second->geometry(), QRect(0, secondTop, width, int(t.itemHeight)));
+    QCOMPARE(second->geometry(),
+             QRect(kOutlineInset, secondTop, rowWidth, int(t.itemHeight)));
 
     // The 8 px padding below the last row closes the surface.
     QCOMPARE(menu.height(), secondTop + int(t.itemHeight) + int(t.containerVerticalPadding));

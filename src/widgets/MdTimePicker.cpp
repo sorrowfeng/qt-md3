@@ -102,7 +102,13 @@ QRectF MdTimePicker::timeSelectorRect(bool start) const
     // Below the "Select time" headline (label-medium at y+12, 20 tall).
     const qreal y = 44.0;
     if (m_24h) {
-        return QRectF(left, y, tokens.timeSelector24hWidth, tokens.timeSelectorHeight);
+        // The 24h field is one 114 px box, but it still hosts two faces:
+        // the leading half is the hours input, the trailing half the minutes
+        // (Android's time-input contract). Returning the same rect for both
+        // made the minutes face unreachable by pointer.
+        const qreal half = tokens.timeSelector24hWidth / 2.0;
+        return start ? QRectF(left, y, half, tokens.timeSelectorHeight)
+                     : QRectF(left + half, y, half, tokens.timeSelectorHeight);
     }
     return start ? QRectF(left, y, tokens.timeSelectorWidth, tokens.timeSelectorHeight)
                  : QRectF(left + tokens.timeSelectorWidth + 24.0, y, tokens.timeSelectorWidth,
@@ -231,11 +237,13 @@ void MdTimePicker::mousePressEvent(QMouseEvent *event)
     const QPointF pos = mousePosition(event);
 
     // Mode switching: the time selectors and the period selector take clicks.
+    // Both faces are reachable in 12h *and* 24h — the 24h field splits into
+    // an hours half and a minutes half (see timeSelectorRect).
     if (timeSelectorRect(true).contains(pos) && m_face != MdTimePickerFace::Hours) {
         setFace(MdTimePickerFace::Hours);
         return;
     }
-    if (!m_24h && timeSelectorRect(false).contains(pos) && m_face != MdTimePickerFace::Minutes) {
+    if (timeSelectorRect(false).contains(pos) && m_face != MdTimePickerFace::Minutes) {
         setFace(MdTimePickerFace::Minutes);
         return;
     }

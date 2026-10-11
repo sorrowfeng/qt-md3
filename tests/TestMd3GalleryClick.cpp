@@ -1,4 +1,4 @@
-﻿// TestMd3GalleryClick 锟?gallery-level click probe.
+// TestMd3GalleryClick 锟?gallery-level click probe.
 //
 // TestMd3InteractionSmoke proves the components work when constructed
 // standalone. This suite instantiates the real GalleryWindow shell and drives
@@ -17,6 +17,8 @@
 #include "widgets/MdFab.h"
 #include "widgets/MdIconButton.h"
 #include "widgets/MdMenu.h"
+#include "widgets/MdList.h"
+#include "widgets/MdListItem.h"
 #include "widgets/MdRadioButton.h"
 #include "widgets/MdSegmentedButton.h"
 #include "widgets/MdSlider.h"
@@ -25,13 +27,23 @@
 #include "widgets/MdTabs.h"
 #include "widgets/MdTextArea.h"
 #include "widgets/MdTextField.h"
+#include "widgets/MdDatePicker.h"
+#include "widgets/MdDialog.h"
+#include "widgets/MdDialogHost.h"
+#include "widgets/MdSearchBar.h"
+#include "widgets/MdTimePicker.h"
+#include "widgets/MdBottomSheetHost.h"
+#include "widgets/MdSideSheetHost.h"
 
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QStringList>
+#include <QtCore/QVector>
 #include <QtCore/QThread>
 #include <QtGui/QMouseEvent>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QScrollArea>
+#include <QtWidgets/QScrollBar>
 
 using namespace md;
 
@@ -110,6 +122,12 @@ private slots:
     void iconButtonClickEmits();
     void menuPageItemClickEmits();
     void radioPageClickSelects();
+    void listPageClickSelects();
+    void dialogPageActionButtonsReceiveClicks();
+    void timePickerPageSelectorsSwitchFace();
+    void datePickerPageClickSelectsDate();
+    void searchPageTypingEntersText();
+    void sheetHostDismissPreservesScrollBar();
 
     // Diagnostic: every enabled interactive child of a page must be the
     // hit-test winner at its own centre. Reports the first cover/geometry
@@ -593,10 +611,273 @@ void TestMd3GalleryClick::radioPageClickSelects()
     QVERIFY(target->isChecked());
 }
 
+void TestMd3GalleryClick::listPageClickSelects()
+{
+    int page = pageIndexBySlug(QStringLiteral("list"));
+    if (page < 0) {
+        page = pageIndexBySlug(QStringLiteral("List"));
+    }
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    const QList<MdListItem *> items = liveWidgets<MdListItem>(*m_window, page);
+    QVERIFY2(!items.isEmpty(), "List page has no live MdListItem children");
+
+    // Prefer an interactive, enabled item that is not already selected.
+    MdListItem *target = nullptr;
+    for (MdListItem *item : items) {
+        if (item->isEnabled() && item->isVisible() && !item->geometry().isEmpty()
+            && item->isInteractive() && !item->isSelected()) {
+            target = item;
+            break;
+        }
+    }
+    QVERIFY2(target != nullptr, "List page has no clickable unselected MdListItem");
+
+    const QPoint global = target->mapToGlobal(target->rect().center());
+    QWidget *hit = hitAt(global);
+    QVERIFY2(!isCoveredByForeignWidget(hit, target),
+             qPrintable(QStringLiteral("List page: covered by %1")
+                            .arg(hit ? hit->metaObject()->className() : QStringLiteral("null"))));
+
+    QSignalSpy activated(target, &MdListItem::activated);
+    QTest::mouseClick(target, Qt::LeftButton, Qt::NoModifier, target->rect().center());
+    QVERIFY2(activated.count() >= 1, "List item click produced no activated()");
+    QVERIFY2(target->isSelected(), "List item click did not select the item");
+}
+
 // ---------------------------------------------------------------------------
 // Hit-test sweep
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Dialog / TimePicker / DatePicker / Search
+// ---------------------------------------------------------------------------
+
+void TestMd3GalleryClick::dialogPageActionButtonsReceiveClicks()
+{
+    int page = pageIndexBySlug(QStringLiteral("dialogs"));
+    if (page < 0) {
+        page = pageIndexBySlug(QStringLiteral("Dialogs"));
+    }
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    // Banked dialogs own real MdButton children. Every visible, enabled
+    // action button must be the hit-test winner at its own centre.
+    const QList<MdButton *> buttons = liveWidgets<MdButton>(*m_window, page);
+    QVERIFY2(!buttons.isEmpty(), "Dialog page has no live MdButton children");
+
+    int clicked = 0;
+    for (MdButton *b : buttons) {
+        if (!b->isEnabled() || !b->isVisible() || b->geometry().isEmpty()) {
+            continue;
+        }
+        const QPoint global = b->mapToGlobal(b->rect().center());
+        QWidget *hit = hitAt(global);
+        if (isCoveredByForeignWidget(hit, b)) {
+            continue;
+        }
+        QSignalSpy spy(b, &QAbstractButton::clicked);
+        clickCentre(b);
+        if (spy.count() >= 1) {
+            ++clicked;
+        }
+    }
+    QVERIFY2(clicked >= 1, "no dialog action button received a click");
+
+    // Leave the page idle: a showing modal host is *meant* to cover the
+    // page, and the next hit-test sweep would report that as a defect.
+    for (md::MdDialogHost *host : m_window->pageWidget(page)->findChildren<md::MdDialogHost *>()) {
+        host->dismiss();
+        QTest::qWait(40);
+    }
+}
+
+void TestMd3GalleryClick::timePickerPageSelectorsSwitchFace()
+{
+    int page = pageIndexBySlug(QStringLiteral("time-picker"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    const QList<MdTimePicker *> pickers = liveWidgets<MdTimePicker>(*m_window, page);
+    QVERIFY2(!pickers.isEmpty(), "Time picker page has no live MdTimePicker children");
+
+    MdTimePicker *picker = nullptr;
+    for (MdTimePicker *p : pickers) {
+        if (!p->is24h() && p->face() == MdTimePickerFace::Hours) {
+            picker = p;
+            break;
+        }
+    }
+    QVERIFY(picker != nullptr);
+
+    const QPoint global = picker->mapToGlobal(picker->timeSelectorRect(false).center().toPoint());
+    QWidget *hit = hitAt(global);
+    QVERIFY2(!isCoveredByForeignWidget(hit, picker),
+             "time picker minutes selector is covered");
+
+    QTest::mouseClick(picker, Qt::LeftButton, Qt::NoModifier,
+                      picker->timeSelectorRect(false).center().toPoint());
+    QCOMPARE(picker->face(), MdTimePickerFace::Minutes);
+}
+
+void TestMd3GalleryClick::datePickerPageClickSelectsDate()
+{
+    int page = pageIndexBySlug(QStringLiteral("date-picker"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    const QList<MdDatePicker *> pickers = liveWidgets<MdDatePicker>(*m_window, page);
+    QVERIFY2(!pickers.isEmpty(), "Date picker page has no live MdDatePicker children");
+
+    MdDatePicker *picker = pickers.first();
+    picker->setDisplayedMonth(QDate(2026, 6, 1));
+    settle(*m_window, page);
+
+    const QRectF cell = picker->dateCellRect(2, 0);
+    QVERIFY(picker->dateAtCell(2, 0).isValid());
+    const QPoint global = picker->mapToGlobal(cell.center().toPoint());
+    QWidget *hit = hitAt(global);
+    QVERIFY2(!isCoveredByForeignWidget(hit, picker),
+             "date picker cell is covered");
+
+    // Click a cell that is not already the selection so the spy must fire.
+    const QDate target = picker->dateAtCell(2, 0);
+    QVERIFY(target.isValid());
+    if (picker->selectedDate() == target) {
+        picker->setSelectedDate(target.addDays(-1));
+    }
+    QSignalSpy spy(picker, &MdDatePicker::selectedDateChanged);
+    QTest::mouseClick(picker, Qt::LeftButton, Qt::NoModifier, cell.center().toPoint());
+    QCOMPARE(picker->selectedDate(), target);
+    QVERIFY(spy.count() >= 1);
+}
+
+void TestMd3GalleryClick::searchPageTypingEntersText()
+{
+    int page = pageIndexBySlug(QStringLiteral("search"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    const QList<MdSearchBar *> bars = liveWidgets<MdSearchBar>(*m_window, page);
+    QVERIFY2(!bars.isEmpty(), "Search page has no live MdSearchBar children");
+
+    MdSearchBar *bar = bars.first();
+    const QPoint global = bar->mapToGlobal(bar->rect().center());
+    QWidget *hit = hitAt(global);
+    QVERIFY2(!isCoveredByForeignWidget(hit, bar), "search bar is covered");
+
+    QTest::mouseClick(bar, Qt::LeftButton, Qt::NoModifier, bar->rect().center());
+    QVERIFY(bar->hasFocus());
+    QTest::keyClicks(bar, QStringLiteral("hello"));
+    QCOMPARE(bar->text(), QStringLiteral("hello"));
+}
+
+
+
+namespace {
+
+/// The page's wrapping QScrollArea (page -> viewport -> scroll area).
+QScrollArea *scrollAreaFor(QWidget *page)
+{
+    if (!page) {
+        return nullptr;
+    }
+    QWidget *viewport = page->parentWidget();
+    if (!viewport) {
+        return nullptr;
+    }
+    return qobject_cast<QScrollArea *>(viewport->parentWidget());
+}
+
+} // namespace
+
+void TestMd3GalleryClick::sheetHostDismissPreservesScrollBar()
+{
+    // Sheets are overlays: showing and dismissing a modal sheet host must
+    // not reflow the page or jump the vertical scrollbar. The bug this
+    // locks: after the bottom/side sheet demo host is shown and dismissed,
+    // the scrollbar geometry and scroll value shifted.
+    struct Case
+    {
+        const char *slug;
+        bool bottom;
+    };
+    const Case cases[] = {
+        {"bottom-sheets", true},
+        {"side-sheets", false},
+    };
+    for (const Case &c : cases) {
+        int page = pageIndexBySlug(QString::fromUtf8(c.slug));
+        QVERIFY2(page >= 0, c.slug);
+        settle(*m_window, page);
+        QCoreApplication::processEvents();
+
+        QWidget *pageW = m_window->pageWidget(page);
+        QVERIFY(pageW);
+        QScrollArea *scroll = scrollAreaFor(pageW);
+        QVERIFY2(scroll, "page is not hosted in a QScrollArea");
+        QScrollBar *bar = scroll->verticalScrollBar();
+        QVERIFY(bar);
+
+        // Park the page mid-scroll the way a reader of a long demo page would.
+        if (bar->maximum() > 0) {
+            bar->setValue(bar->maximum() / 2);
+        }
+        QCoreApplication::processEvents();
+
+        const int scrollBefore = bar->value();
+        const QRect barBefore = bar->geometry();
+        const QSize pageBefore = pageW->size();
+        const QRect pageGeoBefore = pageW->geometry();
+        const int rangeBefore = bar->maximum();
+
+        md::MdBottomSheetHost *bottom =
+            pageW->findChild<md::MdBottomSheetHost *>(QString(), Qt::FindDirectChildrenOnly);
+        md::MdSideSheetHost *side =
+            pageW->findChild<md::MdSideSheetHost *>(QString(), Qt::FindDirectChildrenOnly);
+        if (c.bottom) {
+            QVERIFY2(bottom, "bottom-sheets page has no MdBottomSheetHost");
+            bottom->show();
+        } else {
+            QVERIFY2(side, "side-sheets page has no MdSideSheetHost");
+            side->show();
+        }
+        QElapsedTimer clock;
+        clock.start();
+        while (clock.elapsed() < 250) {
+            QCoreApplication::processEvents();
+            QThread::msleep(4);
+        }
+
+        if (bottom) {
+            QVERIFY(bottom->isShowing());
+            bottom->dismiss();
+        } else if (side) {
+            QVERIFY(side->isShowing());
+            side->dismiss();
+        }
+        clock.restart();
+        while (clock.elapsed() < 1200) {
+            QCoreApplication::processEvents();
+            QThread::msleep(4);
+        }
+
+        if (bottom) {
+            QVERIFY2(!bottom->isShowing(), "bottom sheet host still showing after dismiss");
+        }
+        if (side) {
+            QVERIFY2(!side->isShowing(), "side sheet host still showing after dismiss");
+        }
+
+        QCOMPARE(pageW->size(), pageBefore);
+        QCOMPARE(pageW->geometry(), pageGeoBefore);
+        QCOMPARE(bar->geometry(), barBefore);
+        QCOMPARE(bar->maximum(), rangeBefore);
+        QCOMPARE(bar->value(), scrollBefore);
+    }
+}
 void TestMd3GalleryClick::hitTestSweep()
 {
     // Representative interactive families. Each entry: slug fragment and the
@@ -617,6 +898,10 @@ void TestMd3GalleryClick::hitTestSweep()
         {QStringLiteral("tabs"), "md::MdTabs"},
         {QStringLiteral("Icon buttons"), "md::MdIconButton"},
         {QStringLiteral("radio-button"), "md::MdRadioButton"},
+        {QStringLiteral("dialogs"), "md::MdButton"},
+        {QStringLiteral("time-picker"), "md::MdTimePicker"},
+        {QStringLiteral("date-picker"), "md::MdDatePicker"},
+        {QStringLiteral("search"), "md::MdSearchBar"},
     };
 
     QStringList failures;
@@ -654,8 +939,13 @@ void TestMd3GalleryClick::hitTestSweep()
             ++checked;
             const QPoint global = w->mapToGlobal(w->rect().center());
             QWidget *hit = hitAt(global);
-            // Only a foreign widget on top is a real cover. widgetAt() == null
+            // Only a *foreign* widget on top is a real cover. widgetAt() == null
             // is inconclusive under the offscreen platform.
+            // A showing MdDialogHost is a modal overlay, not a stacking bug.
+            if (hit && QString::fromUtf8(hit->metaObject()->className())
+                           == QLatin1String("md::MdDialogHost")) {
+                continue;
+            }
             if (isCoveredByForeignWidget(hit, w)) {
                 failures << QStringLiteral("%1: %2 at %3 covered by %4")
                                 .arg(probe.slug,
@@ -682,8 +972,3 @@ void TestMd3GalleryClick::hitTestSweep()
 QTEST_MAIN(TestMd3GalleryClick)
 
 #include "TestMd3GalleryClick.moc"
-
-
-
-
-

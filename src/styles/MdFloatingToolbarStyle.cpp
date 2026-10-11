@@ -17,6 +17,13 @@ namespace md {
 
 namespace {
 
+/// Paint margin the toolbar reserves around the pill: enough for the level-3
+/// shadow rings and for a slot widget's outward focus indicator (7.5 px at
+/// the published 3 px stroke / 2 px gap / 8 px active width). Qt clips a
+/// child to its own rect, so without this the shadow is cut off and the
+/// first/last icons' focus margins fall outside the toolbar.
+constexpr qreal kPaintMargin = 10.0;
+
 /// The toolbar's own axis, so the horizontal and the vertical layouts share a
 /// single body of arithmetic. Everything inside `layoutFor` is written in
 /// `main` (the axis the toolbar grows along) and `cross`.
@@ -80,6 +87,11 @@ bool MdFloatingToolbarStyle::isInstalled()
     return hasPaintFilter(&MdFloatingToolbar::staticMetaObject);
 }
 
+qreal MdFloatingToolbarStyle::paintMargin()
+{
+    return kPaintMargin;
+}
+
 MdFloatingToolbarStyle::Layout MdFloatingToolbarStyle::layoutFor(
     const MdFloatingToolbar &toolbar, const MdFloatingToolbarTokens &tokens)
 {
@@ -87,7 +99,11 @@ MdFloatingToolbarStyle::Layout MdFloatingToolbarStyle::layoutFor(
 
     const Axis axis{toolbar.orientation() != MdToolbarOrientation::Vertical};
     const qreal progress = qBound<qreal>(0.0, toolbar.expansionProgress(), 1.0);
-    const QRectF outer(toolbar.rect());
+    // The widget reserves paint margin around the pill: headroom for the
+    // level-3 shadow and for the slot widgets' own focus-indicator margins,
+    // which Qt would otherwise clip at the toolbar's edge.
+    const QRectF outer = QRectF(toolbar.rect()).adjusted(kPaintMargin, kPaintMargin,
+                                                         -kPaintMargin, -kPaintMargin);
 
     // --- the slots ----------------------------------------------------------
     //

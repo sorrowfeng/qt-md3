@@ -31,7 +31,7 @@ MdSwitch::~MdSwitch() = default;
 void MdSwitch::init()
 {
     // Space and Enter toggle; a click does the same. Switches are independent
-    // toggles — QCheckBox's non-autoexclusive semantics match Compose's
+    // toggles �?QCheckBox's non-autoexclusive semantics match Compose's
     // `toggleable`.
     setFocusPolicy(Qt::StrongFocus);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -111,7 +111,7 @@ MdSwitch::ThumbTarget MdSwitch::thumbTarget() const
         return t.unselectedHandleSize;
     }();
 
-    // `thumbPaddingStart = (SwitchHeight - size) / 2` — the x inset the small
+    // `thumbPaddingStart = (SwitchHeight - size) / 2` �?the x inset the small
     // thumb keeps from the track's left edge.
     const qreal minBound = (t.trackHeight - size) / 2.0;
     // `thumbPathLength = (SwitchWidth - ThumbDiameter) - ThumbPadding` where
@@ -163,7 +163,7 @@ void MdSwitch::retargetThumb()
     }
     // While pressed both animations run `SnapSpec`; otherwise the fast
     // spatial spring carries them. A press that changes nothing re-snaps to
-    // the same place — harmless.
+    // the same place �?harmless.
     restartThumbAnimation(pressed);
     m_thumbFromDiameter = m_thumbDiameter;
     m_thumbToDiameter = target.diameter;
@@ -209,7 +209,7 @@ QRectF MdSwitch::trackRect() const
 QRectF MdSwitch::thumbRect() const
 {
     const QRectF track = trackRect();
-    // The thumb travels from the leading edge — the right side under RTL, so
+    // The thumb travels from the leading edge �?the right side under RTL, so
     // the offset measures from left() in LTR and from right() in RTL.
     const qreal x = layoutDirection() == Qt::RightToLeft
         ? track.right() - m_thumbOffset - m_thumbDiameter
@@ -229,13 +229,18 @@ QRectF MdSwitch::stateLayerRect() const
 QSize MdSwitch::sizeHint() const
 {
     // Compose's `minimumInteractiveComponentSize` around the required
-    // 52×32 track: 52 × 48.
+    // 52x32 track. On top of that, Qt clips the widget at its own rect, so
+    // the outward focus ring and the thumb's unbounded 40 px state layer
+    // need headroom on the cross axis - the bare track would cut both off
+    // at the sides.
     const MdSwitchTokens &t = switchTokens();
-    const qreal w = qMax(t.trackWidth, t.minimumInteractiveSize);
-    const qreal h = qMax(t.trackHeight, t.minimumInteractiveSize);
+    const qreal ringMargin =
+        t.focusIndicatorOuterOffset + 8.0 / 2.0 + t.focusIndicatorThickness / 2.0;
+    const qreal margin = qMax<qreal>(ringMargin, 8.0);
+    const qreal w = qMax(t.trackWidth + 2.0 * margin, t.minimumInteractiveSize);
+    const qreal h = qMax(t.trackHeight + 2.0 * margin, t.minimumInteractiveSize);
     return QSize(int(std::ceil(w)), int(std::ceil(h)));
 }
-
 QSize MdSwitch::minimumSizeHint() const
 {
     return sizeHint();
@@ -278,9 +283,10 @@ void MdSwitch::mousePressEvent(QMouseEvent *event)
 {
     if (m_ripple != nullptr) {
         // The ripple rides the thumb: unbounded in a 40 px circle at the
-        // thumb's centre.
+        // thumb's centre. The controller works in state-layer-local
+        // coordinates, so the press point is relative to that rect.
         m_ripple->setBounds(stateLayerRect().size());
-        m_ripple->press(QPointF(event->pos()));
+        m_ripple->press(QPointF(event->pos()) - stateLayerRect().topLeft());
     }
     QCheckBox::mousePressEvent(event);
     retargetThumb(); // the press snaps the thumb to its pressed target

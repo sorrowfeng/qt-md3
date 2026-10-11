@@ -59,6 +59,9 @@ void MdElevation::drawShadowDp(QPainter *painter,
     painter->setPen(Qt::NoPen);
 
     // Approximate a soft shadow with a handful of growing, fading rings.
+    // The rings expand on every side (with a slight downward bias, matching
+    // the key-light convention MD3's elevation shadows use) so the result is
+    // a soft halo rather than a hard edge on the sides and nothing on top.
     constexpr int kLayers = 6;
     for (int i = kLayers; i >= 1; --i) {
         const qreal progress = qreal(i) / qreal(kLayers);
@@ -67,7 +70,8 @@ void MdElevation::drawShadowDp(QPainter *painter,
         QColor layer = shadowColor;
         layer.setAlphaF(std::clamp(alpha, 0.0, 1.0));
 
-        const QRectF ring = rect.adjusted(-spread / 2.0, spread / 2.0, spread / 2.0, spread);
+        const QRectF ring = rect.adjusted(-spread / 2.0, -spread / 4.0, spread / 2.0,
+                                          spread * 0.75);
         const qreal ringRadius = cornerRadius < 0.0 ? ring.height() / 2.0 : cornerRadius + spread / 2.0;
         painter->setBrush(layer);
         painter->drawPath(MdShape::roundedRect(ring, QList<qreal>{ringRadius, ringRadius, ringRadius, ringRadius}));

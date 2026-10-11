@@ -87,6 +87,24 @@ qreal MdCardStyle::focusRingInset(const MdCardTokens &tokens)
     return ringInsetFor(focusRingSpec(tokens));
 }
 
+qreal MdCardStyle::shadowInset(const MdCardTokens &tokens)
+{
+    // Only the elevated variant rests above level0. The headroom matches the
+    // snackbar / tooltip convention: enough for the level-2 rings and the
+    // dragged level-4 halo to land inside the widget rather than being cut
+    // off at its edge.
+    if (tokens.family.enabled.elevation == ElevationLevel::Level0) {
+        return 0.0;
+    }
+    return 8.0;
+}
+
+qreal MdCardStyle::paintInset(const MdCard &card, const MdCardTokens &tokens)
+{
+    const qreal ring = card.isClickable() ? focusRingInset(tokens) : 0.0;
+    return qMax(ring, shadowInset(tokens));
+}
+
 MdCardState MdCardStyle::stateFor(const MdCard &card)
 {
     // A non-clickable card never paints an interactive state: Compose's
@@ -118,11 +136,11 @@ MdCardStyle::Layout MdCardStyle::layoutFor(const MdCard &card, const MdCardToken
 {
     Layout layout;
 
-    // A clickable card reserves the focus-indicator margin; a non-clickable
-    // one is the plain surface, edge to edge. The widget keeps its contents
-    // margins in sync, so a layout installed on the card fills the container
-    // exactly.
-    const qreal inset = card.isClickable() ? focusRingInset(tokens) : 0.0;
+    // A clickable card reserves the focus-indicator margin; an elevated one
+    // reserves room for its shadow (which a non-clickable card still casts).
+    // The widget keeps its contents margins in sync, so a layout installed on
+    // the card fills the container exactly.
+    const qreal inset = paintInset(card, tokens);
     layout.container = QRectF(card.rect()).adjusted(inset, inset, -inset, -inset);
     layout.radii = MdShape::resolvedRadii(tokens.containerShape, layout.container.size());
 

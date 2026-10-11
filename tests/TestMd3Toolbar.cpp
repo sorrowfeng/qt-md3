@@ -1,4 +1,4 @@
-// TestMd3Toolbar — the Toolbars family: MdDockedToolbar + MdFloatingToolbar.
+// TestMd3Toolbar —the Toolbars family: MdDockedToolbar + MdFloatingToolbar.
 //
 // Numbers transcribed from material-web
 // tokens/versions/latest/sass/_md-comp-toolbar-docked.scss,
@@ -8,7 +8,7 @@
 //
 // The *behaviour* sources differ per variant and that is the point of the
 // family: material-web ships no toolbars implementation at all, so the docked
-// toolbar's layout comes from `FlexibleBottomAppBar` (AppBar.kt — the only
+// toolbar's layout comes from `FlexibleBottomAppBar` (AppBar.kt —the only
 // place the variant exists as behaviour in Compose) and the floating toolbar's
 // from `HorizontalFloatingToolbar` / `VerticalFloatingToolbar`
 // (FloatingToolbar.kt).
@@ -24,10 +24,9 @@
 //     expanded, and its action button is 56 px expanded and *80* collapsed, so
 //     the pair keeps a roughly constant footprint;
 //   * children go on their **containers** in both, because `MdIconButton` is a
-//     55 px widget around a 40 px container — see `MdChildBox`;
+//     55 px widget around a 40 px container —see `MdChildBox`;
 //   * the floating toolbar's slots are separated by the published
-//     `container.between-space` (4), a row Compose declares and never reads —
-//     so the pill is `8 + n * item + (n - 1) * 4 + 8` long. The gap reached the
+//     `container.between-space` (4), a row Compose declares and never reads —//     so the pill is `8 + n * item + (n - 1) * 4 + 8` long. The gap reached the
 //     layout only after a pixel audit of page 29 caught the pill measuring 136
 //     px where the export's own arithmetic says 144.
 
@@ -60,7 +59,7 @@ namespace {
 ///
 /// Deliberately *not* fixed-size: `MdChildBox::measure` resizes the widget to
 /// its `sizeHint()`, and the toolbar's action button is the one child that then
-/// has to be resized again to a size that is not its hint — a fixed-size probe
+/// has to be resized again to a size that is not its hint —a fixed-size probe
 /// cannot demonstrate that.
 class ProbeWidget : public QWidget
 {
@@ -220,7 +219,7 @@ void TestMd3Toolbar::floatingFabTable()
     QVERIFY(fab.expandedShape == ShapeCorner::Large);
     QVERIFY(fab.expandedElevation == ElevationLevel::Level1);
 
-    // Collapsed: the *medium* FAB — the export's word for it is "medium".
+    // Collapsed: the *medium* FAB —the export's word for it is "medium".
     QCOMPARE(fab.collapsedSize, 80.0);
     QCOMPARE(fab.collapsedIconSize, 28.0);
     QVERIFY(fab.collapsedShape == ShapeCorner::LargeIncreased);
@@ -341,7 +340,7 @@ void TestMd3Toolbar::tokenOverridesReachTheLayout()
     // The override reaches a live widget, not just the free function.
     MdFloatingToolbar bar;
     QCOMPARE(bar.tokens().containerLeadingSpace, 12.0);
-    QCOMPARE(bar.sizeHint(), QSize(12 + 8, 72));
+    QCOMPARE(bar.sizeHint(), QSize(12 + 8 + 20, 72 + 20));
 }
 
 // ---------------------------------------------------------------------------
@@ -393,7 +392,7 @@ void TestMd3Toolbar::dockedCollapsesItsWholeHeight()
     // The painted container follows the collapse...
     QCOMPARE(layout.container.height(), 32.0);
     // ...but the children were laid out against the expanded geometry, so the
-    // content does not reflow as the bar shrinks — the widget's own shorter
+    // content does not reflow as the bar shrinks —the widget's own shorter
     // rect clips it, exactly as Compose lays a `Surface` out shorter than the
     // `Row` inside it.
     QCOMPARE(layout.content, QRectF(16, 0, 328, 64));
@@ -439,7 +438,7 @@ void TestMd3Toolbar::dockedPaintsItsContainer()
     const QColor container = MdTheme::instance().color(ColorRole::SurfaceContainer);
     QCOMPARE(pixelColorAt(bar, QPointF(100, 32)), container);
     // `container.shape` is corner-none, so even the corner is the container's
-    // own — unlike a floating toolbar's pill.
+    // own —unlike a floating toolbar's pill.
     QCOMPARE(pixelColorAt(bar, QPointF(0, 0)), container);
 }
 
@@ -454,14 +453,14 @@ void TestMd3Toolbar::floatingPillGeometry()
     bar.addContentWidget(&content);
 
     // 8 px padding a side around a 48 px slot; 64 px across.
-    QCOMPARE(bar.sizeHint(), QSize(64, 64));
+    QCOMPARE(bar.sizeHint(), QSize(84, 84));
 
     const MdFloatingToolbarStyle::Layout layout =
         MdFloatingToolbarStyle::layoutFor(bar, bar.tokens());
-    QCOMPARE(layout.container, QRectF(0, 0, 64, 64));
-    QCOMPARE(layout.content, QRectF(8, 8, 48, 48));
+    QCOMPARE(layout.container, QRectF(10, 10, 64, 64));
+    QCOMPARE(layout.content, QRectF(18, 18, 48, 48));
     QCOMPARE(layout.contentChildBoxes.size(), 1);
-    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(8, 8, 48, 48));
+    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(18, 18, 48, 48));
     // `corner-full`: a pill, half the container's 64 px height.
     QCOMPARE(layout.radii.size(), 4);
     QCOMPARE(layout.radii.first(), 32.0);
@@ -473,7 +472,7 @@ void TestMd3Toolbar::betweenSpaceSeparatesTheSlots()
     // Compose does not: upstream's toolbar items are arranged by the caller's
     // `Row`, so `FloatingToolbarTokens.ContainerBetweenSpace` is referenced
     // nowhere in `FloatingToolbar.kt`. This widget *is* the arrangement, so the
-    // row has to reach the layout — and has to stay reachable, which is what a
+    // row has to reach the layout —and has to stay reachable, which is what a
     // token test alone would not have caught (the row was resolved and asserted
     // for a whole round while the layout ignored it).
     MdFloatingToolbar bar;
@@ -485,20 +484,20 @@ void TestMd3Toolbar::betweenSpaceSeparatesTheSlots()
     bar.addContentWidget(&third);
 
     // 8 + 48 + 4 + 48 + 4 + 48 + 8.
-    QCOMPARE(bar.sizeHint(), QSize(168, 64));
+    QCOMPARE(bar.sizeHint(), QSize(188, 84));
 
     MdFloatingToolbarStyle::Layout layout = MdFloatingToolbarStyle::layoutFor(bar, bar.tokens());
-    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(8, 8, 48, 48));
-    QCOMPARE(layout.contentChildBoxes.at(1), QRectF(60, 8, 48, 48));
-    QCOMPARE(layout.contentChildBoxes.at(2), QRectF(112, 8, 48, 48));
+    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(18, 18, 48, 48));
+    QCOMPARE(layout.contentChildBoxes.at(1), QRectF(70, 18, 48, 48));
+    QCOMPARE(layout.contentChildBoxes.at(2), QRectF(122, 18, 48, 48));
     // The run is `n - 1` gaps long, never `n`: a trailing gap would push the
     // centred run half a gap off centre, which the pill's own edges would show.
-    QCOMPARE(layout.container.right(), 168.0);
-    QCOMPARE(layout.contentChildBoxes.constLast().right(), 160.0);
+    QCOMPARE(layout.container.right(), 178.0);
+    QCOMPARE(layout.contentChildBoxes.constLast().right(), 170.0);
 
     // The override reaches the layout, so the row cannot quietly stop being
     // read again. A toolbar resolves its tokens when it is built, so this half
-    // needs a fresh widget with the override already in place — the same order
+    // needs a fresh widget with the override already in place —the same order
     // `tokenOverridesReachTheLayout` uses.
     MdComponentTokens::global().setValue(
         QStringLiteral("md.comp.toolbar.floating.container.between-space"),
@@ -514,12 +513,12 @@ void TestMd3Toolbar::betweenSpaceSeparatesTheSlots()
 
         QCOMPARE(wider.tokens().containerBetweenSpace, 12.0);
         // 8 + 48 + 12 + 48 + 12 + 48 + 8.
-        QCOMPARE(wider.sizeHint(), QSize(184, 64));
+        QCOMPARE(wider.sizeHint(), QSize(204, 84));
         const MdFloatingToolbarStyle::Layout wide =
             MdFloatingToolbarStyle::layoutFor(wider, wider.tokens());
-        QCOMPARE(wide.contentChildBoxes.at(1), QRectF(68, 8, 48, 48));
-        QCOMPARE(wide.contentChildBoxes.at(2), QRectF(128, 8, 48, 48));
-        QCOMPARE(wide.container.right(), 184.0);
+        QCOMPARE(wide.contentChildBoxes.at(1), QRectF(78, 18, 48, 48));
+        QCOMPARE(wide.contentChildBoxes.at(2), QRectF(138, 18, 48, 48));
+        QCOMPARE(wide.container.right(), 194.0);
     }
 }
 
@@ -533,11 +532,11 @@ void TestMd3Toolbar::verticalIsTheTranspose()
     horizontal.addContentWidget(&first);
     horizontal.addContentWidget(&second);
     // 8 + 48 + 4 + 48 + 8.
-    QCOMPARE(horizontal.sizeHint(), QSize(116, 64));
+    QCOMPARE(horizontal.sizeHint(), QSize(136, 84));
     const MdFloatingToolbarStyle::Layout hLayout =
         MdFloatingToolbarStyle::layoutFor(horizontal, horizontal.tokens());
-    QCOMPARE(hLayout.contentChildBoxes.at(0), QRectF(8, 8, 48, 48));
-    QCOMPARE(hLayout.contentChildBoxes.at(1), QRectF(60, 8, 48, 48));
+    QCOMPARE(hLayout.contentChildBoxes.at(0), QRectF(18, 18, 48, 48));
+    QCOMPARE(hLayout.contentChildBoxes.at(1), QRectF(70, 18, 48, 48));
 
     MdFloatingToolbar vertical;
     vertical.setOrientation(MdToolbarOrientation::Vertical);
@@ -546,12 +545,12 @@ void TestMd3Toolbar::verticalIsTheTranspose()
     vertical.addContentWidget(&third);
     vertical.addContentWidget(&fourth);
     // Exactly the transpose: the same numbers with the axes swapped.
-    QCOMPARE(vertical.sizeHint(), QSize(64, 116));
+    QCOMPARE(vertical.sizeHint(), QSize(84, 136));
     const MdFloatingToolbarStyle::Layout vLayout =
         MdFloatingToolbarStyle::layoutFor(vertical, vertical.tokens());
-    QCOMPARE(vLayout.container, QRectF(0, 0, 64, 116));
-    QCOMPARE(vLayout.contentChildBoxes.at(0), QRectF(8, 8, 48, 48));
-    QCOMPARE(vLayout.contentChildBoxes.at(1), QRectF(8, 60, 48, 48));
+    QCOMPARE(vLayout.container, QRectF(10, 10, 64, 116));
+    QCOMPARE(vLayout.contentChildBoxes.at(0), QRectF(18, 18, 48, 48));
+    QCOMPARE(vLayout.contentChildBoxes.at(1), QRectF(18, 70, 48, 48));
 }
 
 void TestMd3Toolbar::leadingAndTrailingExistOnlyWhenExpanded()
@@ -565,14 +564,14 @@ void TestMd3Toolbar::leadingAndTrailingExistOnlyWhenExpanded()
     bar.setTrailingWidget(&trailing);
 
     // Three slots, 8 px a side and a 4 px gap between neighbours.
-    QCOMPARE(bar.sizeHint(), QSize(168, 64));
+    QCOMPARE(bar.sizeHint(), QSize(188, 84));
 
     const MdFloatingToolbarTokens tokens = bar.tokens();
     MdFloatingToolbarStyle::Layout layout = MdFloatingToolbarStyle::layoutFor(bar, tokens);
     QCOMPARE(layout.leadingChildBoxes.size(), 1);
-    QCOMPARE(layout.leadingChildBoxes.at(0), QRectF(8, 8, 48, 48));
-    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(60, 8, 48, 48));
-    QCOMPARE(layout.trailingChildBoxes.at(0), QRectF(112, 8, 48, 48));
+    QCOMPARE(layout.leadingChildBoxes.at(0), QRectF(18, 18, 48, 48));
+    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(70, 18, 48, 48));
+    QCOMPARE(layout.trailingChildBoxes.at(0), QRectF(122, 18, 48, 48));
 
     bar.setExpansionProgress(0.0);
     layout = MdFloatingToolbarStyle::layoutFor(bar, tokens);
@@ -580,14 +579,14 @@ void TestMd3Toolbar::leadingAndTrailingExistOnlyWhenExpanded()
     // from the layout, so the content re-centres in the band...
     QVERIFY(layout.leadingChildBoxes.isEmpty());
     QVERIFY(layout.trailingChildBoxes.isEmpty());
-    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(60, 8, 48, 48));
+    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(70, 18, 48, 48));
     // ...and the pill has no main-axis extent left.
     QCOMPARE(layout.container.width(), 0.0);
     QVERIFY(layout.container.isEmpty());
     // The widget's own bounds do not move: Compose sizes the outer Layout from
     // the toolbar's *maximum* intrinsic width and only shortens the inside.
-    QCOMPARE(bar.size(), QSize(168, 64));
-    QCOMPARE(bar.sizeHint(), QSize(168, 64));
+    QCOMPARE(bar.size(), QSize(188, 84));
+    QCOMPARE(bar.sizeHint(), QSize(188, 84));
 }
 
 void TestMd3Toolbar::expandedProgressLengthsThePill()
@@ -599,7 +598,7 @@ void TestMd3Toolbar::expandedProgressLengthsThePill()
 
     bar.setExpansionProgress(1.0);
     MdFloatingToolbarStyle::Layout layout = MdFloatingToolbarStyle::layoutFor(bar, tokens);
-    QCOMPARE(layout.container, QRectF(0, 0, 64, 64));
+    QCOMPARE(layout.container, QRectF(10, 10, 64, 64));
 
     // `targetWidth = maxIntrinsicWidth * expandedProgress`.
     bar.setExpansionProgress(0.5);
@@ -612,10 +611,10 @@ void TestMd3Toolbar::expandedProgressLengthsThePill()
     QCOMPARE(layout.container.width(), 16.0);
     // The pill keeps its trailing edge and sweeps its leading one, which is
     // Compose's `toolbarX = maxToolbarWidth - toolbarWidth`.
-    QCOMPARE(layout.container.left(), 48.0);
+    QCOMPARE(layout.container.left(), 58.0);
 
     // The band is always the expanded one: the content never reflows.
-    QCOMPARE(layout.content, QRectF(8, 8, 48, 48));
+    QCOMPARE(layout.content, QRectF(18, 18, 48, 48));
 }
 
 void TestMd3Toolbar::floatingFabStripAndSizeSets()
@@ -630,24 +629,24 @@ void TestMd3Toolbar::floatingFabStripAndSizeSets()
     // Pill (8 + 48 + 8 = 64) plus the reserved strip (between-space 8 +
     // *expanded* size 56 = 64); the cross extent is lifted to the collapsed
     // FAB's 80 by `defaultMinSize(minHeight = FabSizeRange.endInclusive)`.
-    QCOMPARE(bar.sizeHint(), QSize(128, 80));
+    QCOMPARE(bar.sizeHint(), QSize(148, 100));
 
     MdFloatingToolbarStyle::Layout layout = MdFloatingToolbarStyle::layoutFor(bar, tokens);
     // The pill is 64 px across and centred in the 80 px the FAB raises the
     // cross extent to (`toolbarTopOffset = (height - toolbarHeight) / 2`).
-    QCOMPARE(layout.container, QRectF(0, 8, 64, 64));
+    QCOMPARE(layout.container, QRectF(10, 18, 64, 64));
     // The default position is End: the FAB takes the trailing edge and the pill
     // keeps its own trailing edge fixed.
-    QCOMPARE(layout.fabBox, QRectF(72, 12, 56, 56));
+    QCOMPARE(layout.fabBox, QRectF(82, 22, 56, 56));
 
     bar.setExpansionProgress(0.0);
     layout = MdFloatingToolbarStyle::layoutFor(bar, tokens);
     QCOMPARE(layout.container.width(), 0.0);
-    QCOMPARE(layout.container.left(), 64.0);
+    QCOMPARE(layout.container.left(), 74.0);
     // Collapsed, the FAB is the 80 px medium one, and this is where it lands:
     // `width - 80` really is 16 px inside `width - 64`, so it overlaps the
     // pill's ruins. Compose's arithmetic, not an error.
-    QCOMPARE(layout.fabBox, QRectF(48, 0, 80, 80));
+    QCOMPARE(layout.fabBox, QRectF(58, 10, 80, 80));
     QVERIFY(layout.fabBox.left() < layout.container.right());
 
     // The transpose, still at `End` (which is `Bottom` for a vertical toolbar).
@@ -657,11 +656,11 @@ void TestMd3Toolbar::floatingFabStripAndSizeSets()
     ProbeWidget vFab(QSize(56, 56));
     vertical.addContentWidget(&vContent);
     vertical.setFab(&vFab);
-    QCOMPARE(vertical.sizeHint(), QSize(80, 128));
+    QCOMPARE(vertical.sizeHint(), QSize(100, 148));
     const MdFloatingToolbarStyle::Layout vLayout =
         MdFloatingToolbarStyle::layoutFor(vertical, vertical.tokens());
-    QCOMPARE(vLayout.container, QRectF(8, 0, 64, 64));
-    QCOMPARE(vLayout.fabBox, QRectF(12, 72, 56, 56));
+    QCOMPARE(vLayout.container, QRectF(18, 10, 64, 64));
+    QCOMPARE(vLayout.fabBox, QRectF(22, 82, 56, 56));
 }
 
 void TestMd3Toolbar::floatingFabPosition()
@@ -677,9 +676,9 @@ void TestMd3Toolbar::floatingFabPosition()
         MdFloatingToolbarStyle::layoutFor(bar, bar.tokens());
     // Compose: `toolbarX = width - maxToolbarWidth` when the FAB is at the
     // start, i.e. the pill begins *after* the strip.
-    QCOMPARE(layout.fabBox, QRectF(0, 12, 56, 56));
-    QCOMPARE(layout.container, QRectF(64, 8, 64, 64));
-    QCOMPARE(bar.sizeHint(), QSize(128, 80));
+    QCOMPARE(layout.fabBox, QRectF(10, 22, 56, 56));
+    QCOMPARE(layout.container, QRectF(74, 18, 64, 64));
+    QCOMPARE(bar.sizeHint(), QSize(148, 100));
 }
 
 void TestMd3Toolbar::floatingFabIsAskedToTakeTheTokenSize()
@@ -691,7 +690,7 @@ void TestMd3Toolbar::floatingFabIsAskedToTakeTheTokenSize()
     bar.setFab(&fab);
 
     // A widget with no container concept of its own fills whatever box the
-    // toolbar hands it — which is how the 56 / 80 transition is expressed.
+    // toolbar hands it —which is how the 56 / 80 transition is expressed.
     QCOMPARE(fab.size(), QSize(56, 56));
     bar.setExpansionProgress(1.0);
     QCOMPARE(fab.size(), QSize(56, 56));
@@ -702,7 +701,7 @@ void TestMd3Toolbar::floatingFabIsAskedToTakeTheTokenSize()
     // An `MdFab` does *not*: its container is a fixed pair of tokens
     // (`containerWidth x containerHeight`), so it stays 56 px centred in the
     // 80 px box rather than growing. That is the FAB family's gap, recorded in
-    // docs/porting-todo.md — the toolbar's box is right, the child's metrics
+    // docs/porting-todo.md —the toolbar's box is right, the child's metrics
     // are not there yet.
     MdFloatingToolbar bar2;
     ProbeWidget content2(QSize(48, 48));
@@ -733,12 +732,12 @@ void TestMd3Toolbar::floatingChildrenUseContainers()
     QCOMPARE(MdChildBox::measure(first).containerSize(), QSizeF(40, 40));
 
     // 8 + 40 + 4 + 40 + 8. Advancing by the widgets would have made this 130.
-    QCOMPARE(bar.sizeHint(), QSize(100, 64));
+    QCOMPARE(bar.sizeHint(), QSize(120, 84));
 
     const MdFloatingToolbarStyle::Layout layout =
         MdFloatingToolbarStyle::layoutFor(bar, bar.tokens());
-    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(8, 12, 40, 40));
-    QCOMPARE(layout.contentChildBoxes.at(1), QRectF(52, 12, 40, 40));
+    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(18, 22, 40, 40));
+    QCOMPARE(layout.contentChildBoxes.at(1), QRectF(62, 22, 40, 40));
     QVERIFY(std::abs((second->pos().x() - first->pos().x()) - 44) <= 1);
 }
 
@@ -780,8 +779,8 @@ void TestMd3Toolbar::rtlIsNotMirrored()
 
     const MdFloatingToolbarStyle::Layout layout =
         MdFloatingToolbarStyle::layoutFor(bar, bar.tokens());
-    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(8, 8, 48, 48));
-    QCOMPARE(layout.contentChildBoxes.at(1), QRectF(60, 8, 48, 48));
+    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(18, 18, 48, 48));
+    QCOMPARE(layout.contentChildBoxes.at(1), QRectF(70, 18, 48, 48));
 
     MdDockedToolbar docked;
     ProbeWidget probe(QSize(48, 48));

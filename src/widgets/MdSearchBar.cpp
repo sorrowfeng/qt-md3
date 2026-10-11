@@ -20,6 +20,11 @@ MdSearchBar::MdSearchBar(QWidget *parent)
     pal.setColor(QPalette::Window, Qt::transparent);
     setPalette(pal);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    // The leading search icon owns the first 16+24 px; the input line starts
+    // after it (and after the trailing slot on the other side).
+    const MdSearchTokens &tokens = searchTokens();
+    setTextMargins(int(tokens.leadingSpace + tokens.iconSize + 8.0), 0,
+                   int(tokens.trailingSpace), 0);
 }
 
 MdSearchBar::~MdSearchBar() = default;
@@ -96,9 +101,14 @@ void MdSearchBar::setSearchTokens(const MdSearchTokens &tokens)
 
 void MdSearchBar::paintEvent(QPaintEvent *event)
 {
+    // Chrome first, then QLineEdit's text / cursor / selection on top.
+    // Painting the container *after* QLineEdit laid an opaque slab over the
+    // input — typing worked but the glyphs were invisible.
+    {
+        QPainter painter(this);
+        MdSearchBarStyle::paintSearchBar(painter, *this, searchTokens());
+    }
     QLineEdit::paintEvent(event);
-    QPainter painter(this);
-    MdSearchBarStyle::paintSearchBar(painter, *this, searchTokens());
 }
 
 void MdSearchBar::mousePressEvent(QMouseEvent *event)

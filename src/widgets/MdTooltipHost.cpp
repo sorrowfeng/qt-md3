@@ -12,6 +12,8 @@
 #include <QtCore/QTimer>
 #include <QtGui/QCursor>
 #include <QtGui/QGuiApplication>
+#include <QtGui/QScreen>
+#include <QtGui/QWindow>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QResizeEvent>
@@ -170,8 +172,11 @@ QRect MdTooltipHost::anchorGlobalRect() const
     if (!m_anchor) {
         return {};
     }
+    // The popup is a top-level tool-tip window, so its geometry is global:
+    // the anchor has to be reported in the same space or the tooltip lands
+    // at the window-relative point as if it were a screen position.
     QRect anchorRect = m_anchor->rect();
-    anchorRect.moveTopLeft(m_anchor->mapTo(m_anchor->window(), QPoint(0, 0)));
+    anchorRect.moveTopLeft(m_anchor->mapToGlobal(QPoint(0, 0)));
     return anchorRect;
 }
 
@@ -199,15 +204,23 @@ void MdTooltipHost::placePopup()
         return;
     }
     const QRect anchorRect = anchorGlobalRect();
+    // Clamp against the anchor window's global bounds (or the screen when
+    // there is no window), so the popup stays in the same coordinate space
+    // as `anchorRect` — both global.
     const QWidget *window = m_anchor->window();
-    const QSize windowSize = window ? window->size() : QSize();
+    QRect available;
+    if (window != nullptr && window->windowHandle() != nullptr) {
+        available = window->windowHandle()->geometry();
+    } else if (const QScreen *screen = QGuiApplication::primaryScreen()) {
+        available = screen->availableGeometry();
+    }
     const QSize size = surfaceSize();
 
     const bool above = m_anchorPosition == AnchorPosition::Above;
     const QPoint surface = above
-        ? MdTooltipStyle::abovePopupPosition(anchorRect, size, windowSize,
+        ? MdTooltipStyle::abovePopupPosition(anchorRect, size, available,
                                              MdTooltipTokens::kAnchorSpacing)
-        : MdTooltipStyle::richPopupPosition(anchorRect, size, windowSize,
+        : MdTooltipStyle::richPopupPosition(anchorRect, size, available,
                                             MdTooltipTokens::kAnchorSpacing);
 
     // The caret keeps its tip exactly kAnchorSpacing from the anchor

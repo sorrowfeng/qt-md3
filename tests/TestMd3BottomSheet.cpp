@@ -9,6 +9,8 @@
 #include <QtGui/QMouseEvent>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QScrollBar>
 
 #include <cmath>
 
@@ -68,6 +70,7 @@ private slots:
     void hostScrimFade();
     void hostEscapeFlow();
     void hostScrimClick();
+    void hostPreservesScrollLayout();
     void renderSmoke();
     void styleIsInstalled();
 };
@@ -551,6 +554,102 @@ void TestMd3BottomSheet::hostScrimClick()
     QVERIFY(host.isShowing());
 }
 
+namespace {
+
+/// Gallery-shaped page: height-for-width content living in a QScrollArea
+/// with widgetResizable, the same shell the sheet demo pages sit in.
+class ScrollStabilityPage : public QWidget
+{
+public:
+    explicit ScrollStabilityPage(QWidget *parent = nullptr)
+        : QWidget(parent)
+    {
+        QSizePolicy policy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+        policy.setHeightForWidth(true);
+        setSizePolicy(policy);
+        resize(400, 1200);
+    }
+
+    int heightForWidth(int width) const override
+    {
+        // Tall enough that the vertical scrollbar is always on.
+        return qMax(1200, width * 3);
+    }
+
+    QSize sizeHint() const override
+    {
+        return QSize(qMax(width(), 400), heightForWidth(qMax(width(), 400)));
+    }
+
+    QSize minimumSizeHint() const override { return QSize(320, 200); }
+};
+
+} // namespace
+
+void TestMd3BottomSheet::hostPreservesScrollLayout()
+{
+    // Overlays must not reflow their host page: showing and dismissing a
+    // modal sheet host has to leave the scroll area's scrollbar geometry and
+    // the scroll value exactly where they were (animation may move them
+    // transiently, but the settled state is the original one).
+    QScrollArea scroll;
+    scroll.setWidgetResizable(true);
+    scroll.setFrameShape(QFrame::NoFrame);
+    scroll.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll.resize(420, 320);
+    auto *page = new ScrollStabilityPage;
+    scroll.setWidget(page);
+    scroll.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&scroll));
+    QTest::qWait(50);
+
+    QScrollBar *bar = scroll.verticalScrollBar();
+    QVERIFY(bar->maximum() > 0);
+    bar->setValue(bar->maximum() / 2);
+    QTest::qWait(30);
+
+    auto *host = new MdBottomSheetHost(page);
+    host->sheet()->resize(320, 244);
+    QCOMPARE(host->geometry(), page->rect());
+
+    // Overlay isolation: the host itself must not advertise a size to any
+    // parent layout, or show/hide would reflow the scroll page.
+    QCOMPARE(host->sizeHint(), QSize(0, 0));
+    QCOMPARE(host->minimumSizeHint(), QSize(0, 0));
+    QVERIFY(host->sizePolicy().horizontalPolicy() == QSizePolicy::Ignored);
+    QVERIFY(host->sizePolicy().verticalPolicy() == QSizePolicy::Ignored);
+
+    const int scrollBefore = bar->value();
+    const QRect barBefore = bar->geometry();
+    const QSize pageBefore = page->size();
+    const QRect pageGeoBefore = page->geometry();
+    const QSize hintBefore = page->sizeHint();
+    const int heightForWidthBefore = page->heightForWidth(page->width());
+
+    host->show();
+    QTest::qWait(700);
+    QVERIFY(host->isShowing());
+
+    // Mid-show the scrollbar may ride the animation; the page's layout
+    // metrics must already be unchanged so nothing reflows.
+    QCOMPARE(page->size(), pageBefore);
+    QCOMPARE(page->geometry(), pageGeoBefore);
+    QCOMPARE(page->sizeHint(), hintBefore);
+    QCOMPARE(page->heightForWidth(page->width()), heightForWidthBefore);
+    QCOMPARE(bar->geometry(), barBefore);
+
+    host->dismiss();
+    QTest::qWait(900);
+    QVERIFY(!host->isShowing());
+    QVERIFY(!host->isVisible());
+
+    QCOMPARE(page->size(), pageBefore);
+    QCOMPARE(page->geometry(), pageGeoBefore);
+    QCOMPARE(page->sizeHint(), hintBefore);
+    QCOMPARE(page->heightForWidth(page->width()), heightForWidthBefore);
+    QCOMPARE(bar->geometry(), barBefore);
+    QCOMPARE(bar->value(), scrollBefore);
+}
 void TestMd3BottomSheet::renderSmoke()
 {
     // Static snapshots at several states/kinds must paint without crashing.

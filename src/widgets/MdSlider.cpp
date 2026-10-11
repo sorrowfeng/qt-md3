@@ -32,6 +32,7 @@ MdSlider::MdSlider(QWidget *parent)
 {
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_Hover, true);
+    setMouseTracking(true);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     QTimer *timer = new QTimer(this);
@@ -201,7 +202,11 @@ QRectF MdSlider::stateLayerRect(bool startHandle) const
 QSize MdSlider::sizeHint() const
 {
     const MdSliderTokens &tokens = sliderTokens();
-    return QSize(200, int(tokens.stateLayerSize));
+    // The handle is taller than the state layer at the base size (44 vs 40);
+    // reporting only the state layer clips the pill and makes the overhang
+    // un-hittable. Reserve whichever is taller.
+    const int height = int(std::ceil(qMax(tokens.stateLayerSize, tokens.handleHeight)));
+    return QSize(200, height);
 }
 
 QSize MdSlider::minimumSizeHint() const
@@ -399,8 +404,12 @@ void MdSlider::resizeEvent(QResizeEvent *event)
 void MdSlider::mousePressEvent(QMouseEvent *event)
 {
     if (isEffectivelyDisabled()) {
+        event->ignore();
         return;
     }
+    // Accept so the grab lands here for the whole drag — a parent scroll area
+    // must not steal the subsequent moves.
+    event->accept();
     m_pressed = true;
     emit sliderPressed();
     setActiveFromPoint(mousePosition(event));
@@ -419,15 +428,16 @@ void MdSlider::mouseMoveEvent(QMouseEvent *event)
     if ((!m_pressed && !leftDown) || isEffectivelyDisabled()) {
         return;
     }
+    event->accept();
     setActiveFromPoint(mousePosition(event));
 }
 
 void MdSlider::mouseReleaseEvent(QMouseEvent *event)
 {
-    Q_UNUSED(event)
     if (!m_pressed) {
         return;
     }
+    event->accept();
     m_pressed = false;
     emit sliderReleased();
     retargetAnimations();

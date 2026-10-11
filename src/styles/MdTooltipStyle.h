@@ -98,21 +98,22 @@ public:
     // --- popup positioning (Compose TooltipPositionProviderImpl) ------------
     /// The `TooltipAnchorPosition.Above` provider: horizontally centred with
     /// start / end fallbacks, above the anchor or below it when the top would
-    /// clip, always coerced into the window. `anchorRect` and the returned
-    /// point share the window coordinate space; `size` is the tooltip
-    /// SURFACE (container) size.
+    /// clip, always coerced into `available`. `anchorRect` and the returned
+    /// point share the same global coordinate space as `available` (the
+    /// screen or window rect the popup must stay inside); `size` is the
+    /// tooltip SURFACE (container) size.
     static QPoint abovePopupPosition(const QRect &anchorRect,
                                      const QSize &size,
-                                     const QSize &windowSize,
+                                     const QRect &available,
                                      qreal spacing);
 
     /// The rich provider: start-aligned to the anchor, shifted left when it
-    /// would clip the window's right edge, centred when both edges clip.
+    /// would clip `available`'s right edge, centred when both edges clip.
     /// Compose keeps shipping this for RichTooltip even though the generic
     /// provider supersedes it, so the behaviour difference is preserved.
     static QPoint richPopupPosition(const QRect &anchorRect,
                                     const QSize &size,
-                                    const QSize &windowSize,
+                                    const QRect &available,
                                     qreal spacing);
 
     // --- painting -----------------------------------------------------------

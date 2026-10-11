@@ -1160,7 +1160,7 @@ set_tests_properties(TestMd3InteractionSmoke PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3InteractionSmoke)
 
-# TestMd3GalleryClick ¡ª gallery-shell click probe. Unlike TestMd3InteractionSmoke
+# TestMd3GalleryClick ï¿½ï¿½ gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
 # shell fail here. Links the example gallery sources directly.

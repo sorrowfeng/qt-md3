@@ -137,6 +137,22 @@ MdSegmentedButtonStyle::Layout MdSegmentedButtonStyle::layoutFor(
     layout.naturalWidth = total;
     layout.contentWidth = qMax<qreal>(inner.width(), total);
 
+    // When the widget is wider than the natural row, grow every segment by an
+    // equal share so the pill fills the control. Otherwise the segments pack
+    // against the inline-start edge and a click at the centre of a stretched
+    // widget lands on empty space (the hit-test and the paint share this
+    // layout, so filling the width makes the whole widget clickable).
+    // A sub-pixel remainder from sizeHint's ceil is left alone so the natural
+    // widths stay exact.
+    if (inner.width() > total + 1.0 && count > 0) {
+        const qreal extra = (inner.width() - total) / qreal(count);
+        for (qreal &width : widths) {
+            width += extra;
+        }
+        total = inner.width();
+        layout.contentWidth = total;
+    }
+
     const qreal base = tokens.baseCornerRadius();
     qreal cursor = rtl ? inner.left() + (inner.width() - total) : inner.left();
     for (int i = 0; i < count; ++i) {

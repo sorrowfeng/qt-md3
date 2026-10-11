@@ -47,6 +47,7 @@
 #include <QtWidgets/QWidget>
 
 class QKeyEvent;
+class QMouseEvent;
 
 namespace md {
 
@@ -124,6 +125,7 @@ signals:
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
 
 private slots:

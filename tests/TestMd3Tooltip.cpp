@@ -1,4 +1,4 @@
-// TestMd3Tooltip — the Communication family's closing pair.
+// TestMd3Tooltip —the Communication family's closing pair.
 //
 // Pins the two exports (plain: inverse-surface / extra-small / body-small
 // inverse-on-surface, NO elevation; rich: surface-container / medium /
@@ -88,7 +88,7 @@ void TestMd3Tooltip::richTokenRows()
 
 void TestMd3Tooltip::actionStateRows()
 {
-    // md.comp.rich-tooltip.action.<state>.* — the label stays primary; the
+    // md.comp.rich-tooltip.action.<state>.* —the label stays primary; the
     // state layer is primary at the md.sys.state opacities.
     const MdTooltipTokens tokens;
     const MdTooltipActionRow enabled = tokens.actionRow(MdTooltipActionState::Enabled);
@@ -258,43 +258,43 @@ void TestMd3Tooltip::positioningProviders()
     const QRect anchor(100, 200, 80, 40);
     const QSize size(60, 30);
     const QPoint centred =
-        MdTooltipStyle::abovePopupPosition(anchor, size, QSize(1000, 800), 4.0);
+        MdTooltipStyle::abovePopupPosition(anchor, size, QRect(0, 0, 1000, 800), 4.0);
     QCOMPARE(centred, QPoint(110, 166)); // 100 + (80-60)/2, 200 - 30 - 4
 
     // Centring falls inside the window (x = 20): the provider merely coerces
-    // x into the window — no start fallback for a centred value that fits.
+    // x into the window —no start fallback for a centred value that fits.
     const QPoint centredFits =
-        MdTooltipStyle::abovePopupPosition(QRect(10, 200, 80, 40), size, QSize(1000, 800), 4.0);
+        MdTooltipStyle::abovePopupPosition(QRect(10, 200, 80, 40), size, QRect(0, 0, 1000, 800), 4.0);
     QCOMPARE(centredFits.x(), 20);
 
     // Centring would clip the right edge: coerced to the window edge.
     const QPoint endAligned =
-        MdTooltipStyle::abovePopupPosition(QRect(950, 200, 80, 40), size, QSize(1000, 800), 4.0);
+        MdTooltipStyle::abovePopupPosition(QRect(950, 200, 80, 40), size, QRect(0, 0, 1000, 800), 4.0);
     QCOMPARE(endAligned.x(), 940);
 
     // No room above: below the anchor (anchor bottom 59 + 1 + spacing 4).
     const QPoint below =
-        MdTooltipStyle::abovePopupPosition(QRect(100, 20, 80, 40), size, QSize(1000, 800), 4.0);
+        MdTooltipStyle::abovePopupPosition(QRect(100, 20, 80, 40), size, QRect(0, 0, 1000, 800), 4.0);
     QCOMPARE(below.y(), 64);
 
     // Always coerced into the window: x clamps to 0, y clamps to the window
     // height minus the tooltip height (10).
     const QPoint coerced =
-        MdTooltipStyle::abovePopupPosition(QRect(0, 0, 40, 20), QSize(60, 30), QSize(50, 40), 4.0);
+        MdTooltipStyle::abovePopupPosition(QRect(0, 0, 40, 20), QSize(60, 30), QRect(0, 0, 50, 40), 4.0);
     QCOMPARE(coerced, QPoint(0, 10));
 
     // Rich provider: start-aligned, shifted left when the right edge clips,
     // centred when both would clip.
     const QPoint richStart =
-        MdTooltipStyle::richPopupPosition(anchor, size, QSize(1000, 800), 4.0);
+        MdTooltipStyle::richPopupPosition(anchor, size, QRect(0, 0, 1000, 800), 4.0);
     QCOMPARE(richStart.x(), 100);
     const QPoint richShifted =
-        MdTooltipStyle::richPopupPosition(QRect(950, 200, 80, 40), size, QSize(1000, 800), 4.0);
+        MdTooltipStyle::richPopupPosition(QRect(950, 200, 80, 40), size, QRect(0, 0, 1000, 800), 4.0);
     QCOMPARE(richShifted.x(), 970); // 950 + 80 - 1 + 1 - 60
     // Rich provider centring: both a left shift and the anchor are too wide
-    // for the window — the tooltip centres on the anchor instead.
+    // for the window —the tooltip centres on the anchor instead.
     const QPoint richCentred =
-        MdTooltipStyle::richPopupPosition(QRect(100, 200, 80, 40), QSize(500, 30), QSize(500, 800),
+        MdTooltipStyle::richPopupPosition(QRect(100, 200, 80, 40), QSize(500, 30), QRect(0, 0, 500, 800),
                                           4.0);
     QCOMPARE(richCentred.x(), 100 + (80 - 500) / 2);
 }
@@ -398,7 +398,7 @@ void TestMd3Tooltip::richActionKeyboardContract()
     rich.setFocus(Qt::MouseFocusReason);
     QCOMPARE(rich.actionState(), MdTooltipActionState::Enabled);
     // Qt suppresses a repeated FocusIn when the widget already has focus, so
-    // clear first — the reason matters for :focus-visible.
+    // clear first —the reason matters for :focus-visible.
     rich.clearFocus();
     flushEvents();
     rich.setFocus(Qt::TabFocusReason);
@@ -538,7 +538,7 @@ void TestMd3Tooltip::hostEscapeDismiss()
 void TestMd3Tooltip::hostTransitionSprings()
 {
     // The enter transition runs the same fade + scale pair the snackbar host
-    // uses: opacity on the effects-fast spring, scale 0.8→1 on the
+    // uses: opacity on the effects-fast spring, scale 0.8→ on the
     // spatial-fast spring.
     MdTooltipHost host;
     QCOMPARE(host.currentOpacity(), 1.0);

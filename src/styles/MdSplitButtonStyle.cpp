@@ -241,16 +241,24 @@ void MdSplitButtonStyle::paintSplitButton(QPainter &painter,
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing, true);
 
-    // 1. Shadow (elevated only), then the two container fills. Both shadows
-    //    first, so neither fill is painted over by the other half's shadow.
+    // 1. Shadow, then the two container fills.
+    //
+    // One shadow around the *whole* split, not one per half: two per-half
+    // shadows drawn with the outer pill radius bulge into the between-space
+    // gap and read as a dirty edge through the middle of the control. The
+    // split is one raised surface with a notch, so it casts one shadow.
     const bool paintsShadow = buttonTokens.enabled.elevation != ElevationLevel::Level0;
     if (paintsShadow) {
+        ElevationLevel level = ElevationLevel::Level0;
         for (const Half &half : halves) {
-            const ElevationLevel level = buttonTokens.state(half.state).elevation;
-            if (level != ElevationLevel::Level0) {
-                MdElevation::drawShadow(&painter, half.rect, metrics.outerCornerRadius(), level,
-                                        theme.color(ColorRole::Shadow));
+            const ElevationLevel halfLevel = buttonTokens.state(half.state).elevation;
+            if (int(halfLevel) > int(level)) {
+                level = halfLevel;
             }
+        }
+        if (level != ElevationLevel::Level0) {
+            MdElevation::drawShadow(&painter, layout.container, metrics.outerCornerRadius(), level,
+                                    theme.color(ColorRole::Shadow));
         }
     }
     for (const Half &half : halves) {
@@ -263,6 +271,28 @@ void MdSplitButtonStyle::paintSplitButton(QPainter &painter,
             painter.setPen(Qt::NoPen);
             painter.setBrush(fill);
             painter.drawPath(MdShape::roundedRect(half.rect, half.radii));
+        }
+    }
+    // The between-space slot is part of the surface, not a hole in it. Filling
+    // it with the container colour keeps an elevated or filled split reading
+    // as one control; leaving it open shows the page through the middle.
+    if (metrics.betweenSpace > 0.0) {
+        const MdButtonStateColours &leadingColoursForGap =
+            buttonTokens.state(halves[0].state);
+        if (leadingColoursForGap.paintsContainer()) {
+            const QColor gapFill = resolveSlot(leadingColoursForGap.container);
+            if (gapFill.isValid()) {
+                const QRectF gap = layout.leading.right() < layout.trailing.left()
+                    ? QRectF(layout.leading.right(), layout.container.top(),
+                             layout.trailing.left() - layout.leading.right(),
+                             layout.container.height())
+                    : QRectF(layout.trailing.right(), layout.container.top(),
+                             layout.leading.left() - layout.trailing.right(),
+                             layout.container.height());
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(gapFill);
+                painter.drawRect(gap);
+            }
         }
     }
 
@@ -317,20 +347,44 @@ void MdSplitButtonStyle::paintSplitButton(QPainter &painter,
     }
 
     // 4. Outline (the borrowed outlined variant), on top of the state layer.
+    //
+    // One outline around the whole split plus a seam in the gap — drawing a
+    // full rounded rect per half puts a stroke on both facing edges and the
+    // 2 px slot between them reads as a double border through the middle.
     for (const Half &half : halves) {
         const MdButtonStateColours &colours = buttonTokens.state(half.state);
         if (!colours.paintsOutline() || buttonTokens.outlineWidth <= 0.0) {
             continue;
         }
         const QColor stroke = theme.color(colours.outline);
-        if (stroke.isValid()) {
-            QPen pen(stroke);
-            pen.setWidthF(buttonTokens.outlineWidth);
-            pen.setJoinStyle(Qt::RoundJoin);
-            painter.setPen(pen);
-            painter.setBrush(Qt::NoBrush);
+        if (!stroke.isValid()) {
+            continue;
+        }
+        QPen pen(stroke);
+        pen.setWidthF(buttonTokens.outlineWidth);
+        pen.setJoinStyle(Qt::RoundJoin);
+        painter.setPen(pen);
+        painter.setBrush(Qt::NoBrush);
+        if (metrics.betweenSpace > 0.0) {
+            // Outer capsule: the split's own outline (the end corners follow
+            // the outer pill). The seam below marks the split.
+            QPainterPath outer;
+            outer.addRoundedRect(layout.container, metrics.outerCornerRadius(),
+                                 metrics.outerCornerRadius());
+            painter.drawPath(outer);
+            // The seam: one stroke down the gap, following the inner corners.
+            QPainterPath seam;
+            const qreal seamX = layout.leading.right() < layout.trailing.left()
+                ? (layout.leading.right() + layout.trailing.left()) / 2.0
+                : (layout.trailing.right() + layout.leading.left()) / 2.0;
+            const qreal inner = button.innerCornerRadius(half.zone);
+            seam.moveTo(seamX, layout.container.top() + inner);
+            seam.lineTo(seamX, layout.container.bottom() - inner);
+            painter.drawPath(seam);
+        } else {
             painter.drawPath(MdShape::roundedRect(half.rect, half.radii));
         }
+        break; // one outline for the whole control
     }
 
     // 5. Leading content: icon and label.

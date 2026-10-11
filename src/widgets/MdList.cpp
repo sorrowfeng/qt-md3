@@ -205,8 +205,11 @@ bool MdList::activateItem(MdListItem *item)
 
     switch (m_selectionMode) {
     case SelectionMode::None:
-        break;
     case SelectionMode::Single:
+        // `None` is the plain action list, but a click still has to produce a
+        // visible selected response — otherwise the activation is silent.
+        // Selecting the activated row and clearing the rest is the same shape
+        // as Single; `Multiple` toggles instead.
         for (MdListItem *other : items()) {
             if (other != item && other->isSelected()) {
                 other->setSelected(false);
@@ -232,11 +235,6 @@ bool MdList::activateItem(MdListItem *item)
 
 void MdList::handleItemActivated(MdListItem *item)
 {
-    if (m_selectionMode == SelectionMode::None) {
-        setActiveItem(item);
-        emit itemActivated(item);
-        return;
-    }
     activateItem(item);
 }
 
@@ -284,6 +282,38 @@ void MdList::syncLayout()
         all.at(i)->setSegmentedPosition(m_segmented ? i : -1, m_segmented ? int(all.size()) : 0);
     }
     updateGeometry();
+}
+
+int MdList::heightForWidth(int width) const
+{
+    // Sum the items' own height-for-width plus the container padding and the
+    // (segmented) gap. Without this a band takes a single preferred height
+    // measured at an arbitrary width and the rows collide once the list is
+    // actually laid out narrower.
+    const MdListContainerTokens &resolved = tokens();
+    const int gap = m_segmented ? int(resolved.segmentedGap) : 0;
+    int total = int(resolved.topPadding) + int(resolved.bottomPadding);
+    const QList<MdListItem *> all = items();
+    for (int i = 0; i < all.size(); ++i) {
+        if (i > 0) {
+            total += gap;
+        }
+        total += all.at(i)->heightForWidth(width);
+    }
+    return total;
+}
+
+QSize MdList::sizeHint() const
+{
+    // Prefer the current width, else the items' measuring width, so the
+    // height matches what a layout at that width will actually need.
+    const int width = this->width() > 0 ? this->width() : 360;
+    return QSize(width, heightForWidth(width));
+}
+
+QSize MdList::minimumSizeHint() const
+{
+    return QSize(0, heightForWidth(120));
 }
 
 const MdListContainerTokens &MdList::tokens() const

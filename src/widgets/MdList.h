@@ -21,8 +21,9 @@
 //
 // Selection is the *container's* business, not the item's (Compose's
 // `selectable` overloads; the spec's "a list can have only one selection mode
-// at a time"): None leaves every item as the caller set it, Single clears the
-// others, Multiple toggles.
+// at a time"). Single clears the others, Multiple toggles; `None` is the
+// plain action list — activation still selects the row so the click has a
+// visible response, and switching *to* `None` clears any managed selection.
 //
 // The container paints the export's container colour rounded by
 // `container.shape`; items are laid out through the owned vertical layout,
@@ -56,7 +57,8 @@ class QT_MD3_EXPORT MdList : public QWidget
 
 public:
     /// Compose's three selection shapes, minus "required": a list may hold
-    /// none. `None` is the plain single-action list.
+    /// none. `None` is the plain single-action list (activation still selects
+    /// the row so a click is visible).
     enum class SelectionMode
     {
         None,
@@ -113,6 +115,15 @@ public:
 
     // --- tokens ------------------------------------------------------------------
     const MdListContainerTokens &tokens() const;
+
+    /// Stack height of the items at `width`, including the container padding.
+    /// The list has height-for-width: a multi-line item grows when the list
+    /// narrows, so a single preferred height would let the band clip or
+    /// overlap the rows.
+    int heightForWidth(int width) const override;
+    bool hasHeightForWidth() const override { return true; }
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
 
     MdComponentTokens &componentTokens()
     {

@@ -27,6 +27,10 @@ MdDialogHost::MdDialogHost(QWidget *parent)
     : QWidget(parent)
 {
     setAttribute(Qt::WA_NoSystemBackground);
+    // Idle, the host is a transparent overlay: a lazily-created host must
+    // never steal clicks from the page underneath. Scrim clicks only apply
+    // while the dialog is actually showing.
+    setAttribute(Qt::WA_TransparentForMouseEvents, true);
     setFocusPolicy(Qt::StrongFocus);
     if (parent) {
         setGeometry(parent->rect());
@@ -52,9 +56,13 @@ void MdDialogHost::show()
     if (m_dialog->isVisible() && m_phase == Phase::Idle) {
         return;
     }
+    // The scrim is live: take pointer events so outside clicks can dismiss.
+    setAttribute(Qt::WA_TransparentForMouseEvents, false);
     raise();
     layoutDialog();
     m_dialog->show();
+    // The dialog (and its action children) must sit above the scrim.
+    m_dialog->raise();
     setFocus();
     m_dialog->setFocus();
     m_opacity = 0.0;
@@ -124,6 +132,8 @@ void MdDialogHost::onTransitionTick()
     update();
     if (settled && m_opacity <= 0.0) {
         m_dialog->hide();
+        // Idle again: go transparent so the page underneath keeps its clicks.
+        setAttribute(Qt::WA_TransparentForMouseEvents, true);
     }
 }
 
@@ -145,8 +155,19 @@ void MdDialogHost::paintEvent(QPaintEvent * /*event*/)
 void MdDialogHost::mousePressEvent(QMouseEvent *event)
 {
     // Click on the scrim: the onDismissRequest flow (Compose's
-    // dismissOnClickOutside). Clicks inside the dialog never reach the host.
-    if (m_dialog->isVisible() && !m_dialog->geometry().contains(event->pos())) {
+    // dismissOnClickOutside). Clicks that land on the dialog — or on any of
+    // its children (the action buttons) — must never dismiss.
+    if (m_dialog->isVisible()) {
+        const QPoint local = event->pos();
+        QWidget *hit = childAt(local);
+        if (hit == m_dialog || (hit && m_dialog->isAncestorOf(hit))) {
+            event->accept();
+            return;
+        }
+        if (m_dialog->geometry().contains(local)) {
+            event->accept();
+            return;
+        }
         dismiss();
         return;
     }

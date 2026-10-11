@@ -44,8 +44,15 @@ public:
 
     /// The margin a *clickable* card reserves around the container so the
     /// outward focus indicator is not clipped. Non-clickable cards publish
-    /// no ring, so they reserve nothing.
+    /// no ring, so they reserve nothing for it.
     static qreal focusRingInset(const MdCardTokens &tokens);
+
+    /// The margin an *elevated* card reserves so its shadow is not clipped
+    /// at the widget edge. Zero for the level-0 variants.
+    static qreal shadowInset(const MdCardTokens &tokens);
+
+    /// The margin the card must reserve for whichever of the two applies.
+    static qreal paintInset(const MdCard &card, const MdCardTokens &tokens);
 
     /// The interaction state painting should use. Disabled requires the
     /// card to be clickable (Compose only applies the disabled colours to

@@ -5,6 +5,7 @@
 #include "core/MdTheme.h"
 
 #include <QtGui/QKeyEvent>
+#include <QtGui/QMouseEvent>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QWidget>
 
@@ -20,7 +21,11 @@ MdDialog::~MdDialog() = default;
 
 void MdDialog::init()
 {
+    // The dialog body is a passive surface but must still *take* pointer
+    // events: an ignored press bubbles to the host and can be read as an
+    // outside click. Accepting keeps body clicks on the dialog.
     setFocusPolicy(Qt::NoFocus);
+    setAttribute(Qt::WA_OpaquePaintEvent, false);
     MdDialogStyle::shared();
     MdStyleBase::connectThemeUpdate(this, &MdDialog::onThemeChanged);
 }
@@ -183,6 +188,14 @@ void MdDialog::keyPressEvent(QKeyEvent *event)
     QWidget::keyPressEvent(event);
 }
 
+void MdDialog::mousePressEvent(QMouseEvent *event)
+{
+    // Accept body clicks so they cannot bubble to the host and be mistaken
+    // for a scrim (outside) click. Action buttons are children and get
+    // their own events first.
+    event->accept();
+}
+
 void MdDialog::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
@@ -215,9 +228,14 @@ void MdDialog::syncChildGeometry()
         }
         if (m_confirmButton && !confirmRects.isEmpty()) {
             m_confirmButton->setGeometry(confirmRects.first().toRect());
+            m_confirmButton->raise();
         }
         if (m_dismissButton && !dismissRects.isEmpty()) {
             m_dismissButton->setGeometry(dismissRects.first().toRect());
+            m_dismissButton->raise();
+        }
+        if (m_icon) {
+            m_icon->raise();
         }
     }
 }

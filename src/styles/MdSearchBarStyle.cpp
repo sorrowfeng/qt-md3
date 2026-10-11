@@ -2,7 +2,9 @@
 
 #include "core/MdElevation.h"
 #include "core/MdIcon.h"
+#include "core/MdShape.h"
 #include "core/MdTheme.h"
+#include "core/MdTypeScale.h"
 #include "widgets/MdSearchBar.h"
 
 #include <QtCore/QMutex>
@@ -25,6 +27,15 @@ QColor resolveSlot(const MdNavigationColourSlot &slot)
     }
     colour.setAlphaF(qBound(0.0, colour.alphaF() * slot.opacity, 1.0));
     return colour;
+}
+
+/// The pill path, inset by half a pixel so the antialiased edge (and any
+/// outline stroke) is not clipped by the widget rect — `drawRoundedRect` on
+/// the raw rect left the top corners of the 56 px pill open.
+QPainterPath containerPath(const QRectF &rect, qreal radius)
+{
+    return MdShape::roundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5),
+                                {radius, radius, radius, radius});
 }
 
 } // namespace
@@ -64,27 +75,29 @@ void MdSearchBarStyle::paintSearchBar(QPainter &painter, const MdSearchBar &bar,
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing, true);
 
-    // 1 — the container.
+    // 1 — the container: a full pill (corner-full) via MdShape so the
+    //     stadium outline is complete, not clipped at the widget rect.
     {
         const QRectF container = bar.containerRect();
+        const qreal radius = tokens.containerRadius;
+        const QPainterPath path = containerPath(container, radius);
         if (bar.surface() == MdSearchSurface::Bar) {
-            MdElevation::drawShadowDp(&painter, container, tokens.containerRadius,
+            MdElevation::drawShadowDp(&painter, container, radius,
                                       int(tokens.containerElevation),
                                       MdTheme::instance().color(ColorRole::Shadow));
         }
         painter.setPen(Qt::NoPen);
         painter.setBrush(MdTheme::instance().color(tokens.containerColor));
-        painter.drawRoundedRect(container, tokens.containerRadius, tokens.containerRadius);
+        painter.drawPath(path);
     }
 
     // 2 — the state layer.
     {
         const QColor overlay = resolveSlot(tokens.stateLayer[int(state)]);
-        if (overlay.isValid()) {
+        if (overlay.isValid() && overlay.alpha() > 0) {
             painter.setPen(Qt::NoPen);
             painter.setBrush(overlay);
-            painter.drawRoundedRect(bar.containerRect(), tokens.containerRadius,
-                                    tokens.containerRadius);
+            painter.drawPath(containerPath(bar.containerRect(), tokens.containerRadius));
         }
     }
 
@@ -104,6 +117,19 @@ void MdSearchBarStyle::paintSearchBar(QPainter &painter, const MdSearchBar &bar,
                          icon.bottomRight() + QPointF(-2.0, -2.0));
     }
 
+    // 4 — the focus indicator (the system focus-indicator rows).
+    if (bar.hasFocus()) {
+        const QRectF ring = bar.containerRect().adjusted(-tokens.focusIndicatorOuterOffset,
+                                                         -tokens.focusIndicatorOuterOffset,
+                                                         tokens.focusIndicatorOuterOffset,
+                                                         tokens.focusIndicatorOuterOffset);
+        painter.setPen(QPen(MdTheme::instance().color(tokens.focusIndicatorColor),
+                            tokens.focusIndicatorThickness));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawPath(containerPath(ring, tokens.containerRadius
+                                              + tokens.focusIndicatorOuterOffset));
+    }
+
     painter.restore();
 }
 
@@ -114,6 +140,28 @@ void MdSearchBarStyle::drawWidget(QPainter *painter, QWidget *widget)
         return;
     }
     paintSearchBar(*painter, *bar, bar->searchTokens());
+
+    // The paint filter replaces QLineEdit::paintEvent, so the input line has
+    // to be drawn here or the typed text never appears.
+    const QString contents = bar->text().isEmpty() ? bar->placeholderText() : bar->text();
+    if (contents.isEmpty()) {
+        return;
+    }
+    painter->save();
+    painter->setFont(bar->font());
+    const bool showingPlaceholder = bar->text().isEmpty();
+    QColor colour = MdTheme::instance().color(
+        showingPlaceholder ? bar->searchTokens().supportingTextColor
+                           : bar->searchTokens().inputTextColor);
+    if (bar->isEffectivelyDisabled()) {
+        colour.setAlphaF(colour.alphaF() * 0.38);
+    }
+    painter->setPen(colour);
+    painter->drawText(bar->rect().adjusted(int(bar->searchTokens().leadingSpace
+                                                   + bar->searchTokens().iconSize + 8.0),
+                                           0, -int(bar->searchTokens().trailingSpace), 0),
+                      int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(bar)), contents);
+    painter->restore();
 }
 
 } // namespace md

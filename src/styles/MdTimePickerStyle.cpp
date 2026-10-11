@@ -114,9 +114,9 @@ void MdTimePickerStyle::paintTimePicker(QPainter &painter, const MdTimePicker &p
             painter.drawRoundedRect(rect, tokens.timeSelectorRadius, tokens.timeSelectorRadius);
         }
         // 12h halves are two digits and sit comfortably in display-large.
-        // The 24h combined field is "HH:mm" (five glyphs) in the export's
-        // 114 px box — display-large (57 px) overflows and clips the last
-        // digit, so the combined field steps down until it fits. Recorded
+        // The 24h field is also split into two two-digit halves (hours /
+        // minutes) so each face has its own hit target — the combined
+        // "HH:mm" field made the minutes face unreachable. Recorded
         // divergence: the export publishes no per-face type row.
         const QFont font = [&] {
             if (!picker.is24h()) {
@@ -135,8 +135,10 @@ void MdTimePickerStyle::paintTimePicker(QPainter &painter, const MdTimePicker &p
     };
 
     if (picker.is24h()) {
-        const QString text = hourText(picker) + QStringLiteral(":") + minuteText(picker);
-        paintSelector(picker.timeSelectorRect(true), text, true);
+        // Two faces, two fields: the leading half is hours, the trailing
+        // half minutes — matching timeSelectorRect's hit targets.
+        paintSelector(hours, hourText(picker), face == MdTimePickerFace::Hours);
+        paintSelector(minutes, minuteText(picker), face == MdTimePickerFace::Minutes);
     } else {
         paintSelector(hours, hourText(picker), face == MdTimePickerFace::Hours);
         paintSelector(minutes, minuteText(picker), face == MdTimePickerFace::Minutes);

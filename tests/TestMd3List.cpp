@@ -569,11 +569,12 @@ void TestMd3List::theListDrivesSelectionModes()
     }
     QCOMPARE(list.itemCount(), 3);
 
-    // --- None: activation never selects -------------------------------------
+    // --- None: activation still selects the row (a click must have a visible
+    //     response) but is not a managed selection list -----------------------
     QCOMPARE(int(list.selectionMode()), int(MdList::SelectionMode::None));
     QVERIFY(list.activateItem(second));
-    QVERIFY(!second->isSelected());
-    QCOMPARE(list.selectedItems().size(), 0);
+    QVERIFY(second->isSelected());
+    QCOMPARE(list.selectedItems().size(), 1);
 
     // --- Single: exactly one, and it moves ----------------------------------
     list.setSelectionMode(MdList::SelectionMode::Single);

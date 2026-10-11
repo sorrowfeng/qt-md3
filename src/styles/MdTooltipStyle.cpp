@@ -264,41 +264,43 @@ qreal MdTooltipStyle::richWidthFor(const QString &title,
 
 QPoint MdTooltipStyle::abovePopupPosition(const QRect &anchorRect,
                                           const QSize &size,
-                                          const QSize &windowSize,
+                                          const QRect &available,
                                           qreal spacing)
 {
     // Horizontal alignment preference: middle -> start -> end; vertical:
-    // above -> below; always coerced into the window.
+    // above -> below; always coerced into the available area (global screen
+    // or window rect — the same space `anchorRect` is in).
     int x = anchorRect.left() + (anchorRect.width() - size.width()) / 2;
-    x = qBound(0, x, qMax(0, windowSize.width() - size.width()));
+    x = qBound(available.left(), x, qMax(available.left(), available.right() - size.width() + 1));
 
     int y = anchorRect.top() - size.height() - int(spacing);
-    if (y < 0) {
+    if (y < available.top()) {
         y = anchorRect.bottom() + 1 + int(spacing);
     }
-    y = qBound(0, y, qMax(0, windowSize.height() - size.height()));
+    y = qBound(available.top(), y, qMax(available.top(), available.bottom() - size.height() + 1));
     return QPoint(x, y);
 }
 
 QPoint MdTooltipStyle::richPopupPosition(const QRect &anchorRect,
                                          const QSize &size,
-                                         const QSize &windowSize,
+                                         const QRect &available,
                                          qreal spacing)
 {
     // Start-aligned, shifting left when the right edge clips and centring
     // when both would; above preferred, below otherwise.
     int x = anchorRect.left();
-    if (x + size.width() > windowSize.width()) {
+    if (x + size.width() > available.right() + 1) {
         x = anchorRect.right() + 1 - size.width();
-        if (x < 0) {
+        if (x < available.left()) {
             x = anchorRect.left() + (anchorRect.width() - size.width()) / 2;
         }
     }
 
     int y = anchorRect.top() - size.height() - int(spacing);
-    if (y < 0) {
+    if (y < available.top()) {
         y = anchorRect.bottom() + 1 + int(spacing);
     }
+    y = qBound(available.top(), y, qMax(available.top(), available.bottom() - size.height() + 1));
     return QPoint(x, y);
 }
 
@@ -330,6 +332,7 @@ void MdTooltipStyle::paintTooltip(QPainter *painter,
     const MdTooltipTokens tokens = MdTooltipTokens::resolve(variant);
     const MdTheme &theme = MdTheme::instance();
 
+    painter->setRenderHint(QPainter::Antialiasing, true);
     if (opacity < 1.0) {
         painter->setOpacity(opacity);
     }

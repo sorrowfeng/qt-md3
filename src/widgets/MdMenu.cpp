@@ -52,6 +52,11 @@ void MdMenuItem::init()
     connect(m_focusRing, &MdFocusRingController::repaintRequested, this,
             qOverload<>(&QWidget::update));
 
+    // An activation always leaves the row selected, so a click (or Space /
+    // Enter through `click()`) has a visible selected response and emits
+    // `selectedChanged`.
+    connect(this, &QAbstractButton::clicked, this, [this] { setSelected(true); });
+
     MdStyleBase::connectThemeUpdate(this, &MdMenuItem::onThemeChanged);
 }
 
@@ -320,16 +325,20 @@ void MdMenu::relayout()
     for (MdMenuItem *item : m_items) {
         contentWidth = qMax(contentWidth, qreal(item->sizeHint().width()));
     }
+    // Rows sit inside the 1 px container outline so a selected row's fill
+    // cannot paint over the edge stroke.
+    constexpr int kOutlineInset = 1;
+    const int rowWidth = int(std::ceil(contentWidth)) - 2 * kOutlineInset;
     // Rows in insertion order — items and dividers interleave as added — with
     // the 8 px vertical padding above the first row and below the last.
     qreal y = t.containerVerticalPadding;
     for (QWidget *row : m_rows) {
         if (auto *item = qobject_cast<MdMenuItem *>(row)) {
-            item->setGeometry(0, int(y), int(std::ceil(contentWidth)), int(t.itemHeight));
+            item->setGeometry(kOutlineInset, int(y), rowWidth, int(t.itemHeight));
             y += t.itemHeight;
         } else {
-            row->setGeometry(int(t.dividerHorizontalPadding), int(y),
-                             int(std::ceil(contentWidth - 2.0 * t.dividerHorizontalPadding)),
+            row->setGeometry(kOutlineInset + int(t.dividerHorizontalPadding), int(y),
+                             qMax(0, rowWidth - 2 * int(t.dividerHorizontalPadding)),
                              int(t.dividerHeight));
             y += t.dividerHeight + 2.0 * t.dividerVerticalPadding;
         }

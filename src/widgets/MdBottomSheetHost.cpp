@@ -10,6 +10,7 @@
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
+#include <QtWidgets/QApplication>
 
 #include <cmath>
 
@@ -28,6 +29,9 @@ MdBottomSheetHost::MdBottomSheetHost(QWidget *parent)
 {
     setAttribute(Qt::WA_NoSystemBackground);
     setFocusPolicy(Qt::StrongFocus);
+    // An overlay never contributes to the parent's layout metrics: a
+    // preferred policy would let show/hide reflow a QScrollArea page.
+    setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     if (parent) {
         setGeometry(parent->rect());
         parent->installEventFilter(this);
@@ -65,9 +69,17 @@ void MdBottomSheetHost::show()
         return;
     }
     raise();
+    // Re-sync to the parent: the host is constructed during a layout pass
+    // and must never keep a stale overlay rect.
+    if (parentWidget()) {
+        setGeometry(parentWidget()->rect());
+    }
     QWidget::show();
     layoutSheet();
     m_sheet->showSheet();
+    if (!m_previousFocus) {
+        m_previousFocus = QApplication::focusWidget() == this ? nullptr : QApplication::focusWidget();
+    }
     setFocus();
     m_scrimAlpha = 0.0;
     startTransition(Phase::Entering);
@@ -81,6 +93,9 @@ void MdBottomSheetHost::dismiss()
         || (!m_sheet->isVisible() && m_phase == Phase::Idle)) {
         return;
     }
+    // Hand focus back before the slide-down so hiding the host cannot jump
+    // the enclosing scroll area through the focus chain.
+    restoreFocus();
     m_sheet->hideSheet();
     if (!m_sheet->isAnimating() && !m_sheet->isVisible()) {
         // Vetoed or already hidden: settle the scrim directly.
@@ -133,6 +148,7 @@ void MdBottomSheetHost::onTransitionTick()
         m_scrimAlpha = m_phase == Phase::Entering ? 1.0 : 0.0;
         m_phase = Phase::Idle;
         if (m_scrimAlpha <= 0.0) {
+            restoreFocus();
             hide();
         }
     }
@@ -192,6 +208,34 @@ bool MdBottomSheetHost::eventFilter(QObject *watched, QEvent *event)
         layoutSheet();
     }
     return QWidget::eventFilter(watched, event);
+}
+
+QSize MdBottomSheetHost::sizeHint() const
+{
+    // Overlay: no layout contribution. The host is placed by setGeometry
+    // against its parent's rect.
+    return QSize(0, 0);
+}
+
+QSize MdBottomSheetHost::minimumSizeHint() const
+{
+    return QSize(0, 0);
+}
+
+void MdBottomSheetHost::restoreFocus()
+{
+    QWidget *previous = m_previousFocus.data();
+    m_previousFocus.clear();
+    if (previous == nullptr || previous == this) {
+        return;
+    }
+    if (previous->isVisible() && previous->isEnabled()) {
+        previous->setFocus(Qt::OtherFocusReason);
+        return;
+    }
+    if (parentWidget()) {
+        parentWidget()->setFocus(Qt::OtherFocusReason);
+    }
 }
 
 } // namespace md

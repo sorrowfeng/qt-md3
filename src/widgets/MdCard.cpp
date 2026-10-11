@@ -42,7 +42,7 @@ MdCard::~MdCard() = default;
 
 void MdCard::init()
 {
-    // The paint hub owns painting — registering the shared style as soon as
+    // The paint hub owns painting —registering the shared style as soon as
     // the first card exists means a card is never momentarily painted by the
     // platform style.
     MdCardStyle::shared();
@@ -75,13 +75,14 @@ void MdCard::setVariant(MdCardVariant variant)
     }
     m_variant = variant;
     // The variant selects the whole state table, so the cached token set is
-    // stale the moment this lands — and the elevation ladder changes with it.
+    // stale the moment this lands - and the elevation ladder (and therefore
+    // the shadow headroom the contents margins reserve) changes with it.
     invalidateTokens();
+    applyClickability();
     updateElevationTarget();
     update();
     emit variantChanged(m_variant);
 }
-
 void MdCard::setClickable(bool clickable)
 {
     if (m_clickable == clickable) {
@@ -108,17 +109,17 @@ void MdCard::setDragged(bool dragged)
 void MdCard::applyClickability()
 {
     // Exactly the Compose split: the clickable card is focusable and paints
-    // its ring; the plain surface is not and paints neither. The contents
-    // margins keep the layout inside the painted container either way.
+    // its ring; the plain surface is not and paints neither. Both reserve the
+    // paint inset —the focus ring and/or the elevation shadow —so the
+    // painted container and the contents margins stay in step.
     if (m_clickable) {
         setFocusPolicy(Qt::StrongFocus);
-        const qreal inset = MdCardStyle::focusRingInset(tokens());
-        setContentsMargins(int(std::ceil(inset)), int(std::ceil(inset)), int(std::ceil(inset)),
-                           int(std::ceil(inset)));
     } else {
         setFocusPolicy(Qt::NoFocus);
-        setContentsMargins(0, 0, 0, 0);
     }
+    const qreal inset = MdCardStyle::paintInset(*this, tokens());
+    setContentsMargins(int(std::ceil(inset)), int(std::ceil(inset)), int(std::ceil(inset)),
+                       int(std::ceil(inset)));
     updateGeometry();
 }
 
@@ -185,7 +186,7 @@ QSize MdCard::sizeHint() const
 {
     // A card sizes to its content: the installed layout's hint plus the
     // contents margins. Without a layout the widget publishes no hint of its
-    // own — a card with no children has no intrinsic size, exactly as a
+    // own —a card with no children has no intrinsic size, exactly as a
     // plain QWidget would not.
     QSize hint = QWidget::sizeHint();
     if (layout()) {
@@ -250,8 +251,7 @@ void MdCard::leaveEvent(QEvent *event)
 void MdCard::focusInEvent(QFocusEvent *event)
 {
     QWidget::focusInEvent(event);
-    // `:focus-visible` semantics, shared with MdButton and MdIconButton —
-    // pointer focus shows no ring and no focused row.
+    // `:focus-visible` semantics, shared with MdButton and MdIconButton —    // pointer focus shows no ring and no focused row.
     switch (event->reason()) {
     case Qt::MouseFocusReason:
     case Qt::PopupFocusReason:

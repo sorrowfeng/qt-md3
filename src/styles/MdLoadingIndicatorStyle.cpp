@@ -203,6 +203,7 @@ void MdLoadingIndicatorStyle::paint(QPainter &painter, const MdLoadingIndicator 
     }
 
     painter.save();
+    painter.setRenderHint(QPainter::Antialiasing, true);
 
     // The container: the corner-full square is a circle; only the contained
     // variant paints it (the plain variant's container colour row is the

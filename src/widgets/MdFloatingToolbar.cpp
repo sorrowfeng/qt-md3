@@ -297,6 +297,12 @@ QSize MdFloatingToolbar::sizeHint() const
         cross = qMax(cross, t.fab.collapsedSize);
     }
 
+    // The pill paints inside a margin for its shadow and the slot widgets'
+    // focus indicators; without it Qt clips both at the toolbar's edge.
+    const qreal margin = MdFloatingToolbarStyle::paintMargin();
+    main += 2.0 * margin;
+    cross += 2.0 * margin;
+
     return horizontal ? QSize(int(std::ceil(main)), int(std::ceil(cross)))
                       : QSize(int(std::ceil(cross)), int(std::ceil(main)));
 }
@@ -304,10 +310,12 @@ QSize MdFloatingToolbar::sizeHint() const
 QSize MdFloatingToolbar::minimumSizeHint() const
 {
     // The cross extent is a token and never shrinks; the main axis is the
-    // pill's content and may be zero.
-    const qreal cross = tokens().containerCrossExtent(m_orientation);
+    // pill's content and may be zero. Both grow by the paint margin.
+    const qreal margin = MdFloatingToolbarStyle::paintMargin();
+    const qreal cross = tokens().containerCrossExtent(m_orientation) + 2.0 * margin;
     const bool horizontal = m_orientation != MdToolbarOrientation::Vertical;
-    return horizontal ? QSize(0, int(std::ceil(cross))) : QSize(int(std::ceil(cross)), 0);
+    return horizontal ? QSize(int(std::ceil(2.0 * margin)), int(std::ceil(cross)))
+                      : QSize(int(std::ceil(cross)), int(std::ceil(2.0 * margin)));
 }
 
 void MdFloatingToolbar::repolish()

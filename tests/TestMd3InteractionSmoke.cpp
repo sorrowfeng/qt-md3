@@ -10,14 +10,21 @@
 #include "widgets/MdButton.h"
 #include "widgets/MdCheckBox.h"
 #include "widgets/MdChip.h"
+#include "widgets/MdDatePicker.h"
+#include "widgets/MdDialog.h"
+#include "widgets/MdDialogHost.h"
 #include "widgets/MdIconButton.h"
+#include "widgets/MdList.h"
+#include "widgets/MdListItem.h"
 #include "widgets/MdMenu.h"
+#include "widgets/MdSearchBar.h"
 #include "widgets/MdSegmentedButton.h"
 #include "widgets/MdSlider.h"
 #include "widgets/MdTab.h"
 #include "widgets/MdTabs.h"
 #include "widgets/MdTextArea.h"
 #include "widgets/MdTextField.h"
+#include "widgets/MdTimePicker.h"
 #include "widgets/MdSwitch.h"
 
 #include <QtGui/QMouseEvent>
@@ -108,6 +115,35 @@ private slots:
     // 11. MdSegmentedButton
     void segmentedButtonClickSelects();
     void segmentedSingleChoiceClearsPrevious();
+    void segmentedStretchedClickStillSelects();
+
+    // 12. MdList / MdListItem
+    void listClickSelects();
+    void listItemsStackWithoutOverlap();
+
+    // 13. MdMenuItem selection on click
+    void menuClickSetsSelected();
+    void menuSurfacePaintsFullContainerRect();
+    void sliderHandleDragUpdatesValue();
+
+    // 14. Dialog action / body clicks
+    void dialogActionButtonsReceiveClicks();
+    void dialogBodyClickDoesNotDismiss();
+
+    // 15. TimePicker face switching
+    void timePickerMinutesFaceViaSelectorClick();
+    void timePicker24hMinutesFaceViaSelectorClick();
+    void timePickerDialSetsMinutes();
+
+    // 16. DatePicker click selection + press feedback
+    void datePickerClickSelectsDate();
+    void datePickerYearClickMovesSelection();
+    void datePickerPressShowsStateLayer();
+
+    // 17. SearchBar typing + visible text + full pill
+    void searchBarTypingUpdatesText();
+    void searchBarTextIsVisible();
+    void searchBarPaintsFullPill();
 };
 
 void TestMd3InteractionSmoke::initTestCase()
@@ -527,6 +563,420 @@ void TestMd3InteractionSmoke::segmentedSingleChoiceClearsPrevious()
     QVERIFY(button.isChecked(2));
     QVERIFY(!button.isChecked(0));
     QCOMPARE(button.checkedIndex(), 2);
+}
+
+void TestMd3InteractionSmoke::segmentedStretchedClickStillSelects()
+{
+    // A layout may stretch the control well past its natural width. The
+    // segment row must fill that width — otherwise a click at the centre (or
+    // at 3/4, the gallery's probe point) lands on empty space and the button
+    // looks dead.
+    MdSegmentedButton button(QStringList{QStringLiteral("A"), QStringLiteral("B"),
+                                         QStringLiteral("C")});
+    const QSize hint = button.sizeHint();
+    button.resize(hint.width() * 2, hint.height());
+    showAndExpose(button);
+
+    QSignalSpy checked(&button, &MdSegmentedButton::segmentChecked);
+    QTest::mouseClick(&button, Qt::LeftButton, Qt::NoModifier,
+                      QPoint(button.width() * 3 / 4, button.height() / 2));
+    QVERIFY2(checked.count() >= 1,
+             "Click at 3/4 of a stretched segmented button produced no segmentChecked");
+    QCOMPARE(button.checkedIndex(), 2);
+}
+
+void TestMd3InteractionSmoke::listClickSelects()
+{
+    MdList list;
+    list.resize(360, 300);
+    showAndExpose(list);
+
+    auto *one = new MdListItem(QStringLiteral("One"));
+    one->setInteractive(true);
+    auto *two = new MdListItem(QStringLiteral("Two"));
+    two->setInteractive(true);
+    list.addItem(one);
+    list.addItem(two);
+    QApplication::processEvents();
+
+    QSignalSpy activated(&list, &MdList::itemActivated);
+    QSignalSpy selected(&list, &MdList::selectionChanged);
+    QTest::mouseClick(two, Qt::LeftButton, Qt::NoModifier, two->rect().center());
+    QVERIFY2(activated.count() >= 1, "List item click produced no itemActivated");
+    QVERIFY2(two->isSelected(), "List item click did not select the item");
+    QVERIFY(!one->isSelected());
+    QVERIFY(selected.count() >= 1);
+}
+
+void TestMd3InteractionSmoke::listItemsStackWithoutOverlap()
+{
+    // Height-for-width: a wrapping supporting row grows when the list narrows.
+    // The list must report that height so a band places it tall enough —
+    // otherwise neighbouring items share the same y and paint on top of each
+    // other.
+    MdList list;
+    showAndExpose(list);
+
+    auto *one = new MdListItem(QStringLiteral("One"));
+    one->setInteractive(true);
+    auto *two = new MdListItem(QStringLiteral("Two"));
+    two->setInteractive(true);
+    two->setSupporting(QStringLiteral("Supporting text that wraps when the list is narrow"));
+    auto *three = new MdListItem(QStringLiteral("Three"));
+    three->setInteractive(true);
+    three->setOverline(QStringLiteral("OVERLINE"));
+    three->setSupporting(QStringLiteral("Supporting"));
+    for (MdListItem *item : {one, two, three}) {
+        list.addItem(item);
+    }
+
+    for (int width : {220, 360, 640}) {
+        list.resize(width, list.heightForWidth(width));
+        QApplication::processEvents();
+
+        const QList<MdListItem *> items = list.items();
+        for (int i = 0; i + 1 < items.size(); ++i) {
+            const QRect a = items.at(i)->geometry();
+            const QRect b = items.at(i + 1)->geometry();
+            const int overlap = qMin(a.bottom(), b.bottom()) - qMax(a.top(), b.top());
+            QVERIFY2(overlap < 0,
+                     qPrintable(QStringLiteral("items %1 and %2 overlap by %3 at width %4")
+                                    .arg(i)
+                                    .arg(i + 1)
+                                    .arg(overlap)
+                                    .arg(width)));
+        }
+        QVERIFY2(list.height() >= list.heightForWidth(width) - 1,
+                 qPrintable(QStringLiteral("list shorter than heightForWidth at width %1")
+                                .arg(width)));
+    }
+}
+
+void TestMd3InteractionSmoke::menuClickSetsSelected()
+{
+    MdMenu menu;
+    menu.setWindowFlags(Qt::Widget);
+    menu.resize(220, 200);
+    menu.addItem(QStringLiteral("First"));
+    menu.addItem(QStringLiteral("Second"));
+    menu.addItem(QStringLiteral("Third"));
+    showAndExpose(menu);
+    QApplication::processEvents();
+
+    MdMenuItem *target = menu.items().at(1);
+    QSignalSpy clicked(target, &QAbstractButton::clicked);
+    QSignalSpy selectedSpy(target, &MdMenuItem::selectedChanged);
+    QTest::mouseClick(target, Qt::LeftButton, Qt::NoModifier, target->rect().center());
+    QVERIFY2(clicked.count() >= 1, "Menu item click produced no clicked()");
+    QVERIFY2(target->isSelected(), "Menu item click did not set selected");
+    QVERIFY(selectedSpy.count() >= 1);
+}
+
+void TestMd3InteractionSmoke::menuSurfacePaintsFullContainerRect()
+{
+    MdMenu menu;
+    menu.setWindowFlags(Qt::Widget);
+    menu.resize(200, 160);
+    menu.addItem(QStringLiteral("First"));
+    menu.addItem(QStringLiteral("Second"));
+    showAndExpose(menu);
+    QApplication::processEvents();
+
+    const QImage image = menu.grab().toImage();
+    const QColor surfaceContainer =
+        MdTheme::instance().color(ColorRole::SurfaceContainer);
+    auto near = [](const QColor &a, const QColor &b) {
+        return a.isValid() && b.isValid() && qAbs(a.red() - b.red()) < 28
+               && qAbs(a.green() - b.green()) < 28 && qAbs(a.blue() - b.blue()) < 28
+               && a.alpha() > 200;
+    };
+    const int w = image.width();
+    const int h = image.height();
+    // Mid-edges of the container rect must carry the surface (and its
+    // outline) — a missing band here is the "incomplete border" defect.
+    const QColor top = image.pixelColor(w / 2, 1);
+    const QColor bottom = image.pixelColor(w / 2, h - 2);
+    const QColor left = image.pixelColor(1, h / 2);
+    const QColor right = image.pixelColor(w - 2, h / 2);
+    QVERIFY2(near(top, surfaceContainer), "menu top edge not painted");
+    QVERIFY2(near(bottom, surfaceContainer), "menu bottom edge not painted");
+    QVERIFY2(near(left, surfaceContainer), "menu left edge not painted");
+    QVERIFY2(near(right, surfaceContainer), "menu right edge not painted");
+}
+
+void TestMd3InteractionSmoke::sliderHandleDragUpdatesValue()
+{
+    // Press on the handle itself (not the track) and drag — the overhang used
+    // to sit outside the widget's sizeHint height, so a real grab on the pill
+    // never reached the slider.
+    MdSlider slider;
+    slider.setMin(0.0);
+    slider.setMax(100.0);
+    slider.setStep(0.0);
+    slider.resize(240, slider.sizeHint().height());
+    showAndExpose(slider);
+
+    QVERIFY2(slider.sizeHint().height() >= slider.handleRect().height(),
+             "slider sizeHint shorter than its handle");
+
+    slider.setValue(20.0);
+    const QPoint handle = slider.handleRect().center().toPoint();
+    const QPoint target(slider.width() - 30, handle.y());
+    dragSequence(slider, handle, target);
+    QVERIFY2(slider.value() > 60.0,
+             qPrintable(QStringLiteral("handle drag left value at %1").arg(slider.value())));
+}
+
+// ---------------------------------------------------------------------------
+// 14. Dialog action / body clicks
+// ---------------------------------------------------------------------------
+
+void TestMd3InteractionSmoke::dialogActionButtonsReceiveClicks()
+{
+    QWidget parent;
+    parent.resize(800, 600);
+    MdDialogHost host(&parent);
+    host.dialog()->setTitle(QStringLiteral("Reset settings?"));
+    host.dialog()->setText(QStringLiteral("This resets every setting."));
+    auto *confirm = new MdButton(QStringLiteral("Accept"));
+    confirm->setVariant(ButtonVariant::Text);
+    host.dialog()->setConfirmButton(confirm);
+    auto *dismiss = new MdButton(QStringLiteral("Cancel"));
+    dismiss->setVariant(ButtonVariant::Text);
+    host.dialog()->setDismissButton(dismiss);
+
+    parent.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&parent));
+    host.show();
+    QTest::qWait(40);
+
+    // Hit-test first: a covered button is a stacking fault, not a spy fault.
+    const QPoint global = confirm->mapToGlobal(confirm->rect().center());
+    QWidget *hit = QApplication::widgetAt(global);
+    QVERIFY2(hit == confirm || (hit && confirm->isAncestorOf(hit)),
+             "dialog confirm button is covered — click cannot reach it");
+
+    QSignalSpy confirmSpy(confirm, &QAbstractButton::clicked);
+    QTest::mouseClick(confirm, Qt::LeftButton, Qt::NoModifier, confirm->rect().center());
+    QCOMPARE(confirmSpy.count(), 1);
+
+    QSignalSpy dismissSpy(dismiss, &QAbstractButton::clicked);
+    QTest::mouseClick(dismiss, Qt::LeftButton, Qt::NoModifier, dismiss->rect().center());
+    QCOMPARE(dismissSpy.count(), 1);
+}
+
+void TestMd3InteractionSmoke::dialogBodyClickDoesNotDismiss()
+{
+    QWidget parent;
+    parent.resize(800, 600);
+    MdDialogHost host(&parent);
+    host.dialog()->setTitle(QStringLiteral("T"));
+    host.dialog()->setText(QStringLiteral("B"));
+
+    int dismissals = 0;
+    QObject::connect(&host, &MdDialogHost::dismissed, [&dismissals] { ++dismissals; });
+
+    parent.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&parent));
+    host.show();
+    QTest::qWait(40);
+    QVERIFY(host.isShowing());
+
+    // A press on the dialog body must be absorbed by the dialog — it is not
+    // a scrim click and must not run onDismissRequest.
+    QMouseEvent bodyPress(QEvent::MouseButtonPress,
+                          QPointF(host.dialog()->rect().center()),
+                          QPointF(host.dialog()->mapToGlobal(host.dialog()->rect().center())),
+                          Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(host.dialog(), &bodyPress);
+    QCOMPARE(dismissals, 0);
+    QVERIFY(host.isShowing());
+
+    // A press on the scrim still dismisses.
+    QTest::mousePress(&host, Qt::LeftButton, Qt::NoModifier, QPoint(4, host.height() / 2));
+    QCOMPARE(dismissals, 1);
+}
+
+// ---------------------------------------------------------------------------
+// 15. TimePicker face switching
+// ---------------------------------------------------------------------------
+
+void TestMd3InteractionSmoke::timePickerMinutesFaceViaSelectorClick()
+{
+    MdTimePicker picker;
+    picker.resize(picker.sizeHint());
+    showAndExpose(picker);
+
+    QCOMPARE(picker.face(), MdTimePickerFace::Hours);
+    QTest::mouseClick(&picker, Qt::LeftButton, Qt::NoModifier,
+                      picker.timeSelectorRect(false).center().toPoint());
+    QCOMPARE(picker.face(), MdTimePickerFace::Minutes);
+
+    // And back to hours.
+    QTest::mouseClick(&picker, Qt::LeftButton, Qt::NoModifier,
+                      picker.timeSelectorRect(true).center().toPoint());
+    QCOMPARE(picker.face(), MdTimePickerFace::Hours);
+}
+
+void TestMd3InteractionSmoke::timePicker24hMinutesFaceViaSelectorClick()
+{
+    MdTimePicker picker;
+    picker.set24h(true);
+    picker.setTime(QTime(18, 45));
+    picker.resize(picker.sizeHint());
+    showAndExpose(picker);
+
+    // The 24h field must split into distinct hours / minutes hit targets —
+    // one combined rect made the minutes face unreachable.
+    const QRectF hours = picker.timeSelectorRect(true);
+    const QRectF minutes = picker.timeSelectorRect(false);
+    QVERIFY2(!hours.intersects(minutes), "24h hours and minutes hit rects overlap");
+    QVERIFY2(hours != minutes, "24h hours and minutes hit rects are identical");
+
+    QCOMPARE(picker.face(), MdTimePickerFace::Hours);
+    QTest::mouseClick(&picker, Qt::LeftButton, Qt::NoModifier, minutes.center().toPoint());
+    QCOMPARE(picker.face(), MdTimePickerFace::Minutes);
+
+    QTest::mouseClick(&picker, Qt::LeftButton, Qt::NoModifier, hours.center().toPoint());
+    QCOMPARE(picker.face(), MdTimePickerFace::Hours);
+}
+
+void TestMd3InteractionSmoke::timePickerDialSetsMinutes()
+{
+    MdTimePicker picker;
+    picker.setFace(MdTimePickerFace::Minutes);
+    picker.setTime(QTime(10, 30));
+    picker.resize(picker.sizeHint());
+    showAndExpose(picker);
+
+    // Click near 3 o'clock on the dial — the minutes face snaps to 5-minute
+    // slots, so the minute must move off 30.
+    const QRectF dial = picker.dialRect();
+    const QPoint pos = (dial.center() + QPointF(dial.width() / 2.0 - 24.0, 0)).toPoint();
+    QTest::mouseClick(&picker, Qt::LeftButton, Qt::NoModifier, pos);
+    QVERIFY2(picker.time().minute() != 30,
+             qPrintable(QStringLiteral("dial click left minute at %1").arg(picker.time().minute())));
+}
+
+// ---------------------------------------------------------------------------
+// 16. DatePicker click selection + press feedback
+// ---------------------------------------------------------------------------
+
+void TestMd3InteractionSmoke::datePickerClickSelectsDate()
+{
+    MdDatePicker picker;
+    picker.setDisplayedMonth(QDate(2026, 6, 1));
+    picker.setSelectedDate(QDate(2026, 6, 1));
+    picker.resize(picker.sizeHint());
+    showAndExpose(picker);
+
+    // June 2026: day 15 sits in cell (2, 0) on the Monday-first grid.
+    QCOMPARE(picker.dateAtCell(2, 0), QDate(2026, 6, 15));
+    QSignalSpy spy(&picker, &MdDatePicker::selectedDateChanged);
+    QTest::mouseClick(&picker, Qt::LeftButton, Qt::NoModifier,
+                      picker.dateCellRect(2, 0).center().toPoint());
+    QCOMPARE(picker.selectedDate(), QDate(2026, 6, 15));
+    QVERIFY(spy.count() >= 1);
+}
+
+void TestMd3InteractionSmoke::datePickerYearClickMovesSelection()
+{
+    MdDatePicker picker;
+    picker.setDisplayedMonth(QDate(2026, 6, 1));
+    picker.setSelectedDate(QDate(2026, 6, 15));
+    picker.resize(picker.sizeHint());
+    showAndExpose(picker);
+
+    // Open the year face from the header's supporting line.
+    const QRectF header = picker.headerRect();
+    QTest::mouseClick(&picker, Qt::LeftButton, Qt::NoModifier,
+                      QPoint(int(header.left() + 40), int(header.bottom() - 24)));
+    QCOMPARE(picker.face(), MdDatePickerFace::Years);
+
+    // Year cells are laid out around the displayed year; index 8 is +2.
+    QSignalSpy spy(&picker, &MdDatePicker::selectedDateChanged);
+    QTest::mouseClick(&picker, Qt::LeftButton, Qt::NoModifier,
+                      picker.yearCellRect(8).center().toPoint());
+    QCOMPARE(picker.face(), MdDatePickerFace::Calendar);
+    QCOMPARE(picker.selectedDate().year(), 2028);
+    QVERIFY(spy.count() >= 1);
+}
+
+void TestMd3InteractionSmoke::datePickerPressShowsStateLayer()
+{
+    MdDatePicker picker;
+    picker.setDisplayedMonth(QDate(2026, 6, 1));
+    picker.setSelectedDate(QDate(2026, 6, 1));
+    picker.resize(picker.sizeHint());
+    showAndExpose(picker);
+
+    QCOMPARE(picker.pressedCell(), -1);
+    QTest::mousePress(&picker, Qt::LeftButton, Qt::NoModifier,
+                      picker.dateCellRect(2, 0).center().toPoint());
+    QCOMPARE(picker.pressedCell(), 2 * 7 + 0);
+    QTest::mouseRelease(&picker, Qt::LeftButton, Qt::NoModifier,
+                        picker.dateCellRect(2, 0).center().toPoint());
+    QCOMPARE(picker.pressedCell(), -1);
+}
+
+// ---------------------------------------------------------------------------
+// 17. SearchBar typing + visible text + full pill
+// ---------------------------------------------------------------------------
+
+void TestMd3InteractionSmoke::searchBarTypingUpdatesText()
+{
+    MdSearchBar bar;
+    bar.resize(360, 56);
+    showAndExpose(bar);
+
+    QTest::mouseClick(&bar, Qt::LeftButton, Qt::NoModifier, bar.rect().center());
+    QVERIFY(bar.hasFocus());
+    QTest::keyClicks(&bar, QStringLiteral("hello"));
+    QCOMPARE(bar.text(), QStringLiteral("hello"));
+}
+
+void TestMd3InteractionSmoke::searchBarTextIsVisible()
+{
+    MdSearchBar bar;
+    bar.resize(360, 56);
+    bar.setText(QStringLiteral("hello"));
+    showAndExpose(bar);
+
+    const QImage image = bar.grab().toImage();
+    int ink = 0;
+    for (int y = 16; y < 40; ++y) {
+        for (int x = 48; x < 300; ++x) {
+            if (qGray(image.pixel(x, y)) < 100 && qAlpha(image.pixel(x, y)) > 100) {
+                ++ink;
+            }
+        }
+    }
+    QVERIFY2(ink > 20, "typed text is not visible in the search bar");
+}
+
+void TestMd3InteractionSmoke::searchBarPaintsFullPill()
+{
+    MdSearchBar bar;
+    bar.resize(360, 56);
+    showAndExpose(bar);
+
+    const QImage image = bar.grab().toImage();
+    const QColor container = MdTheme::instance().color(ColorRole::SurfaceContainerHigh);
+    auto near = [](const QColor &a, const QColor &b) {
+        return a.isValid() && b.isValid() && qAbs(a.red() - b.red()) < 28
+               && qAbs(a.green() - b.green()) < 28 && qAbs(a.blue() - b.blue()) < 28
+               && a.alpha() > 200;
+    };
+    // The pill's flat top / bottom spans the middle of the bar; the corners
+    // of the widget rect are outside the stadium and may be transparent.
+    QVERIFY2(near(image.pixelColor(image.width() / 2, 3), container),
+             "search bar top edge not painted");
+    QVERIFY2(near(image.pixelColor(image.width() / 2, image.height() - 4), container),
+             "search bar bottom edge not painted");
+    QVERIFY2(near(image.pixelColor(2, image.height() / 2), container),
+             "search bar left tip not painted");
+    QVERIFY2(near(image.pixelColor(image.width() - 3, image.height() / 2), container),
+             "search bar right tip not painted");
 }
 
 QTEST_MAIN(TestMd3InteractionSmoke)

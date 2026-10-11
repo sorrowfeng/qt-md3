@@ -131,14 +131,22 @@ MdFabMenuStyle::Layout MdFabMenuStyle::layoutFor(const MdFabMenuItem &item,
     layout.radii = MdShape::resolvedRadii(element.containerShape, containerSize);
 
     const qreal centerY = layout.container.center().y();
-    qreal cursor = layout.container.left() + element.leadingSpace;
     const bool hasIcon = !item.iconName().isEmpty();
+    const bool hasLabel = !label.isEmpty();
+    // A fixed-width icon-only container (the 56 px close button) centres its
+    // content the way MdFab does; a content-derived one (the list item) stays
+    // start-aligned behind its leading padding.
+    qreal cursor = layout.container.left() + element.leadingSpace;
+    if (element.containerWidth > 0.0 && !hasLabel) {
+        const qreal contentWidth = hasIcon ? element.iconSize : 0.0;
+        cursor = layout.container.left() + (containerWidth - contentWidth) / 2.0;
+    }
     if (hasIcon) {
         layout.icon = QRectF(cursor, centerY - element.iconSize / 2.0, element.iconSize,
                              element.iconSize);
         cursor += element.iconSize;
     }
-    if (!label.isEmpty()) {
+    if (hasLabel) {
         if (hasIcon) {
             cursor += element.iconLabelSpace;
         }

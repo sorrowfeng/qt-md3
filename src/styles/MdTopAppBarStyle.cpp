@@ -170,6 +170,12 @@ TextColumn measureColumn(const QFont &titleFont, const QFont &subtitleFont, qrea
         const QFontMetrics wideSubtitle(subtitleFont);
         column.width = qMax(column.width, qreal(wideSubtitle.boundingRect(subtitle).width()));
     }
+    // Never wider than the slot: a title that would run past the navigation
+    // and action boxes gets wrapped (the height above already accounts for
+    // that) or elided at paint time, not clipped off the edge of the bar.
+    if (widthLimit > 0.0) {
+        column.width = qMin(column.width, widthLimit);
+    }
     return column;
 }
 
@@ -178,6 +184,10 @@ TextColumn measureColumn(const QFont &titleFont, const QFont &subtitleFont, qrea
 /// The clip is the point: Compose clips a two-row bar's two `TopAppBarLayout`s
 /// to their own rows, which is what keeps the expanded title from spilling over
 /// the icon row as the bar collapses.
+///
+/// Text wider than `rect` is wrapped when the wrapped block still fits in the
+/// rect's height, and elided (with an ellipsis) when it does not — never
+/// hard-clipped mid-glyph at the bar's edge.
 void drawClippedText(QPainter &painter, const QRectF &clip, const QRectF &rect, const QFont &font,
                      const QColor &colour, qreal alpha, const QString &text)
 {
@@ -189,7 +199,19 @@ void drawClippedText(QPainter &painter, const QRectF &clip, const QRectF &rect, 
     painter.setOpacity(qBound(0.0, alpha, 1.0));
     painter.setPen(colour);
     painter.setFont(font);
-    painter.drawText(rect, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop), text);
+    const int flags = int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignTop);
+    const QFontMetrics metrics(font);
+    if (metrics.horizontalAdvance(text) <= rect.width()) {
+        painter.drawText(rect, flags, text);
+    } else {
+        const QRect wrapped = metrics.boundingRect(rect.toRect(), flags | Qt::TextWordWrap, text);
+        if (wrapped.height() <= rect.height() + 1) {
+            painter.drawText(rect, flags | Qt::TextWordWrap, text);
+        } else {
+            painter.drawText(rect, flags,
+                             metrics.elidedText(text, Qt::ElideRight, int(rect.width())));
+        }
+    }
     painter.restore();
 }
 

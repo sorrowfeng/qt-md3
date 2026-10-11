@@ -13,6 +13,15 @@
 
 namespace md {
 
+namespace {
+
+/// Preferred measuring width when the item has not been laid out yet. Matches
+/// the width `sizeHint` used to fall back on, kept as one named constant so
+/// `sizeHint` and `heightForWidth` cannot drift apart.
+constexpr int kMeasureWidth = 360;
+
+} // namespace
+
 MdListItem::MdListItem(QWidget *parent)
     : QWidget(parent)
 {
@@ -296,8 +305,13 @@ QRectF MdListItem::containerRect() const
 
 QSize MdListItem::sizeHint() const
 {
-    const int height = int(std::ceil(heightForWidth(width() > 0 ? width() : 360)));
-    return QSize(QWidget::sizeHint().width(), height);
+    // A plain QWidget's sizeHint width is invalid (-1); report the measuring
+    // width so a layout has a usable preferred size, and derive the height
+    // from the width actually in force (or the measuring width when the item
+    // has not been laid out yet).
+    const int width = this->width() > 0 ? this->width() : kMeasureWidth;
+    const int height = int(std::ceil(heightForWidth(width)));
+    return QSize(kMeasureWidth, height);
 }
 
 QSize MdListItem::minimumSizeHint() const

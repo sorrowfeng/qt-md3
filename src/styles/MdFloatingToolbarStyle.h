@@ -129,6 +129,11 @@ public:
         QList<qreal> fabRadii;
     };
 
+    /// Margin the toolbar reserves around the pill for the shadow and the
+    /// slot widgets' focus indicators. The widget's sizeHint grows by twice
+    /// this on each axis so nothing is clipped at the edge.
+    static qreal paintMargin();
+
     static Layout layoutFor(const MdFloatingToolbar &toolbar,
                             const MdFloatingToolbarTokens &tokens);
 
