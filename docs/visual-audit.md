@@ -1153,3 +1153,29 @@ standard split (see interaction-reference.md).
 Vision-reader caveat: mid-size multi-image batches are unreliable in this
 environment ¡ª verdicts above were cross-checked with System.Drawing pixel
 runs (box 18 px, switch track 52 px, button height ~44 px).
+
+## 2026-10-11 sharp Overview pair results
+
+Using the recaptured Overview samples (uild/ref-overview/, figures
+injected via the proxy + data-URL path). The image reader locked onto one
+image mid-session, so only four pairs are vision-verified; the rest are
+skipped rather than guessed. Blank-content sanity (System.Drawing) shows
+all 15 Qt *-full.png are non-blank.
+
+| Pair | Verdict | Evidence |
+| --- | --- | --- |
+| buttons | MATCH | Elevated/Filled/Tonal/Outlined/Text map 1:1; corner-full; role colours correct |
+| icon-button | MATCH | standard/filled/tonal/outlined + selected toggle align with the app-bar mockup |
+| fabs | MATCH | rounded-square (not circle), 40/56/96 with 12/16/28 corners, elevation ladders |
+| switch | MINOR | roles/shapes match; official demo shows an **optional handle check** on ON ¡ª Qt only draws it in the ´øÍ¼±ê variant |
+| checkbox, radio, chips, menus, cards, dialogs, nav-bar, tabs, text-fields, date/time pickers | SKIP | reader mis-served / locked |
+
+**One open question, not a defect filed:** M3 switch 	humbContent is
+optional. The official sample happens to show a check on the ON thumb; our
+default is iconless and the check is an explicit variant. Either default
+the check or record the choice ¡ª not a token violation either way.
+
+No other visual defects in the verified pairs. Combined with the earlier
+material-web live-demo pass (5 families MATCH, slider Expressive-by-design),
+the ported set is visually consistent with official M3 within the limits of
+what this network can capture.
