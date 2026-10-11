@@ -27,7 +27,9 @@
 #include "widgets/MdTimePicker.h"
 #include "widgets/MdSwitch.h"
 
+#include <QtGui/QImage>
 #include <QtGui/QMouseEvent>
+#include <QtGui/QPainter>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
 
@@ -937,21 +939,70 @@ void TestMd3InteractionSmoke::searchBarTypingUpdatesText()
 
 void TestMd3InteractionSmoke::searchBarTextIsVisible()
 {
+    // Qt 5's Windows offscreen platform has no font database: drawText is a
+    // silent no-op, so a glyph-ink probe cannot tell "text hidden under the
+    // chrome" from "text drawn but the engine paints nothing". Detect that
+    // first — otherwise the assertion fails for an environment reason.
+    {
+        QImage fontProbe(120, 40, QImage::Format_ARGB32);
+        fontProbe.fill(Qt::white);
+        {
+            QPainter painter(&fontProbe);
+            painter.setPen(Qt::black);
+            painter.drawText(fontProbe.rect(), Qt::AlignCenter, QStringLiteral("hello"));
+        }
+        int probeInk = 0;
+        for (int y = 0; y < fontProbe.height(); ++y) {
+            for (int x = 0; x < fontProbe.width(); ++x) {
+                if (qGray(fontProbe.pixel(x, y)) < 100) {
+                    ++probeInk;
+                }
+            }
+        }
+        if (probeInk == 0) {
+            QSKIP("offscreen font engine paints no glyph ink; cannot verify text visibility");
+        }
+    }
+
+    // The real claim is paint order: the typed line must sit *on top of* the
+    // pill, not under it. Compare an empty bar with a populated one — if the
+    // chrome covered the text the two grabs would be identical.
+    auto inkCount = [](const QImage &image) {
+        int ink = 0;
+        const int y0 = image.height() / 4;
+        const int y1 = image.height() * 3 / 4;
+        const int x0 = 48;
+        const int x1 = qMin(300, image.width() - 8);
+        for (int y = y0; y < y1; ++y) {
+            for (int x = x0; x < x1; ++x) {
+                if (qGray(image.pixel(x, y)) < 120) {
+                    ++ink;
+                }
+            }
+        }
+        return ink;
+    };
+
+    MdSearchBar emptyBar;
+    emptyBar.resize(360, 56);
+    showAndExpose(emptyBar);
+    const int emptyInk = inkCount(emptyBar.grab().toImage());
+
     MdSearchBar bar;
     bar.resize(360, 56);
     bar.setText(QStringLiteral("hello"));
     showAndExpose(bar);
+    const int textInk = inkCount(bar.grab().toImage());
 
-    const QImage image = bar.grab().toImage();
-    int ink = 0;
-    for (int y = 16; y < 40; ++y) {
-        for (int x = 48; x < 300; ++x) {
-            if (qGray(image.pixel(x, y)) < 100 && qAlpha(image.pixel(x, y)) > 100) {
-                ++ink;
-            }
-        }
-    }
-    QVERIFY2(ink > 20, "typed text is not visible in the search bar");
+    QVERIFY2(textInk > emptyInk,
+             qPrintable(QStringLiteral("typed text adds no ink (empty=%1, text=%2) "
+                                       "— either not painted or hidden under the chrome")
+                            .arg(emptyInk)
+                            .arg(textInk)));
+    QVERIFY2(textInk - emptyInk > 20,
+             qPrintable(QStringLiteral("typed text ink too faint (empty=%1, text=%2)")
+                            .arg(emptyInk)
+                            .arg(textInk)));
 }
 
 void TestMd3InteractionSmoke::searchBarPaintsFullPill()

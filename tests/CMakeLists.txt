@@ -1155,7 +1155,7 @@ target_link_libraries(TestMd3InteractionSmoke
 
 add_test(NAME TestMd3InteractionSmoke COMMAND TestMd3InteractionSmoke)
 set_tests_properties(TestMd3InteractionSmoke PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
 )
 
 qt_md3_deploy_runtime(TestMd3InteractionSmoke)

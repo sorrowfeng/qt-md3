@@ -10,6 +10,8 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QStyleOption>
 
+#include <cmath>
+
 namespace md {
 
 namespace {

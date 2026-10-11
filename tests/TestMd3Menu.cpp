@@ -38,6 +38,8 @@
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
 
+#include <cmath>
+
 using namespace md;
 
 namespace {

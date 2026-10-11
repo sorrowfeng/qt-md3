@@ -20,6 +20,8 @@
 
 #include <QtTest/QtTest>
 
+#include <cmath>
+
 using namespace md;
 
 namespace {
