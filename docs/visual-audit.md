@@ -1179,3 +1179,25 @@ No other visual defects in the verified pairs. Combined with the earlier
 material-web live-demo pass (5 families MATCH, slider Expressive-by-design),
 the ported set is visually consistent with official M3 within the limits of
 what this network can capture.
+
+### Switch handle check ¡ª deliberate
+
+M3 `thumbContent` is optional (Compose default: no icon). The official
+sample happens to show a check on the ON thumb; qt-md3 keeps it opt-in via
+`MdSwitch::setIconName` and the gallery's ´øÍ¼±ê variant. Not a defect ¡ª
+recorded so the comparison is not re-opened.
+
+### Anti-scramble retry (checkbox + radio)
+
+Unique stamped copies + in-image title checks unlocked two more pairs:
+
+| Pair | Verdict |
+| --- | --- |
+| checkbox | MATCH ¡ª 18 dp, 2 dp radius, primary fill + white check, indeterminate dash |
+| radio-button | MATCH ¡ª 2 dp ring, 12 dp dot, 20 dp icon in 48 dp target |
+
+Nine further pairs (chips, menus, cards, dialogs, nav-bar, tabs, text-fields,
+date/time pickers) remain **SKIP**: the image reader locks onto one decoded
+image regardless of path, hash or banner stamp. This is an environment
+limitation, not a library finding. Do not treat any earlier false alarm
+(menu corner radius, AM/PM tint) as open ¡ª those are export-faithful.
