@@ -190,6 +190,17 @@ int main(int argc, char *argv[])
               "classic Material Icons SVG baseline.");
     }
 
+    // Default the gallery to a multi-hue scheme variant. TonalSpot keeps
+    // primary/secondary/tertiary in one hue family, so switching the seed
+    // recolours the whole UI to a single wash. FruitSalad rotates primary off
+    // the seed hue while tertiary keeps it: with the purple seed the screen
+    // shows purple (tertiary) + blue (primary) + red (error) at once, which is
+    // how the official MD3 demos read. The variant only takes effect through
+    // the dynamic scheme, so dynamic colour is on by default too — the header
+    // chip and `--dynamic` still toggle it live.
+    md::MdTheme::instance().setDynamicColor(true);
+    md::MdTheme::instance().setSchemeVariant(md::SchemeVariant::FruitSalad);
+
     if (parser.isSet(themeOption)
         && parser.value(themeOption).compare(QStringLiteral("dark"), Qt::CaseInsensitive) == 0) {
         md::MdTheme::instance().setThemeMode(md::ThemeMode::Dark);

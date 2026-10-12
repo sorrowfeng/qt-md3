@@ -202,6 +202,59 @@ void CardPage::build(GalleryContext &context)
         m_slots.append(CardSlot{outlined, QRectF(band.topLeft(), QSizeF(width, kCardHeight))});
     }
 
+    // --- two container hues on one screen ----------------------------------------
+    // The three published variants pin their container to surface tones, which
+    // is a token fact. To keep one screen multi-hue the way the official demos
+    // read, two extra surfaces are painted from the theme's secondary-container
+    // and tertiary-container roles — same shape, same tokens, different colour
+    // families — so purple/blue/red can sit on a single page.
+    context.section(L("同屏两族容器色：secondary-container 与 tertiary-container",
+                      "Two container hues on one screen: secondary-container and "
+                      "tertiary-container"));
+    context.paragraph(L(
+        "三个官方变体的容器色锁在 surface 色阶上，这是令牌事实。下面两张是同一形状、"
+        "同一 corner-medium 的角色色样：左边 secondary-container，右边 tertiary-container。"
+        "全部来自 MdTheme::color(ColorRole::…)，换种子时与真实卡片一起变色。",
+        "The three published variants pin their containers to the surface ladder — a token "
+        "fact. The two samples below share the same shape and corner-medium radius but read "
+        "their fills from secondary-container and tertiary-container. Both come from "
+        "MdTheme::color(ColorRole::…) and recolour with the real cards on a seed change."));
+    {
+        QPainter *painter = context.painter();
+        const qreal width = qMin<qreal>(280.0, contentWidth);
+        const QRectF band = context.band(kCardHeight);
+        const QRectF left(band.left(), band.top(), width, kCardHeight);
+        const QRectF right(band.left() + width + 16.0, band.top(),
+                           qMin<qreal>(width, band.right() - band.left() - width - 16.0),
+                           kCardHeight);
+        if (painter != nullptr) {
+            painter->save();
+            painter->setRenderHint(QPainter::Antialiasing, true);
+            fillRounded(*painter, left, role(md::ColorRole::SecondaryContainer),
+                        md::ShapeCorner::Medium);
+            fillRounded(*painter, right, role(md::ColorRole::TertiaryContainer),
+                        md::ShapeCorner::Medium);
+            painter->setFont(fontFor(md::TypeStyle::TitleMedium));
+            painter->setPen(role(md::ColorRole::OnSecondaryContainer));
+            painter->drawText(left.adjusted(16.0, 16.0, -16.0, -16.0),
+                              Qt::AlignLeft | Qt::AlignTop, QStringLiteral("secondary-container"));
+            painter->setPen(role(md::ColorRole::OnSecondaryContainer));
+            painter->setFont(fontFor(md::TypeStyle::BodySmall));
+            painter->drawText(left.adjusted(16.0, 48.0, -16.0, -16.0),
+                              Qt::AlignLeft | Qt::AlignTop,
+                              L("色调容器样张", "Tonal container sample"));
+            painter->setFont(fontFor(md::TypeStyle::TitleMedium));
+            painter->setPen(role(md::ColorRole::OnTertiaryContainer));
+            painter->drawText(right.adjusted(16.0, 16.0, -16.0, -16.0),
+                              Qt::AlignLeft | Qt::AlignTop, QStringLiteral("tertiary-container"));
+            painter->setFont(fontFor(md::TypeStyle::BodySmall));
+            painter->drawText(right.adjusted(16.0, 48.0, -16.0, -16.0),
+                              Qt::AlignLeft | Qt::AlignTop,
+                              L("第三色容器样张", "Tertiary container sample"));
+            painter->restore();
+        }
+    }
+
     Q_ASSERT(m_slots.size() == m_bank.size());
 
     // --- token facts -----------------------------------------------------------------

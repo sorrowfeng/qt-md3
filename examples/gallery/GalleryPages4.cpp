@@ -230,6 +230,56 @@ void ButtonPage::build(GalleryContext &context)
         layFlow(context, row);
     }
 
+    // --- many colour roles on one screen -----------------------------------
+    // MD3 demos read as colourful because one screen mixes several colour
+    // *roles*, not because the seed is loud. Every swatch below is
+    // MdTheme::color(ColorRole::…) so it tracks the live scheme: with the
+    // gallery's default FruitSalad variant and the purple seed, primary is
+    // blue while tertiary keeps the purple, and error adds a third hue.
+    context.section(L("同屏多角色 —— primary · secondary · tertiary · error",
+                      "Many roles on one screen — primary · secondary · tertiary · error"));
+    context.paragraph(L(
+        "这五个色块全部来自 MdTheme::color(ColorRole::…)。按钮行本身已经在混角色："
+        "填充 = primary，色调 = secondary-container，提升 = surface + primary 标签。"
+        "下面把 tertiary、tertiary-container 与 error 也放到同一屏，"
+        "一屏就能看见多个色相。",
+        "These five swatches all come from MdTheme::color(ColorRole::…). The button row "
+        "already mixes roles — filled is primary, tonal is secondary-container, elevated is "
+        "surface with a primary label. This row adds tertiary, tertiary-container and "
+        "error so several hues are visible at once."));
+    {
+        const QRectF band = context.band(56.0);
+        QPainter *painter = context.painter();
+        if (painter != nullptr) {
+            struct Swatch
+            {
+                md::ColorRole fill;
+                md::ColorRole ink;
+                const char *label;
+            };
+            const Swatch swatches[] = {
+                {md::ColorRole::Primary, md::ColorRole::OnPrimary, "primary"},
+                {md::ColorRole::SecondaryContainer, md::ColorRole::OnSecondaryContainer,
+                 "secondary-container"},
+                {md::ColorRole::Tertiary, md::ColorRole::OnTertiary, "tertiary"},
+                {md::ColorRole::TertiaryContainer, md::ColorRole::OnTertiaryContainer,
+                 "tertiary-container"},
+                {md::ColorRole::Error, md::ColorRole::OnError, "error"},
+            };
+            qreal x = band.left();
+            for (const Swatch &swatch : swatches) {
+                const qreal width = qMin<qreal>(168.0, (band.width() - 40.0) / 5.0);
+                const QRectF cell(x, band.top() + 4.0, width, 48.0);
+                fillRounded(*painter, cell, role(swatch.fill), md::ShapeCorner::Full);
+                painter->setFont(fontFor(md::TypeStyle::LabelMedium));
+                painter->setPen(role(swatch.ink));
+                painter->drawText(cell, Qt::AlignCenter, QString::fromUtf8(swatch.label));
+                x += width + 10.0;
+            }
+        }
+    }
+    context.space(8.0);
+
     // --- five sizes --------------------------------------------------------
     context.section(L("五种 Expressive 尺寸", "Five Expressive sizes"));
     context.paragraph(L(

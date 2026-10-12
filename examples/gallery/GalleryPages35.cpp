@@ -248,6 +248,70 @@ void ChipPage::build(GalleryContext &context)
         context.space(16.0);
     }
 
+    // --- two hue families on one screen ------------------------------------------
+    // Official selected is secondary-container. A second family is pushed onto
+    // tertiary-container through setChipTokens so one screen shows two hues at
+    // once instead of a single secondary wash; both still read their colours
+    // from MdTheme, never from literals.
+    context.section(L("两族色相同屏：secondary-container 与 tertiary-container",
+                      "Two hue families on one screen: secondary-container and "
+                      "tertiary-container"));
+    context.paragraph(L(
+        "左边这颗是规范里的选中色 secondary-container；右边这颗用 setChipTokens 把选中"
+        "容器推到 tertiary-container、内容推到 on-tertiary-container。两个角色都从 "
+        "MdTheme::color(ColorRole::…) 解析，换种子时一起变色，因此一屏能看到两个色相。",
+        "The left chip is the published selected colour, secondary-container; the right "
+        "one uses setChipTokens to push the selected container to tertiary-container and "
+        "the content to on-tertiary-container. Both roles resolve through "
+        "MdTheme::color(ColorRole::…), so they recolour together on a seed change and one "
+        "screen shows two hues."));
+    {
+        auto *secondaryChip = chip(QStringLiteral("filter-secondary-container"));
+        secondaryChip->setVariant(md::MdChipVariant::Filter);
+        secondaryChip->setText(L("secondary", "secondary"));
+        secondaryChip->setIconName(QStringLiteral("palette"));
+        secondaryChip->setSelected(true);
+
+        auto *tertiaryChip = chip(QStringLiteral("filter-tertiary-container"));
+        tertiaryChip->setVariant(md::MdChipVariant::Filter);
+        tertiaryChip->setText(L("tertiary", "tertiary"));
+        tertiaryChip->setIconName(QStringLiteral("color_lens"));
+        // Resolve the published table, then retarget only the selected side's
+        // colour roles. Metrics, shape, opacity and the unselected side stay
+        // exactly as exported.
+        {
+            md::MdChipVariantTokens tokens =
+                md::MdChipVariantTokens::resolve(md::MdChipVariant::Filter);
+            for (int kind = 0; kind < md::chipKindCount; ++kind) {
+                md::MdChipSurfaceTokens &surface = tokens.surface[kind];
+                for (int state = 0; state < md::chipInteractionCount; ++state) {
+                    if (surface.container[1][state].role == md::ColorRole::SecondaryContainer) {
+                        surface.container[1][state].role = md::ColorRole::TertiaryContainer;
+                    }
+                    if (surface.label[1][state].role == md::ColorRole::OnSecondaryContainer) {
+                        surface.label[1][state].role = md::ColorRole::OnTertiaryContainer;
+                    }
+                    if (surface.leadingIcon[1][state].role == md::ColorRole::OnSecondaryContainer) {
+                        surface.leadingIcon[1][state].role = md::ColorRole::OnTertiaryContainer;
+                    }
+                    if (surface.trailingIcon[1][state].role == md::ColorRole::OnSecondaryContainer) {
+                        surface.trailingIcon[1][state].role = md::ColorRole::OnTertiaryContainer;
+                    }
+                    if (surface.stateLayer[1][state].role == md::ColorRole::OnSecondaryContainer) {
+                        surface.stateLayer[1][state].role = md::ColorRole::OnTertiaryContainer;
+                    }
+                }
+            }
+            tertiaryChip->setChipTokens(tokens);
+        }
+        tertiaryChip->setSelected(true);
+        addRow({{QStringLiteral("a"), secondaryChip}, {QStringLiteral("b"), tertiaryChip}});
+        context.detail(L("secondary-container 选中 · tertiary-container 选中（令牌覆盖）",
+                         "secondary-container selected · tertiary-container selected "
+                         "(token override)"));
+        context.space(16.0);
+    }
+
     // --- avatar -----------------------------------------------------------------
     context.section(L("input 的 24dp 头像槽",
                       "The input family's 24dp avatar slot"));

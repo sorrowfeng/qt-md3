@@ -242,6 +242,10 @@ md::MdFab *ShowcaseMailPage::composeFab()
 {
     if (m_fab == nullptr) {
         m_fab = new md::MdFab(QStringLiteral("edit"), this);
+        // Tertiary so the inbox screen spends a second hue family: the filter
+        // chips already sit on secondary-container and the badge is error, so
+        // the compose action is the tertiary accent.
+        m_fab->setVariant(md::FabVariant::Tertiary);
         m_fab->hide();
     }
     return m_fab;
