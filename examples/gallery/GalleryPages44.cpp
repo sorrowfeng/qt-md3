@@ -1,11 +1,10 @@
 // Gallery page 44: showcase - Mail / Inbox.
 //
-// A product screen assembled from already-ported families, not a component
-// grid: top app bar with search + badged avatar, a search bar, filter chips,
-// an inbox list, a compose FAB and a bottom navigation bar. Same rules as
-// every other page: widgets are banked, build() is re-entrant, and the page
-// never styles anything - every colour, radius and type size comes from the
-// theme at paint time.
+// A product screen, not a component grid: a painted hero header (title +
+// avatar), a search field, filter chips, a rich inbox list with unread
+// markers, a compose FAB above the bottom navigation. Every control is a
+// real Md* widget; the hero, the unread dots and the layered surfaces are
+// QPainter from theme tokens.
 
 #include "GalleryPages.h"
 
@@ -19,7 +18,6 @@
 #include "widgets/MdNavigationBar.h"
 #include "widgets/MdNavigationBarItem.h"
 #include "widgets/MdSearchBar.h"
-#include "widgets/MdTopAppBar.h"
 
 #include "I18n.h"
 
@@ -39,10 +37,8 @@ struct Slot
     QRectF rect;
 };
 
-/// The screen band's height: app bar + search + chips + six mail rows +
-/// the navigation bar, with the FAB overlapping the lower-right corner.
-constexpr qreal kScreenHeight = 780.0;
-constexpr qreal kMailRowHeight = 76.0;
+constexpr qreal kScreenHeight = 820.0;
+constexpr qreal kHeroHeight = 132.0;
 
 struct MailEntry
 {
@@ -61,7 +57,7 @@ struct MailEntry
 
 const MailEntry kMails[] = {
     {"m0", "林小满", "Avery Chen", "周会纪要", "Standup notes",
-     "后端接口的边界情况是…", "Edge cases on the API surface are…",
+     "后端接口的边界情况是……", "Edge cases on the API surface are…",
      "10:24", "10:24", "林", true},
     {"m1", "设计组", "Design Guild", "新色板已发布", "New palette shipped",
      "动态提取的次级色已合入主干。", "The derived secondary is merged to main.",
@@ -78,6 +74,18 @@ const MailEntry kMails[] = {
     {"m5", "M3 Spec", "M3 Spec", "Token export 34.0.21", "Token export 34.0.21",
      "flexible navigation bar 替代基线家族。", "The flexible navigation bar replaces the baseline family.",
      "周一", "Mon", "M", false},
+};
+
+/// Colour rotation for the avatar discs, all tonal families.
+const md::ColorRole kAvatarBg[] = {
+    md::ColorRole::PrimaryContainer,
+    md::ColorRole::SecondaryContainer,
+    md::ColorRole::TertiaryContainer,
+};
+const md::ColorRole kAvatarFg[] = {
+    md::ColorRole::OnPrimaryContainer,
+    md::ColorRole::OnSecondaryContainer,
+    md::ColorRole::OnTertiaryContainer,
 };
 
 } // namespace
@@ -104,7 +112,6 @@ private:
     void layoutChildren();
     void placeChildren();
 
-    md::MdTopAppBar *appBar();
     md::MdIconButton *iconButton(const QString &id, const QString &icon);
     md::MdBadgedBox *avatarBox();
     md::MdSearchBar *searchBar();
@@ -116,7 +123,6 @@ private:
     md::MdNavigationBarItem *navItem(const QString &id, const QString &label,
                                      const QString &icon);
 
-    md::MdTopAppBar *m_appBar = nullptr;
     QHash<QString, md::MdIconButton *> m_iconButtons;
     md::MdBadgedBox *m_avatarBox = nullptr;
     md::MdSearchBar *m_search = nullptr;
@@ -127,6 +133,8 @@ private:
     md::MdNavigationBar *m_navBar = nullptr;
     QHash<QString, md::MdNavigationBarItem *> m_navItems;
     QVector<Slot> m_slots;
+    /// Unread markers painted beside list rows (content-local).
+    QVector<QPointF> m_unreadDots;
 };
 
 ShowcaseMailPage::ShowcaseMailPage(QWidget *parent)
@@ -148,22 +156,10 @@ QString ShowcaseMailPage::slug() const
 
 QString ShowcaseMailPage::subtitle() const
 {
-    return L("一个完整的邮件收件箱屏幕：顶部应用栏（搜索 + 头像角标）、搜索栏、"
-             "筛选芯片、列表条目、撰写 FAB 与底部导航栏。全部由已移植的组件拼装，"
-             "颜色、字号、圆角均来自主題令牌。",
-             "A complete inbox screen: a top app bar (search + avatar), a search bar, "
-             "filter chips, a message list, a compose FAB and a bottom navigation bar. "
-             "Assembled entirely from already-ported components; every colour, type "
-             "size and corner comes from theme tokens.");
-}
-
-md::MdTopAppBar *ShowcaseMailPage::appBar()
-{
-    if (m_appBar == nullptr) {
-        m_appBar = new md::MdTopAppBar(this);
-        m_appBar->hide();
-    }
-    return m_appBar;
+    return L("一台收件箱：英雄标题、搜索、筛选芯片、带未读点的信件列表，"
+             "撰写 FAB 浮在底部导航之上。",
+             "An inbox screen: hero title, search, filter chips, a message list "
+             "with unread markers, and a compose FAB above the bottom navigation.");
 }
 
 md::MdIconButton *ShowcaseMailPage::iconButton(const QString &id, const QString &icon)
@@ -183,8 +179,6 @@ md::MdBadgedBox *ShowcaseMailPage::avatarBox()
     if (m_avatarBox == nullptr) {
         m_avatarBox = new md::MdBadgedBox(this);
         auto *avatarButton = iconButton(QStringLiteral("avatar"), QStringLiteral("person"));
-        // Tonal avatar: secondary-container family, so the app bar is not a
-        // single primary wash. The badge itself is the error role (MD3 default).
         avatarButton->setVariant(md::IconButtonVariant::Tonal);
         avatarButton->setParent(m_avatarBox);
         m_avatarBox->setContentWidget(avatarButton);
@@ -242,10 +236,8 @@ md::MdFab *ShowcaseMailPage::composeFab()
 {
     if (m_fab == nullptr) {
         m_fab = new md::MdFab(QStringLiteral("edit"), this);
-        // Tertiary so the inbox screen spends a second hue family: the filter
-        // chips already sit on secondary-container and the badge is error, so
-        // the compose action is the tertiary accent.
         m_fab->setVariant(md::FabVariant::Tertiary);
+        m_fab->setFabSize(md::FabSize::Large);
         m_fab->hide();
     }
     return m_fab;
@@ -276,58 +268,77 @@ md::MdNavigationBarItem *ShowcaseMailPage::navItem(const QString &id, const QStr
 void ShowcaseMailPage::build(GalleryContext &context)
 {
     m_slots.clear();
+    m_unreadDots.clear();
 
     QPainter *painter = context.painter();
 
-    context.section(L("收件箱屏幕", "The inbox screen"));
-    context.paragraph(L("下面是一台在页面里整幅呈现的应用：该有的框架元素都在，"
-                        "但每个元素都是真的 Md* 组件，不是描绘出来的画。"
-                        "点击条目会选中，点击 FAB 与导航栏项是真按钮。",
-                        "The application below fills the page frame: every chrome "
-                        "element is present, and every one of them is a real Md* "
-                        "component rather than a painted picture. Clicking a row "
-                        "selects it; the FAB and the navigation destinations are "
-                        "live buttons."));
+    // One short product caption; the screen itself carries the story.
+    context.paragraph(L(
+        "点信件可选中；FAB 与底部导航是真按钮。颜色、圆角、字号全部来自主令牌。",
+        "Click a message to select it; the FAB and the destinations are live "
+        "buttons. Colours, radii and type all come from theme tokens."));
 
     const QRectF screen = context.band(kScreenHeight);
     const qreal left = screen.left();
     const qreal width = screen.width();
-    qreal y = screen.top();
+    const qreal right = screen.right();
 
+    // Screen surface: layered tonal containment.
     if (painter != nullptr) {
+        paintTonalPanel(*painter, screen, md::ColorRole::SurfaceContainerLow,
+                        md::ShapeCorner::ExtraLarge);
+    }
+
+    // --- hero header ------------------------------------------------------
+    // Full-bleed tonal gradient with the inbox title and the account avatar.
+    // This is the colour ceremony of an official showcase: one hero surface
+    // in a hue family, then neutral panels below it.
+    const QRectF hero(left, screen.top(), width, kHeroHeight);
+    if (painter != nullptr) {
+        paintGradientArt(*painter, hero, md::ColorRole::PrimaryContainer,
+                         md::ColorRole::SecondaryContainer, md::ShapeCorner::ExtraLarge);
+
         painter->save();
-        painter->setRenderHint(QPainter::Antialiasing, true);
-        // Screen surface: tonal containment, not shadow.
-        fillRounded(*painter, screen, role(md::ColorRole::SurfaceContainerLow),
-                    md::ShapeCorner::ExtraLarge);
+        const QFont helloFont = fontFor(md::TypeStyle::LabelLarge);
+        painter->setFont(helloFont);
+        painter->setPen(role(md::ColorRole::OnPrimaryContainer));
+        painter->drawText(QRectF(left + 24.0, screen.top() + 22.0, width - 160.0, 22.0),
+                          Qt::AlignLeft | Qt::AlignVCenter, L("你好，林小满", "Good morning, Avery"));
+
+        const QFont titleFont = fontFor(md::TypeStyle::HeadlineLarge);
+        painter->setFont(titleFont);
+        painter->setPen(role(md::ColorRole::OnPrimaryContainer));
+        painter->drawText(QRectF(left + 24.0, screen.top() + 48.0, width - 160.0, 52.0),
+                          Qt::AlignLeft | Qt::AlignVCenter, L("收件箱", "Inbox"));
+
+        const QFont countFont = fontFor(md::TypeStyle::BodyMedium);
+        painter->setFont(countFont);
+        painter->setPen(role(md::ColorRole::OnPrimaryContainer));
+        painter->drawText(QRectF(left + 24.0, screen.top() + 100.0, width - 160.0, 20.0),
+                          Qt::AlignLeft | Qt::AlignVCenter,
+                          L("2 封未读 · 今天", "2 unread · today"));
         painter->restore();
     }
 
-    // --- top app bar ------------------------------------------------------
-    md::MdTopAppBar *bar = appBar();
-    bar->setTitle(L("收件箱", "Inbox"));
-    bar->setVariant(md::MdAppBarVariant::Small);
-    bar->setNavigationWidget(iconButton(QStringLiteral("menu"), QStringLiteral("menu")));
-    if (bar->actionWidgets().isEmpty()) {
-        bar->addActionWidget(iconButton(QStringLiteral("search"), QStringLiteral("search")));
-        bar->addActionWidget(avatarBox());
+    // Account avatar (badged) sits on the hero, trailing side.
+    {
+        md::MdBadgedBox *box = avatarBox();
+        const qreal boxSize = 48.0;
+        m_slots.append(Slot{box, QRectF(right - 24.0 - boxSize, screen.top() + 42.0,
+                                        boxSize, boxSize)});
     }
-    const qreal barHeight = bar->sizeHint().height();
-    m_slots.append(Slot{bar, QRectF(left, y, width, barHeight)});
-    y += barHeight;
 
-    // --- search bar -------------------------------------------------------
+    // --- search ----------------------------------------------------------
     md::MdSearchBar *search = searchBar();
     search->setPlaceholderText(L("搜索邮件", "Search mail"));
     const qreal searchHeight = search->sizeHint().height();
-    const qreal sidePad = 16.0;
-    m_slots.append(Slot{search, QRectF(left + sidePad, y + 8.0, width - 2.0 * sidePad,
-                                       searchHeight)});
-    y += searchHeight + 24.0;
+    const qreal sidePad = 20.0;
+    qreal y = screen.top() + kHeroHeight + 16.0;
+    m_slots.append(Slot{search, QRectF(left + sidePad, y, width - 2.0 * sidePad, searchHeight)});
+    y += searchHeight + 16.0;
 
-    // --- filter chips -----------------------------------------------------
+    // --- filter chips ----------------------------------------------------
     const qreal chipHeight = 32.0;
-    const QRectF chipBand(left + sidePad, y, width - 2.0 * sidePad, chipHeight);
     {
         struct ChipEntry
         {
@@ -342,26 +353,35 @@ void ShowcaseMailPage::build(GalleryContext &context)
             {"starred", "已加星", "Starred", false},
             {"work", "工作", "Work", false},
         };
-        qreal x = chipBand.left();
+        qreal x = left + sidePad;
         for (const ChipEntry &entry : entries) {
             md::MdChip *c = chip(QString::fromUtf8(entry.id), L(entry.zh, entry.en));
             c->setChecked(entry.selected);
             const qreal w = qMax<qreal>(c->sizeHint().width(), 64.0);
-            m_slots.append(Slot{c, QRectF(x, chipBand.top(), w, chipHeight)});
+            m_slots.append(Slot{c, QRectF(x, y, w, chipHeight)});
             x += w + 8.0;
         }
     }
-    y += chipHeight + 16.0;
+    y += chipHeight + 20.0;
 
-    // --- inbox list -------------------------------------------------------
+    // --- inbox list on a nested tonal panel -------------------------------
     md::MdList *list = mailList();
-    // Populate once: build() runs from paintEvent, and re-adding mid-click
-    // drops the press.
     if (list->itemCount() == 0) {
         for (const MailEntry &entry : kMails) {
             list->addItem(mailItem(QString::fromUtf8(entry.id)));
         }
     }
+
+    const qreal listHeight = 6.0 * 76.0 + 16.0;
+    const QRectF listPanel(left + sidePad, y, width - 2.0 * sidePad, listHeight);
+    if (painter != nullptr) {
+        paintTonalPanel(*painter, listPanel, md::ColorRole::SurfaceContainerLowest,
+                        md::ShapeCorner::Large);
+    }
+
+    const qreal rowHeight = 76.0;
+    qreal rowY = y + 8.0;
+    int colourIndex = 0;
     for (const MailEntry &entry : kMails) {
         md::MdListItem *item = m_items.value(QString::fromUtf8(entry.id));
         if (item == nullptr) {
@@ -374,12 +394,19 @@ void ShowcaseMailPage::build(GalleryContext &context)
         item->setTrailingSupporting(L(entry.timeZh, entry.timeEn));
         item->setSelected(entry.unread && QString::fromUtf8(entry.id) == QStringLiteral("m0"));
         item->setVariant(md::MdListVariant::Expressive);
+        m_slots.append(Slot{item, QRectF(left + sidePad + 8.0, rowY, width - 2.0 * sidePad - 16.0,
+                                         rowHeight)});
+        if (entry.unread) {
+            // Indicator column in the 8dp gap between the panel edge and the
+            // row — never on the avatar itself.
+            m_unreadDots.append(QPointF(left + sidePad + 4.5, rowY + rowHeight / 2.0));
+        }
+        rowY += rowHeight;
+        ++colourIndex;
     }
-    const qreal listHeight = qMax<qreal>(list->sizeHint().height(), 6.0 * kMailRowHeight);
-    m_slots.append(Slot{list, QRectF(left + sidePad, y, width - 2.0 * sidePad, listHeight)});
-    y += listHeight;
+    y = listPanel.bottom() + 8.0;
 
-    // --- navigation bar + FAB ---------------------------------------------
+    // --- navigation bar + FAB --------------------------------------------
     md::MdNavigationBar *nav = navBar();
     if (nav->count() == 0) {
         struct Destination
@@ -408,14 +435,11 @@ void ShowcaseMailPage::build(GalleryContext &context)
     const QSize fabSize = fab->sizeHint();
     m_slots.append(Slot{fab,
                         QRectF(screen.right() - qreal(fabSize.width()) - 20.0,
-                               screen.bottom() - navHeight - qreal(fabSize.height()) - 16.0,
+                               screen.bottom() - navHeight - qreal(fabSize.height()) - 12.0,
                                qreal(fabSize.width()), qreal(fabSize.height()))});
 
-    Q_UNUSED(y);
-    context.space(12.0);
-    context.detail(L("提示：点击邮件条目会切换选中态，底部导航栏与撰写 FAB 均可点击。",
-                     "Tip: click a message row to toggle selection; the bottom "
-                     "navigation and the compose FAB are clickable too."));
+    Q_UNUSED(colourIndex);
+    context.space(8.0);
 }
 
 void ShowcaseMailPage::placeChildren()
@@ -458,6 +482,16 @@ void ShowcaseMailPage::showEvent(QShowEvent *event)
 void ShowcaseMailPage::paintEvent(QPaintEvent *event)
 {
     GalleryPage::paintEvent(event);
+
+    // Unread markers ride on top of the list rows.
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    beginOverlay(painter);
+    for (const QPointF &dot : m_unreadDots) {
+        paintDot(painter, dot, 4.5, role(md::ColorRole::Primary));
+    }
+    painter.restore();
+
     placeChildren();
 }
 

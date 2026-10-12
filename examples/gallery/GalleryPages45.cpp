@@ -1,9 +1,10 @@
 // Gallery page 45: showcase - Music player.
 //
-// A now-playing screen: top app bar, album-art placeholder, track meta,
-// a progress slider, transport icon buttons and playlist chips. Same rules
-// as the other pages: widgets are banked, build() is re-entrant, and the page
-// never styles anything.
+// A now-playing screen built like an official MD3 media demo: a full-bleed
+// painted album-art block, Display/Headline track meta, a progress slider
+// with times, a large play FAB among small transport icons, playlist chips
+// and an up-next list. Real Md* widgets throughout; the art is a tonal
+// gradient painted from theme tokens.
 
 #include "GalleryPages.h"
 
@@ -13,7 +14,6 @@
 #include "widgets/MdList.h"
 #include "widgets/MdListItem.h"
 #include "widgets/MdSlider.h"
-#include "widgets/MdTopAppBar.h"
 
 #include "I18n.h"
 
@@ -32,8 +32,8 @@ struct Slot
     QRectF rect;
 };
 
-constexpr qreal kScreenHeight = 900.0;
-constexpr qreal kArtSize = 280.0;
+constexpr qreal kScreenHeight = 920.0;
+constexpr qreal kArtHeight = 300.0;
 
 struct Track
 {
@@ -76,7 +76,6 @@ private:
     void layoutChildren();
     void placeChildren();
 
-    md::MdTopAppBar *appBar();
     md::MdIconButton *iconButton(const QString &id, const QString &icon);
     md::MdFab *transportFab();
     md::MdSlider *progressSlider();
@@ -84,7 +83,6 @@ private:
     md::MdList *upNextList();
     md::MdListItem *trackItem(const QString &id);
 
-    md::MdTopAppBar *m_appBar = nullptr;
     QHash<QString, md::MdIconButton *> m_iconButtons;
     md::MdFab *m_playFab = nullptr;
     md::MdSlider *m_slider = nullptr;
@@ -103,7 +101,7 @@ ShowcaseMusicPage::~ShowcaseMusicPage() = default;
 
 QString ShowcaseMusicPage::title() const
 {
-    return L("示例·音乐播放", "Showcase·Music");
+    return L("示例·音乐", "Showcase·Music");
 }
 
 QString ShowcaseMusicPage::slug() const
@@ -113,22 +111,9 @@ QString ShowcaseMusicPage::slug() const
 
 QString ShowcaseMusicPage::subtitle() const
 {
-    return L("正在播放屏幕：专辑艺术占位、曲目信息、进度滑块、传输控制与"
-             "待播列表。芯片选择播放列表。全部由已移植的组件拼装，"
-             "颜色和字体均来自主题令牌。",
-             "A now-playing screen: album-art placeholder, track meta, a progress "
-             "slider, transport controls and an up-next list. Playlist chips select "
-             "a queue. Assembled from already-ported components; colours and type "
-             "come from theme tokens.");
-}
-
-md::MdTopAppBar *ShowcaseMusicPage::appBar()
-{
-    if (m_appBar == nullptr) {
-        m_appBar = new md::MdTopAppBar(this);
-        m_appBar->hide();
-    }
-    return m_appBar;
+    return L("正在播放：全幅专辑艺术、大号曲名、进度与传输控制、播放列表芯片与待播队列。",
+             "Now playing: full-bleed album art, large track title, scrubber and "
+             "transport, playlist chips and an up-next queue.");
 }
 
 md::MdIconButton *ShowcaseMusicPage::iconButton(const QString &id, const QString &icon)
@@ -148,10 +133,11 @@ md::MdFab *ShowcaseMusicPage::transportFab()
     if (m_playFab != nullptr) {
         return m_playFab;
     }
-    // The play transport sits on tertiary so the now-playing screen spends
-    // all three colour families: tertiary art, tertiary play, primary scrubber.
+    // Primary play: the one filled large control, so the screen spends its
+    // colour ceremony on the action that matters.
     m_playFab = new md::MdFab(QStringLiteral("play_arrow"), this);
-    m_playFab->setVariant(md::FabVariant::Tertiary);
+    m_playFab->setVariant(md::FabVariant::Primary);
+    m_playFab->setFabSize(md::FabSize::Large);
     m_playFab->hide();
     return m_playFab;
 }
@@ -208,92 +194,84 @@ void ShowcaseMusicPage::build(GalleryContext &context)
     m_slots.clear();
     QPainter *painter = context.painter();
 
-    context.section(L("正在播放", "Now playing"));
-    context.paragraph(L("更大的艺术图、更少的文字：典型的 M3 媒体屏幕。"
-                        "滑条是真 MdSlider，播放按钮是真 MdIconButton，"
-                        "芯片是可选中筛选芯片。",
-                        "Bigger art, fewer words: a typical M3 media screen. "
-                        "The scrubber is a real MdSlider, the transport buttons "
-                        "are real MdIconButtons, and the chips are selectable "
-                        "filter chips."));
+    context.paragraph(L(
+        "拖动滑块可跳转，点主播放键与芯片可交互。专辑艺术是令牌渐变，不是图片。",
+        "Drag the scrubber to seek; the play control and chips are live. "
+        "Album art is a token gradient, not a bitmap."));
 
     const QRectF screen = context.band(kScreenHeight);
     const qreal left = screen.left();
     const qreal width = screen.width();
     const qreal centre = left + width / 2.0;
-    qreal y = screen.top();
 
     if (painter != nullptr) {
+        paintTonalPanel(*painter, screen, md::ColorRole::SurfaceContainerLow,
+                        md::ShapeCorner::ExtraLarge);
+    }
+
+    // --- full-bleed album art --------------------------------------------
+    // Expressive corner on a hero surface: tertiary -> primary gradient with
+    // a music glyph, the imagery stand-in official demos use when photos
+    // cannot ship.
+    const QRectF art(left + 16.0, screen.top() + 16.0, width - 32.0, kArtHeight);
+    if (painter != nullptr) {
+        paintGradientArt(*painter, art, md::ColorRole::TertiaryContainer,
+                         md::ColorRole::PrimaryContainer, md::ShapeCorner::ExtraLarge,
+                         QStringLiteral("music_note"));
+
+        // Small "Hi-Res" pill over the art, a product detail.
         painter->save();
-        painter->setRenderHint(QPainter::Antialiasing, true);
-        fillRounded(*painter, screen, role(md::ColorRole::SurfaceContainerLow),
-                    md::ShapeCorner::ExtraLarge);
+        const QFont pillFont = fontFor(md::TypeStyle::LabelSmall);
+        const QFontMetricsF pillMetrics(pillFont);
+        const QString pillText = QStringLiteral("Hi-Res Lossless");
+        const qreal pillW = pillMetrics.horizontalAdvance(pillText) + 20.0;
+        const QRectF pill(art.left() + 16.0, art.top() + 16.0, pillW, 28.0);
+        fillRounded(*painter, pill, role(md::ColorRole::SurfaceContainerHighest),
+                    md::ShapeCorner::Full);
+        painter->setFont(pillFont);
+        painter->setPen(role(md::ColorRole::OnSurface));
+        painter->drawText(pill, Qt::AlignCenter, pillText);
         painter->restore();
     }
+    qreal y = art.bottom() + 24.0;
 
-    // --- top app bar ------------------------------------------------------
-    md::MdTopAppBar *bar = appBar();
-    bar->setTitle(L("正在播放", "Now playing"));
-    bar->setVariant(md::MdAppBarVariant::Small);
-    bar->setNavigationWidget(iconButton(QStringLiteral("back"), QStringLiteral("arrow_back")));
-    if (bar->actionWidgets().isEmpty()) {
-        bar->addActionWidget(iconButton(QStringLiteral("more"), QStringLiteral("more_vert")));
-    }
-    const qreal barHeight = bar->sizeHint().height();
-    m_slots.append(Slot{bar, QRectF(left, y, width, barHeight)});
-    y += barHeight + 12.0;
-
-    // --- album art (painted placeholder) ---------------------------------
-    const QRectF art(centre - kArtSize / 2.0, y, kArtSize, kArtSize);
+    // --- track meta: Display title + artist -------------------------------
     if (painter != nullptr) {
         painter->save();
-        painter->setRenderHint(QPainter::Antialiasing, true);
-        // Art placeholder: a tertiary container disc with a music-note glyph.
-        fillRounded(*painter, art, role(md::ColorRole::TertiaryContainer),
-                    md::ShapeCorner::ExtraLarge);
-        md::MdIcon::paint(painter, art.adjusted(48.0, 48.0, -48.0, -48.0),
-                          QStringLiteral("music_note"),
-                          role(md::ColorRole::OnTertiaryContainer), md::MdIconSet::Auto,
-                          md::MdIconFamily::Outlined, md::MdIconStyle{0.0, 400.0, 0.0, 96.0});
-        painter->restore();
-    }
-    y += kArtSize + 20.0;
-
-    // --- track meta (painted) --------------------------------------------
-    if (painter != nullptr) {
-        painter->save();
-        const QFont titleFont = fontFor(md::TypeStyle::HeadlineSmall);
+        const QFont titleFont = fontFor(md::TypeStyle::DisplaySmall);
         painter->setFont(titleFont);
         painter->setPen(role(md::ColorRole::OnSurface));
-        painter->drawText(QRectF(left, y, width, 36.0), Qt::AlignHCenter | Qt::AlignVCenter,
-                          L("后弦", "Afterglow"));
-        const QFont artistFont = fontFor(md::TypeStyle::BodyLarge);
+        painter->drawText(QRectF(left + 28.0, y, width - 56.0, 56.0),
+                          Qt::AlignLeft | Qt::AlignVCenter, L("后弦", "Afterglow"));
+
+        const QFont artistFont = fontFor(md::TypeStyle::TitleMedium);
         painter->setFont(artistFont);
         painter->setPen(role(md::ColorRole::OnSurfaceVariant));
-        painter->drawText(QRectF(left, y + 36.0, width, 28.0),
-                          Qt::AlignHCenter | Qt::AlignVCenter, L("北纬组合", "Latitude"));
+        painter->drawText(QRectF(left + 28.0, y + 56.0, width - 56.0, 28.0),
+                          Qt::AlignLeft | Qt::AlignVCenter,
+                          L("北纬组合 · 远线现场", "Latitude · Far Line Live"));
         painter->restore();
     }
-    y += 72.0;
+    y += 100.0;
 
-    // --- progress slider + times ------------------------------------------
+    // --- progress slider + times -----------------------------------------
     md::MdSlider *slider = progressSlider();
     const qreal sliderHeight = slider->sizeHint().height();
-    m_slots.append(Slot{slider, QRectF(left + 32.0, y, width - 64.0, sliderHeight)});
+    m_slots.append(Slot{slider, QRectF(left + 28.0, y, width - 56.0, sliderHeight)});
     if (painter != nullptr) {
         painter->save();
         const QFont timeFont = fontFor(md::TypeStyle::LabelSmall);
         painter->setFont(timeFont);
         painter->setPen(role(md::ColorRole::OnSurfaceVariant));
-        painter->drawText(QRectF(left + 32.0, y + sliderHeight, 80.0, 20.0),
+        painter->drawText(QRectF(left + 28.0, y + sliderHeight, 80.0, 20.0),
                           Qt::AlignLeft | Qt::AlignVCenter, QStringLiteral("1:12"));
-        painter->drawText(QRectF(left + width - 32.0 - 80.0, y + sliderHeight, 80.0, 20.0),
-                          Qt::AlignRight | Qt::AlignVCenter, QStringLiteral("3:42"));
+        painter->drawText(QRectF(left + width - 28.0 - 80.0, y + sliderHeight, 80.0, 20.0),
+                          Qt::AlignRight | Qt::AlignVCenter, QStringLiteral("-2:30"));
         painter->restore();
     }
     y += sliderHeight + 28.0;
 
-    // --- transport row ----------------------------------------------------
+    // --- transport: big play FAB + small icons ---------------------------
     struct Transport
     {
         const char *id;
@@ -307,13 +285,11 @@ void ShowcaseMusicPage::build(GalleryContext &context)
         {"next", "skip_next", false},
         {"repeat", "repeat", false},
     };
-    const qreal buttonPitch = 64.0;
+    const qreal buttonPitch = 72.0;
     const qreal rowWidth = 5.0 * buttonPitch;
     qreal x = centre - rowWidth / 2.0;
     for (const Transport &t : transport) {
         if (t.primary) {
-            // Tertiary FAB: the one filled transport, so the screen shows
-            // primary (scrubber) + tertiary (art & play) together.
             md::MdFab *button = transportFab();
             const QSize hint = button->sizeHint();
             m_slots.append(Slot{button,
@@ -331,7 +307,7 @@ void ShowcaseMusicPage::build(GalleryContext &context)
         }
         x += buttonPitch;
     }
-    y += 96.0 + 12.0;
+    y += 100.0;
 
     // --- playlist chips ---------------------------------------------------
     const qreal chipHeight = 32.0;
@@ -349,7 +325,7 @@ void ShowcaseMusicPage::build(GalleryContext &context)
             {"sport", "运动", "Workout", false},
             {"fav", "收藏", "Favorites", false},
         };
-        qreal chipX = left + 32.0;
+        qreal chipX = left + 28.0;
         for (const ChipEntry &entry : entries) {
             md::MdChip *c = chip(QString::fromUtf8(entry.id), L(entry.zh, entry.en));
             c->setChecked(entry.selected);
@@ -358,19 +334,19 @@ void ShowcaseMusicPage::build(GalleryContext &context)
             chipX += w + 8.0;
         }
     }
-    y += chipHeight + 20.0;
+    y += chipHeight + 28.0;
 
-    // --- up next ----------------------------------------------------------
+    // --- up next on a nested panel ---------------------------------------
     if (painter != nullptr) {
         painter->save();
-        const QFont headingFont = fontFor(md::TypeStyle::TitleMedium);
+        const QFont headingFont = fontFor(md::TypeStyle::TitleLarge);
         painter->setFont(headingFont);
         painter->setPen(role(md::ColorRole::OnSurface));
-        painter->drawText(QRectF(left + 32.0, y, width - 64.0, 28.0),
+        painter->drawText(QRectF(left + 28.0, y, width - 56.0, 36.0),
                           Qt::AlignLeft | Qt::AlignVCenter, L("接下来", "Up next"));
         painter->restore();
     }
-    y += 36.0;
+    y += 44.0;
 
     md::MdList *list = upNextList();
     if (list->itemCount() == 0) {
@@ -383,21 +359,21 @@ void ShowcaseMusicPage::build(GalleryContext &context)
         if (item == nullptr) {
             continue;
         }
-        item->setAvatarLabel(QStringLiteral("-"));
+        item->setAvatarLabel(QStringLiteral("♪"));
         item->setHeadline(L(track.titleZh, track.titleEn));
         item->setSupporting(L(track.artistZh, track.artistEn));
         item->setTrailingSupporting(L(track.timeZh, track.timeEn));
         item->setVariant(md::MdListVariant::Expressive);
     }
     const qreal listHeight = list->sizeHint().height();
-    m_slots.append(Slot{list, QRectF(left + 24.0, y, width - 48.0, listHeight)});
-    y += listHeight;
+    const QRectF listPanel(left + 20.0, y, width - 40.0, listHeight + 8.0);
+    if (painter != nullptr) {
+        paintTonalPanel(*painter, listPanel, md::ColorRole::SurfaceContainerLowest,
+                        md::ShapeCorner::Large);
+    }
+    m_slots.append(Slot{list, QRectF(left + 28.0, y + 4.0, width - 56.0, listHeight)});
 
-    Q_UNUSED(y);
-    context.space(12.0);
-    context.detail(L("提示：拖动滑条可改变进度，点击主播放按钮，芯片可切换选择。",
-                     "Tip: drag the scrubber to seek, click the primary transport "
-                     "button, and toggle the playlist chips."));
+    context.space(8.0);
 }
 
 void ShowcaseMusicPage::placeChildren()

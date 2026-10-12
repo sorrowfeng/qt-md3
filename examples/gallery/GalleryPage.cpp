@@ -13,7 +13,7 @@ namespace gallery {
 namespace {
 
 /// Space between a section heading and the block under it.
-constexpr qreal kHeadingGap = 12.0;
+constexpr qreal kHeadingGap = 20.0;
 
 } // namespace
 
@@ -39,6 +39,8 @@ qreal GalleryContext::textHeight(const QFont &font, const QString &text, qreal w
 
 void GalleryContext::section(const QString &text)
 {
+    // Title / large-title energy without leaving the published type scale:
+    // TitleMedium for the label, but the band above it opens the page out.
     const QFont font = GalleryPage::fontFor(md::TypeStyle::TitleMedium);
     const qreal height = textHeight(font, text, m_width);
     if (m_painter != nullptr) {
@@ -180,13 +182,16 @@ QRectF GalleryPage::contentRectForCurrentSize() const
 
 qreal GalleryPage::buildOriginY() const
 {
-    const QFontMetricsF titleMetrics(fontFor(md::TypeStyle::HeadlineMedium));
-    qreal y = titleMetrics.height() + 4.0;
+    // Hero-scale page title (HeadlineLarge) and a single body-medium line
+    // under it: the header is the first piece of product composition every
+    // page shares, so it carries the same type hierarchy a real screen does.
+    const QFontMetricsF titleMetrics(fontFor(md::TypeStyle::HeadlineLarge));
+    qreal y = titleMetrics.height() + 8.0;
     const QString sub = subtitle();
     if (!sub.isEmpty()) {
-        y += QFontMetricsF(fontFor(md::TypeStyle::BodyLarge)).height() + 12.0;
+        y += QFontMetricsF(fontFor(md::TypeStyle::BodyMedium)).height() + 16.0;
     }
-    return y + 8.0;
+    return y + 20.0;
 }
 
 void GalleryPage::remeasure()
@@ -213,22 +218,23 @@ void GalleryPage::paintEvent(QPaintEvent *event)
     painter.setClipRect(content);
     painter.translate(content.topLeft());
 
-    // Page heading.
-    const QFont titleFont = fontFor(md::TypeStyle::HeadlineMedium);
+    // Page heading: Display/Headline scale title, one body-medium line of
+    // subtitle, then a generous gap before the page body starts.
+    const QFont titleFont = fontFor(md::TypeStyle::HeadlineLarge);
     const QFontMetricsF titleMetrics(titleFont);
     painter.setFont(titleFont);
     painter.setPen(role(md::ColorRole::OnSurface));
     painter.drawText(QPointF(0.0, titleMetrics.ascent()), title());
 
-    qreal y = titleMetrics.height() + 4.0;
+    qreal y = titleMetrics.height() + 8.0;
     const QString sub = subtitle();
     if (!sub.isEmpty()) {
-        const QFont subFont = fontFor(md::TypeStyle::BodyLarge);
+        const QFont subFont = fontFor(md::TypeStyle::BodyMedium);
         const QFontMetricsF subMetrics(subFont);
         painter.setFont(subFont);
         painter.setPen(role(md::ColorRole::OnSurfaceVariant));
         painter.drawText(QPointF(0.0, y + subMetrics.ascent()), sub);
-        y += subMetrics.height() + 12.0;
+        y += subMetrics.height() + 16.0;
     }
 
     // buildOriginY() is the single source for the cursor the page body starts
@@ -288,6 +294,69 @@ void GalleryPage::paintElevated(QPainter &painter, const QRectF &rect, md::Eleva
     painter.setRenderHint(QPainter::Antialiasing, true);
     fillRounded(painter, rect, md::MdElevation::surfaceColor(level, md::MdTheme::instance().scheme()),
                 md::ShapeCorner::Medium);
+    painter.restore();
+}
+
+void GalleryPage::paintGradientArt(QPainter &painter, const QRectF &rect,
+                                   md::ColorRole from, md::ColorRole to,
+                                   md::ShapeCorner corner, const QString &icon)
+{
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    const QList<qreal> radii = md::MdShape::resolvedRadii(corner, rect.size());
+    QLinearGradient gradient(rect.topLeft(), rect.bottomRight());
+    gradient.setColorAt(0.0, role(from));
+    gradient.setColorAt(1.0, role(to));
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(gradient);
+    painter.drawPath(md::MdShape::roundedRect(rect, radii));
+
+    if (!icon.isEmpty()) {
+        const qreal side = qMin(rect.width(), rect.height());
+        const QRectF glyph = QRectF(rect.center() - QPointF(side * 0.22, side * 0.22),
+                                    QSizeF(side * 0.44, side * 0.44));
+        md::MdIcon::paint(&painter, glyph, icon, role(md::ColorRole::OnTertiaryContainer),
+                          md::MdIconSet::Auto, md::MdIconFamily::Outlined,
+                          md::MdIconStyle{0.0, 400.0, 0.0, side * 0.22});
+    }
+    painter.restore();
+}
+
+void GalleryPage::paintAvatarDisc(QPainter &painter, const QRectF &rect,
+                                  const QString &initials, md::ColorRole background,
+                                  md::ColorRole foreground)
+{
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(role(background));
+    painter.drawEllipse(rect);
+    if (!initials.isEmpty()) {
+        const QFont font = fontFor(md::TypeStyle::TitleMedium);
+        painter.setFont(font);
+        painter.setPen(role(foreground));
+        painter.drawText(rect, Qt::AlignCenter, initials);
+    }
+    painter.restore();
+}
+
+void GalleryPage::paintDot(QPainter &painter, const QPointF &centre, qreal radius,
+                           const QColor &color)
+{
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(color);
+    painter.drawEllipse(centre, radius, radius);
+    painter.restore();
+}
+
+void GalleryPage::paintTonalPanel(QPainter &painter, const QRectF &rect,
+                                  md::ColorRole surface, md::ShapeCorner corner)
+{
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    fillRounded(painter, rect, role(surface), corner);
     painter.restore();
 }
 

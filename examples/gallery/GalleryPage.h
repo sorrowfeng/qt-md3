@@ -117,8 +117,8 @@ public:
     // base uses, so it can place its children from resizeEvent() and never have
     // to guess.
 
-    /// Content gutter on every side of a page.
-    static constexpr qreal contentGutter() { return 32.0; }
+    /// Content gutter on every side of a page (24dp page margin).
+    static constexpr qreal contentGutter() { return 24.0; }
 
     /// The content rect for the widget's current size. Identical to the one
     /// paintEvent installs.
@@ -147,6 +147,31 @@ public:
     /// Fill `rect` with the surface at the given elevation level.
     static void paintElevated(QPainter &painter, const QRectF &rect,
                               md::ElevationLevel level);
+
+    // --- product-scene art helpers (token driven, no bitmaps) -------------
+
+    /// Painted "image" placeholder: a two-stop tonal gradient with an optional
+    /// centred icon. Used for album art, card banners and avatars where a real
+    /// photograph cannot ship.
+    static void paintGradientArt(QPainter &painter, const QRectF &rect,
+                                 md::ColorRole from, md::ColorRole to,
+                                 md::ShapeCorner corner = md::ShapeCorner::ExtraLarge,
+                                 const QString &icon = QString());
+
+    /// Circular avatar disc with initials, the list-item avatar language.
+    static void paintAvatarDisc(QPainter &painter, const QRectF &rect,
+                                const QString &initials, md::ColorRole background,
+                                md::ColorRole foreground);
+
+    /// Small status dot (unread, live, error) at `centre`.
+    static void paintDot(QPainter &painter, const QPointF &centre, qreal radius,
+                         const QColor &color);
+
+    /// Nested tonal panel: surface-container-low/high/highest with the
+    /// theme's large corner, the layered-surface look of official showcases.
+    static void paintTonalPanel(QPainter &painter, const QRectF &rect,
+                                md::ColorRole surface,
+                                md::ShapeCorner corner = md::ShapeCorner::Large);
 
 protected:
     void paintEvent(QPaintEvent *event) override;

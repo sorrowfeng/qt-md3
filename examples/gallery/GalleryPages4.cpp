@@ -197,6 +197,68 @@ void ButtonPage::build(GalleryContext &context)
 {
     m_slots.clear();
 
+    // --- composed scene: a publish card ------------------------------------
+    // Product composition first: one believable surface that spends the
+    // button family the way a real screen would, not a matrix of specimens.
+    {
+        context.section(L("场景：发布一张卡片", "Scene: publish a card"));
+        const qreal panelHeight = 200.0;
+        const QRectF panel = context.band(panelHeight);
+        QPainter *painter = context.painter();
+        if (painter != nullptr) {
+            paintTonalPanel(*painter, panel, md::ColorRole::SurfaceContainerLow,
+                            md::ShapeCorner::ExtraLarge);
+            painter->save();
+            const QFont titleFont = fontFor(md::TypeStyle::HeadlineSmall);
+            painter->setFont(titleFont);
+            painter->setPen(role(md::ColorRole::OnSurface));
+            painter->drawText(QRectF(panel.left() + 28.0, panel.top() + 24.0,
+                                     panel.width() - 56.0, 36.0),
+                              Qt::AlignLeft | Qt::AlignVCenter,
+                              L("准备发布了？", "Ready to publish?"));
+            const QFont bodyFont = fontFor(md::TypeStyle::BodyMedium);
+            painter->setFont(bodyFont);
+            painter->setPen(role(md::ColorRole::OnSurfaceVariant));
+            painter->drawText(
+                QRectF(panel.left() + 28.0, panel.top() + 64.0, panel.width() - 56.0, 52.0),
+                Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap,
+                L("草稿已保存在本地。发布后协作者会立即看到更新，也可以先存为草稿稍后继续。",
+                  "The draft is saved locally. Publishing notifies collaborators at once; "
+                  "you can also keep it as a draft and finish later."));
+            painter->restore();
+        }
+        // Action row: filled primary, tonal secondary, text tertiary.
+        auto *publish = button(QStringLiteral("scene-publish"), L("发布", "Publish"),
+                               [](md::MdButton *widget) {
+                                   widget->setVariant(md::ButtonVariant::Filled);
+                                   widget->setButtonSize(md::ButtonSize::Medium);
+                                   widget->setLeadingIcon(QStringLiteral("publish"));
+                               });
+        auto *draft = button(QStringLiteral("scene-draft"), L("存草稿", "Save draft"),
+                             [](md::MdButton *widget) {
+                                 widget->setVariant(md::ButtonVariant::Tonal);
+                                 widget->setButtonSize(md::ButtonSize::Medium);
+                             });
+        auto *discard = button(QStringLiteral("scene-discard"), L("放弃", "Discard"),
+                               [](md::MdButton *widget) {
+                                   widget->setVariant(md::ButtonVariant::Text);
+                                   widget->setButtonSize(md::ButtonSize::Medium);
+                               });
+        const QSize publishHint = publish->sizeHint();
+        const QSize draftHint = draft->sizeHint();
+        const QSize discardHint = discard->sizeHint();
+        const qreal rowY = panel.bottom() - qreal(publishHint.height()) - 28.0;
+        qreal x = panel.left() + 28.0;
+        m_slots.append(ButtonSlot{publish, QRectF(x, rowY, publishHint.width(),
+                                                  publishHint.height())});
+        x += publishHint.width() + 12.0;
+        m_slots.append(ButtonSlot{draft, QRectF(x, rowY, draftHint.width(), draftHint.height())});
+        x += draftHint.width() + 12.0;
+        m_slots.append(ButtonSlot{discard,
+                                  QRectF(x, rowY, discardHint.width(), discardHint.height())});
+        context.space(16.0);
+    }
+
     // --- five colour styles ------------------------------------------------
     context.section(L("五种颜色样式 —— md.comp.button.<style>",
                       "Five colour styles — md.comp.button.<style>"));

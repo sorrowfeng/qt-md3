@@ -23,6 +23,7 @@
 
 #include "GalleryPages.h"
 
+#include "widgets/MdFab.h"
 #include "widgets/MdNavigationBar.h"
 #include "widgets/MdNavigationBarItem.h"
 
@@ -75,9 +76,11 @@ private:
 
     md::MdNavigationBar *bar(const QString &id);
     md::MdNavigationBarItem *item(const QString &id, const QString &label, const QString &icon);
+    md::MdFab *sceneFab();
 
     QHash<QString, md::MdNavigationBar *> m_bars;
     QHash<QString, md::MdNavigationBarItem *> m_items;
+    md::MdFab *m_sceneFab = nullptr;
     QVector<NavSlot> m_slots;
 };
 
@@ -148,9 +151,119 @@ md::MdNavigationBarItem *NavigationBarPage::item(const QString &id, const QStrin
     return created;
 }
 
+md::MdFab *NavigationBarPage::sceneFab()
+{
+    if (m_sceneFab == nullptr) {
+        m_sceneFab = new md::MdFab(QStringLiteral("edit"), this);
+        m_sceneFab->setVariant(md::FabVariant::Primary);
+        m_sceneFab->setFabSize(md::FabSize::Medium);
+        m_sceneFab->hide();
+    }
+    return m_sceneFab;
+}
+
 void NavigationBarPage::build(GalleryContext &context)
 {
     m_slots.clear();
+
+    // --- composed scene: a phone shell ---------------------------------------
+    // Navigation is chrome around content. Lead with the product shape: a
+    // screen of list rows, a FAB above the bar, and the bar itself.
+    {
+        context.section(L("场景：手机外壳", "Scene: phone shell"));
+        const qreal sceneHeight = 420.0;
+        const QRectF scene = context.band(sceneHeight);
+        QPainter *painter = context.painter();
+        if (painter != nullptr) {
+            paintTonalPanel(*painter, scene, md::ColorRole::SurfaceContainerLow,
+                            md::ShapeCorner::ExtraLarge);
+        }
+
+        // Content rows painted as list items (this page's subject is the bar).
+        const qreal rowH = 64.0;
+        qreal rowY = scene.top() + 16.0;
+        struct Row
+        {
+            const char *icon;
+            const char *zh;
+            const char *en;
+            const char *metaZh;
+            const char *metaEn;
+        };
+        const Row rows[] = {
+            {"mail", "设计评审纪要", "Design review notes", "10:24", "10:24"},
+            {"event", "周五团建", "Friday offsite", "昨天", "Yesterday"},
+            {"description", "Token 导出 34.0.21", "Token export 34.0.21", "周一", "Mon"},
+        };
+        for (const Row &row : rows) {
+            if (painter != nullptr) {
+                const QRectF band(scene.left() + 16.0, rowY, scene.width() - 32.0, rowH - 8.0);
+                paintTonalPanel(*painter, band, md::ColorRole::SurfaceContainerLowest,
+                                md::ShapeCorner::Medium);
+                painter->save();
+                const QRectF iconBox(band.left() + 14.0, band.top() + 16.0, 32.0, 32.0);
+                fillRounded(*painter, iconBox, role(md::ColorRole::PrimaryContainer),
+                            md::ShapeCorner::Full);
+                md::MdIcon::paint(painter, iconBox.adjusted(6.0, 6.0, -6.0, -6.0),
+                                  QString::fromUtf8(row.icon),
+                                  role(md::ColorRole::OnPrimaryContainer),
+                                  md::MdIconSet::Auto, md::MdIconFamily::Outlined,
+                                  md::MdIconStyle{0.0, 400.0, 0.0, 20.0});
+                const QFont titleFont = fontFor(md::TypeStyle::BodyLarge);
+                painter->setFont(titleFont);
+                painter->setPen(role(md::ColorRole::OnSurface));
+                painter->drawText(QRectF(iconBox.right() + 12.0, band.top() + 8.0,
+                                         band.width() - 80.0, 24.0),
+                                  Qt::AlignLeft | Qt::AlignVCenter, L(row.zh, row.en));
+                const QFont metaFont = fontFor(md::TypeStyle::LabelSmall);
+                painter->setFont(metaFont);
+                painter->setPen(role(md::ColorRole::OnSurfaceVariant));
+                painter->drawText(QRectF(band.right() - 64.0, band.top() + 8.0, 52.0, 24.0),
+                                  Qt::AlignRight | Qt::AlignVCenter,
+                                  L(row.metaZh, row.metaEn));
+                painter->restore();
+            }
+            rowY += rowH;
+        }
+
+        // FAB above the bar, trailing side — the real app placement.
+        auto *fab = sceneFab();
+        const QSize fabHint = fab->sizeHint();
+        m_slots.append(NavSlot{fab,
+                               QRectF(scene.right() - qreal(fabHint.width()) - 24.0,
+                                      scene.bottom() - 80.0 - qreal(fabHint.height()) - 12.0,
+                                      qreal(fabHint.width()), qreal(fabHint.height())),
+                               false, false});
+
+        // The bar itself, pinned to the bottom of the scene.
+        md::MdNavigationBar *shellBar = bar(QStringLiteral("scene-shell"));
+        shellBar->setVariant(md::MdNavigationBarVariant::Baseline);
+        if (shellBar->count() == 0) {
+            struct Destination
+            {
+                const char *id;
+                const char *zh;
+                const char *en;
+                const char *icon;
+            };
+            const Destination destinations[] = {
+                {"home", "首页", "Home", "home"},
+                {"search", "搜索", "Search", "search"},
+                {"mail", "邮件", "Mail", "mail"},
+                {"settings", "设置", "Settings", "settings"},
+            };
+            for (const Destination &d : destinations) {
+                shellBar->addItem(item(QStringLiteral("scene-") + QString::fromUtf8(d.id),
+                                       L(d.zh, d.en), d.icon));
+            }
+            shellBar->setCurrentIndex(0);
+        }
+        const qreal barH = shellBar->sizeHint().height();
+        m_slots.append(NavSlot{shellBar, QRectF(scene.left(), scene.bottom() - barH,
+                                                scene.width(), barH),
+                               true, false});
+        context.space(16.0);
+    }
 
     struct Destination
     {

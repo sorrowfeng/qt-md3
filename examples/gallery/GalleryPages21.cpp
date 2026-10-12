@@ -33,6 +33,54 @@ struct CardSlot
     QRectF rect;
 };
 
+/// Painted media header used by the composed scene: gradient art + copy.
+/// A child widget (not page paint) so the card's own container paints first
+/// and the art sits inside it, the way a real media card would.
+class SceneMediaContent : public QWidget
+{
+public:
+    SceneMediaContent(md::ColorRole from, md::ColorRole to, const QString &icon,
+                      const QString &title, const QString &meta, QWidget *parent = nullptr)
+        : QWidget(parent)
+        , m_from(from)
+        , m_to(to)
+        , m_icon(icon)
+        , m_title(title)
+        , m_meta(meta)
+    {
+        setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    }
+
+protected:
+    void paintEvent(QPaintEvent *) override
+    {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        const QRectF bounds(rect());
+        const QRectF art(bounds.left() + 12.0, bounds.top() + 12.0,
+                         bounds.width() - 24.0, 108.0);
+        GalleryPage::paintGradientArt(painter, art, m_from, m_to,
+                                      md::ShapeCorner::Large, m_icon);
+        painter.setFont(GalleryPage::fontFor(md::TypeStyle::TitleMedium));
+        painter.setPen(GalleryPage::role(md::ColorRole::OnSurface));
+        painter.drawText(QRectF(bounds.left() + 16.0, art.bottom() + 10.0,
+                                bounds.width() - 32.0, 24.0),
+                         Qt::AlignLeft | Qt::AlignVCenter, m_title);
+        painter.setFont(GalleryPage::fontFor(md::TypeStyle::BodySmall));
+        painter.setPen(GalleryPage::role(md::ColorRole::OnSurfaceVariant));
+        painter.drawText(QRectF(bounds.left() + 16.0, art.bottom() + 36.0,
+                                bounds.width() - 32.0, 20.0),
+                         Qt::AlignLeft | Qt::AlignVCenter, m_meta);
+    }
+
+private:
+    md::ColorRole m_from;
+    md::ColorRole m_to;
+    QString m_icon;
+    QString m_title;
+    QString m_meta;
+};
+
 /// The sample content every card carries: a title and two lines of
 /// supporting text, laid out by the card's own layout.
 void fillWithSampleContent(md::MdCard *card)
@@ -149,6 +197,64 @@ void CardPage::build(GalleryContext &context)
     m_slots.clear();
     const qreal contentWidth = context.width();
     constexpr qreal kCardHeight = 148.0;
+
+    // --- composed scene: a media shelf ------------------------------------------
+    // A card is a content surface. The product shape is a shelf of media cards
+    // with painted art headers, not a stack of empty boxes.
+    {
+        context.section(L("场景：媒体架", "Scene: media shelf"));
+        const qreal sceneHeight = 280.0;
+        const QRectF scene = context.band(sceneHeight);
+        const qreal gap = 16.0;
+        const qreal cardW = (scene.width() - gap) / 2.0;
+        const QRectF leftCard(scene.left(), scene.top(), cardW, scene.height() - 12.0);
+        const QRectF rightCard(scene.left() + cardW + gap, scene.top(), cardW,
+                               scene.height() - 12.0);
+
+        auto sceneCard = [&](const QString &id, md::MdCardVariant variant,
+                             md::ColorRole from, md::ColorRole to, const QString &icon,
+                             const QString &title, const QString &meta) {
+            md::MdCard *c = card(id, variant, [&](md::MdCard *widget) {
+                widget->setClickable(true);
+                // The bank already installed sample labels via a QVBoxLayout.
+                // Clear that layout and drop a painted media header in its place.
+                QLayout *existing = widget->layout();
+                if (existing != nullptr) {
+                    while (existing->count() > 0) {
+                        QLayoutItem *item = existing->takeAt(0);
+                        if (item->widget() != nullptr) {
+                            item->widget()->deleteLater();
+                        }
+                        delete item;
+                    }
+                    existing->setContentsMargins(0, 0, 0, 0);
+                }
+                auto *media = new SceneMediaContent(from, to, icon, title, meta, widget);
+                if (existing != nullptr) {
+                    existing->addWidget(media);
+                }
+            });
+            return c;
+        };
+
+        md::MdCard *left = sceneCard(QStringLiteral("scene-mix"), md::MdCardVariant::Filled,
+                                     md::ColorRole::PrimaryContainer,
+                                     md::ColorRole::TertiaryContainer,
+                                     QStringLiteral("graphic_eq"),
+                                     L("通勤歌单", "Commute mix"),
+                                     L("42 首 · 2 小时 51 分", "42 songs · 2 hr 51 min"));
+        m_slots.append(CardSlot{left, leftCard});
+
+        md::MdCard *right = sceneCard(QStringLiteral("scene-live"), md::MdCardVariant::Elevated,
+                                      md::ColorRole::SecondaryContainer,
+                                      md::ColorRole::PrimaryContainer,
+                                      QStringLiteral("podcasts"),
+                                      L("设计访谈", "Design interview"),
+                                      L("每周新集 · 38 分钟", "New weekly · 38 min"));
+        m_slots.append(CardSlot{right, rightCard});
+
+        context.space(16.0);
+    }
 
     // --- filled -------------------------------------------------------------------
     context.section(L("Filled card", "Filled card"));

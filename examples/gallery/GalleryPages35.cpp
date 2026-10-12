@@ -124,6 +124,68 @@ void ChipPage::build(GalleryContext &context)
 {
     m_slots.clear();
 
+    // --- composed scene: a filter bar ---------------------------------------
+    // The chip family earns its keep as a horizontal filter / input strip on a
+    // content surface — that is the product shape, not a row of specimens.
+    {
+        context.section(L("场景：筛选与收件人", "Scene: filters and recipients"));
+        const qreal panelHeight = 176.0;
+        const QRectF panel = context.band(panelHeight);
+        QPainter *painter = context.painter();
+        if (painter != nullptr) {
+            paintTonalPanel(*painter, panel, md::ColorRole::SurfaceContainerLow,
+                            md::ShapeCorner::ExtraLarge);
+            painter->save();
+            const QFont titleFont = fontFor(md::TypeStyle::TitleLarge);
+            painter->setFont(titleFont);
+            painter->setPen(role(md::ColorRole::OnSurface));
+            painter->drawText(QRectF(panel.left() + 24.0, panel.top() + 18.0,
+                                     panel.width() - 48.0, 32.0),
+                              Qt::AlignLeft | Qt::AlignVCenter,
+                              L("收件箱", "Inbox"));
+            const QFont hintFont = fontFor(md::TypeStyle::BodySmall);
+            painter->setFont(hintFont);
+            painter->setPen(role(md::ColorRole::OnSurfaceVariant));
+            painter->drawText(QRectF(panel.left() + 24.0, panel.top() + 52.0,
+                                     panel.width() - 48.0, 20.0),
+                              Qt::AlignLeft | Qt::AlignVCenter,
+                              L("用筛选芯片收窄列表；输入芯片可删除。",
+                                "Filter chips narrow the list; input chips can be removed."));
+            painter->restore();
+        }
+
+        struct SceneChip
+        {
+            const char *id;
+            const char *zh;
+            const char *en;
+            md::MdChipVariant variant;
+            bool checked;
+        };
+        const SceneChip sceneChips[] = {
+            {"sc-all", "全部", "All", md::MdChipVariant::Filter, true},
+            {"sc-unread", "未读", "Unread", md::MdChipVariant::Filter, false},
+            {"sc-star", "已加星", "Starred", md::MdChipVariant::Filter, false},
+            {"sc-avery", "Avery", "Avery", md::MdChipVariant::Input, false},
+            {"sc-design", "设计组", "Design", md::MdChipVariant::Input, false},
+        };
+        qreal x = panel.left() + 24.0;
+        const qreal rowY = panel.top() + 96.0;
+        for (const SceneChip &spec : sceneChips) {
+            md::MdChip *c = chip(QString::fromUtf8(spec.id));
+            c->setText(L(spec.zh, spec.en));
+            c->setVariant(spec.variant);
+            c->setChecked(spec.checked);
+            if (spec.variant == md::MdChipVariant::Input) {
+                c->setTrailingIconName(QStringLiteral("close"));
+            }
+            const QSize hint = c->sizeHint();
+            m_slots.append(ChipSlot{c, QRectF(x, rowY, hint.width(), hint.height())});
+            x += hint.width() + 10.0;
+        }
+        context.space(16.0);
+    }
+
     // Chips hug their content — never stretch a chip across the band.
     auto addRow = [&](const QVector<QPair<QString, md::MdChip *>> &chips) {
         if (chips.isEmpty()) {
