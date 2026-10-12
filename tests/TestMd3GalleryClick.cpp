@@ -131,6 +131,7 @@ private slots:
     void showcaseMailPageClickSelects();
     void showcaseMusicPageClickEmits();
     void showcaseSettingsPageClickToggles();
+    void dynamicColourPageClickChangesProbe();
 
     // Diagnostic: every enabled interactive child of a page must be the
     // hit-test winner at its own centre. Reports the first cover/geometry
@@ -990,6 +991,90 @@ void TestMd3GalleryClick::showcaseSettingsPageClickToggles()
     clickCentre(target);
     QVERIFY(spy.count() >= 1);
     QVERIFY(target->isChecked() != before);
+}
+
+// ---------------------------------------------------------------------------
+// Dynamic colour probe
+// ---------------------------------------------------------------------------
+
+void TestMd3GalleryClick::dynamicColourPageClickChangesProbe()
+{
+    int page = pageIndexBySlug(QStringLiteral("dynamic-colour"));
+    if (page < 0) {
+        page = pageIndexBySlug(QStringLiteral("Dynamic colour"));
+    }
+    if (page < 0) {
+        page = pageIndexBySlug(QStringLiteral("Dynamic Colour"));
+    }
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+
+    QWidget *pageWidget = m_window->pageWidget(page);
+    QVERIFY(pageWidget != nullptr);
+
+    QWidget *probe = nullptr;
+    const QList<QWidget *> all = pageWidget->findChildren<QWidget *>();
+    for (QWidget *w : all) {
+        if (w->objectName() == QLatin1String("dynamic-colour-probe")) {
+            probe = w;
+            break;
+        }
+    }
+    QVERIFY(probe != nullptr);
+    QVERIFY(probe->isVisible());
+    QVERIFY(probe->width() > 0 && probe->height() > 0);
+
+    // Seed swatches are object-named seed-swatch-N. Click one that is not the
+    // current seed and prove both the theme seed and the probe pixels move.
+    QWidget *target = nullptr;
+    const QColor original = MdTheme::instance().seedColor();
+    for (QWidget *w : all) {
+        if (!w->objectName().startsWith(QLatin1String("seed-swatch"))) {
+            continue;
+        }
+        // 0 is the baseline purple the gallery starts from; pick a later seed.
+        if (w->objectName() == QLatin1String("seed-swatch-0") && original == QColor("#6750A4")) {
+            continue;
+        }
+        if (w->objectName() == QLatin1String("seed-swatch-1")) {
+            target = w;
+            break;
+        }
+    }
+    QVERIFY(target != nullptr);
+    QVERIFY(target->isVisible());
+    QVERIFY(target->width() > 0 && target->height() > 0);
+
+    settle(*m_window, page);
+    const QPixmap before = probe->grab();
+    QVERIFY(!before.isNull());
+
+    clickCentre(target);
+    settle(*m_window, page);
+
+    const QColor after = MdTheme::instance().seedColor();
+    QVERIFY(after != original);
+    QVERIFY(after == QColor("#00A3A3"));
+
+    const QPixmap afterPixmap = probe->grab();
+    QVERIFY(!afterPixmap.isNull());
+    // Compare a centre pixel of each third of the probe (primary/secondary/tertiary).
+    const QImage beforeImage = before.toImage();
+    const QImage afterImage = afterPixmap.toImage();
+    QVERIFY(beforeImage.size() == afterImage.size());
+    bool changed = false;
+    for (int third = 0; third < 3; ++third) {
+        const QPoint sample(beforeImage.width() * (2 * third + 1) / 6,
+                            beforeImage.height() / 2);
+        if (beforeImage.pixelColor(sample) != afterImage.pixelColor(sample)) {
+            changed = true;
+            break;
+        }
+    }
+    QVERIFY2(changed, "probe widget colour did not change after seed click");
+
+    // Restore the baseline seed so later tests (and screenshots) start clean.
+    MdTheme::instance().setSeedColor(original);
 }
 
 void TestMd3GalleryClick::hitTestSweep()

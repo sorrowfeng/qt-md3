@@ -296,6 +296,7 @@ void GalleryHeader::rebuildButtons()
         {6, theme.languageTag() == QStringLiteral("zh-Hans") ? QStringLiteral("中文")
                                                             : QStringLiteral("English"),
          QStringLiteral("text_fields")},
+        {7, QStringLiteral("seed"), QStringLiteral("color_lens")},
         {0, theme.themeMode() == md::ThemeMode::Dark ? QStringLiteral("dark")
                                                      : QStringLiteral("light"),
          theme.themeMode() == md::ThemeMode::Dark ? QStringLiteral("dark_mode")
@@ -362,10 +363,25 @@ void GalleryHeader::paintEvent(QPaintEvent *event)
             button.rect.adjusted(0.5, 0.5, -0.5, -0.5),
             md::MdShape::resolvedRadii(md::ShapeCorner::Full, button.rect.size())));
 
-        md::MdIcon::paint(&painter,
-                          QRectF(button.rect.left() + 12.0, button.rect.center().y() - 9.0, 18.0,
-                                 18.0),
-                          button.icon, theme.color(md::ColorRole::OnSurfaceVariant));
+        if (button.action == 7) {
+            // Seed control: a colour lens instead of a mono glyph, so the
+            // current seed is visible at a glance.
+            const QRectF swatch(button.rect.left() + 12.0, button.rect.center().y() - 9.0, 18.0,
+                                18.0);
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(theme.seedColor());
+            painter.drawEllipse(swatch);
+            QPen ring(theme.color(md::ColorRole::Outline));
+            ring.setCosmetic(true);
+            painter.setPen(ring);
+            painter.setBrush(Qt::NoBrush);
+            painter.drawEllipse(swatch.adjusted(0.5, 0.5, -0.5, -0.5));
+        } else {
+            md::MdIcon::paint(&painter,
+                              QRectF(button.rect.left() + 12.0, button.rect.center().y() - 9.0, 18.0,
+                                     18.0),
+                              button.icon, theme.color(md::ColorRole::OnSurfaceVariant));
+        }
         drawLabel(painter, button.rect.adjusted(36.0, 0.0, -12.0, 0.0),
                   md::MdTypeScale::font(md::TypeStyle::LabelLarge),
                   theme.color(md::ColorRole::OnSurfaceVariant), button.label);
@@ -408,6 +424,7 @@ void GalleryHeader::mouseReleaseEvent(QMouseEvent *event)
     case 4: emit densityCycled(); break;
     case 5: emit directionToggled(); break;
     case 6: emit languageCycled(); break;
+    case 7: emit seedCycled(); break;
     default: break;
     }
 }
@@ -519,6 +536,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createDatePickerPage(),
         createTextFieldPage(),
         createSearchPage(),
+        createDynamicColourPage(),
         createShowcaseMailPage(),
         createShowcaseMusicPage(),
         createShowcaseSettingsPage(),
@@ -595,6 +613,25 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         // page, and re-renders every page's bilingual copy.
         const bool toChinese = theme.languageTag() != QStringLiteral("zh-Hans");
         theme.setLanguageTag(toChinese ? QStringLiteral("zh-Hans") : QStringLiteral("en"));
+    });
+    connect(m_header, &GalleryHeader::seedCycled, this, [] {
+        // Wallpaper-style seed set, shared with the Dynamic colour page.
+        static const QColor seeds[] = {
+            QColor(QStringLiteral("#6750A4")), QColor(QStringLiteral("#00A3A3")),
+            QColor(QStringLiteral("#E8710A")), QColor(QStringLiteral("#2E7D32")),
+            QColor(QStringLiteral("#D81B60")), QColor(QStringLiteral("#1B6EF3")),
+            QColor(QStringLiteral("#F9A825")),
+        };
+        md::MdTheme &theme = md::MdTheme::instance();
+        theme.setDynamicColor(true);
+        int next = 0;
+        for (int i = 0; i < int(sizeof(seeds) / sizeof(seeds[0])); ++i) {
+            if (seeds[i] == theme.seedColor()) {
+                next = (i + 1) % int(sizeof(seeds) / sizeof(seeds[0]));
+                break;
+            }
+        }
+        theme.setSeedColor(seeds[next]);
     });
 
     // One subscription for the whole shell.

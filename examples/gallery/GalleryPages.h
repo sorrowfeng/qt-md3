@@ -255,6 +255,10 @@ GalleryPage *createShowcaseMusicPage();
 /// Showcase 鈥?Settings.
 GalleryPage *createShowcaseSettingsPage();
 
+/// Dynamic colour — live seed picker, scheme-variant switcher, role strip and
+/// a component board that repaints from MdTheme as you click.
+GalleryPage *createDynamicColourPage();
+
 } // namespace gallery
 
 #endif // GALLERY_PAGES_H

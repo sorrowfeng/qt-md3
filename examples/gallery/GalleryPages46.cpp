@@ -326,12 +326,12 @@ void ShowcaseSettingsPage::build(GalleryContext &context)
         painter->restore();
     };
 
-    auto sectionHeading = [&](const QString &text) {
+    auto sectionHeading = [&](const QString &text, md::ColorRole accent) {
         if (painter != nullptr) {
             painter->save();
             const QFont font = fontFor(md::TypeStyle::TitleSmall);
             painter->setFont(font);
-            painter->setPen(role(md::ColorRole::Primary));
+            painter->setPen(role(accent));
             painter->drawText(QRectF(contentLeft, rowY, contentWidth, 28.0),
                               Qt::AlignLeft | Qt::AlignVCenter, text);
             painter->restore();
@@ -340,7 +340,7 @@ void ShowcaseSettingsPage::build(GalleryContext &context)
     };
 
     // Appearance
-    sectionHeading(L("外观", "Appearance"));
+    sectionHeading(L("外观", "Appearance"), md::ColorRole::Secondary);
     paintLabel(L("深色模式", "Dark theme"),
                L("切换浅色与深色表面", "Switch between light and dark surfaces"));
     placeRow(toggle(QStringLiteral("dark")), 56.0);
@@ -375,7 +375,7 @@ void ShowcaseSettingsPage::build(GalleryContext &context)
     rowY += 17.0;
 
     // Notifications
-    sectionHeading(L("通知", "Notifications"));
+    sectionHeading(L("通知", "Notifications"), md::ColorRole::Tertiary);
     paintLabel(L("推送通知", "Push notifications"), L("新邮件与提醒", "New mail and reminders"));
     placeRow(toggle(QStringLiteral("push")), 56.0);
 
@@ -387,7 +387,7 @@ void ShowcaseSettingsPage::build(GalleryContext &context)
     rowY += 17.0;
 
     // Language
-    sectionHeading(L("语言", "Language"));
+    sectionHeading(L("语言", "Language"), md::ColorRole::Primary);
     paintLabel(L("界面语言", "Interface language"),
                L("重新生效后打开导航重新进入生效", "Re-enter the app after switching"));
     {

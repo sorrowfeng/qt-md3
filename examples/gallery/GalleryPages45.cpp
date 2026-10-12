@@ -8,6 +8,7 @@
 #include "GalleryPages.h"
 
 #include "widgets/MdChip.h"
+#include "widgets/MdFab.h"
 #include "widgets/MdIconButton.h"
 #include "widgets/MdList.h"
 #include "widgets/MdListItem.h"
@@ -77,6 +78,7 @@ private:
 
     md::MdTopAppBar *appBar();
     md::MdIconButton *iconButton(const QString &id, const QString &icon);
+    md::MdFab *transportFab();
     md::MdSlider *progressSlider();
     md::MdChip *chip(const QString &id, const QString &label);
     md::MdList *upNextList();
@@ -84,6 +86,7 @@ private:
 
     md::MdTopAppBar *m_appBar = nullptr;
     QHash<QString, md::MdIconButton *> m_iconButtons;
+    md::MdFab *m_playFab = nullptr;
     md::MdSlider *m_slider = nullptr;
     QHash<QString, md::MdChip *> m_chips;
     md::MdList *m_list = nullptr;
@@ -138,6 +141,19 @@ md::MdIconButton *ShowcaseMusicPage::iconButton(const QString &id, const QString
     created->hide();
     m_iconButtons.insert(id, created);
     return created;
+}
+
+md::MdFab *ShowcaseMusicPage::transportFab()
+{
+    if (m_playFab != nullptr) {
+        return m_playFab;
+    }
+    // The play transport sits on tertiary so the now-playing screen spends
+    // all three colour families: tertiary art, tertiary play, primary scrubber.
+    m_playFab = new md::MdFab(QStringLiteral("play_arrow"), this);
+    m_playFab->setVariant(md::FabVariant::Tertiary);
+    m_playFab->hide();
+    return m_playFab;
 }
 
 md::MdSlider *ShowcaseMusicPage::progressSlider()
@@ -295,18 +311,24 @@ void ShowcaseMusicPage::build(GalleryContext &context)
     const qreal rowWidth = 5.0 * buttonPitch;
     qreal x = centre - rowWidth / 2.0;
     for (const Transport &t : transport) {
-        md::MdIconButton *button = iconButton(QString::fromUtf8(t.id), QString::fromUtf8(t.icon));
         if (t.primary) {
-            button->setVariant(md::IconButtonVariant::Filled);
-            button->setButtonSize(md::ButtonSize::Large);
+            // Tertiary FAB: the one filled transport, so the screen shows
+            // primary (scrubber) + tertiary (art & play) together.
+            md::MdFab *button = transportFab();
+            const QSize hint = button->sizeHint();
+            m_slots.append(Slot{button,
+                                QRectF(x + (buttonPitch - qreal(hint.width())) / 2.0, y,
+                                       qreal(hint.width()), qreal(hint.height()))});
         } else {
+            md::MdIconButton *button =
+                iconButton(QString::fromUtf8(t.id), QString::fromUtf8(t.icon));
             button->setVariant(md::IconButtonVariant::Standard);
             button->setButtonSize(md::ButtonSize::Medium);
+            const QSize hint = button->sizeHint();
+            m_slots.append(Slot{button,
+                                QRectF(x + (buttonPitch - qreal(hint.width())) / 2.0, y,
+                                       qreal(hint.width()), qreal(hint.height()))});
         }
-        const QSize hint = button->sizeHint();
-        m_slots.append(Slot{button,
-                            QRectF(x + (buttonPitch - qreal(hint.width())) / 2.0, y,
-                                   qreal(hint.width()), qreal(hint.height()))});
         x += buttonPitch;
     }
     y += 96.0 + 12.0;

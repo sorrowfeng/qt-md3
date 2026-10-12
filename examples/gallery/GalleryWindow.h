@@ -87,6 +87,7 @@ signals:
     void densityCycled();
     void directionToggled();
     void languageCycled();
+    void seedCycled();
 
 protected:
     void paintEvent(QPaintEvent *event) override;

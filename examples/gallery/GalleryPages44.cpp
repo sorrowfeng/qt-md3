@@ -183,6 +183,9 @@ md::MdBadgedBox *ShowcaseMailPage::avatarBox()
     if (m_avatarBox == nullptr) {
         m_avatarBox = new md::MdBadgedBox(this);
         auto *avatarButton = iconButton(QStringLiteral("avatar"), QStringLiteral("person"));
+        // Tonal avatar: secondary-container family, so the app bar is not a
+        // single primary wash. The badge itself is the error role (MD3 default).
+        avatarButton->setVariant(md::IconButtonVariant::Tonal);
         avatarButton->setParent(m_avatarBox);
         m_avatarBox->setContentWidget(avatarButton);
         m_avatarBox->badge()->setText(QStringLiteral("3"));
