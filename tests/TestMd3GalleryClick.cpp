@@ -382,9 +382,18 @@ void TestMd3GalleryClick::chipPageClickToggles()
     // click-only by design and must not be asked to toggle.
     MdChip *target = nullptr;
     for (MdChip *c : chips) {
-        if (c->isEnabled() && c->isVisible() && !c->geometry().isEmpty() && c->isCheckable()) {
+        if (c->isEnabled() && c->isVisible() && !c->geometry().isEmpty() && c->isCheckable()
+            && !c->isChecked()) {
             target = c;
             break;
+        }
+    }
+    if (target == nullptr) {
+        for (MdChip *c : chips) {
+            if (c->isEnabled() && c->isVisible() && !c->geometry().isEmpty() && c->isCheckable()) {
+                target = c;
+                break;
+            }
         }
     }
     QVERIFY2(target != nullptr, "Chip page has no live checkable MdChip");

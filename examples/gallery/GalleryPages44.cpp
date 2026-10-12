@@ -22,6 +22,7 @@
 #include "I18n.h"
 
 #include <QtCore/QHash>
+#include <QtCore/QSet>
 #include <QtCore/QVector>
 
 #include <cmath>
@@ -133,6 +134,9 @@ private:
     md::MdNavigationBar *m_navBar = nullptr;
     QHash<QString, md::MdNavigationBarItem *> m_navItems;
     QVector<Slot> m_slots;
+    /// Ids whose interaction state has already been seeded from the scene.
+    /// build() re-runs on every measure/paint and must not clobber a click.
+    QSet<QString> m_stateSeeded;
     /// Unread markers painted beside list rows (content-local).
     QVector<QPointF> m_unreadDots;
 };
@@ -215,6 +219,7 @@ md::MdList *ShowcaseMailPage::mailList()
     if (m_list == nullptr) {
         m_list = new md::MdList(this);
         m_list->setSelectionMode(md::MdList::SelectionMode::Single);
+        m_list->hide();
     }
     return m_list;
 }
@@ -355,8 +360,12 @@ void ShowcaseMailPage::build(GalleryContext &context)
         };
         qreal x = left + sidePad;
         for (const ChipEntry &entry : entries) {
-            md::MdChip *c = chip(QString::fromUtf8(entry.id), L(entry.zh, entry.en));
-            c->setChecked(entry.selected);
+            const QString id = QString::fromUtf8(entry.id);
+            md::MdChip *c = chip(id, L(entry.zh, entry.en));
+            if (!m_stateSeeded.contains(id)) {
+                c->setChecked(entry.selected);
+                m_stateSeeded.insert(id);
+            }
             const qreal w = qMax<qreal>(c->sizeHint().width(), 64.0);
             m_slots.append(Slot{c, QRectF(x, y, w, chipHeight)});
             x += w + 8.0;
@@ -365,23 +374,14 @@ void ShowcaseMailPage::build(GalleryContext &context)
     y += chipHeight + 20.0;
 
     // --- inbox list on a nested tonal panel -------------------------------
+    // The list widget is one slot: its own layout places the rows. Sizing
+    // each row here would fight the layout and leave the items un-hit-testable.
     md::MdList *list = mailList();
     if (list->itemCount() == 0) {
         for (const MailEntry &entry : kMails) {
             list->addItem(mailItem(QString::fromUtf8(entry.id)));
         }
     }
-
-    const qreal listHeight = 6.0 * 76.0 + 16.0;
-    const QRectF listPanel(left + sidePad, y, width - 2.0 * sidePad, listHeight);
-    if (painter != nullptr) {
-        paintTonalPanel(*painter, listPanel, md::ColorRole::SurfaceContainerLowest,
-                        md::ShapeCorner::Large);
-    }
-
-    const qreal rowHeight = 76.0;
-    qreal rowY = y + 8.0;
-    int colourIndex = 0;
     for (const MailEntry &entry : kMails) {
         md::MdListItem *item = m_items.value(QString::fromUtf8(entry.id));
         if (item == nullptr) {
@@ -392,18 +392,25 @@ void ShowcaseMailPage::build(GalleryContext &context)
         item->setSupporting(L(entry.subjectZh, entry.subjectEn) + QStringLiteral(" · ")
                             + L(entry.previewZh, entry.previewEn));
         item->setTrailingSupporting(L(entry.timeZh, entry.timeEn));
-        item->setSelected(entry.unread && QString::fromUtf8(entry.id) == QStringLiteral("m0"));
         item->setVariant(md::MdListVariant::Expressive);
-        m_slots.append(Slot{item, QRectF(left + sidePad + 8.0, rowY, width - 2.0 * sidePad - 16.0,
-                                         rowHeight)});
-        if (entry.unread) {
-            // Indicator column in the 8dp gap between the panel edge and the
-            // row — never on the avatar itself.
-            m_unreadDots.append(QPointF(left + sidePad + 4.5, rowY + rowHeight / 2.0));
+        const QString id = QString::fromUtf8(entry.id);
+        if (!m_stateSeeded.contains(id)) {
+            item->setSelected(entry.unread && id == QStringLiteral("m0"));
+            m_stateSeeded.insert(id);
         }
-        rowY += rowHeight;
-        ++colourIndex;
     }
+
+    const qreal listWidth = width - 2.0 * sidePad - 16.0;
+    const qreal listHeight = list->heightForWidth(int(listWidth));
+    const QRectF listPanel(left + sidePad, y, width - 2.0 * sidePad, listHeight + 16.0);
+    if (painter != nullptr) {
+        paintTonalPanel(*painter, listPanel, md::ColorRole::SurfaceContainerLowest,
+                        md::ShapeCorner::Large);
+    }
+    // The list sits on the panel; its own 8px container padding and layout
+    // place the rows. Unread dots are derived from the laid-out item geometry
+    // in paintEvent, never from a parallel row-height guess.
+    m_slots.append(Slot{list, QRectF(left + sidePad + 8.0, y + 8.0, listWidth, listHeight)});
     y = listPanel.bottom() + 8.0;
 
     // --- navigation bar + FAB --------------------------------------------
@@ -438,7 +445,6 @@ void ShowcaseMailPage::build(GalleryContext &context)
                                screen.bottom() - navHeight - qreal(fabSize.height()) - 12.0,
                                qreal(fabSize.width()), qreal(fabSize.height()))});
 
-    Q_UNUSED(colourIndex);
     context.space(8.0);
 }
 
@@ -482,17 +488,37 @@ void ShowcaseMailPage::showEvent(QShowEvent *event)
 void ShowcaseMailPage::paintEvent(QPaintEvent *event)
 {
     GalleryPage::paintEvent(event);
+    // Place first so the unread dots can read the laid-out item geometry
+    // instead of a parallel row-height guess that would drift from the list.
+    placeChildren();
 
-    // Unread markers ride on top of the list rows.
+    // Unread markers ride on top of the list rows, in the 8dp gap between
+    // the panel edge and the row — never on the avatar itself.
+    m_unreadDots.clear();
+    if (m_list != nullptr) {
+        for (const MailEntry &entry : kMails) {
+            if (!entry.unread) {
+                continue;
+            }
+            md::MdListItem *item = m_items.value(QString::fromUtf8(entry.id));
+            if (item == nullptr) {
+                continue;
+            }
+            const QRectF rowInList(item->geometry());
+            const QPointF rowInPage =
+                QPointF(m_list->pos()) + rowInList.center();
+            m_unreadDots.append(rowInPage - QPointF(rowInList.width() / 2.0 - 4.5, 0.0));
+        }
+    }
+
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
     beginOverlay(painter);
     for (const QPointF &dot : m_unreadDots) {
-        paintDot(painter, dot, 4.5, role(md::ColorRole::Primary));
+        // beginOverlay translates to the content origin; dots are page-local.
+        paintDot(painter, dot - contentRect().topLeft(), 4.5, role(md::ColorRole::Primary));
     }
     painter.restore();
-
-    placeChildren();
 }
 
 // ---------------------------------------------------------------------------

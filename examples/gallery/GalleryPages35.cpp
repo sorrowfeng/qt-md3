@@ -26,6 +26,7 @@
 #include "I18n.h"
 
 #include <QtCore/QHash>
+#include <QtCore/QSet>
 #include <QtCore/QVector>
 #include <QtWidgets/QSizePolicy>
 
@@ -67,6 +68,9 @@ private:
 
     QHash<QString, md::MdChip *> m_chips;
     QVector<ChipSlot> m_slots;
+    /// Ids whose interaction state has already been seeded from the scene.
+    /// build() re-runs on every measure/paint and must not clobber a click.
+    QSet<QString> m_stateSeeded;
 };
 
 ChipPage::ChipPage(QWidget *parent)
@@ -172,10 +176,14 @@ void ChipPage::build(GalleryContext &context)
         qreal x = panel.left() + 24.0;
         const qreal rowY = panel.top() + 96.0;
         for (const SceneChip &spec : sceneChips) {
-            md::MdChip *c = chip(QString::fromUtf8(spec.id));
+            const QString id = QString::fromUtf8(spec.id);
+            md::MdChip *c = chip(id);
             c->setText(L(spec.zh, spec.en));
             c->setVariant(spec.variant);
-            c->setChecked(spec.checked);
+            if (!m_stateSeeded.contains(id)) {
+                c->setChecked(spec.checked);
+                m_stateSeeded.insert(id);
+            }
             if (spec.variant == md::MdChipVariant::Input) {
                 c->setTrailingIconName(QStringLiteral("close"));
             }
@@ -290,18 +298,26 @@ void ChipPage::build(GalleryContext &context)
         "appearing, which is Compose's AnimatingChipContent presence animation, not a "
         "colour one)."));
     {
-        auto *filter = chip(QStringLiteral("filter-selected"));
+        const QString selectedId = QStringLiteral("filter-selected");
+        auto *filter = chip(selectedId);
         filter->setVariant(md::MdChipVariant::Filter);
         filter->setText(L("已选", "Selected"));
         filter->setIconName(QStringLiteral("check"));
-        filter->setSelected(true);
+        if (!m_stateSeeded.contains(selectedId)) {
+            filter->setSelected(true);
+            m_stateSeeded.insert(selectedId);
+        }
         auto *filterPlain = chip(QStringLiteral("filter-unselected"));
         filterPlain->setVariant(md::MdChipVariant::Filter);
         filterPlain->setText(L("未选", "Unselected"));
-        auto *input = chip(QStringLiteral("input-selected"));
+        const QString inputId = QStringLiteral("input-selected");
+        auto *input = chip(inputId);
         input->setVariant(md::MdChipVariant::Input);
         input->setText(L("已选", "Selected"));
-        input->setSelected(true);
+        if (!m_stateSeeded.contains(inputId)) {
+            input->setSelected(true);
+            m_stateSeeded.insert(inputId);
+        }
         addRow({{QStringLiteral("a"), filter},
                 {QStringLiteral("b"), filterPlain},
                 {QStringLiteral("c"), input}});
@@ -328,13 +344,18 @@ void ChipPage::build(GalleryContext &context)
         "MdTheme::color(ColorRole::…), so they recolour together on a seed change and one "
         "screen shows two hues."));
     {
-        auto *secondaryChip = chip(QStringLiteral("filter-secondary-container"));
+        const QString secondaryId = QStringLiteral("filter-secondary-container");
+        auto *secondaryChip = chip(secondaryId);
         secondaryChip->setVariant(md::MdChipVariant::Filter);
         secondaryChip->setText(L("secondary", "secondary"));
         secondaryChip->setIconName(QStringLiteral("palette"));
-        secondaryChip->setSelected(true);
+        if (!m_stateSeeded.contains(secondaryId)) {
+            secondaryChip->setSelected(true);
+            m_stateSeeded.insert(secondaryId);
+        }
 
-        auto *tertiaryChip = chip(QStringLiteral("filter-tertiary-container"));
+        const QString tertiaryId = QStringLiteral("filter-tertiary-container");
+        auto *tertiaryChip = chip(tertiaryId);
         tertiaryChip->setVariant(md::MdChipVariant::Filter);
         tertiaryChip->setText(L("tertiary", "tertiary"));
         tertiaryChip->setIconName(QStringLiteral("color_lens"));
@@ -366,7 +387,10 @@ void ChipPage::build(GalleryContext &context)
             }
             tertiaryChip->setChipTokens(tokens);
         }
-        tertiaryChip->setSelected(true);
+        if (!m_stateSeeded.contains(tertiaryId)) {
+            tertiaryChip->setSelected(true);
+            m_stateSeeded.insert(tertiaryId);
+        }
         addRow({{QStringLiteral("a"), secondaryChip}, {QStringLiteral("b"), tertiaryChip}});
         context.detail(L("secondary-container 选中 · tertiary-container 选中（令牌覆盖）",
                          "secondary-container selected · tertiary-container selected "
@@ -411,10 +435,14 @@ void ChipPage::build(GalleryContext &context)
         "programmatically by setDragged() — there is no drag controller here, matching how "
         "Compose's InteractionSource would emit Drag."));
     {
-        auto *disabledSelected = chip(QStringLiteral("filter-disabled-selected"));
+        const QString disabledId = QStringLiteral("filter-disabled-selected");
+        auto *disabledSelected = chip(disabledId);
         disabledSelected->setVariant(md::MdChipVariant::Filter);
         disabledSelected->setText(L("禁用已选", "Disabled selected"));
-        disabledSelected->setSelected(true);
+        if (!m_stateSeeded.contains(disabledId)) {
+            disabledSelected->setSelected(true);
+            m_stateSeeded.insert(disabledId);
+        }
         disabledSelected->setEnabled(false);
         auto *disabledPlain = chip(QStringLiteral("assist-disabled"));
         disabledPlain->setText(L("禁用", "Disabled"));
