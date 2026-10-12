@@ -54,6 +54,7 @@ private slots:
     void sizeRowsMatchTheExport();
     void disabledRowsCarryTheirOpacities();
     void handleWidthNarrowsUnderFocusAndPress();
+    void handleWidthSpringsOnRelease();
     void geometryFollowsTheTokens();
     void valueClampsAndSnaps();
     void keyboardWalksTheValue();
@@ -164,6 +165,33 @@ void TestMd3Slider::handleWidthNarrowsUnderFocusAndPress()
     QTest::mousePress(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
     QCOMPARE(slider.animatedHandleWidth(), 2.0);
     QTest::mouseRelease(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+}
+
+void TestMd3Slider::handleWidthSpringsOnRelease()
+{
+    // Release springs the handle back to 4 px on the fast spatial spring —
+    // it must not snap, and it must settle at the target.
+    MdSlider slider;
+    slider.resize(240, 48);
+    QTest::mousePress(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+    QCOMPARE(slider.animatedHandleWidth(), 2.0);
+    QTest::mouseRelease(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+    // Immediately after release the spring is still travelling.
+    QVERIFY(slider.animatedHandleWidth() < 4.0);
+    QTest::qWait(600);
+    QCOMPARE(slider.animatedHandleWidth(), 4.0);
+
+    // Interruptible: a press mid-flight lands on the pressed width without
+    // jumping through a stale target.
+    QTest::mousePress(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+    QCOMPARE(slider.animatedHandleWidth(), 2.0);
+    QTest::mouseRelease(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+    QTest::qWait(30);
+    QTest::mousePress(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+    QCOMPARE(slider.animatedHandleWidth(), 2.0);
+    QTest::mouseRelease(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+    QTest::qWait(600);
+    QCOMPARE(slider.animatedHandleWidth(), 4.0);
 }
 
 void TestMd3Slider::geometryFollowsTheTokens()

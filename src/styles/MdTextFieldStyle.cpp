@@ -1,5 +1,7 @@
 #include "MdTextFieldStyle.h"
 
+#include "core/MdShape.h"
+#include "core/MdStateLayer.h"
 #include "core/MdTheme.h"
 #include "core/MdTypeScale.h"
 #include "widgets/MdTextField.h"
@@ -93,6 +95,31 @@ void MdTextFieldStyle::paintTextField(QPainter &painter, const MdTextField &fiel
                 painter.setClipping(false);
             } else {
                 painter.drawRoundedRect(container, tokens.containerRadius, tokens.containerRadius);
+            }
+        }
+        // Hover state layer, clipped to the container shape. Focus is the
+        // indicator / ring's job; press is not a text-field state.
+        if (state == MdTextFieldState::Hovered && !field.isEffectivelyDisabled()) {
+            const qreal scale =
+                tokens.hoverStateLayerOpacity / MdStateLayer::opacity(StateLayerKind::Hover);
+            const QColor overlay = MdStateLayer::overlayScaled(
+                MdTheme::instance().color(ColorRole::OnSurface), StateLayerKind::Hover, scale);
+            if (overlay.isValid()) {
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(overlay);
+                if (tokens.containerRadiusTopOnly) {
+                    QPainterPath path;
+                    path.addRoundedRect(container, tokens.containerRadius, tokens.containerRadius);
+                    QPainterPath clip;
+                    clip.addRect(container.adjusted(0.0, 0.0, 0.0, -tokens.containerRadius));
+                    clip.addRect(container.adjusted(0.0, tokens.containerRadius, 0.0, 0.0));
+                    painter.setClipPath(clip);
+                    painter.drawPath(path);
+                    painter.setClipping(false);
+                } else {
+                    painter.drawRoundedRect(container, tokens.containerRadius,
+                                            tokens.containerRadius);
+                }
             }
         }
     }

@@ -7,8 +7,11 @@
 // One widget, two shapes (`ProgressIndicatorShape`), two modes:
 //
 //   determinate    value/max drives the active indicator; a value change
-//                  transitions over the published durations (250 ms linear /
-//                  500 ms circular, the material-web CSS transition rows)
+//                  springs to the new fraction on the default-effects
+//                  spring (critically damped — progress must not overshoot).
+//                  The material-web CSS transition rows (250 ms linear /
+//                  500 ms circular) are carried as published timing
+//                  constants; the drive is MdSpring, not QEasingCurve.
 //   indeterminate  the material-web animation, itself transplanted from MDC:
 //                  linear = the 2 s two-bar translate+scale keyframes,
 //                  circular = the three composed rotations (1.333 s arc
@@ -35,7 +38,6 @@
 #include <QtWidgets/QWidget>
 
 class QTimer;
-class QVariantAnimation;
 
 namespace md {
 
@@ -89,6 +91,9 @@ public:
     /// display value, not `value / max`.
     qreal displayFraction() const { return m_displayFraction; }
 
+    /// True while a determinate value change is still springing to target.
+    bool isValueTransitioning() const { return m_transitionActive; }
+
     /// Milliseconds since this indicator was created — the clock the
     /// indeterminate cycles and the buffer dots run on.
     qint64 animationElapsedMs() const { return m_clock.elapsed(); }
@@ -133,9 +138,11 @@ private:
     void updateAnimationState();
     /// Snap the determinate display fraction to `value / max`.
     void snapDisplayFraction();
-    /// Transition the determinate display fraction to `value / max` over the
-    /// shape's published duration.
+    /// Spring the determinate display fraction to `value / max` on the
+    /// default-effects spring. Retargeting mid-flight continues from the
+    /// current display fraction.
     void transitionDisplayFraction();
+    void onTransitionTick();
 
     ProgressIndicatorShape m_shape = ProgressIndicatorShape::Linear;
     bool m_indeterminate = false;
@@ -150,8 +157,12 @@ private:
 
     QElapsedTimer m_clock;
     QTimer *m_timer = nullptr;
-    QVariantAnimation *m_transition = nullptr;
+    QTimer *m_transitionTimer = nullptr;
+    QElapsedTimer m_transitionClock;
     qreal m_displayFraction = 0.0;
+    qreal m_displayFrom = 0.0;
+    qreal m_displayTo = 0.0;
+    bool m_transitionActive = false;
 };
 
 } // namespace md

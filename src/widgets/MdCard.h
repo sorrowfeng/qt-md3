@@ -30,9 +30,9 @@
 // Two behaviours Compose publishes that the flat token export does not show:
 //
 //   * the elevation *animates* between the state rows' dp values (Compose
-//     runs it through the theme's motion scheme; this port uses the
-//     published standard easing over the short4 duration — recorded in
-//     docs/porting-todo.md). Disabled snaps, as Compose does.
+//     runs it through the theme's motion scheme; this port springs the
+//     ladder on the default-effects spring — critically damped, no
+//     overshoot past the target dp). Disabled snaps, as Compose does.
 //   * a `dragged` state, driven here by an explicit setter for external drag
 //     frameworks (Compose's DragInteraction), painting the dragged row: the
 //     highest elevation and its own state layer.
@@ -49,13 +49,14 @@
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QRectF>
-#include <QtCore/QVariantAnimation>
 #include <QtWidgets/QWidget>
 
 class QFocusEvent;
 class QKeyEvent;
 class QMouseEvent;
+class QTimer;
 
 namespace md {
 
@@ -177,6 +178,7 @@ private:
     /// Start (or snap) the elevation animation towards the current state's
     /// row value.
     void updateElevationTarget();
+    void onElevationTick();
     /// The elevation row value (dp) for the state painting would use now.
     qreal targetShadowDp() const;
     /// Apply the contents margins + focus policy a clickability change implies.
@@ -197,8 +199,11 @@ private:
     MdRippleController *m_ripple = nullptr;
     MdFocusRingController *m_focusRing = nullptr;
 
-    QVariantAnimation m_elevationAnimation;
+    QTimer *m_elevationTimer = nullptr;
+    QElapsedTimer m_elevationClock;
     qreal m_animatedShadowDp = 0.0;
+    qreal m_elevationFrom = 0.0;
+    qreal m_elevationTo = 0.0;
 };
 
 } // namespace md

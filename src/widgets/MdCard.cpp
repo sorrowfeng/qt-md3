@@ -9,6 +9,7 @@
 #include "core/MdTheme.h"
 
 #include <cmath>
+#include <QtCore/QTimer>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
@@ -18,10 +19,9 @@ namespace md {
 
 namespace {
 
-/// Compose animates the card's elevation through the theme's motion scheme;
-/// this port runs the same transition on the published standard easing over
-/// the short4 duration (recorded in docs/porting-todo.md).
-constexpr int kElevationDurationMs = 200;
+/// The elevation ladder springs on the default-effects motion — critically
+/// damped, so a hover never overshoots past the target dp.
+constexpr int kElevationTickMs = 8;
 
 } // namespace
 
@@ -54,15 +54,14 @@ void MdCard::init()
     connect(m_focusRing, &MdFocusRingController::repaintRequested, this,
             qOverload<>(&QWidget::update));
 
-    connect(&m_elevationAnimation, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
-        m_animatedShadowDp = value.toReal();
-        update();
-    });
-
-    m_elevationAnimation.setDuration(kElevationDurationMs);
-    m_elevationAnimation.setEasingCurve(MdMotion::easing(MotionEasing::Standard));
+    m_elevationTimer = new QTimer(this);
+    m_elevationTimer->setInterval(kElevationTickMs);
+    m_elevationTimer->setTimerType(Qt::PreciseTimer);
+    connect(m_elevationTimer, &QTimer::timeout, this, &MdCard::onElevationTick);
 
     m_animatedShadowDp = targetShadowDp();
+    m_elevationFrom = m_animatedShadowDp;
+    m_elevationTo = m_animatedShadowDp;
 
     applyClickability();
     MdStyleBase::connectThemeUpdate(this, &MdCard::onThemeChanged);
@@ -146,29 +145,61 @@ qreal MdCard::targetShadowDp() const
 
 bool MdCard::isElevationAnimating() const
 {
-    return m_elevationAnimation.state() == QAbstractAnimation::Running;
+    return m_elevationTimer != nullptr && m_elevationTimer->isActive();
 }
 
 void MdCard::updateElevationTarget()
 {
     const qreal target = targetShadowDp();
-    if (qFuzzyCompare(m_animatedShadowDp, target)) {
+    if (qFuzzyCompare(m_animatedShadowDp + 1.0, target + 1.0)
+        && qFuzzyCompare(m_elevationTo + 1.0, target + 1.0)) {
         return;
     }
     // Compose snaps instead of transitioning when the card becomes disabled;
-    // everything else animates.
+    // everything else springs.
     const bool snap = !m_clickable || !isEnabled()
         || MdCardStyle::stateFor(*this) == MdCardState::Disabled;
     if (snap) {
-        m_elevationAnimation.stop();
+        if (m_elevationTimer) {
+            m_elevationTimer->stop();
+        }
         m_animatedShadowDp = target;
+        m_elevationFrom = target;
+        m_elevationTo = target;
         update();
         return;
     }
-    m_elevationAnimation.stop();
-    m_elevationAnimation.setStartValue(m_animatedShadowDp);
-    m_elevationAnimation.setEndValue(target);
-    m_elevationAnimation.start();
+    // Interruptible: continue from the dp currently on screen.
+    m_elevationFrom = m_animatedShadowDp;
+    m_elevationTo = target;
+    if (qFuzzyCompare(m_elevationFrom + 1.0, m_elevationTo + 1.0)) {
+        m_animatedShadowDp = target;
+        if (m_elevationTimer) {
+            m_elevationTimer->stop();
+        }
+        update();
+        return;
+    }
+    m_elevationClock.restart();
+    if (m_elevationTimer) {
+        m_elevationTimer->start();
+    }
+}
+
+void MdCard::onElevationTick()
+{
+    const MdSpring spring = MdMotion::spring(MotionSpring::EffectsDefault);
+    const qreal seconds = qreal(m_elevationClock.elapsed()) / 1000.0;
+    const qreal progress = spring.valueAt(seconds);
+    m_animatedShadowDp = m_elevationFrom + (m_elevationTo - m_elevationFrom) * progress;
+    if (progress >= 1.0
+        || qreal(m_elevationClock.elapsed()) >= spring.settlingDurationMs()) {
+        m_animatedShadowDp = m_elevationTo;
+        if (m_elevationTimer) {
+            m_elevationTimer->stop();
+        }
+    }
+    update();
 }
 
 void MdCard::syncRippleGeometry()

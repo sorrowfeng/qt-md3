@@ -58,6 +58,7 @@ private slots:
     void circularIndeterminateComposition();
     void theFourColorCycleInterpolatesColours();
     void determinateChangesTransition();
+    void determinateSpringSettlesAndIsInterruptible();
     void renderSmokeLinear();
     void renderSmokeCircular();
 
@@ -352,20 +353,52 @@ void TestMd3ProgressIndicator::theFourColorCycleInterpolatesColours()
 
 void TestMd3ProgressIndicator::determinateChangesTransition()
 {
-    // The published determinate transitions: 250 ms linear /
-    // 500 ms circular. A value change moves the *display* fraction over the
-    // duration instead of jumping.
+    // The value change springs the *display* fraction to the target instead
+    // of jumping. The published CSS durations (250 ms linear / 500 ms
+    // circular) are no longer the drive — the default-effects spring is.
     m_linear->setValue(0.5);
     QTest::qWait(350);
     QCOMPARE(m_linear->displayFraction(), 0.5);
 
     m_linear->setValue(1.0);
-    // Halfway through the 250 ms transition the display fraction has not
-    // reached the target (the easing starts fast, so assert not-yet-there).
-    QTest::qWait(60);
+    // Early in the spring the display fraction has not reached the target.
+    QTest::qWait(20);
     QVERIFY(m_linear->displayFraction() < 1.0);
     QTest::qWait(400);
     QCOMPARE(m_linear->displayFraction(), 1.0);
+    QVERIFY(!m_linear->isValueTransitioning());
+}
+
+void TestMd3ProgressIndicator::determinateSpringSettlesAndIsInterruptible()
+{
+    // Settles: a value change lands on the target and stops the transition.
+    m_linear->setIndeterminate(false);
+    m_linear->setValue(0.0);
+    QTest::qWait(350);
+    QCOMPARE(m_linear->displayFraction(), 0.0);
+
+    m_linear->setValue(1.0);
+    QVERIFY(m_linear->isValueTransitioning());
+    QTest::qWait(400);
+    QCOMPARE(m_linear->displayFraction(), 1.0);
+    QVERIFY(!m_linear->isValueTransitioning());
+
+    // Interruptible: a mid-flight retarget continues from the display
+    // fraction currently on screen — it never jumps to the old target or
+    // restarts from zero.
+    m_linear->setValue(0.0);
+    QTRY_VERIFY_WITH_TIMEOUT(m_linear->isValueTransitioning()
+                                 && m_linear->displayFraction() < 1.0
+                                 && m_linear->displayFraction() > 0.0,
+                             250);
+    const qreal mid = m_linear->displayFraction();
+    QVERIFY(mid > 0.0);
+    QVERIFY(mid < 1.0);
+    m_linear->setValue(0.75);
+    // The display fraction stays continuous across the retarget.
+    QVERIFY(qAbs(m_linear->displayFraction() - mid) < 0.35);
+    QTRY_COMPARE_WITH_TIMEOUT(m_linear->displayFraction(), 0.75, 800);
+    QVERIFY(!m_linear->isValueTransitioning());
 }
 
 void TestMd3ProgressIndicator::renderSmokeLinear()

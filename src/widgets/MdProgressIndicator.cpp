@@ -2,13 +2,12 @@
 
 #include "styles/MdProgressIndicatorStyle.h"
 
+#include "core/MdMotion.h"
 #include "core/MdTheme.h"
 
 #include <cmath>
 #include <QtCore/QElapsedTimer>
-#include <QtCore/QEasingCurve>
 #include <QtCore/QTimer>
-#include <QtCore/QVariantAnimation>
 #include <QtGui/QShowEvent>
 
 namespace md {
@@ -56,11 +55,10 @@ void MdProgressIndicator::init()
     m_timer->setInterval(16);
     connect(m_timer, &QTimer::timeout, this, &MdProgressIndicator::onAnimationFrame);
 
-    m_transition = new QVariantAnimation(this);
-    connect(m_transition, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
-        m_displayFraction = value.toReal();
-        update();
-    });
+    m_transitionTimer = new QTimer(this);
+    m_transitionTimer->setInterval(16);
+    m_transitionTimer->setTimerType(Qt::PreciseTimer);
+    connect(m_transitionTimer, &QTimer::timeout, this, &MdProgressIndicator::onTransitionTick);
 
     MdStyleBase::connectThemeUpdate(this, &MdProgressIndicator::onThemeChanged);
 
@@ -81,8 +79,9 @@ void MdProgressIndicator::setShape(ProgressIndicatorShape shape)
     // the display fraction snaps because the two shapes transition at
     // different durations.
     invalidateTokens();
-    if (m_transition) {
-        m_transition->stop();
+    m_transitionActive = false;
+    if (m_transitionTimer) {
+        m_transitionTimer->stop();
     }
     snapDisplayFraction();
     updateGeometry();
@@ -97,8 +96,9 @@ void MdProgressIndicator::setIndeterminate(bool indeterminate)
         return;
     }
     m_indeterminate = indeterminate;
-    if (m_transition) {
-        m_transition->stop();
+    m_transitionActive = false;
+    if (m_transitionTimer) {
+        m_transitionTimer->stop();
     }
     snapDisplayFraction();
     setAccessibleName(indeterminate ? QStringLiteral("loading")
@@ -239,18 +239,46 @@ void MdProgressIndicator::snapDisplayFraction()
 
 void MdProgressIndicator::transitionDisplayFraction()
 {
-    if (m_transition == nullptr) {
+    if (m_transitionTimer == nullptr) {
         return;
     }
-    m_transition->stop();
-    m_transition->setDuration(m_shape == ProgressIndicatorShape::Linear
-                                  ? MdProgressIndicatorStyle::kLinearDeterminateDurationMs
-                                  : MdProgressIndicatorStyle::kCircularDeterminateDurationMs);
-    m_transition->setEasingCurve(
-        MdProgressIndicatorStyle::determinateEasing(m_shape));
-    m_transition->setStartValue(m_displayFraction);
-    m_transition->setEndValue(fraction());
-    m_transition->start();
+    const qreal target = fraction();
+    // Interruptible: retarget from the fraction currently on screen rather
+    // than jumping. Critically damped effects spring — a progress bar must
+    // never overshoot its target.
+    m_displayFrom = m_displayFraction;
+    m_displayTo = target;
+    if (qFuzzyCompare(m_displayFrom + 1.0, m_displayTo + 1.0)) {
+        m_displayFraction = target;
+        m_transitionActive = false;
+        m_transitionTimer->stop();
+        update();
+        return;
+    }
+    m_transitionActive = true;
+    m_transitionClock.restart();
+    m_transitionTimer->start();
+}
+
+void MdProgressIndicator::onTransitionTick()
+{
+    if (!m_transitionActive) {
+        m_transitionTimer->stop();
+        return;
+    }
+    const MdSpring spring = MdMotion::spring(MotionSpring::EffectsDefault);
+    const qreal seconds = qreal(m_transitionClock.elapsed()) / 1000.0;
+    const qreal progress = spring.valueAt(seconds);
+    m_displayFraction = m_displayFrom + (m_displayTo - m_displayFrom) * progress;
+    // A damped spring approaches its target asymptotically; the elapsed-time
+    // bound is what guarantees the timer stops.
+    if (progress >= 1.0
+        || qreal(m_transitionClock.elapsed()) >= spring.settlingDurationMs()) {
+        m_displayFraction = m_displayTo;
+        m_transitionActive = false;
+        m_transitionTimer->stop();
+    }
+    update();
 }
 
 } // namespace md

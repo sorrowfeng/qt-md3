@@ -2,6 +2,8 @@
 
 #include "styles/MdSliderStyle.h"
 
+#include "core/MdMotion.h"
+
 #include <QtCore/QTimer>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QPainter>
@@ -17,15 +19,10 @@ namespace md {
 namespace {
 
 /// The reveal / width animations step on a 8 ms timer (the same shape as
-/// MdSwitch's thumb loop): the handle width moves on the fast spatial spring
-/// equivalent — critically damped toward the target — and the label reveal on
-/// the emphasized easing. Both settle well inside 200 ms.
+/// MdSwitch's thumb loop): the handle width travels on the fast spatial
+/// spring, the value-label reveal on the default-effects spring. Both settle
+/// well inside 200 ms.
 constexpr int kTickMs = 8;
-
-qreal approach(qreal current, qreal target, qreal rate)
-{
-    return current + (target - current) * rate;
-}
 
 } // namespace
 
@@ -44,6 +41,9 @@ MdSlider::MdSlider(QWidget *parent)
 
     retargetAnimations();
     m_handleWidth = m_handleWidthTarget;
+    m_handleWidthFrom = m_handleWidthTarget;
+    m_labelRevealFrom = m_labelRevealTarget;
+    m_motionClock.start();
 }
 
 MdSlider::~MdSlider() = default;
@@ -350,22 +350,42 @@ void MdSlider::retargetAnimations()
         m_handleWidthTarget = tokens.handleWidth;
         break;
     }
-    m_labelRevealTarget = m_labeled && (m_hovered || m_pressed || hasKeyboardFocus()) ? 1.0 : 0.0;
+    m_labelRevealTarget =
+        m_labeled && (m_hovered || m_pressed || hasKeyboardFocus()) ? 1.0 : 0.0;
+    // Retarget from whatever is currently on screen so a mid-flight change
+    // never jumps.
+    if (!qFuzzyCompare(m_handleWidth + 1.0, m_handleWidthTarget + 1.0)
+        || !qFuzzyCompare(m_labelReveal + 1.0, m_labelRevealTarget + 1.0)) {
+        m_handleWidthFrom = m_handleWidth;
+        m_labelRevealFrom = m_labelReveal;
+        m_motionClock.restart();
+    }
 }
 
 void MdSlider::tickAnimations()
 {
+    const qreal seconds = qreal(m_motionClock.elapsed()) / 1000.0;
     bool dirty = false;
-    if (!qFuzzyCompare(m_handleWidth, m_handleWidthTarget)) {
-        m_handleWidth = approach(m_handleWidth, m_handleWidthTarget, 0.35);
-        if (qAbs(m_handleWidth - m_handleWidthTarget) < 0.01) {
+    if (!qFuzzyCompare(m_handleWidth + 1.0, m_handleWidthTarget + 1.0)) {
+        const MdSpring spring = MdMotion::spring(MotionSpring::SpatialFast);
+        const qreal progress = spring.valueAt(seconds);
+        m_handleWidth =
+            m_handleWidthFrom + (m_handleWidthTarget - m_handleWidthFrom) * progress;
+        if (progress >= 1.0
+            || qreal(m_motionClock.elapsed()) >= spring.settlingDurationMs()
+            || qAbs(m_handleWidth - m_handleWidthTarget) < 0.01) {
             m_handleWidth = m_handleWidthTarget;
         }
         dirty = true;
     }
-    if (!qFuzzyCompare(m_labelReveal, m_labelRevealTarget)) {
-        m_labelReveal = approach(m_labelReveal, m_labelRevealTarget, 0.30);
-        if (qAbs(m_labelReveal - m_labelRevealTarget) < 0.01) {
+    if (!qFuzzyCompare(m_labelReveal + 1.0, m_labelRevealTarget + 1.0)) {
+        const MdSpring spring = MdMotion::spring(MotionSpring::EffectsDefault);
+        const qreal progress = spring.valueAt(seconds);
+        m_labelReveal =
+            m_labelRevealFrom + (m_labelRevealTarget - m_labelRevealFrom) * progress;
+        if (progress >= 1.0
+            || qreal(m_motionClock.elapsed()) >= spring.settlingDurationMs()
+            || qAbs(m_labelReveal - m_labelRevealTarget) < 0.01) {
             m_labelReveal = m_labelRevealTarget;
         }
         dirty = true;

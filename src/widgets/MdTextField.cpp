@@ -2,6 +2,8 @@
 
 #include "styles/MdTextFieldStyle.h"
 
+#include "core/MdMotion.h"
+
 #include <QtCore/QTimer>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QPainter>
@@ -11,11 +13,6 @@ namespace md {
 namespace {
 
 constexpr int kTickMs = 8;
-
-qreal approach(qreal current, qreal target, qreal rate)
-{
-    return current + (target - current) * rate;
-}
 
 } // namespace
 
@@ -45,6 +42,8 @@ MdTextField::MdTextField(QWidget *parent)
 
     retargetAnimations();
     m_labelFloat = m_labelFloatTarget;
+    m_labelFloatFrom = m_labelFloatTarget;
+    m_labelClock.start();
 }
 
 MdTextField::MdTextField(const QString &contents, QWidget *parent)
@@ -166,16 +165,27 @@ void MdTextField::setTextFieldTokens(const MdTextFieldTokens &tokens)
 
 void MdTextField::retargetAnimations()
 {
-    m_labelFloatTarget = isPopulated() ? 1.0 : 0.0;
+    const qreal target = isPopulated() ? 1.0 : 0.0;
+    if (!qFuzzyCompare(m_labelFloatTarget + 1.0, target + 1.0)) {
+        // Target changed: continue from the float currently on screen.
+        m_labelFloatFrom = m_labelFloat;
+        m_labelClock.restart();
+    }
+    m_labelFloatTarget = target;
 }
 
 void MdTextField::tickAnimations()
 {
-    if (qFuzzyCompare(m_labelFloat, m_labelFloatTarget)) {
+    if (qFuzzyCompare(m_labelFloat + 1.0, m_labelFloatTarget + 1.0)) {
         return;
     }
-    m_labelFloat = approach(m_labelFloat, m_labelFloatTarget, 0.35);
-    if (qAbs(m_labelFloat - m_labelFloatTarget) < 0.01) {
+    const MdSpring spring = MdMotion::spring(MotionSpring::EffectsDefault);
+    const qreal seconds = qreal(m_labelClock.elapsed()) / 1000.0;
+    const qreal progress = spring.valueAt(seconds);
+    m_labelFloat = m_labelFloatFrom + (m_labelFloatTarget - m_labelFloatFrom) * progress;
+    if (progress >= 1.0
+        || qreal(m_labelClock.elapsed()) >= spring.settlingDurationMs()
+        || qAbs(m_labelFloat - m_labelFloatTarget) < 0.01) {
         m_labelFloat = m_labelFloatTarget;
     }
     update();

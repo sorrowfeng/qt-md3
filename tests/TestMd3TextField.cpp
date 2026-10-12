@@ -54,6 +54,7 @@ private slots:
     void colourTablesFollowTheExport();
     void geometryFollowsTheTokens();
     void labelFloats();
+    void labelFloatSpringsAndIsInterruptible();
     void errorOverlayApplies();
     void disabledOpacities();
     void renderSmoke();
@@ -130,12 +131,35 @@ void TestMd3TextField::labelFloats()
     field.setLabelText(QStringLiteral("Label"));
     QCOMPARE(field.labelFloat(), 0.0);
 
-    // Typing popsulates the field and floats the label.
+    // Typing populates the field and floats the label.
     field.setText(QStringLiteral("hello"));
     QVERIFY(field.isPopulated());
-    QTRY_VERIFY_WITH_TIMEOUT(field.labelFloat() > 0.5, 500);
+    QTRY_COMPARE_WITH_TIMEOUT(field.labelFloat(), 1.0, 800);
 }
 
+void TestMd3TextField::labelFloatSpringsAndIsInterruptible()
+{
+    MdTextField field;
+    field.setLabelText(QStringLiteral("Label"));
+    field.setText(QStringLiteral("hello"));
+    QTRY_COMPARE_WITH_TIMEOUT(field.labelFloat(), 1.0, 800);
+
+    // Clearing springs back to 0 and settles.
+    field.clear();
+    QVERIFY(!field.isPopulated());
+    QTRY_COMPARE_WITH_TIMEOUT(field.labelFloat(), 0.0, 800);
+
+    // Interruptible: a mid-flight retarget continues from the float on
+    // screen rather than jumping.
+    field.setText(QStringLiteral("hello"));
+    QTest::qWait(30);
+    const qreal mid = field.labelFloat();
+    QVERIFY(mid > 0.0);
+    QVERIFY(mid < 1.0);
+    field.clear();
+    QVERIFY(qAbs(field.labelFloat() - mid) < 0.5);
+    QTRY_COMPARE_WITH_TIMEOUT(field.labelFloat(), 0.0, 800);
+}
 void TestMd3TextField::errorOverlayApplies()
 {
     MdTextField field;

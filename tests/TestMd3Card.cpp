@@ -40,6 +40,7 @@ private slots:
     void pointerContract();
     void keyboardContract();
     void elevationAnimation();
+    void elevationSpringIsInterruptible();
     void disabledSnaps();
     void clickabilityMargins();
     void renderSmoke();
@@ -311,6 +312,28 @@ void TestMd3Card::elevationAnimation()
     QVERIFY(closeTo(plain.currentShadowDp(), MdElevation::shadowDp(ElevationLevel::Level1)));
 }
 
+void TestMd3Card::elevationSpringIsInterruptible()
+{
+    MdCard card(MdCardVariant::Elevated);
+    card.resize(200, 100);
+    card.setClickable(true);
+
+    // Start a hover climb (level1 -> level2), then retarget mid-flight to
+    // dragged (level4). The animated dp stays continuous — it never jumps
+    // through the old target.
+    QEvent enter(QEvent::Enter);
+    QApplication::sendEvent(&card, &enter);
+    QTest::qWait(30);
+    QVERIFY(card.isElevationAnimating());
+    const qreal mid = card.currentShadowDp();
+    QVERIFY(mid > MdElevation::shadowDp(ElevationLevel::Level1) - 1e-6);
+    QVERIFY(mid < MdElevation::shadowDp(ElevationLevel::Level2) + 1e-6);
+    card.setDragged(true);
+    QVERIFY(qAbs(card.currentShadowDp() - mid) < 3.0);
+    QTest::qWait(400);
+    QVERIFY(!card.isElevationAnimating());
+    QVERIFY(closeTo(card.currentShadowDp(), MdElevation::shadowDp(ElevationLevel::Level4), 1e-3));
+}
 void TestMd3Card::disabledSnaps()
 {
     MdCard card(MdCardVariant::Elevated);

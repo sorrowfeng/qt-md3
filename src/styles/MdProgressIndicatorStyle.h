@@ -56,7 +56,9 @@ public:
     static constexpr double kCircularLinearRotateDurationMs =
         kCircularArcDurationMs * 360.0 / 306.0;
 
-    /// The determinate transition easing for one shape, as a QEasingCurve.
+    /// The published determinate transition easing for one shape
+    /// (material-web CSS rows). The widget drives the value change with
+    /// MdSpring, not this curve — it is kept so the token stays auditable.
     static QEasingCurve determinateEasing(ProgressIndicatorShape shape);
 
     // --- pure animation math ------------------------------------------------

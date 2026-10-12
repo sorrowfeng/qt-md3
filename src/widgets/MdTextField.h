@@ -24,6 +24,7 @@
 
 #include "core/MdQtCompat.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtWidgets/QLineEdit>
 
 namespace md {
@@ -124,6 +125,8 @@ private:
 
     qreal m_labelFloat = 0.0;
     qreal m_labelFloatTarget = 0.0;
+    qreal m_labelFloatFrom = 0.0;
+    QElapsedTimer m_labelClock;
 
     mutable MdTextFieldTokens m_tokens;
     mutable bool m_tokensDirty = true;

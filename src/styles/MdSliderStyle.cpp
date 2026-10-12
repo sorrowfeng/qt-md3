@@ -3,6 +3,7 @@
 #include "core/MdElevation.h"
 #include "core/MdFocusRing.h"
 #include "core/MdShape.h"
+#include "core/MdStateLayer.h"
 #include "core/MdTheme.h"
 #include "core/MdTypeScale.h"
 #include "widgets/MdSlider.h"
@@ -156,9 +157,53 @@ void MdSliderStyle::paintSlider(QPainter &painter, const MdSlider &slider,
         }
     }
 
-    // 4 — the handles. The active handle paints its level-1 shadow.
-    auto paintHandle = [&](const QRectF &rect, bool active) {
+    // 4 — the handles. The active handle paints its level-1 shadow, and a
+    //     hover / focus / pressed state layer clipped to the 40 px circle.
+    auto paintHandle = [&](const QRectF &rect, bool active, bool startHandle) {
         if (active && !disabled) {
+            // The state layer sits under the handle fill, clipped to the
+            // published state-layer circle. Press is a flat layer here (the
+            // slider has no ripple), as are hover and keyboard focus.
+            StateLayerKind kind = StateLayerKind::Hover;
+            bool layerActive = false;
+            switch (state) {
+            case MdSliderInteraction::Pressed:
+                kind = StateLayerKind::Pressed;
+                layerActive = true;
+                break;
+            case MdSliderInteraction::Focused:
+                kind = StateLayerKind::Focus;
+                layerActive = true;
+                break;
+            case MdSliderInteraction::Hovered:
+                kind = StateLayerKind::Hover;
+                layerActive = true;
+                break;
+            default:
+                break;
+            }
+            if (layerActive) {
+                qreal scale = 1.0;
+                switch (kind) {
+                case StateLayerKind::Pressed:
+                    scale = tokens.pressedStateLayerOpacity / MdStateLayer::opacity(kind);
+                    break;
+                case StateLayerKind::Focus:
+                    scale = tokens.focusStateLayerOpacity / MdStateLayer::opacity(kind);
+                    break;
+                default:
+                    scale = tokens.hoverStateLayerOpacity / MdStateLayer::opacity(kind);
+                    break;
+                }
+                const QColor overlay = MdStateLayer::overlayScaled(
+                    MdTheme::instance().color(ColorRole::OnSurface), kind, scale);
+                if (overlay.isValid()) {
+                    const QRectF layer = slider.stateLayerRect(startHandle);
+                    painter.setPen(Qt::NoPen);
+                    painter.setBrush(overlay);
+                    painter.drawEllipse(layer);
+                }
+            }
             MdElevation::drawShadowDp(&painter, rect, rect.width() / 2.0, 1.0,
                                       MdTheme::instance().color(ColorRole::Shadow));
         }
@@ -171,9 +216,9 @@ void MdSliderStyle::paintSlider(QPainter &painter, const MdSlider &slider,
         painter.drawRoundedRect(rect, rect.width() / 2.0, rect.width() / 2.0);
     };
     if (slider.isRange()) {
-        paintHandle(handleStart, slider.hasKeyboardFocus());
+        paintHandle(handleStart, slider.hasKeyboardFocus(), true);
     }
-    paintHandle(handleEnd, true);
+    paintHandle(handleEnd, true, false);
 
     // 5 — the value indicator.
     if (slider.isLabeled() && slider.labelReveal() > 0.01) {

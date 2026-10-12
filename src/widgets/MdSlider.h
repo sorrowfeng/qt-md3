@@ -27,6 +27,7 @@
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtWidgets/QWidget>
 
 namespace md {
@@ -189,8 +190,11 @@ private:
 
     qreal m_handleWidth = 4.0;
     qreal m_handleWidthTarget = 4.0;
+    qreal m_handleWidthFrom = 4.0;
     qreal m_labelReveal = 0.0;
     qreal m_labelRevealTarget = 0.0;
+    qreal m_labelRevealFrom = 0.0;
+    QElapsedTimer m_motionClock;
 
     mutable MdSliderTokens m_tokens;
     mutable bool m_tokensDirty = true;
