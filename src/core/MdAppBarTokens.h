@@ -312,4 +312,7 @@ struct QT_MD3_EXPORT MdBottomAppBarTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdAppBarVariant)
+Q_DECLARE_METATYPE(md::MdAppBarAlignment)
+
 #endif // MD_APP_BAR_TOKENS_H

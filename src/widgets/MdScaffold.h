@@ -162,4 +162,7 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdFabPlacement)
+Q_DECLARE_METATYPE(md::MdNavPlacement)
+
 #endif // MD_SCAFFOLD_H

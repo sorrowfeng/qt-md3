@@ -349,4 +349,8 @@ struct QT_MD3_EXPORT MdFloatingToolbarTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdToolbarColorScheme)
+Q_DECLARE_METATYPE(md::MdToolbarOrientation)
+Q_DECLARE_METATYPE(md::MdToolbarFabPosition)
+
 #endif // MD_FLOATING_TOOLBAR_TOKENS_H

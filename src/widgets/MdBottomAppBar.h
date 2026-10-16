@@ -124,4 +124,6 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdBottomAppBar::Arrangement)
+
 #endif // MD_BOTTOM_APP_BAR_H

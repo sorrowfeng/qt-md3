@@ -177,4 +177,6 @@ struct QT_MD3_EXPORT MdNavigationDrawerTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdNavigationDrawerVariant)
+
 #endif // MD_NAVIGATION_DRAWER_TOKENS_H

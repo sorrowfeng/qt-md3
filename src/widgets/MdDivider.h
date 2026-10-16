@@ -148,4 +148,6 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdDivider::InsetMode)
+
 #endif // MD_DIVIDER_H

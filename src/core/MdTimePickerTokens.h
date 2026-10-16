@@ -151,4 +151,7 @@ struct QT_MD3_EXPORT MdTimePickerTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdTimePickerFace)
+Q_DECLARE_METATYPE(md::MdTimePeriod)
+
 #endif // MD_TIME_PICKER_TOKENS_H

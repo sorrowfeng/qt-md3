@@ -195,4 +195,6 @@ struct QT_MD3_EXPORT MdSliderTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdSliderSize)
+
 #endif // MD_SLIDER_TOKENS_H

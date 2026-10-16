@@ -153,4 +153,7 @@ struct QT_MD3_EXPORT MdNavigationRailTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdNavigationRailVariant)
+Q_DECLARE_METATYPE(md::MdNavigationRailArrangement)
+
 #endif // MD_NAVIGATION_RAIL_TOKENS_H

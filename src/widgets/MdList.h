@@ -170,4 +170,6 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdList::SelectionMode)
+
 #endif // MD_LIST_H

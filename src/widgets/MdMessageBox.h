@@ -264,4 +264,6 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdMessageBoxVariant)
+
 #endif // MD_MESSAGE_BOX_H

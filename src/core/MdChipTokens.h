@@ -174,4 +174,7 @@ struct QT_MD3_EXPORT MdChipVariantTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdChipVariant)
+Q_DECLARE_METATYPE(md::MdChipKind)
+
 #endif // MD_CHIP_TOKENS_H

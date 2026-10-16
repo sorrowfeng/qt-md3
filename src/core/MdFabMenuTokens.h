@@ -134,4 +134,6 @@ QT_MD3_EXPORT qreal fabMenuDisabledContentOpacity();
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::FabMenuElement)
+
 #endif // MD_FAB_MENU_TOKENS_H

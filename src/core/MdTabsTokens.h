@@ -175,4 +175,8 @@ struct QT_MD3_EXPORT MdTabsTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdTabsVariant)
+Q_DECLARE_METATYPE(md::MdTabsLayout)
+Q_DECLARE_METATYPE(md::MdTabIconPosition)
+
 #endif // MD_TABS_TOKENS_H

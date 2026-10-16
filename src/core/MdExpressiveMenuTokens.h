@@ -303,4 +303,7 @@ struct QT_MD3_EXPORT MdExpressiveMenuTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdExpressiveMenuVariant)
+Q_DECLARE_METATYPE(md::MdExpressiveMenuOrientation)
+
 #endif // MD_EXPRESSIVE_MENU_TOKENS_H

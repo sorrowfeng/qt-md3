@@ -113,4 +113,6 @@ struct QT_MD3_EXPORT MdSearchTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdSearchSurface)
+
 #endif // MD_SEARCH_TOKENS_H

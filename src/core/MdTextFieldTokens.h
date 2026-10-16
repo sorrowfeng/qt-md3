@@ -132,4 +132,6 @@ struct QT_MD3_EXPORT MdTextFieldTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdTextFieldVariant)
+
 #endif // MD_TEXT_FIELD_TOKENS_H

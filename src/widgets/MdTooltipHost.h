@@ -171,4 +171,6 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdTooltipHost::AnchorPosition)
+
 #endif // MD_TOOLTIP_HOST_H

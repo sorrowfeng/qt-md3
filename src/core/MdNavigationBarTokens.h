@@ -248,4 +248,8 @@ QT_MD3_EXPORT void fillNavigationItemColours(MdNavigationBarVariantTokens *token
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdNavigationBarVariant)
+Q_DECLARE_METATYPE(md::MdNavigationItemIconPosition)
+Q_DECLARE_METATYPE(md::MdNavigationBarArrangement)
+
 #endif // MD_NAVIGATION_BAR_TOKENS_H

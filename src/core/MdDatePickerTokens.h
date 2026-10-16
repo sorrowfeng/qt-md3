@@ -146,4 +146,7 @@ struct QT_MD3_EXPORT MdDatePickerTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdDatePickerFace)
+Q_DECLARE_METATYPE(md::MdDatePickerVariant)
+
 #endif // MD_DATE_PICKER_TOKENS_H

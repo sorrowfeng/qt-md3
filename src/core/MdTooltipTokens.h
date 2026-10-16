@@ -158,5 +158,6 @@ struct QT_MD3_EXPORT MdTooltipTokens
 } // namespace md
 
 Q_DECLARE_METATYPE(md::MdTooltipCaretSide)
+Q_DECLARE_METATYPE(md::MdTooltipVariant)
 
 #endif // MD_TOOLTIP_TOKENS_H

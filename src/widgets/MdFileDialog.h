@@ -232,4 +232,6 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdFileDialogMode)
+
 #endif // MD_FILE_DIALOG_H

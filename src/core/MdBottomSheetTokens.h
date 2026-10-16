@@ -130,4 +130,6 @@ struct QT_MD3_EXPORT MdBottomSheetTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdSheetState)
+
 #endif // MD_BOTTOM_SHEET_TOKENS_H

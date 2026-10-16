@@ -197,4 +197,6 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdAppBarScrollMode)
+
 #endif // MD_APP_BAR_SCROLL_BEHAVIOR_H

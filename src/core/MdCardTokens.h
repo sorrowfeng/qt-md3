@@ -143,4 +143,6 @@ struct QT_MD3_EXPORT MdCardTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdCardVariant)
+
 #endif // MD_CARD_TOKENS_H

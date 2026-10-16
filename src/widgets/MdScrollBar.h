@@ -103,4 +103,6 @@ private:
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdScrollBarVisibility)
+
 #endif // MD_SCROLL_BAR_H

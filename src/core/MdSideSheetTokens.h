@@ -177,4 +177,6 @@ struct QT_MD3_EXPORT MdSideSheetTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdSideSheetState)
+
 #endif // MD_SIDE_SHEET_TOKENS_H

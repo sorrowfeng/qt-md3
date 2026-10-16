@@ -331,4 +331,6 @@ struct QT_MD3_EXPORT MdListTokens
 
 } // namespace md
 
+Q_DECLARE_METATYPE(md::MdListVariant)
+
 #endif // MD_LIST_TOKENS_H
