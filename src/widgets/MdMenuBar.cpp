@@ -50,13 +50,16 @@ void MdMenuBar::setItems(const QStringList &titles)
     if (m_titles == titles) {
         return;
     }
-    const int oldCount = m_titles.size();
     m_titles = titles;
-    m_menus.resize(m_titles.size());
-    m_enabled.resize(m_titles.size());
-    for (int i = oldCount; i < m_titles.size(); ++i) {
-        m_menus[i] = nullptr;
-        m_enabled[i] = true;
+    // QList::resize is Qt 6-only. Keep the parallel lists sized to m_titles
+    // with append / removeLast, which exist on both Qt 5 and Qt 6.
+    while (m_menus.size() > m_titles.size()) {
+        m_menus.removeLast();
+        m_enabled.removeLast();
+    }
+    while (m_menus.size() < m_titles.size()) {
+        m_menus.append(nullptr);
+        m_enabled.append(true);
     }
     if (m_currentIndex >= m_titles.size()) {
         m_currentIndex = m_titles.isEmpty() ? -1 : m_titles.size() - 1;
