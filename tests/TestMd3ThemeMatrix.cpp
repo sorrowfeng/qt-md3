@@ -525,7 +525,12 @@ void TestMd3ThemeMatrix::fontSwitchChangesTextMetricsPerFamily()
     // Find any installed font we can switch to. The offscreen platform often
     // has no font database at all; in that case the API-level check still
     // runs and the render check is skipped.
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     const QStringList installed = QFontDatabase::families();
+#else
+    // Qt 5: families() is an instance method.
+    const QStringList installed = QFontDatabase().families();
+#endif
     QString replacement;
     for (const QString &c : { QStringLiteral("Courier New"),
                               QStringLiteral("Times New Roman"),
