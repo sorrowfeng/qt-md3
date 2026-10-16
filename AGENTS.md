@@ -173,7 +173,9 @@ Stage 2 (Qt extensions) is underway. Landed so far (tests + gallery pages
 `MdScaffold`, `MdMenuBar`, `MdStatusBar`, `MdSplitter`, `MdPagination`,
 `MdEmptyState`, `MdSkeleton`, `MdSteps` / `MdStepper`, `MdUpload`, `MdRate`,
 `MdFlex`, `MdGrid`, `MdSpace`, `MdCollapse`, `MdNotification`,
-`MdTree` / `MdTreeSelect`. The remaining appendix D rows are listed in
+`MdTree` / `MdTreeSelect`, `MdStatistic`, `MdPopover` / `MdPopconfirm`,
+`MdAutoComplete`, `MdColorPicker`, `MdDockWidget` / `MdDockManager`.
+The remaining appendix D rows are listed in
 docs/porting-todo.md.
 
 Before starting a component, read

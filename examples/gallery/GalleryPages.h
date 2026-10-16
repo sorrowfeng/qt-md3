@@ -253,6 +253,9 @@ GalleryPage *createStage2DataPage();
 /// Page 52. Stage 2 layout & structure extensions (MdGrid + MdSpace +
 /// MdCollapse + MdNotification + MdTree / MdTreeSelect).
 GalleryPage *createStage2LayoutPage();
+/// Page 53. Stage 2 entry & overlay extensions (MdStatistic + MdPopover +
+/// MdPopconfirm + MdAutoComplete + MdColorPicker + MdDockWidget / MdDockManager).
+GalleryPage *createStage2EntryPage();
 
 // ---------------------------------------------------------------------------
 // Showcase screens

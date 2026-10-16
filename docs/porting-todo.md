@@ -1953,13 +1953,18 @@ Landed (with tests + gallery page 48 "Qt extensions"):
 | `MdCollapse` | — | List expand/collapse semantics | Header row on List one-line metrics (56 px floor, hover/focus/press state layers, inward `:focus-visible` ring) + a body widget whose height animates on the FastSpatial spring (`MdSpring::valueAt`, never a QEasingCurve). `title` / `supportingText` / `expanded` / `headerHeight`. Space/Enter and click toggle; the trailing chevron swaps `expand_more` / `expand_less`. |
 | `MdNotification` | — | Snackbar persistent variant | Persistent reading of `md.comp.snackbar.*`: no queue, no timer, stays until `dismiss()`. Visual is a real `MdSnackbar` child so the two families cannot drift. `hasDismissAction` defaults to true (the export's recommendation whenever the surface does not self-dismiss). Signals: `actionClicked` / `dismissed`. |
 | `MdTree` / `MdTreeSelect` | QTreeView | List tree rows + Menu select popup | Tree rows on List one-line metrics (56 px, 16 px indent per depth, disclosure chevron in the leading gutter, secondary-container selection). Value model (`MdTreeItem` nodes, `MdTreePath` = child-index list) rather than a QAbstractItemModel, matching the other Stage 2 value APIs. Up/Down/Home/End walk, Left/Right collapse-or-parent / expand-or-child, Enter/Space activate. `MdTreeSelect` is the tree reading of the exposed dropdown: read-only `MdTextField` + Qt::Popup hosting an `MdTree`; a leaf commits, a branch only toggles. |
+| `MdStatistic` | — | Display / headline typography | Value rendered in `TypeStyle::DisplaySmall` (configurable Display/Headline) on `on-surface`; optional `title` in `LabelLarge` on `on-surface-variant`; `prefix` / `suffix` inline; `trend` (None/Up/Down) paints a `trending_up` / `trending_down` / `trending_flat` glyph in `primary` (up) or `error` (down) plus a `LabelMedium` caption. `Q_PROPERTY value / precision / title / prefix / suffix / valueStyle / trend / trendText`. Pure paint widget; no interaction states. |
+| `MdPopover` | — | Menu / Dialog overlay semantics | The content reading of the Menu popup: `surface-container` @ level 2, `corner-extra-small`, fast-spatial + fast-effects open pair, anchored to a trigger rect with overflow flip. Hosts an arbitrary `contentWidget` under an optional `TitleMedium` header. `Qt::Popup` top-level (like `MdMenu`). Esc / outside click closes. `Q_PROPERTY title / open / shape`. |
+| `MdPopconfirm` | — | Popover + Dialog actions | `MdPopover` subclass: Dialog's supporting-text question (`body-medium`) + trailing text-button action row (confirm / cancel). Enter confirms, Esc cancels. `Q_PROPERTY text / confirmText / cancelText`. Signals `confirmed` / `cancelled`. |
+| `MdAutoComplete` | QCompleter | Text field + exposed dropdown | `MdTextField` + `MdMenu` popup (the `MdSelect` exposed-dropdown reading). Filter modes `Contains` (default, case-insensitive substring), `StartsWith`, `Custom` (host filters via `filterRequested` and publishes `setFilteredItems`). `maxVisible` caps the list. Down/Up walk, Enter commits, Esc closes. `Q_PROPERTY text / labelText / placeholderText / filter / maxVisible / popupVisible`. |
+| `MdColorPicker` | QColorDialog | Dialog + Slider(HSV) + Text field(Hex) | MD3 has no colour-swatch spec; assembled from the families that do: three `MdSlider`s (H 0–360, S 0–100, V 0–100) + a filled `MdTextField` hex code + a `ShapeCorner::Full` swatch disc with an `outline-variant` ring (the identity-disc reading MdAvatar uses). Sliders, hex field and swatch stay in sync both ways. `Q_PROPERTY color / hue / saturation / value / hexVisible / swatchShape`. |
+| `MdDockWidget` / `MdDockManager` | QDockWidget | Side sheet + surface container | `MdDockWidget`: 48 px header row (`TitleMedium` label, trailing `MdIconButton` close) + content widget, `surface-container` surface, `outline-variant` header divider — the Side sheet header language. `Q_PROPERTY title / area / closable / open`. `MdDockManager`: center + left / right / bottom areas (each an `MdSplitter` stack), `showGuide(area)` paints a `secondary-container` `ShapeCorner::Medium` shape highlight over the drop zone while dragging. `Q_PROPERTY centerWidget / leftWidth / rightWidth / bottomHeight / guideVisible`. |
 
 Still open (remaining appendix D rows): MdInputDialog,
-MdStackedWidget, MdDockWidget /
-MdDockManager, MdResult,
+MdStackedWidget, MdResult,
 MdBreadcrumb, MdTimeline,
-MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog, MdCascader,
-MdTransfer, MdColorPicker, MdMentions, MdAutoComplete,
+MdImage, MdQRCode, MdWatermark, MdLog, MdCascader,
+MdTransfer, MdMentions,
 MdPlainTextEdit, MdMasonry, MdDrawer,
-MdPopover, MdPopconfirm, MdTour / MdCoachMark,
+MdTour / MdCoachMark,
 MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor, MdBackTop.

@@ -204,6 +204,13 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdNotification.h
     widgets/MdTree.h
     widgets/MdTreeSelect.h
+    widgets/MdStatistic.h
+    widgets/MdPopover.h
+    widgets/MdPopconfirm.h
+    widgets/MdAutoComplete.h
+    widgets/MdColorPicker.h
+    widgets/MdDockWidget.h
+    widgets/MdDockManager.h
 )
 
 set(QT_MD3_SOURCES
@@ -393,6 +400,13 @@ set(QT_MD3_SOURCES
     widgets/MdNotification.cpp
     widgets/MdTree.cpp
     widgets/MdTreeSelect.cpp
+    widgets/MdStatistic.cpp
+    widgets/MdPopover.cpp
+    widgets/MdPopconfirm.cpp
+    widgets/MdAutoComplete.cpp
+    widgets/MdColorPicker.cpp
+    widgets/MdDockWidget.cpp
+    widgets/MdDockManager.cpp
 )
 
 set(QT_MD3_RESOURCES

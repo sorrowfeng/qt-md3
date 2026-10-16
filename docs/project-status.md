@@ -7,7 +7,7 @@ Last updated: 2026-10-12
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
-| Stage | Stage 1 closed (36/36 families). Stage 2 (Qt extensions) in progress — 27 headers landed; appendix D remainder in [porting-todo.md](porting-todo.md) |
+| Stage | Stage 1 closed (36/36 families). Stage 2 (Qt extensions) in progress — 34 headers landed; appendix D remainder in [porting-todo.md](porting-todo.md) |
 | Stage 1 families complete | `36 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets, Carousel, Divider, Lists, App bars, Toolbars, Navigation bar, Navigation rail, Navigation drawer, Tabs, Checkbox, Chips, Radio button, Switch, Menus, Sliders, Time pickers, Date pickers, Text fields, Search) |
 | Base modules | `21 / 21` |
 | Public components | `78` (Stage 1 families plus `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`, `MdTable`, `MdAvatar`, `MdWindow`, `MdFileDialog`, `MdInputNumber`, `MdScaffold`, `MdMenuBar`, `MdStatusBar`, `MdSplitter`, `MdPagination`, `MdEmptyState`, `MdSkeleton`, `MdSteps` / `MdStepper`, `MdUpload`, `MdRate`, `MdFlex`, `MdGrid`, `MdSpace`, `MdCollapse`, `MdNotification`, `MdTree`, `MdTreeSelect`) |
@@ -314,8 +314,9 @@ Stage 1 is closed (36/36 families). Stage 2 (Qt extensions) is in progress.
 MdMessageBox, MdScrollArea, MdTable, MdAvatar, MdWindow, MdFileDialog,
 MdInputNumber, MdScaffold, MdMenuBar, MdStatusBar, MdSplitter, MdPagination,
 MdEmptyState, MdSkeleton, MdSteps / MdStepper, MdUpload, MdRate, MdFlex,
-MdGrid, MdSpace, MdCollapse, MdNotification, MdTree / MdTreeSelect
-(tests + gallery pages 48–52). Still open, in the order
+MdGrid, MdSpace, MdCollapse, MdNotification, MdTree / MdTreeSelect,
+MdStatistic, MdPopover / MdPopconfirm, MdAutoComplete, MdColorPicker,
+MdDockWidget / MdDockManager (tests + gallery pages 48–53). Still open, in the order
 [md3-qt-porting-prompts.md](md3-qt-porting-prompts.md) lists them:
 MdInputDialog, MdStackedWidget, MdDockWidget / MdDockManager, MdResult,
 MdBreadcrumb, MdTimeline, MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog,

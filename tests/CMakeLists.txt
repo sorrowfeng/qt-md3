@@ -1714,6 +1714,113 @@ set_tests_properties(TestMd3Tree PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Tree)
 
+# --- Stage 2 P2: entry & overlay extensions ---------------------------------
+
+add_executable(TestMd3Statistic
+    TestMd3Statistic.cpp
+)
+
+target_link_libraries(TestMd3Statistic
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Statistic COMMAND TestMd3Statistic)
+set_tests_properties(TestMd3Statistic PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Statistic)
+
+add_executable(TestMd3Popover
+    TestMd3Popover.cpp
+)
+
+target_link_libraries(TestMd3Popover
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Popover COMMAND TestMd3Popover)
+set_tests_properties(TestMd3Popover PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Popover)
+
+add_executable(TestMd3AutoComplete
+    TestMd3AutoComplete.cpp
+)
+
+target_link_libraries(TestMd3AutoComplete
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3AutoComplete COMMAND TestMd3AutoComplete)
+set_tests_properties(TestMd3AutoComplete PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3AutoComplete)
+
+add_executable(TestMd3ColorPicker
+    TestMd3ColorPicker.cpp
+)
+
+target_link_libraries(TestMd3ColorPicker
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3ColorPicker COMMAND TestMd3ColorPicker)
+set_tests_properties(TestMd3ColorPicker PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3ColorPicker)
+
+add_executable(TestMd3Dock
+    TestMd3Dock.cpp
+)
+
+target_link_libraries(TestMd3Dock
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Dock COMMAND TestMd3Dock)
+set_tests_properties(TestMd3Dock PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Dock)
+
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
@@ -1768,6 +1875,7 @@ add_executable(TestMd3GalleryClick
     ${GALLERY_DIR}/GalleryPages50.cpp
     ${GALLERY_DIR}/GalleryPages51.cpp
     ${GALLERY_DIR}/GalleryPages52.cpp
+    ${GALLERY_DIR}/GalleryPages53.cpp
     ${GALLERY_DIR}/GalleryPages44.cpp
     ${GALLERY_DIR}/GalleryPages45.cpp
     ${GALLERY_DIR}/GalleryPages46.cpp

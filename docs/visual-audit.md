@@ -1238,3 +1238,25 @@ window size classes (600 / 840 / 1200 / 1600) and the 4 / 8 / 12 column
 defaults come from the M3 layout foundations; like MdFlex's spacing scale
 they are recorded in porting-todo.md because md.sys.layout.* is not a
 published token family in the export.
+
+
+## Stage 2 Qt extensions (entry & overlay batch)
+
+Page 53 (qt-extensions-entry) shows MdStatistic / MdPopover / MdPopconfirm /
+MdAutoComplete / MdColorPicker / MdDockWidget + MdDockManager as live
+widgets. Semantics pinned by unit tests (Display/Headline formatting and
+trend colours, Menu-surface popovers with confirm/cancel, Contains/StartsWith
+filtering, HSV/hex sync, dock areas and the secondary-container guide,
+non-blank render). Side-by-side capture against official Material is still
+pending with the rest of the Stage 2 visual QA round — MD3 publishes no
+statistic, colour-swatch, autocomplete, popover or docking family, so these
+are anchored on the families that do exist (Display/Headline type scale,
+Menu / Dialog surfaces, TextField + exposed dropdown, Side sheet + surface).
+Every colour they paint is already a published role (surface-container,
+on-surface, on-surface-variant, primary, error, outline-variant,
+secondary-container).
+
+Note: MdPopover / MdPopconfirm / MdMenu are Qt::Popup top-levels. The gallery
+demonstrates them from trigger buttons rather than setVisible(true), because
+a permanently-shown Qt::Popup floats over every other gallery page and breaks
+TestMd3GalleryClick's hit-test sweep.
