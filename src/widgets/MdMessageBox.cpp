@@ -217,7 +217,7 @@ void MdMessageBox::init()
 
     MdStyleBase::connectThemeUpdate(this, &MdMessageBox::onThemeChanged);
 
-    if (m_standardButtons == MdMessageBoxStandardButton::None) {
+    if (!m_standardButtons) {
         setStandardButtons(MdMessageBoxStandardButton::Ok);
     }
     updateIcon();

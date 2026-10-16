@@ -498,8 +498,8 @@ void MdTable::mousePressEvent(QMouseEvent *event)
         QWidget::mousePressEvent(event);
         return;
     }
-    const int row = rowAtPosition(event->position());
-    const int column = columnAtPosition(event->position());
+    const int row = rowAtPosition(md::mousePosition(event));
+    const int column = columnAtPosition(md::mousePosition(event));
     if (row >= 0) {
         setCurrentRow(row);
         if (column >= 0) {
@@ -512,7 +512,7 @@ void MdTable::mousePressEvent(QMouseEvent *event)
 
 void MdTable::mouseMoveEvent(QMouseEvent *event)
 {
-    const int row = rowAtPosition(event->position());
+    const int row = rowAtPosition(md::mousePosition(event));
     if (m_hoveredRow != row) {
         m_hoveredRow = row;
         update();
