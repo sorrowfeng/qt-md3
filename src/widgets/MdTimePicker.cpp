@@ -10,6 +10,13 @@
 
 namespace md {
 
+namespace {
+
+// Portable π — M_PI is missing on MSVC without _USE_MATH_DEFINES before <cmath>.
+constexpr double kPi = 3.14159265358979323846;
+
+} // namespace
+
 MdTimePicker::MdTimePicker(QWidget *parent)
     : QWidget(parent)
 {
@@ -202,9 +209,9 @@ void MdTimePicker::applyDialPosition(const QPointF &pos)
     const QPointF delta = pos - dial.center();
     qreal angle = qAtan2(delta.y(), delta.x()) + qDegreesToRadians(90.0);
     if (angle < 0.0) {
-        angle += 2.0 * M_PI;
+        angle += 2.0 * kPi;
     }
-    const qreal turns = angle / (2.0 * M_PI);
+    const qreal turns = angle / (2.0 * kPi);
 
     if (m_face == MdTimePickerFace::Hours) {
         const int slotCount = m_24h ? 24 : 12;

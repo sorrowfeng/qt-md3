@@ -16,6 +16,9 @@ namespace md {
 
 namespace {
 
+// Portable π — M_PI is missing on MSVC without _USE_MATH_DEFINES before <cmath>.
+constexpr double kPi = 3.14159265358979323846;
+
 // The indeterminate easings, keyed exactly as the CSS keyframes name them.
 // material-web transplanted these numbers from MDC
 // (mdc-linear-progress/_linear-progress.scss line refs live in the SCSS).
@@ -702,7 +705,7 @@ void MdProgressIndicatorStyle::paintCircular(QPainter &painter,
         const qreal side = container.width();
         const qreal strokeHalf = activeThickness / 2.0;
         const qreal r = side / 2.0 - strokeHalf;
-        const int numVertices = qMax(5, int(std::lround(2.0 * M_PI * r / wavelength)));
+        const int numVertices = qMax(5, int(std::lround(2.0 * kPi * r / wavelength)));
 
         MdRoundedPolygon trackPoly = MdRoundedPolygon::circle(numVertices).normalized();
         MdRoundedPolygon starPoly =
