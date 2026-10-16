@@ -29,7 +29,28 @@ MdTreeSelect::MdTreeSelect(QWidget *parent)
     init();
 }
 
-MdTreeSelect::~MdTreeSelect() = default;
+MdTreeSelect::~MdTreeSelect()
+{
+    // m_popup is parented to this->window(), which is `this` when MdTreeSelect
+    // is top-level. ~QWidget's deleteChildren() would then destroy the popup
+    // after this class's members are already dead, and the destroyed handler
+    // would write m_popup/m_popupOpen on a half-destroyed object (UBSAN
+    // type-confusion: dynamic type is only QWidget at that point). Tear the
+    // popup down first so destroyed fires while `this` is still MdTreeSelect.
+    if (m_popup != nullptr) {
+        disconnect(m_popup, nullptr, this, nullptr);
+        delete m_popup;
+        m_popup = nullptr;
+        m_tree = nullptr;
+        m_popupOpen = false;
+    }
+    // Cut field -> parent wires before ~QWidget destroys the children;
+    // otherwise a child emitting during its own destruction would call a
+    // slot on a half-destroyed MdTreeSelect.
+    if (m_field != nullptr) {
+        disconnect(m_field, nullptr, this, nullptr);
+    }
+}
 
 void MdTreeSelect::init()
 {
@@ -69,6 +90,7 @@ void MdTreeSelect::init()
     connect(m_tree, &MdTree::itemActivated, this, &MdTreeSelect::onTreeActivated);
     connect(m_popup, &QObject::destroyed, this, [this]() {
         m_popup = nullptr;
+        m_tree = nullptr;
         m_popupOpen = false;
     });
 }
