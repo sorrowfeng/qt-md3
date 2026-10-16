@@ -1,4 +1,4 @@
-﻿# Visual Audit
+# Visual Audit
 
 Side-by-side comparison of the official Material Design 3 pages against the Qt
 example app, per component and per state.
@@ -1223,3 +1223,18 @@ on-surface-variant), so they need measurement, not invention. MdFlex's spacing
 scale (0 / 4 / 8 / 12 / 16 / 24 / 32) is the MD3 4 dp base-unit ladder the
 component exports actually use — recorded in porting-todo.md because
 `md.sys.layout.*` is not a published token family in the export.
+
+## Stage 2 Qt extensions (layout & structure batch)
+
+Page 52 (qt-extensions-layout) shows MdGrid / MdSpace / MdCollapse /
+MdNotification / MdTree / MdTreeSelect as live widgets. Semantics pinned by
+unit tests (breakpoints, spacing scale, spring height, persistent dismiss,
+tree paths and keyboard walk, non-blank render). Side-by-side capture against
+official Material is still pending with the rest of the Stage 2 visual QA
+round; every colour these paint is already a published role (surface,
+on-surface, on-surface-variant, secondary-container, inverse-surface /
+inverse-on-surface / inverse-primary via the snackbar token set). MdGrid's
+window size classes (600 / 840 / 1200 / 1600) and the 4 / 8 / 12 column
+defaults come from the M3 layout foundations; like MdFlex's spacing scale
+they are recorded in porting-todo.md because md.sys.layout.* is not a
+published token family in the export.

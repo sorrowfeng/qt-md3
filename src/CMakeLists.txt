@@ -198,6 +198,12 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdUpload.h
     widgets/MdRate.h
     widgets/MdFlex.h
+    widgets/MdGrid.h
+    widgets/MdSpace.h
+    widgets/MdCollapse.h
+    widgets/MdNotification.h
+    widgets/MdTree.h
+    widgets/MdTreeSelect.h
 )
 
 set(QT_MD3_SOURCES
@@ -381,6 +387,12 @@ set(QT_MD3_SOURCES
     widgets/MdUpload.cpp
     widgets/MdRate.cpp
     widgets/MdFlex.cpp
+    widgets/MdGrid.cpp
+    widgets/MdSpace.cpp
+    widgets/MdCollapse.cpp
+    widgets/MdNotification.cpp
+    widgets/MdTree.cpp
+    widgets/MdTreeSelect.cpp
 )
 
 set(QT_MD3_RESOURCES

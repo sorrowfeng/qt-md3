@@ -1,21 +1,21 @@
 # Project Status
 
-Last updated: 2026-10-10
+Last updated: 2026-10-12
 
 ## Snapshot
 
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0` (source of truth: [`VERSION`](../VERSION)) |
-| Stage | Stage 1 — Batch 0 closed; §1.2 Actions closed; §1.3 Communication closed; §1.4 Containment closed; §1.5 Navigation closed (App bars, Toolbars, Navigation bar, Navigation rail, Navigation drawer and Tabs all in); §1.6 Selection opened |
+| Stage | Stage 1 closed (36/36 families). Stage 2 (Qt extensions) in progress — 27 headers landed; appendix D remainder in [porting-todo.md](porting-todo.md) |
 | Stage 1 families complete | `36 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets, Carousel, Divider, Lists, App bars, Toolbars, Navigation bar, Navigation rail, Navigation drawer, Tabs, Checkbox, Chips, Radio button, Switch, Menus, Sliders, Time pickers, Date pickers, Text fields, Search) |
 | Base modules | `21 / 21` |
-| Public components | `66` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`, `MdLoadingIndicator`, `MdSnackbar`, `MdSnackbarHost`, `MdTooltip`, `MdTooltipHost`, `MdCard`, `MdDialog`, `MdDialogHost`, `MdBottomSheet`, `MdBottomSheetHost`, `MdSideSheet`, `MdSideSheetHost`, `MdCarousel`, `MdDivider`, `MdList`, `MdListItem`, `MdTopAppBar`, `MdBottomAppBar`, `MdDockedToolbar`, `MdFloatingToolbar`, `MdNavigationBar`, `MdNavigationBarItem`, `MdNavigationRail`, `MdNavigationDrawer`, `MdNavigationDrawerItem`, `MdTabs`, `MdTab`, `MdCheckBox`, `MdChip`, `MdRadioButton`, `MdSwitch`, `MdMenu`, `MdMenuItem`, `MdSlider`, `MdTimePicker`, `MdDatePicker`, `MdTextField`, `MdSearchBar`, `MdTextArea`, `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`, `MdTable`, `MdAvatar`, `MdWindow`, `MdFileDialog`, `MdInputNumber`, `MdScaffold`, `MdMenuBar`, `MdStatusBar`, `MdSplitter`, `MdPagination`, `MdEmptyState`) |
-| Style classes | `43` (`MdStyleBase`, `MdButtonStyle`, `MdButtonGroupStyle`, `MdIconButtonStyle`, `MdFabStyle`, `MdExtendedFabStyle`, `MdFabMenuStyle`, `MdSplitButtonStyle`, `MdSegmentedButtonStyle`, `MdBadgeStyle`, `MdProgressIndicatorStyle`, `MdLoadingIndicatorStyle`, `MdSnackbarStyle`, `MdTooltipStyle`, `MdCardStyle`, `MdDialogStyle`, `MdBottomSheetStyle`, `MdSideSheetStyle`, `MdCarouselStyle`, `MdDividerStyle`, `MdListStyle`, `MdListItemStyle`, `MdTopAppBarStyle`, `MdBottomAppBarStyle`, `MdDockedToolbarStyle`, `MdFloatingToolbarStyle`, `MdNavigationBarStyle`, `MdNavigationBarItemStyle`, `MdNavigationRailStyle`, `MdNavigationDrawerStyle`, `MdNavigationDrawerItemStyle`, `MdTabsStyle`, `MdTabStyle`, `MdCheckBoxStyle`, `MdChipStyle`, `MdRadioButtonStyle`, `MdSwitchStyle`, `MdMenuStyle`, `MdSliderStyle`, `MdTimePickerStyle`, `MdDatePickerStyle`, `MdTextFieldStyle`, `MdSearchBarStyle`) |
-| Example pages | `40` |
+| Public components | `78` (Stage 1 families plus `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`, `MdTable`, `MdAvatar`, `MdWindow`, `MdFileDialog`, `MdInputNumber`, `MdScaffold`, `MdMenuBar`, `MdStatusBar`, `MdSplitter`, `MdPagination`, `MdEmptyState`, `MdSkeleton`, `MdSteps` / `MdStepper`, `MdUpload`, `MdRate`, `MdFlex`, `MdGrid`, `MdSpace`, `MdCollapse`, `MdNotification`, `MdTree`, `MdTreeSelect`) |
+| Style classes | `45` (`MdStyleBase` plus one `Md*Style` per painted Stage 1 family; Stage 2 containers paint themselves in `paintEvent` and have no style class) |
+| Example pages | `53` (foundation + one per Stage 1 family + Stage 2 pages 48–52 + dynamic colour + three showcase screens) |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
 | Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `65` (`TestMd3Version`, `TestMd3Tokens`, `TestMd3Contrast`, `TestMd3TemperatureCache`, `TestMd3Ripple`, `TestMd3FocusRing`, `TestMd3Icon`, `TestMd3StyleBase`, `TestMd3Button`, `TestMd3ButtonGroup`, `TestMd3IconButton`, `TestMd3Fab`, `TestMd3ExtendedFab`, `TestMd3FabMenu`, `TestMd3SplitButton`, `TestMd3SegmentedButton`, `TestMd3Badge`, `TestMd3ProgressIndicator`, `TestMd3LoadingIndicator`, `TestMd3Snackbar`, `TestMd3Tooltip`, `TestMd3Card`, `TestMd3Dialog`, `TestMd3BottomSheet`, `TestMd3SideSheet`, `TestMd3Carousel`, `TestMd3Divider`, `TestMd3List`, `TestMd3AppBar`, `TestMd3Toolbar`, `TestMd3Navigation`, `TestMd3Tabs`, `TestMd3CheckBox`, `TestMd3Chip`, `TestMd3RadioButton`, `TestMd3Switch`, `TestMd3Menu`, `TestMd3Slider`, `TestMd3TimePicker`, `TestMd3DatePicker`, `TestMd3TextField`, `TestMd3SearchBar`, `TestMd3TextArea`, `TestMd3NoQss`, `TestMd3CoveragePolicy`, `TestMd3SourceEncoding`, `TestMd3DeploymentTestBinary`, `TestMd3DeploymentExample`) |
+| CTest entries | `80` (all green) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
 
 ## What exists today
@@ -308,25 +308,30 @@ gallery scaffolding, unreachable from the seven token-only pages.
 
 ## What is next
 
-Stage 1 §1.5 Navigation is closed — all six families are in, ending with Tabs
-(`MdTabs` / `MdTab`, both published families, fixed and scrollable). The
-section that opens is §1.6 Selection, in official order:
+Stage 1 is closed (36/36 families). Stage 2 (Qt extensions) is in progress.
 
-**§1.6 Selection.** Checkbox, Chips, Date pickers, Menus, Radio button,
-Sliders, Switch, Time pickers. The first family is **Checkbox** — material-web
-implements it (`packages/checkbox`), Compose's `Checkbox.kt` is the behaviour
-source, and the export publishes the full `md.comp.checkbox.*` set including
-the state layers. Chips follow as the section's largest family (four exported
-sets: assist / filter / input / suggestion). §1.7 Text inputs (Text fields,
-Search) closes Stage 1.
+**Stage 2, remaining appendix D rows.** Landed so far: MdScrollBar, MdSelect,
+MdMessageBox, MdScrollArea, MdTable, MdAvatar, MdWindow, MdFileDialog,
+MdInputNumber, MdScaffold, MdMenuBar, MdStatusBar, MdSplitter, MdPagination,
+MdEmptyState, MdSkeleton, MdSteps / MdStepper, MdUpload, MdRate, MdFlex,
+MdGrid, MdSpace, MdCollapse, MdNotification, MdTree / MdTreeSelect
+(tests + gallery pages 48–52). Still open, in the order
+[md3-qt-porting-prompts.md](md3-qt-porting-prompts.md) lists them:
+MdInputDialog, MdStackedWidget, MdDockWidget / MdDockManager, MdResult,
+MdBreadcrumb, MdTimeline, MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog,
+MdCascader, MdTransfer, MdColorPicker, MdMentions, MdAutoComplete,
+MdPlainTextEdit, MdMasonry, MdDrawer, MdPopover, MdPopconfirm,
+MdTour / MdCoachMark, MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor,
+MdBackTop.
 
-Each component lands as its own commit and must satisfy all twelve Definition of
-Done items before the next one starts, including an independent gallery page, a
-side-by-side visual audit in [visual-audit.md](visual-audit.md), and the
-corresponding row in [md3-coverage.md](md3-coverage.md). Buttons is the first
-row with cells still in progress: `主题` (seed / contrast / density / font
-switch not yet exercised against the page) and `视觉审计` (rendered and read in
-both modes, reference comparison not yet recorded).
+Library-wide gaps that are not components (RTL audit, the Stage 2 visual QA
+round against official captures, MdTextArea as a separate multiline widget)
+are recorded in [porting-todo.md](porting-todo.md) and the cross-cutting
+table in [md3-coverage.md](md3-coverage.md).
+
+Each component lands as its own commit and must satisfy all twelve Definition
+of Done items before the next one starts, including an independent gallery
+page and the corresponding row in [md3-coverage.md](md3-coverage.md).
 
 See [`md3-qt-porting-prompts.md`](md3-qt-porting-prompts.md) for the full brief,
 the component order, and the Definition of Done.

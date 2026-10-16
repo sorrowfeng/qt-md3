@@ -1,4 +1,4 @@
-﻿# Porting TODO
+# Porting TODO
 
 Upstream gaps and outstanding work. Stage 1 must be green before any Stage 2 item
 is started (see [md3-coverage.md](md3-coverage.md)).
@@ -1948,13 +1948,18 @@ Landed (with tests + gallery page 48 "Qt extensions"):
 | `MdUpload` | — | List + Progress indicator + Icon button | List one-line rows (56 px), outline-variant dividers, leading `description` glyph. Transfer progress is a real `MdProgressIndicator` (linear, determinate). Remove is a real `MdIconButton` standard/xsmall (`close`). `Q_PROPERTY files` (QList of `MdUploadFile`), `addFile` / `setFileProgress` / `removeFile` / `clearFiles`, `fileRemoved`. |
 | `MdRate` | — | Icon button + selected state | Star (`star` / `star_border`) or heart (`favorite` / `favorite_border`) glyphs. Selected fill `primary`, unselected `on-surface-variant`. 48 px cells (icon-button 40 px container + focus margin). Optional half fill (clipped glyph) and hover preview. `Q_PROPERTY value / max / readOnly / halfSteps / glyph`. Left/Right/Up/Down, Home/End, digits; `:focus-visible` ring. |
 | `MdFlex` | — | MD3 layout flex / spacing scale | Pure container. `direction` (Row/Column), `justify` (Start/Center/End/SpaceBetween/SpaceAround/SpaceEvenly), `align` (Start/Center/End/Stretch), `gap` (spacing scale), `wrap`. Spacing scale steps 0 / 4 / 8 / 12 / 16 / 24 / 32 on the MD3 4 dp base unit. `md.sys.layout.*` is not a published token family in the export (recorded, not invented silently). RTL mirrors the main axis. |
+| `MdGrid` | — | MD3 responsive grid + Window size classes | Pure container. Breakpoints Compact <600 / Medium 600-840 / Expanded 840-1200 / Large 1200-1600 / ExtraLarge >=1600 (M3 layout foundations). Default tracks 4 / 8 / 12 / 12 / 12 with compact 16/16 and medium+ 24/24 margin/gutter. `sizeClass` pins or auto-derives from width; `columns` / `gutter` / `margin` override per instance; `setItemSpan` stretches a child across tracks. RTL mirrors the column walk. Same `md.sys.layout.*` caveat as MdFlex. |
+| `MdSpace` | — | MD3 spacing scale | One step of the MdFlexSpacing ladder as a widget. `direction` (Horizontal/Vertical), `size`, plus an `extent` override. Reuses `MdFlexSpacing` so the 0/4/8/12/16/24/32 ladder has one source. Pure size hint; paints nothing. |
+| `MdCollapse` | — | List expand/collapse semantics | Header row on List one-line metrics (56 px floor, hover/focus/press state layers, inward `:focus-visible` ring) + a body widget whose height animates on the FastSpatial spring (`MdSpring::valueAt`, never a QEasingCurve). `title` / `supportingText` / `expanded` / `headerHeight`. Space/Enter and click toggle; the trailing chevron swaps `expand_more` / `expand_less`. |
+| `MdNotification` | — | Snackbar persistent variant | Persistent reading of `md.comp.snackbar.*`: no queue, no timer, stays until `dismiss()`. Visual is a real `MdSnackbar` child so the two families cannot drift. `hasDismissAction` defaults to true (the export's recommendation whenever the surface does not self-dismiss). Signals: `actionClicked` / `dismissed`. |
+| `MdTree` / `MdTreeSelect` | QTreeView | List tree rows + Menu select popup | Tree rows on List one-line metrics (56 px, 16 px indent per depth, disclosure chevron in the leading gutter, secondary-container selection). Value model (`MdTreeItem` nodes, `MdTreePath` = child-index list) rather than a QAbstractItemModel, matching the other Stage 2 value APIs. Up/Down/Home/End walk, Left/Right collapse-or-parent / expand-or-child, Enter/Space activate. `MdTreeSelect` is the tree reading of the exposed dropdown: read-only `MdTextField` + Qt::Popup hosting an `MdTree`; a leaf commits, a branch only toggles. |
 
 Still open (remaining appendix D rows): MdInputDialog,
 MdStackedWidget, MdDockWidget /
-MdDockManager, MdTree / MdTreeSelect, MdResult,
+MdDockManager, MdResult,
 MdBreadcrumb, MdTimeline,
 MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog, MdCascader,
 MdTransfer, MdColorPicker, MdMentions, MdAutoComplete,
-MdPlainTextEdit, MdGrid, MdSpace, MdMasonry, MdDrawer,
-MdPopover, MdPopconfirm, MdNotification, MdCollapse, MdTour / MdCoachMark,
+MdPlainTextEdit, MdMasonry, MdDrawer,
+MdPopover, MdPopconfirm, MdTour / MdCoachMark,
 MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor, MdBackTop.

@@ -250,6 +250,9 @@ GalleryPage *createStage2ChromePage();
 /// Page 51. Stage 2 data & layout extensions (MdSkeleton + MdSteps +
 /// MdUpload + MdRate + MdFlex).
 GalleryPage *createStage2DataPage();
+/// Page 52. Stage 2 layout & structure extensions (MdGrid + MdSpace +
+/// MdCollapse + MdNotification + MdTree / MdTreeSelect).
+GalleryPage *createStage2LayoutPage();
 
 // ---------------------------------------------------------------------------
 // Showcase screens

@@ -1,4 +1,4 @@
-﻿# qt-md3 tests.
+# qt-md3 tests.
 #
 # As in the example directory, the Qt runtime is deployed next to the binaries
 # so `ctest` works from a plain shell rather than only from one that happens to
@@ -1608,6 +1608,112 @@ set_tests_properties(TestMd3Flex PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3Flex)
+
+add_executable(TestMd3Space
+    TestMd3Space.cpp
+)
+
+target_link_libraries(TestMd3Space
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Space COMMAND TestMd3Space)
+set_tests_properties(TestMd3Space PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Space)
+
+add_executable(TestMd3Grid
+    TestMd3Grid.cpp
+)
+
+target_link_libraries(TestMd3Grid
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Grid COMMAND TestMd3Grid)
+set_tests_properties(TestMd3Grid PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Grid)
+
+add_executable(TestMd3Collapse
+    TestMd3Collapse.cpp
+)
+
+target_link_libraries(TestMd3Collapse
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Collapse COMMAND TestMd3Collapse)
+set_tests_properties(TestMd3Collapse PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Collapse)
+
+add_executable(TestMd3Notification
+    TestMd3Notification.cpp
+)
+
+target_link_libraries(TestMd3Notification
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Notification COMMAND TestMd3Notification)
+set_tests_properties(TestMd3Notification PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Notification)
+
+add_executable(TestMd3Tree
+    TestMd3Tree.cpp
+)
+
+target_link_libraries(TestMd3Tree
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Tree COMMAND TestMd3Tree)
+set_tests_properties(TestMd3Tree PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Tree)
+
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
@@ -1661,6 +1767,7 @@ add_executable(TestMd3GalleryClick
     ${GALLERY_DIR}/GalleryPages49.cpp
     ${GALLERY_DIR}/GalleryPages50.cpp
     ${GALLERY_DIR}/GalleryPages51.cpp
+    ${GALLERY_DIR}/GalleryPages52.cpp
     ${GALLERY_DIR}/GalleryPages44.cpp
     ${GALLERY_DIR}/GalleryPages45.cpp
     ${GALLERY_DIR}/GalleryPages46.cpp
