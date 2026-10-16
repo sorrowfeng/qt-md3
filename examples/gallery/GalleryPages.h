@@ -244,6 +244,9 @@ GalleryPage *createStage2Page();
 /// Page 49. Stage 2 shell & input extensions (MdWindow + MdFileDialog +
 /// MdInputNumber + MdScaffold).
 GalleryPage *createStage2ShellPage();
+/// Page 50. Stage 2 app-chrome extensions (MdMenuBar + MdStatusBar +
+/// MdSplitter + MdPagination + MdEmptyState).
+GalleryPage *createStage2ChromePage();
 
 // ---------------------------------------------------------------------------
 // Showcase screens

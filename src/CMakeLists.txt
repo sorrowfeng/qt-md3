@@ -187,6 +187,11 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdScaffold.h
     widgets/MdWindow.h
     widgets/MdFileDialog.h
+    widgets/MdMenuBar.h
+    widgets/MdStatusBar.h
+    widgets/MdSplitter.h
+    widgets/MdPagination.h
+    widgets/MdEmptyState.h
 )
 
 set(QT_MD3_SOURCES
@@ -360,6 +365,11 @@ set(QT_MD3_SOURCES
     widgets/MdScaffold.cpp
     widgets/MdWindow.cpp
     widgets/MdFileDialog.cpp
+    widgets/MdMenuBar.cpp
+    widgets/MdStatusBar.cpp
+    widgets/MdSplitter.cpp
+    widgets/MdPagination.cpp
+    widgets/MdEmptyState.cpp
 )
 
 set(QT_MD3_RESOURCES

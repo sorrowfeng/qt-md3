@@ -56,6 +56,7 @@ add_executable(qt-md3-example
     gallery/GalleryPages47.cpp
     gallery/GalleryPages48.cpp
     gallery/GalleryPages49.cpp
+    gallery/GalleryPages50.cpp
     gallery/GalleryWindow.cpp
 )
 

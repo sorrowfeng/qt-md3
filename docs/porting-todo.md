@@ -1937,11 +1937,16 @@ Landed (with tests + gallery page 48 "Qt extensions"):
 | `MdFileDialog` | QFileDialog | Dialog + Navigation drawer (left) + List + Text field | Composition widget. Chrome = `md.comp.dialog.*` (surface-container-high, level 3, extra-large). Left location rail follows drawer item selected state (secondary-container). File list follows List row semantics (56 px, hover 0.08, selected secondary-container, outline-variant dividers). Path/name = filled `MdTextField`. Actions = Filled/Text `MdButton`. QDir-backed listing with name filters; OpenFile / OpenDirectory / SaveFile modes. |
 | `MdInputNumber` | QSpinBox / QDoubleSpinBox | Text field + Icon button steppers | `MdTextField` anchor (filled / outlined) with a trailing pair of xsmall `MdIconButton` (`arrow_drop_up` / `arrow_drop_down`). Q_PROPERTY value/min/max/step/decimals/prefix/suffix. Clamps to [min, max]; Up/Down keys and stepper clicks step; bad edits raise the field error overlay and restore the last good string. |
 | `MdScaffold` | — | App bar + Navigation + FAB + body page skeleton | Pure layout composition: optional Top app bar, navigation (Start rail / End / Bottom bar), end pane, body and FAB. Paints only `md.sys.color.surface`; slots are caller-owned Stage 1 widgets. FAB placements: EndFloat / StartFloat / BottomCenter / EndDocked. RTL-aware. |
+| `MdMenuBar` | QMenuBar | Menu semantics horizontalised | Horizontal strip of top-level items on `surface` with `label-large` labels. Hover state layer 0.08, open item 0.12. Each item hosts a real `MdMenu` popup (anchor = item rect). Left/Right wrap, Down/Enter/Space opens, Esc closes. Menu-less items emit `itemTriggered`. |
+| `MdStatusBar` | QStatusBar | surface container + label typography | `surface-container` band. Leading message in `label-large` / `on-surface`; trailing message in `body-medium` / `on-surface-variant`. Optional size grip (outline-variant diagonal ticks) that resizes the top-level window and emits `sizeGripDragged`. |
+| `MdSplitter` | QSplitter | outline-variant divider + hover handle | Resting 1 px `outline-variant` hairline (Divider token). Hover/drag fades in a 32×3 `outline` pill handle. `Q_PROPERTY orientation` with NOTIFY; handleWidth / handleBarLength / dividerColor overrides. |
+| `MdPagination` | — | Text button + Icon button composition | Page numbers are `MdButton` Text (current = Filled primary). Prev/next are `MdIconButton` standard/xsmall (`chevron_left` / `chevron_right`). Optional first/last buttons. Ellipsis hops are non-interactive labels. Left/Right/Home/End walk; 1-based `currentPage` in `[1, pageCount]`. |
+| `MdEmptyState` | — | Display typography + shape + Text button | `surface-variant` art disc (`ShapeCorner::ExtraLarge`, optional Material Symbols glyph) + Headline title + Body description + Text `MdButton` action. Optional caller `artWidget` replaces the disc. |
 
 Still open (remaining appendix D rows): MdInputDialog,
-MdMenuBar, MdStatusBar, MdSplitter, MdStackedWidget, MdDockWidget /
-MdDockManager, MdTree / MdTreeSelect, MdEmptyState / MdResult, MdSkeleton,
-MdPagination, MdBreadcrumb, MdSteps / MdStepper, MdTimeline, MdDescriptions,
+MdStackedWidget, MdDockWidget /
+MdDockManager, MdTree / MdTreeSelect, MdResult, MdSkeleton,
+MdBreadcrumb, MdSteps / MdStepper, MdTimeline, MdDescriptions,
 MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog, MdCascader,
 MdTransfer, MdUpload, MdColorPicker, MdRate, MdMentions, MdAutoComplete,
 MdPlainTextEdit, MdFlex, MdGrid, MdSpace, MdMasonry, MdDrawer,

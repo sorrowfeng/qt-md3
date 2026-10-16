@@ -1397,6 +1397,112 @@ set_tests_properties(TestMd3FileDialog PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3FileDialog)
 
+# --- Stage 2 P1: chrome & navigation extensions -----------------------------
+
+add_executable(TestMd3MenuBar
+    TestMd3MenuBar.cpp
+)
+
+target_link_libraries(TestMd3MenuBar
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3MenuBar COMMAND TestMd3MenuBar)
+set_tests_properties(TestMd3MenuBar PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3MenuBar)
+
+add_executable(TestMd3StatusBar
+    TestMd3StatusBar.cpp
+)
+
+target_link_libraries(TestMd3StatusBar
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3StatusBar COMMAND TestMd3StatusBar)
+set_tests_properties(TestMd3StatusBar PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3StatusBar)
+
+add_executable(TestMd3Splitter
+    TestMd3Splitter.cpp
+)
+
+target_link_libraries(TestMd3Splitter
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Splitter COMMAND TestMd3Splitter)
+set_tests_properties(TestMd3Splitter PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Splitter)
+
+add_executable(TestMd3Pagination
+    TestMd3Pagination.cpp
+)
+
+target_link_libraries(TestMd3Pagination
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Pagination COMMAND TestMd3Pagination)
+set_tests_properties(TestMd3Pagination PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Pagination)
+
+add_executable(TestMd3EmptyState
+    TestMd3EmptyState.cpp
+)
+
+target_link_libraries(TestMd3EmptyState
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3EmptyState COMMAND TestMd3EmptyState)
+set_tests_properties(TestMd3EmptyState PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3EmptyState)
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
@@ -1448,6 +1554,7 @@ add_executable(TestMd3GalleryClick
     ${GALLERY_DIR}/GalleryPages47.cpp
     ${GALLERY_DIR}/GalleryPages48.cpp
     ${GALLERY_DIR}/GalleryPages49.cpp
+    ${GALLERY_DIR}/GalleryPages50.cpp
     ${GALLERY_DIR}/GalleryPages44.cpp
     ${GALLERY_DIR}/GalleryPages45.cpp
     ${GALLERY_DIR}/GalleryPages46.cpp

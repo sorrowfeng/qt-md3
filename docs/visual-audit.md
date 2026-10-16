@@ -1200,3 +1200,13 @@ date/time pickers) remain **SKIP**: the image reader locks onto one decoded
 image regardless of path, hash or banner stamp. This is an environment
 limitation, not a library finding. Do not treat any earlier false alarm
 (menu corner radius, AM/PM tint) as open �� those are export-faithful.
+
+## Stage 2 Qt extensions (app chrome batch)
+
+Page 50 (qt-extensions-chrome) shows MdMenuBar / MdStatusBar / MdSplitter /
+MdPagination / MdEmptyState as live widgets. Semantics pinned by unit tests
+(token colours, properties, keyboard, non-blank render). Side-by-side capture
+against official Material chrome (desktop menu bar, status bar) is still
+pending with the rest of the Stage 2 visual QA round; the splitter's
+outline-variant hairline and the empty-state art disc are already token-sourced
+(outline-variant, surface-variant) so they need measurement, not invention.
