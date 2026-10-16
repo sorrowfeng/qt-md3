@@ -2,6 +2,7 @@
 
 #include "core/MdShape.h"
 #include "core/MdTheme.h"
+#include "widgets/MdScrollBar.h"
 
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
@@ -51,6 +52,16 @@ QColor onSurfaceAt(qreal alpha)
     const qreal base = colour.alphaF() > 0.0 ? colour.alphaF() : 1.0;
     colour.setAlphaF(std::clamp(base * alpha, 0.0, 1.0));
     return colour;
+}
+
+/// Per-widget overlay width: `MdScrollBar::thickness` when the widget is one,
+/// otherwise the Compose 8.dp default.
+int overlayWidthFor(const QWidget *widget)
+{
+    if (const auto *bar = qobject_cast<const MdScrollBar *>(widget)) {
+        return bar->thickness();
+    }
+    return kOverlayWidth;
 }
 
 } // namespace
@@ -117,6 +128,19 @@ QRect MdScrollBarStyle::handleRectFor(const QRect &rect,
                                       int sliderPosition,
                                       bool upsideDown)
 {
+    return handleRectFor(rect, orientation, minimum, maximum, pageStep, sliderPosition, upsideDown,
+                         kOverlayWidth);
+}
+
+QRect MdScrollBarStyle::handleRectFor(const QRect &rect,
+                                      Qt::Orientation orientation,
+                                      int minimum,
+                                      int maximum,
+                                      int pageStep,
+                                      int sliderPosition,
+                                      bool upsideDown,
+                                      int overlayWidth)
+{
     const bool vertical = orientation == Qt::Vertical;
     const int trackPos = vertical ? rect.top() : rect.left();
     const int trackLen = vertical ? rect.height() : rect.width();
@@ -124,16 +148,13 @@ QRect MdScrollBarStyle::handleRectFor(const QRect &rect,
     const int crossLen = vertical ? rect.width() : rect.height();
 
     const int extent = qMin(kHitExtent, crossLen);
-    const int visible = qMin(kOverlayWidth, extent);
+    const int visible = qBound(1, qMin(overlayWidth, extent), extent);
     const int crossInset = qMax(0, (extent - visible) / 2);
     const int handleCrossPos = crossPos + qMin(crossInset, qMax(0, (crossLen - visible) / 2));
 
     const int range = maximum - minimum;
     int handleLen = trackLen;
     if (range > 0) {
-        // The handle is a proportional slice of the track: pageStep against
-        // the full scrollable span (range + pageStep), which is exactly the
-        // relationship Qt's own groove math uses.
         const int span = range + qMax(pageStep, 1);
         handleLen = qBound(kMinHandleLength, int(std::lround(qreal(trackLen) * pageStep / qreal(span))),
                            trackLen);
@@ -152,6 +173,14 @@ QRect MdScrollBarStyle::handleRectFor(const QRect &rect,
     return QRect(handlePos, handleCrossPos, handleLen, visible);
 }
 
+bool MdScrollBarStyle::chromeSuppressed(const QWidget *widget)
+{
+    if (const auto *bar = qobject_cast<const MdScrollBar *>(widget)) {
+        return bar->visibleMode() == MdScrollBarVisibility::Never;
+    }
+    return false;
+}
+
 void MdScrollBarStyle::drawComplexControl(ComplexControl control, const QStyleOptionComplex *option,
                                           QPainter *painter, const QWidget *widget) const
 {
@@ -165,10 +194,14 @@ void MdScrollBarStyle::drawComplexControl(ComplexControl control, const QStyleOp
         return;
     }
 
+    if (chromeSuppressed(widget)) {
+        return;
+    }
+
     const QRect bar = slider->rect;
     const bool vertical = slider->orientation == Qt::Vertical;
 
-    // The handle rect already carries the 8 dp overlay width; the track uses
+    // The handle rect already carries the overlay width; the track uses
     // the same cross-axis so the rail and the pill share a centre line.
     const QRect handle = subControlRect(control, option, SC_ScrollBarSlider, widget);
     QRect track = bar;
@@ -185,13 +218,18 @@ void MdScrollBarStyle::drawComplexControl(ComplexControl control, const QStyleOp
     const bool pressed = (slider->state & State_Sunken) != 0
                          && (slider->activeSubControls & SC_ScrollBarSlider) != 0;
 
+    const bool forceChrome = widget
+                             && qobject_cast<const MdScrollBar *>(widget)
+                             && qobject_cast<const MdScrollBar *>(widget)->visibleMode()
+                                    == MdScrollBarVisibility::Always;
+
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, true);
     painter->setPen(Qt::NoPen);
 
     // Track: invisible at rest, a very subtle on-surface rail while the bar
     // is being pointed at or dragged (M3 overlay style — no permanent groove).
-    if (enabled && (hovered || pressed)) {
+    if (enabled && (hovered || pressed || forceChrome)) {
         painter->setBrush(onSurfaceAt(kTrackAlpha));
         painter->drawPath(MdShape::roundedRect(QRectF(track), ShapeCorner::Full));
     }
@@ -245,7 +283,7 @@ QRect MdScrollBarStyle::subControlRect(ComplexControl control, const QStyleOptio
 
     const QRect handle = handleRectFor(bar, slider->orientation, slider->minimum, slider->maximum,
                                        slider->pageStep, slider->sliderPosition,
-                                       slider->upsideDown);
+                                       slider->upsideDown, overlayWidthFor(widget));
 
     switch (subControl) {
     case SC_ScrollBarSlider:

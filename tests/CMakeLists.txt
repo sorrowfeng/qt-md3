@@ -1185,6 +1185,50 @@ set_tests_properties(TestMd3ThemeMatrix PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3ThemeMatrix)
 
+# --- Stage 2 Qt extensions ---------------------------------------------------
+
+add_executable(TestMd3ScrollBar
+    TestMd3ScrollBar.cpp
+)
+
+target_link_libraries(TestMd3ScrollBar
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3ScrollBar COMMAND TestMd3ScrollBar)
+set_tests_properties(TestMd3ScrollBar PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3ScrollBar)
+
+add_executable(TestMd3Select
+    TestMd3Select.cpp
+)
+
+target_link_libraries(TestMd3Select
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Select COMMAND TestMd3Select)
+set_tests_properties(TestMd3Select PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Select)
+
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
@@ -1234,6 +1278,7 @@ add_executable(TestMd3GalleryClick
     ${GALLERY_DIR}/GalleryPages42.cpp
     ${GALLERY_DIR}/GalleryPages43.cpp
     ${GALLERY_DIR}/GalleryPages47.cpp
+    ${GALLERY_DIR}/GalleryPages48.cpp
     ${GALLERY_DIR}/GalleryPages44.cpp
     ${GALLERY_DIR}/GalleryPages45.cpp
     ${GALLERY_DIR}/GalleryPages46.cpp

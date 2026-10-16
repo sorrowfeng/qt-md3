@@ -59,7 +59,7 @@ public:
     static qreal disabledAlpha();
 
     /// The painted handle rect for a scrollbar option (also the test hook).
-    /// `rect` is the scrollbar's full rect; the handle is the 8 dp overlay
+    /// `rect` is the scrollbar's full rect; the handle is the overlay
     /// pill inset into it and positioned from the slider value.
     static QRect handleRectFor(const QRect &rect,
                                Qt::Orientation orientation,
@@ -68,6 +68,15 @@ public:
                                int pageStep,
                                int sliderPosition,
                                bool upsideDown);
+    /// Same as above with an explicit overlay width (MdScrollBar::thickness).
+    static QRect handleRectFor(const QRect &rect,
+                               Qt::Orientation orientation,
+                               int minimum,
+                               int maximum,
+                               int pageStep,
+                               int sliderPosition,
+                               bool upsideDown,
+                               int overlayWidth);
 
     /// Pattern B: draws CC_ScrollBar. Everything else falls through to the
     /// base (the application style).
@@ -83,6 +92,10 @@ public:
 
     void drawPrimitive(PrimitiveElement element, const QStyleOption *option,
                        QPainter *painter, const QWidget *widget) const override;
+
+    /// True when the widget is an `MdScrollBar` whose `visibleMode` is
+    /// `Never`. Used to suppress chrome without hiding the scrollbar.
+    static bool chromeSuppressed(const QWidget *widget);
 };
 
 } // namespace md

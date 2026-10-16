@@ -163,6 +163,8 @@ public:
     void addItem(MdMenuItem *item);
     /// Appends a 1 px divider row.
     void addDivider();
+    /// Removes and deletes every row (items and dividers).
+    void clear();
 
     /// The item rows in order (dividers excluded).
     QList<MdMenuItem *> items() const { return m_items; }

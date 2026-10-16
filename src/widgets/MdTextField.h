@@ -43,6 +43,10 @@ class QT_MD3_EXPORT MdTextField : public QLineEdit
     Q_PROPERTY(bool error READ hasError WRITE setError NOTIFY errorChanged)
     Q_PROPERTY(md::MdTextFieldVariant variant READ variant WRITE setVariant NOTIFY variantChanged)
     Q_PROPERTY(bool populated READ isPopulated NOTIFY populatedChanged)
+    Q_PROPERTY(QString leadingIconName READ leadingIconName WRITE setLeadingIconName NOTIFY
+                   leadingIconNameChanged)
+    Q_PROPERTY(QString trailingIconName READ trailingIconName WRITE setTrailingIconName NOTIFY
+                   trailingIconNameChanged)
 
 public:
     explicit MdTextField(QWidget *parent = nullptr);
@@ -64,6 +68,13 @@ public:
     MdTextFieldVariant variant() const { return m_variant; }
     void setVariant(MdTextFieldVariant variant);
 
+    /// The 24 px leading icon slot (`leading-icon-size`). Empty = no icon.
+    QString leadingIconName() const { return m_leadingIconName; }
+    void setLeadingIconName(const QString &iconName);
+    /// The 24 px trailing icon slot (`trailing-icon-size`). Empty = no icon.
+    QString trailingIconName() const { return m_trailingIconName; }
+    void setTrailingIconName(const QString &iconName);
+
     /// True when the label is floated: the field is focused or has text.
     bool isPopulated() const;
 
@@ -72,6 +83,10 @@ public:
     QRectF containerRect() const;
     /// The floating label's rect (populated) or the input line's (at rest).
     QRectF labelRect() const;
+    /// The 24 px leading icon slot, or an empty rect when there is no icon.
+    QRectF leadingIconRect() const;
+    /// The 24 px trailing icon slot, or an empty rect when there is no icon.
+    QRectF trailingIconRect() const;
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
@@ -101,6 +116,8 @@ signals:
     void errorChanged(bool error);
     void variantChanged(md::MdTextFieldVariant variant);
     void populatedChanged(bool populated);
+    void leadingIconNameChanged(const QString &iconName);
+    void trailingIconNameChanged(const QString &iconName);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -113,10 +130,13 @@ protected:
 private:
     void retargetAnimations();
     void tickAnimations();
+    void updateTextMargins();
 
     QString m_label;
     QString m_supporting;
     QString m_placeholder;
+    QString m_leadingIconName;
+    QString m_trailingIconName;
     bool m_error = false;
     MdTextFieldVariant m_variant = MdTextFieldVariant::Filled;
 

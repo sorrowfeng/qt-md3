@@ -106,6 +106,38 @@ void MdTextField::setVariant(MdTextFieldVariant variant)
     update();
 }
 
+void MdTextField::setLeadingIconName(const QString &iconName)
+{
+    if (iconName == m_leadingIconName) {
+        return;
+    }
+    m_leadingIconName = iconName;
+    emit leadingIconNameChanged(iconName);
+    updateTextMargins();
+    update();
+}
+
+void MdTextField::setTrailingIconName(const QString &iconName)
+{
+    if (iconName == m_trailingIconName) {
+        return;
+    }
+    m_trailingIconName = iconName;
+    emit trailingIconNameChanged(iconName);
+    updateTextMargins();
+    update();
+}
+
+void MdTextField::updateTextMargins()
+{
+    // Keep the edit text clear of the 24 px icon slots plus their 16 px
+    // padding — the same inset the label already uses.
+    const MdTextFieldTokens &tokens = textFieldTokens();
+    const qreal lead = m_leadingIconName.isEmpty() ? 0.0 : tokens.iconSize + 8.0;
+    const qreal trail = m_trailingIconName.isEmpty() ? 0.0 : tokens.iconSize + 8.0;
+    setTextMargins(int(lead), 0, int(trail), 0);
+}
+
 bool MdTextField::isPopulated() const
 {
     return hasFocus() || !text().isEmpty();
@@ -130,6 +162,30 @@ QRectF MdTextField::labelRect() const
     const qreal floatedY = 8.0;
     const qreal y = restY + (floatedY - restY) * m_labelFloat;
     return QRectF(16.0, y, rect().width() - 32.0, 24.0);
+}
+
+QRectF MdTextField::leadingIconRect() const
+{
+    if (m_leadingIconName.isEmpty()) {
+        return QRectF();
+    }
+    const MdTextFieldTokens &tokens = textFieldTokens();
+    const qreal size = tokens.iconSize;
+    const qreal x = 16.0;
+    const qreal y = (containerRect().height() - size) / 2.0;
+    return QRectF(x, y, size, size);
+}
+
+QRectF MdTextField::trailingIconRect() const
+{
+    if (m_trailingIconName.isEmpty()) {
+        return QRectF();
+    }
+    const MdTextFieldTokens &tokens = textFieldTokens();
+    const qreal size = tokens.iconSize;
+    const qreal x = containerRect().width() - 16.0 - size;
+    const qreal y = (containerRect().height() - size) / 2.0;
+    return QRectF(x, y, size, size);
 }
 
 QSize MdTextField::sizeHint() const

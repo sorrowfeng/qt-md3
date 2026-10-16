@@ -177,6 +177,8 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdTooltipHost.h
     widgets/MdSegmentedButton.h
     widgets/MdSplitButton.h
+    widgets/MdScrollBar.h
+    widgets/MdSelect.h
 )
 
 set(QT_MD3_SOURCES
@@ -340,6 +342,8 @@ set(QT_MD3_SOURCES
     widgets/MdTooltipHost.cpp
     widgets/MdSegmentedButton.cpp
     widgets/MdSplitButton.cpp
+    widgets/MdScrollBar.cpp
+    widgets/MdSelect.cpp
 )
 
 set(QT_MD3_RESOURCES

@@ -1,5 +1,6 @@
 #include "MdTextFieldStyle.h"
 
+#include "core/MdIcon.h"
 #include "core/MdShape.h"
 #include "core/MdStateLayer.h"
 #include "core/MdTheme.h"
@@ -173,6 +174,31 @@ void MdTextFieldStyle::paintTextField(QPainter &painter, const MdTextField &fiel
                                 field.containerRect().bottom() + 4.0,
                                 field.containerRect().width() - 32.0, 16.0),
                          MdStyleBase::leadingAlignment(&field) | Qt::AlignVCenter, field.supportingText());
+    }
+
+    // 5 — the leading / trailing icons (24 px, on-surface-variant; the
+    // trailing icon takes the error colour when the field is errored).
+    if (!field.leadingIconName().isEmpty()) {
+        const QRectF icon = field.leadingIconRect();
+        if (icon.isValid()) {
+            QColor colour = resolveSlot(tokens.leadingIcon[int(state)]);
+            if (!colour.isValid()) {
+                colour = MdTheme::instance().color(ColorRole::OnSurfaceVariant);
+            }
+            MdIcon::paint(&painter, icon, field.leadingIconName(), colour);
+        }
+    }
+    if (!field.trailingIconName().isEmpty()) {
+        const QRectF icon = field.trailingIconRect();
+        if (icon.isValid()) {
+            QColor colour = field.hasError()
+                ? MdTheme::instance().color(tokens.errorColor)
+                : resolveSlot(tokens.trailingIcon[int(state)]);
+            if (!colour.isValid()) {
+                colour = MdTheme::instance().color(ColorRole::OnSurfaceVariant);
+            }
+            MdIcon::paint(&painter, icon, field.trailingIconName(), colour);
+        }
     }
 
     painter.restore();

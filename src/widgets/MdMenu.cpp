@@ -318,6 +318,18 @@ void MdMenu::addDivider()
     relayout();
 }
 
+void MdMenu::clear()
+{
+    for (QWidget *row : m_rows) {
+        row->setParent(nullptr);
+        row->deleteLater();
+    }
+    m_items.clear();
+    m_dividers.clear();
+    m_rows.clear();
+    relayout();
+}
+
 void MdMenu::relayout()
 {
     const MdMenuTokens &t = menuTokens();

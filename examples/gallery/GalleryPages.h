@@ -239,6 +239,8 @@ GalleryPage *createDatePickerPage();
 GalleryPage *createTextFieldPage();
 /// Page 43. Search.
 GalleryPage *createSearchPage();
+/// Page 48. Stage 2 Qt extensions (MdScrollBar + MdSelect).
+GalleryPage *createStage2Page();
 
 // ---------------------------------------------------------------------------
 // Showcase screens
