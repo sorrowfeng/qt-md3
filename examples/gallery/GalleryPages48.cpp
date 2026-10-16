@@ -1,27 +1,39 @@
-// Gallery page 48: Stage 2 Qt extensions — MdScrollBar + MdSelect.
+// Gallery page 48: Stage 2 Qt extensions — MdScrollBar + MdSelect +
+// MdMessageBox + MdScrollArea + MdTable + MdAvatar.
 //
 // Same rules as the other component pages: widgets are banked, build() is
-// re-entrant, and the page never styles anything. These two are Appendix D
-// P0 Qt extensions (MD3 has no official scrollbar or standalone select
-// family); the page shows the derived overlay scrollbar and the exposed
-// dropdown menu (text field + menu composition) as real live widgets.
+// re-entrant, and the page never styles anything. These are Appendix D
+// Qt extensions (MD3 has no official scrollbar, standalone select, message
+// box, scroll area, data table or avatar family); the page shows the
+// derived designs as real live widgets.
 //
 // MD3 semantics these anchor to, from the Appendix D table:
 //   * MdScrollBar — thumb on-surface-variant low alpha, hover / drag lift
 //     (the 0.38 / 0.46 / 0.54 ladder). Overlay, no arrow buttons.
 //   * MdSelect — exposed dropdown menu: an MdTextField anchor + an MdMenu
 //     popup. Filled / outlined variants, leading icon, error, disabled.
+//   * MdMessageBox — Dialog tokens + Buttons + semantic colour (error uses
+//     the error role).
+//   * MdScrollArea — composes MdScrollBar over surface.
+//   * MdTable — List row semantics + surface-container header.
+//   * MdAvatar — shape Full + surface-variant + initials / icon.
 
 #include "GalleryPages.h"
 
-#include "widgets/MdSelect.h"
+#include "widgets/MdAvatar.h"
+#include "widgets/MdButton.h"
+#include "widgets/MdMessageBox.h"
+#include "widgets/MdScrollArea.h"
 #include "widgets/MdScrollBar.h"
+#include "widgets/MdSelect.h"
+#include "widgets/MdTable.h"
 #include "widgets/MdTextField.h"
 
 #include "I18n.h"
 
 #include <QtCore/QHash>
 #include <QtCore/QVector>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QScrollArea>
 
 namespace gallery {
@@ -60,9 +72,17 @@ private:
 
     md::MdScrollBar *scrollBar(const QString &id);
     md::MdSelect *select(const QString &id);
+    md::MdAvatar *avatar(const QString &id);
+    md::MdMessageBox *messageBox(const QString &id);
+    md::MdScrollArea *scrollArea(const QString &id);
+    md::MdTable *table(const QString &id);
 
     QHash<QString, md::MdScrollBar *> m_bars;
     QHash<QString, md::MdSelect *> m_selects;
+    QHash<QString, md::MdAvatar *> m_avatars;
+    QHash<QString, md::MdMessageBox *> m_messageBoxes;
+    QHash<QString, md::MdScrollArea *> m_scrollAreas;
+    QHash<QString, md::MdTable *> m_tables;
     QVector<Slot> m_slots;
 };
 
@@ -86,15 +106,15 @@ QString Stage2Page::slug() const
 QString Stage2Page::subtitle() const
 {
     return L(
-        "阶段二 P0：MD3 没有滚动条与独立 Select 规范，本页展示从 "
-        "token 推导的 overlay 滚动条（on-surface 低透明度 thumb，hover / drag "
-        "提升 0.38 / 0.46 / 0.54）与 exposed dropdown menu（MdTextField + "
-        "MdMenu 组合，filled / outlined、leading icon、error、disabled）。",
-        "Stage 2 P0: MD3 has no scrollbar or standalone select spec. This page "
-        "shows the token-derived overlay scrollbar (on-surface low-alpha thumb, "
-        "hover / drag lift on the 0.38 / 0.46 / 0.54 ladder) and the exposed "
-        "dropdown menu (MdTextField + MdMenu composition, filled / outlined, "
-        "leading icon, error, disabled).");
+        "阶段二 Qt 扩展：MD3 无官方规范的控件，全部用阶段一 token 重新设计。"
+        "本页覆盖 overlay 滚动条、exposed dropdown、消息框（Dialog + 语义色）、"
+        "滚动区域、数据表（List 行语义）与 Avatar（shape Full + "
+        "surface-variant）。",
+        "Stage 2 Qt extensions: controls MD3 does not specify, redesigned "
+        "with Stage 1 tokens. This page covers the overlay scrollbar, the "
+        "exposed dropdown, the message box (Dialog + semantic colour), the "
+        "scroll area, the data table (List row semantics) and the avatar "
+        "(shape Full + surface-variant).");
 }
 
 md::MdScrollBar *Stage2Page::scrollBar(const QString &id)
@@ -118,6 +138,50 @@ md::MdSelect *Stage2Page::select(const QString &id)
     }
     auto *created = new md::MdSelect(this);
     m_selects.insert(id, created);
+    return created;
+}
+
+md::MdAvatar *Stage2Page::avatar(const QString &id)
+{
+    const auto found = m_avatars.constFind(id);
+    if (found != m_avatars.constEnd()) {
+        return found.value();
+    }
+    auto *created = new md::MdAvatar(this);
+    m_avatars.insert(id, created);
+    return created;
+}
+
+md::MdMessageBox *Stage2Page::messageBox(const QString &id)
+{
+    const auto found = m_messageBoxes.constFind(id);
+    if (found != m_messageBoxes.constEnd()) {
+        return found.value();
+    }
+    auto *created = new md::MdMessageBox(this);
+    m_messageBoxes.insert(id, created);
+    return created;
+}
+
+md::MdScrollArea *Stage2Page::scrollArea(const QString &id)
+{
+    const auto found = m_scrollAreas.constFind(id);
+    if (found != m_scrollAreas.constEnd()) {
+        return found.value();
+    }
+    auto *created = new md::MdScrollArea(this);
+    m_scrollAreas.insert(id, created);
+    return created;
+}
+
+md::MdTable *Stage2Page::table(const QString &id)
+{
+    const auto found = m_tables.constFind(id);
+    if (found != m_tables.constEnd()) {
+        return found.value();
+    }
+    auto *created = new md::MdTable(this);
+    m_tables.insert(id, created);
     return created;
 }
 
@@ -205,6 +269,165 @@ void Stage2Page::build(GalleryContext &context)
     context.detail(L(
         "filled · outlined + leading icon · error · disabled",
         "filled · outlined + leading icon · error · disabled"));
+
+    context.space(16.0);
+
+    // --- MdMessageBox ---------------------------------------------------------
+    context.section(L("MdMessageBox — 对话框 + 语义色", "MdMessageBox — dialog + semantic colour"));
+    context.paragraph(L(
+        "QMessageBox 替代。容器锚定 md.comp.dialog.*（extra-large 圆角、"
+        "surface-container-high、level 3）；动作按钮是真实 MdButton"
+        "（肯定用 Filled，否定用 Text）；语义色只染图标：Information / "
+        "Question 用 primary，Warning 用 tertiary，Error 用 error。",
+        "QMessageBox replacement. The container anchors on md.comp.dialog.* "
+        "(extra-large corner, surface-container-high, level 3); actions are "
+        "real MdButton children (Filled for affirmative, Text for dismissive); "
+        "the semantic colour only tints the icon: Information / Question use "
+        "primary, Warning uses tertiary, Error uses error."));
+    {
+        auto *info = messageBox(QStringLiteral("mb-info"));
+        info->setVariant(md::MdMessageBoxVariant::Information);
+        info->setTitle(L("已保存", "Saved"));
+        info->setText(L("你的更改已写入磁盘。", "Your changes were written to disk."));
+        info->setStandardButtons(md::MdMessageBoxStandardButton::Ok);
+        const QRectF band = context.band(200.0);
+        m_slots.append({info, QRectF(band.left(), band.top(), qMin(360.0, band.width() - 16.0), 200.0)});
+
+        auto *warn = messageBox(QStringLiteral("mb-warn"));
+        warn->setVariant(md::MdMessageBoxVariant::Warning);
+        warn->setTitle(L("电池电量低", "Battery low"));
+        warn->setText(L("剩余 10%。", "10% remaining."));
+        warn->setStandardButtons(md::MdMessageBoxStandardButton::Ok);
+        const QRectF band2 = context.band(200.0);
+        m_slots.append({warn, QRectF(band2.left(), band2.top(), qMin(360.0, band2.width() - 16.0), 200.0)});
+
+        auto *err = messageBox(QStringLiteral("mb-error"));
+        err->setVariant(md::MdMessageBoxVariant::Error);
+        err->setTitle(L("无法删除", "Cannot delete"));
+        err->setText(L("文件被其他程序占用。", "The file is in use by another program."));
+        err->setStandardButtons(md::MdMessageBoxStandardButton::Close);
+        const QRectF band3 = context.band(200.0);
+        m_slots.append({err, QRectF(band3.left(), band3.top(), qMin(360.0, band3.width() - 16.0), 200.0)});
+
+        auto *ask = messageBox(QStringLiteral("mb-ask"));
+        ask->setVariant(md::MdMessageBoxVariant::Question);
+        ask->setTitle(L("退出？", "Quit?"));
+        ask->setText(L("未保存的更改将会丢失。", "Unsaved changes will be lost."));
+        ask->setStandardButtons(md::MdMessageBoxStandardButton::Yes
+                                | md::MdMessageBoxStandardButton::No);
+        const QRectF band4 = context.band(200.0);
+        m_slots.append({ask, QRectF(band4.left(), band4.top(), qMin(360.0, band4.width() - 16.0), 200.0)});
+    }
+    context.detail(L(
+        "information · warning · error · question (Yes/No)",
+        "information · warning · error · question (Yes/No)"));
+
+    context.space(16.0);
+
+    // --- MdScrollArea ----------------------------------------------------------
+    context.section(L("MdScrollArea — 组合 MdScrollBar", "MdScrollArea — composes MdScrollBar"));
+    context.paragraph(L(
+        "QScrollArea 的 MD3 化：frame 关闭，viewport 铺 surface，滚动条是"
+        " MdScrollBar（overlay thumb 0.38 / 0.46 / 0.54）。wheel / 键盘 / "
+        "widgetResizable 沿用 QScrollArea 行为。",
+        "QScrollArea in MD3 clothing: no frame, surface under the viewport, "
+        "and MdScrollBar as the chrome (overlay thumb on the 0.38 / 0.46 / "
+        "0.54 ladder). Wheel / keyboard / widgetResizable keep the QScrollArea "
+        "behaviour."));
+    {
+        auto *area = scrollArea(QStringLiteral("sa-demo"));
+        auto *content = new QLabel(
+            L("内容比视口高，用滚轮或方向键滚动。\n\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20",
+              "Content taller than the viewport — scroll with the wheel or "
+              "arrow keys.\n\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"));
+        content->setWordWrap(true);
+        area->setWidget(content);
+        area->setWidgetResizable(true);
+        const QRectF band = context.band(180.0);
+        m_slots.append({area, QRectF(band.left(), band.top(), qMin(320.0, band.width() - 16.0), 180.0)});
+    }
+    context.detail(L(
+        "wheel · 键盘 · widgetResizable · MdScrollBar overlay",
+        "wheel · keyboard · widgetResizable · MdScrollBar overlay"));
+
+    context.space(16.0);
+
+    // --- MdTable ----------------------------------------------------------------
+    context.section(L("MdTable — List 行语义 + surface 表头", "MdTable — List rows + surface header"));
+    context.paragraph(L(
+        "MD3 无数据表格规范。表头 surface-container + label-large；行高默认"
+        "取 List one-line（56）；hover / selected 是 List 的 state layer 与 "
+        "secondary-container；分割线 outline-variant；可选交替行用 "
+        "surface-container-lowest / low。",
+        "MD3 has no data-table spec. The header is surface-container + "
+        "label-large; row height defaults to the list one-line (56); hover / "
+        "selected are the list's state layer and secondary-container; "
+        "dividers are outline-variant; optional alternating rows use "
+        "surface-container-lowest / low."));
+    {
+        auto *grid = table(QStringLiteral("tbl-demo"));
+        grid->setColumnCount(3);
+        grid->setHorizontalHeaderLabels({L("姓名", "Name"), L("角色", "Role"), L("团队", "Team")});
+        grid->setRowCount(4);
+        grid->setCellText(0, 0, L("Ada", "Ada"));
+        grid->setCellText(0, 1, L("工程师", "Engineer"));
+        grid->setCellText(0, 2, L("核心", "Core"));
+        grid->setCellText(1, 0, L("Grace", "Grace"));
+        grid->setCellText(1, 1, L("负责人", "Lead"));
+        grid->setCellText(1, 2, L("编译器", "Compilers"));
+        grid->setCellText(2, 0, L("Alan", "Alan"));
+        grid->setCellText(2, 1, L("研究", "Research"));
+        grid->setCellText(2, 2, L("数学", "Math"));
+        grid->setCellText(3, 0, L("Barbara", "Barbara"));
+        grid->setCellText(3, 1, L("运维", "Ops"));
+        grid->setCellText(3, 2, L("平台", "Platform"));
+        grid->setAlternatingRowColors(true);
+        grid->setCurrentRow(1);
+        const QRectF band = context.band(240.0);
+        m_slots.append({grid, QRectF(band.left(), band.top(), qMin(480.0, band.width() - 16.0), 240.0)});
+    }
+    context.detail(L(
+        "header · hover · selected · alternating · dividers",
+        "header · hover · selected · alternating · dividers"));
+
+    context.space(16.0);
+
+    // --- MdAvatar -----------------------------------------------------------------
+    context.section(L("MdAvatar — shape Full + surface-variant", "MdAvatar — shape Full + surface-variant"));
+    context.paragraph(L(
+        "MD3 无独立 Avatar 规范（仅作 List / Chip 的 leading 元素）。独立化时"
+        "用 shape Full + surface-variant 背景 + on-surface-variant 内容；内容"
+        "为 initials 或 24px 图标。",
+        "MD3 has no standalone Avatar family (only the list / chip leading "
+        "element). Standalone it takes shape Full + surface-variant background "
+        "+ on-surface-variant content; the content is initials or a 24 px "
+        "icon."));
+    {
+        auto *initials = avatar(QStringLiteral("av-initials"));
+        initials->setText(QStringLiteral("AL"));
+        initials->setAvatarSize(48);
+        const QRectF band = context.band(64.0);
+        m_slots.append({initials, QRectF(band.left(), band.top(), 48, 48)});
+
+        auto *name = avatar(QStringLiteral("av-name"));
+        name->setText(md::MdAvatar::initialsFrom(QStringLiteral("Grace Hopper")));
+        name->setAvatarSize(48);
+        m_slots.append({name, QRectF(band.left() + 64.0, band.top(), 48, 48)});
+
+        auto *icon = avatar(QStringLiteral("av-icon"));
+        icon->setIconName(QStringLiteral("person"));
+        icon->setAvatarSize(48);
+        m_slots.append({icon, QRectF(band.left() + 128.0, band.top(), 48, 48)});
+
+        auto *big = avatar(QStringLiteral("av-big"));
+        big->setText(QStringLiteral("AB"));
+        big->setAvatarSize(64);
+        big->setCorner(md::ShapeCorner::Medium);
+        m_slots.append({big, QRectF(band.left() + 192.0, band.top(), 64, 64)});
+    }
+    context.detail(L(
+        "initials · derived initials · icon · medium corner",
+        "initials · derived initials · icon · medium corner"));
 }
 
 void Stage2Page::layoutChildren()

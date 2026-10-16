@@ -1919,6 +1919,27 @@ pattern.
 
 ## Stage 2 — Qt extensions
 
-Not started. Full list: appendix D of
-[md3-qt-porting-prompts.md](md3-qt-porting-prompts.md). Blocked by the
-`TestMd3CoveragePolicy` gate until Stage 1 is green.
+Stage 1 is green, so the `TestMd3CoveragePolicy` gate now tracks appendix D
+progress instead of blocking. Full list: appendix D of
+[md3-qt-porting-prompts.md](md3-qt-porting-prompts.md).
+
+Landed (with tests + gallery page 48 "Qt extensions"):
+
+| Class | Qt counterpart | Semantic anchor | Notes |
+| --- | --- | --- | --- |
+| `MdScrollBar` | QScrollBar | overlay thumb on-surface @ 0.38/0.46/0.54 | derived (no official scrollbar family) |
+| `MdSelect` | QComboBox | exposed dropdown menu = text field + menu | composition of Stage 1 exports |
+| `MdMessageBox` | QMessageBox | Dialog tokens + Buttons + semantic colour (error uses error role) | container paints `md.comp.dialog.*` (extra-large, surface-container-high, level 3); actions are real `MdButton` (Filled affirmative / Text dismissive); icon tinted primary / tertiary / error. MdDialog's two-slot action row cannot express Yes/No/Cancel, so the box self-paints the dialog chrome and lays out N buttons in the spec's end-aligned FlowRow. |
+| `MdScrollArea` | QScrollArea | surface + MdScrollBar | composes `MdScrollBar`; no frame; viewport fills `surface` |
+| `MdTable` | QTableView | List row semantics + surface-container header | MD3 has no data-table spec. Header surface-container + label-large; rows list one-line height (56); hover 0.08 / selected secondary-container; outline-variant dividers; optional alternating surface-container-lowest/low. String-grid API (`setRowCount` / `setCellText` / `setCellWidget`), not a QAbstractItemModel wrapper. |
+| `MdAvatar` | — | shape Full + surface-variant + on-surface-variant | promoted from the list leading-avatar slot; initials or 24 px icon |
+
+Still open (remaining appendix D rows): MdWindow, MdFileDialog, MdInputDialog,
+MdMenuBar, MdStatusBar, MdSplitter, MdStackedWidget, MdDockWidget /
+MdDockManager, MdTree / MdTreeSelect, MdEmptyState / MdResult, MdSkeleton,
+MdPagination, MdBreadcrumb, MdSteps / MdStepper, MdTimeline, MdDescriptions,
+MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog, MdInputNumber, MdCascader,
+MdTransfer, MdUpload, MdColorPicker, MdRate, MdMentions, MdAutoComplete,
+MdPlainTextEdit, MdFlex, MdGrid, MdSpace, MdScaffold, MdMasonry, MdDrawer,
+MdPopover, MdPopconfirm, MdNotification, MdCollapse, MdTour / MdCoachMark,
+MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor, MdBackTop.

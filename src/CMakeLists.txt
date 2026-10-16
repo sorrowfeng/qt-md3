@@ -179,6 +179,10 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdSplitButton.h
     widgets/MdScrollBar.h
     widgets/MdSelect.h
+    widgets/MdMessageBox.h
+    widgets/MdScrollArea.h
+    widgets/MdTable.h
+    widgets/MdAvatar.h
 )
 
 set(QT_MD3_SOURCES
@@ -344,6 +348,10 @@ set(QT_MD3_SOURCES
     widgets/MdSplitButton.cpp
     widgets/MdScrollBar.cpp
     widgets/MdSelect.cpp
+    widgets/MdMessageBox.cpp
+    widgets/MdScrollArea.cpp
+    widgets/MdTable.cpp
+    widgets/MdAvatar.cpp
 )
 
 set(QT_MD3_RESOURCES

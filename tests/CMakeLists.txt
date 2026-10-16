@@ -1229,6 +1229,90 @@ set_tests_properties(TestMd3Select PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Select)
 
+add_executable(TestMd3Avatar
+    TestMd3Avatar.cpp
+)
+
+target_link_libraries(TestMd3Avatar
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Avatar COMMAND TestMd3Avatar)
+set_tests_properties(TestMd3Avatar PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Avatar)
+
+add_executable(TestMd3ScrollArea
+    TestMd3ScrollArea.cpp
+)
+
+target_link_libraries(TestMd3ScrollArea
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3ScrollArea COMMAND TestMd3ScrollArea)
+set_tests_properties(TestMd3ScrollArea PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3ScrollArea)
+
+add_executable(TestMd3MessageBox
+    TestMd3MessageBox.cpp
+)
+
+target_link_libraries(TestMd3MessageBox
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3MessageBox COMMAND TestMd3MessageBox)
+set_tests_properties(TestMd3MessageBox PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3MessageBox)
+
+add_executable(TestMd3Table
+    TestMd3Table.cpp
+)
+
+target_link_libraries(TestMd3Table
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Table COMMAND TestMd3Table)
+set_tests_properties(TestMd3Table PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Table)
+
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
