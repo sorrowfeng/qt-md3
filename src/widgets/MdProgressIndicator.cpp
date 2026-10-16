@@ -101,6 +101,9 @@ void MdProgressIndicator::setIndeterminate(bool indeterminate)
         m_transitionTimer->stop();
     }
     snapDisplayFraction();
+    if (m_wave) {
+        updateWaveAmplitude();
+    }
     setAccessibleName(indeterminate ? QStringLiteral("loading")
                                     : QString::number(qRound(displayFraction() * 100.0))
                                           + QStringLiteral("%"));
@@ -120,6 +123,9 @@ void MdProgressIndicator::setValue(qreal value)
         // switches back.
     } else {
         transitionDisplayFraction();
+        if (m_wave) {
+            updateWaveAmplitude();
+        }
         setAccessibleName(QString::number(qRound(displayFraction() * 100.0))
                           + QStringLiteral("%"));
     }
@@ -163,6 +169,76 @@ void MdProgressIndicator::setFourColor(bool fourColor)
     updateAnimationState();
     update();
     emit fourColorChanged(m_fourColor);
+}
+
+void MdProgressIndicator::setWave(bool wave)
+{
+    if (m_wave == wave) {
+        return;
+    }
+    m_wave = wave;
+    // The with-wave container size is a different metric row, so the layout
+    // and the amplitude target both move.
+    if (wave) {
+        updateWaveAmplitude();
+    } else {
+        m_waveAmplitude = 0.0;
+        m_waveAmpActive = false;
+        if (m_transitionTimer) {
+            // The transition timer doubles as the amplitude-morph clock.
+            if (!m_transitionActive) {
+                m_transitionTimer->stop();
+            }
+        }
+    }
+    updateGeometry();
+    updateAnimationState();
+    update();
+    emit waveChanged(m_wave);
+}
+
+qreal MdProgressIndicator::waveAmplitudeTarget() const
+{
+    if (!m_wave) {
+        return 0.0;
+    }
+    if (m_indeterminate) {
+        return 1.0;
+    }
+    // Compose WavyProgressIndicatorDefaults.indicatorAmplitude:
+    // "Sets the amplitude to the max on 10%, and back to zero on 95% of
+    // the progress." 0 at or below 0.1 and at or above 0.95.
+    const qreal p = displayFraction();
+    return (p <= 0.1 || p >= 0.95) ? 0.0 : 1.0;
+}
+
+void MdProgressIndicator::updateWaveAmplitude()
+{
+    if (m_transitionTimer == nullptr) {
+        return;
+    }
+    const qreal target = waveAmplitudeTarget();
+    // Already morphing toward (or settled at) this target.
+    if (m_waveAmpActive && qFuzzyCompare(m_waveAmpTo + 1.0, target + 1.0)) {
+        return;
+    }
+    if (!m_waveAmpActive && qFuzzyCompare(m_waveAmplitude + 1.0, target + 1.0)) {
+        return;
+    }
+    m_waveAmpFrom = m_waveAmplitude;
+    m_waveAmpTo = target;
+    if (qFuzzyCompare(m_waveAmpFrom + 1.0, m_waveAmpTo + 1.0)) {
+        m_waveAmplitude = target;
+        m_waveAmpActive = false;
+        if (!m_transitionActive) {
+            m_transitionTimer->stop();
+        }
+        update();
+        return;
+    }
+    m_waveAmpActive = true;
+    m_waveAmpClock.restart();
+    m_transitionTimer->start();
 }
 
 const MdProgressIndicatorTokens &MdProgressIndicator::tokens() const
@@ -223,7 +299,9 @@ void MdProgressIndicator::updateAnimationState()
     }
     const bool bufferDotsVisible =
         !m_indeterminate && m_buffer > 0.0 && m_buffer < m_max && m_value < m_max;
-    const bool animated = (m_indeterminate || bufferDotsVisible) && isVisible();
+    // The wave phase scrolls continuously whenever a wave is actually drawn.
+    const bool waveScrolling = m_wave && (m_indeterminate || m_waveAmplitude > 0.0);
+    const bool animated = (m_indeterminate || bufferDotsVisible || waveScrolling) && isVisible();
     if (animated) {
         m_timer->start();
     } else {
@@ -262,20 +340,41 @@ void MdProgressIndicator::transitionDisplayFraction()
 
 void MdProgressIndicator::onTransitionTick()
 {
-    if (!m_transitionActive) {
+    if (!m_transitionActive && !m_waveAmpActive) {
         m_transitionTimer->stop();
         return;
     }
     const MdSpring spring = MdMotion::spring(MotionSpring::EffectsDefault);
     const qreal seconds = qreal(m_transitionClock.elapsed()) / 1000.0;
-    const qreal progress = spring.valueAt(seconds);
-    m_displayFraction = m_displayFrom + (m_displayTo - m_displayFrom) * progress;
-    // A damped spring approaches its target asymptotically; the elapsed-time
-    // bound is what guarantees the timer stops.
-    if (progress >= 1.0
-        || qreal(m_transitionClock.elapsed()) >= spring.settlingDurationMs()) {
-        m_displayFraction = m_displayTo;
-        m_transitionActive = false;
+    if (m_transitionActive) {
+        const qreal progress = spring.valueAt(seconds);
+        m_displayFraction = m_displayFrom + (m_displayTo - m_displayFrom) * progress;
+        // A damped spring approaches its target asymptotically; the elapsed-time
+        // bound is what guarantees the timer stops.
+        if (progress >= 1.0
+            || qreal(m_transitionClock.elapsed()) >= spring.settlingDurationMs()) {
+            m_displayFraction = m_displayTo;
+            m_transitionActive = false;
+            if (m_wave) {
+                updateWaveAmplitude();
+            }
+        }
+    }
+    if (m_waveAmpActive) {
+        // The amplitude morph is a shape morph — the engineering-spec spring
+        // rule. Compose runs Increasing/DecreasingAmplitudeAnimationSpec
+        // tweens (DurationLong2); this port drives MdSpring instead.
+        const MdSpring ampSpring = MdMotion::spring(MotionSpring::EffectsDefault);
+        const qreal ampSeconds = qreal(m_waveAmpClock.elapsed()) / 1000.0;
+        const qreal ampProgress = ampSpring.valueAt(ampSeconds);
+        m_waveAmplitude = m_waveAmpFrom + (m_waveAmpTo - m_waveAmpFrom) * ampProgress;
+        if (ampProgress >= 1.0
+            || qreal(m_waveAmpClock.elapsed()) >= ampSpring.settlingDurationMs()) {
+            m_waveAmplitude = m_waveAmpTo;
+            m_waveAmpActive = false;
+        }
+    }
+    if (!m_transitionActive && !m_waveAmpActive) {
         m_transitionTimer->stop();
     }
     update();

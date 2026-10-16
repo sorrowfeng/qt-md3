@@ -1,5 +1,6 @@
 #include "MdProgressIndicatorStyle.h"
 
+#include "core/MdMaterialShapes.h"
 #include "core/MdShape.h"
 #include "core/MdTheme.h"
 #include "widgets/MdProgressIndicator.h"
@@ -332,6 +333,127 @@ QColor MdProgressIndicatorStyle::fourColorAt(const MdProgressIndicatorTokens &to
     return fourColorRoleAt(tokens, fourColorRoleIndexAtMark(0));
 }
 
+// --- Expressive wave ------------------------------------------------------
+// Source: androidx compose/material3 `WavyProgressIndicator.kt` +
+// `internal/LinearWavyProgressModifiers.kt` (`updateFullPaths` /
+// `updateDrawPaths`). Every constant below is quoted from those files.
+
+QPainterPath MdProgressIndicatorStyle::linearWavePath(qreal width, qreal height, qreal wavelength,
+                                                      qreal strokeWidth)
+{
+    QPainterPath path;
+    path.moveTo(0.0, 0.0);
+    if (wavelength <= 0.0 || width <= 0.0) {
+        path.lineTo(width, 0.0);
+        path.translate(0.0, height / 2.0);
+        return path;
+    }
+    // Compose updateFullPaths, amplitude > 0 branch:
+    //   halfWavelengthPx = wavelength / 2
+    //   anchorX starts at halfWavelengthPx, controlX at half/2
+    //   controlY = height - stroke.width  (peaks at half that)
+    //   the path is plotted 2 extra wavelengths long so a waveOffset shift
+    //   always has path to draw, then translated to the vertical centre.
+    const qreal halfWavelength = wavelength / 2.0;
+    qreal anchorX = halfWavelength;
+    qreal controlX = halfWavelength / 2.0;
+    qreal controlY = height - strokeWidth;
+    const qreal widthWithExtraPhase = width + wavelength * 2.0;
+    while (anchorX <= widthWithExtraPhase) {
+        path.quadTo(controlX, controlY, anchorX, 0.0);
+        anchorX += halfWavelength;
+        controlX += halfWavelength;
+        controlY = -controlY;
+    }
+    if (path.currentPosition().x() < width) {
+        path.lineTo(width, 0.0);
+    }
+    path.translate(0.0, height / 2.0);
+    return path;
+}
+
+QPainterPath MdProgressIndicatorStyle::linearWaveSegment(qreal width, qreal height, qreal strokeWidth,
+                                                         qreal startFraction, qreal endFraction,
+                                                         qreal amplitude, qreal waveOffset,
+                                                         qreal wavelength)
+{
+    QPainterPath segment;
+    if (endFraction <= startFraction || width <= 0.0) {
+        return segment;
+    }
+    const qreal halfHeight = height / 2.0;
+    if (wavelength <= 0.0 || amplitude == 0.0) {
+        // Flat baseline — Compose's amplitude == 0 path is a plain lineTo.
+        const qreal y = halfHeight;
+        segment.moveTo(startFraction * width, y);
+        segment.lineTo(endFraction * width, y);
+        return segment;
+    }
+    const qreal halfWavelength = wavelength / 2.0;
+    // Compose updateFullPaths: controlY = height - stroke.width at each
+    // half-wavelength midpoint, alternating sign. Anchors sit on y=0 every
+    // half-wavelength starting at 0. Equal-spaced anchors make the quad's x
+    // linear in t, so y is exactly 2(1-t)t * controlY * sign.
+    const qreal controlY = height - strokeWidth;
+    const qreal waveShift = waveOffset * wavelength;
+    // The drawn window is [startFraction, endFraction] of the widget; the
+    // path is evaluated at x + waveShift and then shifted back (Compose's
+    // getSegment + translate(-waveShift) contract).
+    const qreal x0 = startFraction * width;
+    const qreal x1 = endFraction * width;
+    const int samples = qMax(16, int(std::ceil((x1 - x0) / 2.0)) + 1);
+    bool started = false;
+    for (int i = 0; i <= samples; ++i) {
+        const qreal drawnX = x0 + (x1 - x0) * (qreal(i) / qreal(samples));
+        const qreal pathX = drawnX + waveShift;
+        // Which half-wavelength quad, and where inside it.
+        const int n = int(std::floor(pathX / halfWavelength));
+        const qreal t = (pathX - qreal(n) * halfWavelength) / halfWavelength;
+        const qreal sign = (n % 2 == 0) ? 1.0 : -1.0;
+        const qreal yPeak = 2.0 * (1.0 - t) * t * controlY * sign;
+        // Compose's updateFullPaths translates the chain onto the centreline
+        // (y = height/2) before the segment is cut; updateDrawPaths then
+        // scales y by the amplitude and translates by (1 - amplitude) *
+        // halfHeight. Algebraically that is yPeak * amplitude + halfHeight —
+        // amplitude 0 flattens onto the centreline, amplitude 1 keeps the
+        // full published peak.
+        const qreal drawnY = yPeak * amplitude + halfHeight;
+        if (!started) {
+            segment.moveTo(drawnX, drawnY);
+            started = true;
+        } else {
+            segment.lineTo(drawnX, drawnY);
+        }
+    }
+    return segment;
+}
+
+qreal MdProgressIndicatorStyle::wavePhase(qint64 elapsedMs, qreal wavelength, qreal waveSpeed)
+{
+    // Compose BaseLinearWavyProgressNode.updateOffsetAnimation:
+    //   durationMillis = (wavelength / waveSpeed) * 1000
+    //   the offset animates 0 → 1 over that duration, then restarts.
+    // Default waveSpeed == wavelength → one wavelength per second.
+    if (wavelength <= 0.0 || waveSpeed <= 0.0) {
+        return 0.0;
+    }
+    const qreal durationMs = (wavelength / waveSpeed) * 1000.0;
+    if (durationMs <= 0.0) {
+        return 0.0;
+    }
+    return std::fmod(qreal(elapsedMs) / durationMs, 1.0);
+}
+
+qreal MdProgressIndicatorStyle::indicatorAmplitude(qreal progress, bool indeterminate)
+{
+    // WavyProgressIndicatorDefaults.indicatorAmplitude:
+    //   "Sets the amplitude to the max on 10%, and back to zero on 95%."
+    if (indeterminate) {
+        return 1.0;
+    }
+    return (progress <= 0.1 || progress >= 0.95) ? 0.0 : 1.0;
+}
+
 MdProgressIndicatorStyle::Layout MdProgressIndicatorStyle::layoutFor(
     const MdProgressIndicator &indicator, const MdProgressIndicatorTokens &tokens)
 {
@@ -340,9 +462,13 @@ MdProgressIndicatorStyle::Layout MdProgressIndicatorStyle::layoutFor(
 
     if (indicator.shape() == ProgressIndicatorShape::Linear) {
         // --- md.comp.progress-indicator.linear.* ----------------------------
-        const qreal height = qMax<qreal>(tokens.linearHeight,
-                                         qMax(tokens.linearActiveIndicatorThickness,
-                                              tokens.linearTrackThickness));
+        // The with-wave height is the container when the Expressive wave is
+        // on (`linear.with-wave-height` 10 px vs `linear.height` 4 px).
+        const qreal height = indicator.isWave()
+            ? tokens.linearWithWaveHeight
+            : qMax<qreal>(tokens.linearHeight,
+                          qMax(tokens.linearActiveIndicatorThickness,
+                               tokens.linearTrackThickness));
         layout.track = widgetRect;
         layout.activeIndicator = widgetRect;
         layout.preferredSize = QSizeF(80.0, height); // min-width: 80px [material-web css]
@@ -379,7 +505,10 @@ MdProgressIndicatorStyle::Layout MdProgressIndicatorStyle::layoutFor(
     // `size` — Compose's geometry (material-web's percentage-stroke CSS
     // resolves differently and is recorded as the divergent legacy detail).
     layout.radius = (side - tokens.circularActiveIndicatorThickness) / 2.0;
-    layout.preferredSize = QSizeF(tokens.circularSize, tokens.circularSize);
+    // The with-wave size is the container when the wave is on.
+    const qreal preferredSide =
+        indicator.isWave() ? tokens.circularWithWaveSize : tokens.circularSize;
+    layout.preferredSize = QSizeF(preferredSide, preferredSide);
     return layout;
 }
 
@@ -451,6 +580,61 @@ void MdProgressIndicatorStyle::paintLinear(QPainter &painter,
     const qreal barThickness = tokens.linearActiveIndicatorThickness;
     const qreal barY = rect.top() + (height - barThickness) / 2.0;
 
+    if (indicator.isWave()) {
+        // Expressive wavy track (Compose LinearWavyProgressIndicator).
+        // Wavelength: 40 px determinate / 20 px indeterminate (the export's
+        // `linear.active-wave-wavelength` / `linear.indeterminate-wave-
+        // wavelength`). waveSpeed defaults to the wavelength — one
+        // wavelength of travel per second.
+        const qreal wavelength = indicator.isIndeterminate()
+            ? tokens.linearIndeterminateWaveWavelength
+            : tokens.linearWaveWavelength;
+        const qreal amplitude = indicator.waveAmplitude(); // 0..1 morphed
+        const qreal phase =
+            wavePhase(elapsedMs, wavelength, wavelength);
+
+        painter.setPen(QPen(activeColour, barThickness, Qt::SolidLine, Qt::RoundCap,
+                            Qt::RoundJoin));
+        painter.setBrush(Qt::NoBrush);
+
+        if (indicator.isIndeterminate()) {
+            // The two indeterminate bars, each drawn as a wave segment.
+            const LinearIndeterminateFrame frame =
+                linearIndeterminateFrame(qreal(elapsedMs % kLinearIndeterminateDurationMs)
+                                         / qreal(kLinearIndeterminateDurationMs));
+            const QPainterPath secondary = linearWaveSegment(
+                rect.width(), height, barThickness, frame.secondaryTranslate,
+                frame.secondaryTranslate + frame.secondaryScale, amplitude, phase, wavelength);
+            const QPainterPath primary = linearWaveSegment(
+                rect.width(), height, barThickness, frame.primaryTranslate,
+                frame.primaryTranslate + frame.primaryScale, amplitude, phase, wavelength);
+            if (!secondary.isEmpty()) {
+                painter.drawPath(secondary);
+            }
+            if (!primary.isEmpty()) {
+                painter.drawPath(primary);
+            }
+        } else {
+            const QPainterPath bar = linearWaveSegment(
+                rect.width(), height, barThickness, 0.0, indicator.displayFraction(), amplitude,
+                phase, wavelength);
+            if (!bar.isEmpty()) {
+                painter.drawPath(bar);
+            }
+        }
+
+        // The stop indicator trails the wave the same way it trails the flat
+        // bar; the track was already painted above.
+        if (layout.stopIndicator.isValid()) {
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(theme.color(tokens.stopIndicatorColor));
+            painter.drawPath(
+                MdShape::roundedRect(layout.stopIndicator, tokens.stopIndicatorShape));
+        }
+        painter.restore();
+        return;
+    }
+
     if (indicator.isIndeterminate()) {
         // 2. The two indeterminate bars, straight out of the MDC keyframes:
         //    each bar is the full widget wide, translated by its keyframe
@@ -502,6 +686,77 @@ void MdProgressIndicatorStyle::paintCircular(QPainter &painter,
                           qreal(elapsedMs % kCircularFourColorDurationMs)
                               / qreal(kCircularFourColorDurationMs))
             : theme.color(tokens.activeIndicatorColor);
+
+    if (indicator.isWave()) {
+        // Expressive wavy ring — Compose CircularWavyProgressIndicator +
+        // internal/CircularWavyProgressModifiers `CircularShapes`. The wave
+        // is a RoundedPolygon.star morphed from a circle: vertices =
+        // max(5, round(2πr / wavelength)), innerRadius 0.75, rounding
+        // {radius 0.35, smoothing 0.4}, innerRounding {radius 0.5} (quoted
+        // from CircularShapes.update). The published
+        // `circular.wave-amplitude` 1.6 px / `circular.wave-wavelength` 15 px
+        // / `circular.with-wave-size` 48 px are the export rows; the star
+        // geometry is Compose's, and the amplitude 0..1 morphs circle→star.
+        const qreal wavelength = tokens.circularWaveWavelength;
+        const qreal amplitude = indicator.waveAmplitude();
+        const qreal side = container.width();
+        const qreal strokeHalf = activeThickness / 2.0;
+        const qreal r = side / 2.0 - strokeHalf;
+        const int numVertices = qMax(5, int(std::lround(2.0 * M_PI * r / wavelength)));
+
+        MdRoundedPolygon trackPoly = MdRoundedPolygon::circle(numVertices).normalized();
+        MdRoundedPolygon starPoly =
+            MdRoundedPolygon::star(numVertices, 1.0, 0.75, MdCornerRounding{0.35, 0.4},
+                                   MdCornerRounding{0.5, 0.0})
+                .normalized();
+        MdMorph morph(trackPoly, starPoly);
+        QPainterPath wavePath = morph.pathAt(amplitude);
+
+        // Scale the unit-square path out to the stroke-centre diameter and
+        // centre it in the container (Compose processPath).
+        const qreal diameter = r * 2.0;
+        QTransform scale;
+        scale.translate(container.center().x() - diameter / 2.0,
+                        container.center().y() - diameter / 2.0);
+        scale.scale(diameter, diameter);
+        wavePath = scale.map(wavePath);
+
+        QPen pen(activeColour);
+        pen.setWidthF(activeThickness);
+        pen.setCapStyle(Qt::RoundCap);
+        painter.setPen(pen);
+        painter.setBrush(Qt::NoBrush);
+
+        // Wave travel: Compose rotates the morph path by the wave phase
+        // (the circular counterpart of the linear waveShift).
+        const qreal phase =
+            wavePhase(elapsedMs, wavelength, wavelength);
+        painter.translate(container.center());
+        painter.rotate(phase * 360.0);
+        painter.translate(-container.center());
+
+        if (indicator.isIndeterminate()) {
+            painter.drawPath(wavePath);
+        } else {
+            // Determinate: stroke the arc from 12 o'clock, sweep =
+            // fraction × 360°. Qt's dash pattern is in pen-width multiples;
+            // the visible run is `fraction` of the path perimeter.
+            if (indicator.displayFraction() > 0.0) {
+                const qreal perimeter = wavePath.length();
+                if (perimeter > 0.0 && activeThickness > 0.0) {
+                    QVector<qreal> scaled;
+                    scaled << (perimeter * indicator.displayFraction()) / activeThickness
+                           << perimeter / activeThickness;
+                    pen.setDashPattern(scaled);
+                    pen.setDashOffset(0.0);
+                    painter.setPen(pen);
+                }
+                painter.drawPath(wavePath);
+            }
+        }
+        painter.restore();
+        return;
+    }
 
     if (indicator.isIndeterminate()) {
         // The border-trick construction, reproduced composition for

@@ -92,6 +92,10 @@ private slots:
     void pressRipplesInTheSwappedColour();
     void focusRingOnlyOnKeyboardFocus();
 
+    void cornerMorphIsOptIn();
+    void cornerMorphTargetsFollowComposeShapes();
+    void cornerMorphSpringsOnSelect();
+
     // --- the style -----------------------------------------------------------------------
     void styleIsInstalled();
 };
@@ -491,6 +495,68 @@ void TestMd3Chip::focusRingOnlyOnKeyboardFocus()
     chip.setFocus(Qt::TabFocusReason);
     QVERIFY(chip.hasKeyboardFocus());
     QVERIFY(chip.focusRingController() != nullptr);
+}
+
+void TestMd3Chip::cornerMorphIsOptIn()
+{
+    // The export keeps container-shape: corner-small in every state; the
+    // Expressive morph is the opt-in `shapes` overload.
+    MdChip chip(QStringLiteral("c"));
+    chip.resize(80, 32);
+    QVERIFY(!chip.hasCornerMorph());
+    // Off: the published container-shape row (corner-small = 8 px).
+    QCOMPARE(chip.morphCornerRadius(), 8.0);
+
+    chip.setCornerMorph(true);
+    QVERIFY(chip.hasCornerMorph());
+    chip.setCornerMorph(false);
+    QVERIFY(!chip.hasCornerMorph());
+}
+
+void TestMd3Chip::cornerMorphTargetsFollowComposeShapes()
+{
+    // Compose ChipsTokens (37.2.1): UnselectedShape = CornerMedium (12),
+    // SelectedShape = CornerFull (capsule = 16 for a 32 px chip),
+    // PressedShape = CornerSmall (8).
+    MdChip chip(QStringLiteral("c"));
+    chip.setCheckable(true);
+    chip.resize(80, 32);
+    chip.setCornerMorph(true);
+    QTest::qWait(50); // let the initial morph settle
+
+    // Unselected resting target = corner-medium 12 px.
+    QCOMPARE(chip.morphCornerRadius(), 12.0);
+
+    chip.setSelected(true);
+    QTest::qWait(400); // SpatialFast spring settles
+    // Selected target = corner-full → half the height.
+    QCOMPARE(chip.morphCornerRadius(), 16.0);
+
+    chip.setSelected(false);
+    QTest::qWait(400);
+    QCOMPARE(chip.morphCornerRadius(), 12.0);
+}
+
+void TestMd3Chip::cornerMorphSpringsOnSelect()
+{
+    MdChip chip(QStringLiteral("c"));
+    chip.setCheckable(true);
+    chip.resize(80, 32);
+    chip.setCornerMorph(true);
+    QCOMPARE(chip.morphCornerRadius(), 12.0);
+
+    chip.setSelected(true);
+    // The morph runs on the SpatialFast spring; mid-flight the radius is
+    // between the two targets, and it settles at 16.
+    const qreal mid = chip.morphCornerRadius();
+    QVERIFY(mid >= 12.0);
+    QTest::qWait(400);
+    QCOMPARE(chip.morphCornerRadius(), 16.0);
+
+    // Interruptible: flipping back mid-morph continues from the shown value.
+    chip.setSelected(false);
+    QTest::qWait(400);
+    QCOMPARE(chip.morphCornerRadius(), 12.0);
 }
 
 void TestMd3Chip::styleIsInstalled()

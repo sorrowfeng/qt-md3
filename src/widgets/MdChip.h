@@ -32,6 +32,7 @@
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtWidgets/QAbstractButton>
 
 class QKeyEvent;
@@ -57,6 +58,12 @@ class QT_MD3_EXPORT MdChip : public QAbstractButton
     Q_PROPERTY(QString avatarIconName READ avatarIconName WRITE setAvatarIconName NOTIFY
                    avatarIconNameChanged)
     Q_PROPERTY(bool dragged READ isDragged WRITE setDragged NOTIFY draggedChanged)
+    /// Opt-in Expressive corner morph (Compose's second `SelectableChip`
+    /// overload's `shapes` parameter). When on, the container morphs between
+    /// `corner-medium` (unselected), `corner-full` (selected) and
+    /// `corner-small` (pressed) on the fast spatial spring. Off by default —
+    /// the export keeps `container-shape: corner-small` in every state.
+    Q_PROPERTY(bool cornerMorph READ hasCornerMorph WRITE setCornerMorph NOTIFY cornerMorphChanged)
 
 public:
     explicit MdChip(QWidget *parent = nullptr);
@@ -93,6 +100,17 @@ public:
 
     bool isDragged() const { return m_dragged; }
     void setDragged(bool dragged);
+
+    /// Opt-in Expressive corner morph. See the property note.
+    bool hasCornerMorph() const { return m_cornerMorph; }
+    void setCornerMorph(bool enabled);
+
+    /// The concrete container radius currently painted, in px. When the
+    /// morph is off this is `MdShape::resolvedRadius(tokens.containerShape,
+    /// size)`. When on it is the spring-interpolated radius between the
+    /// Compose `ChipsTokens` trio (unselected `CornerMedium`, selected
+    /// `CornerFull`, pressed `CornerSmall`).
+    qreal morphCornerRadius() const;
 
     // --- geometry -----------------------------------------------------------
     /// Where the paint puts everything, in widget coordinates. Exposed for
@@ -143,6 +161,7 @@ signals:
     void trailingIconNameChanged(const QString &iconName);
     void avatarIconNameChanged(const QString &iconName);
     void draggedChanged(bool dragged);
+    void cornerMorphChanged(bool enabled);
 
 protected:
     /// The shared paint filter draws the chip; this override exists only
@@ -159,10 +178,15 @@ protected:
 
 private slots:
     void onThemeChanged();
+    void onMorphTick();
 
 private:
     void init();
     void invalidateTokens();
+    /// The Compose `ChipsTokens` corner the chip is currently in:
+    /// pressed → CornerSmall, selected → CornerFull, else CornerMedium.
+    ShapeCorner morphTargetCorner() const;
+    void retargetMorph();
 
     QString m_iconName;
     QString m_trailingIconName;
@@ -175,6 +199,15 @@ private:
     bool m_dragged = false;
     bool m_hovered = false;
     bool m_focusIsKeyboard = false;
+
+    bool m_cornerMorph = false;
+    qreal m_morphRadius = 0.0;
+    qreal m_morphFrom = 0.0;
+    qreal m_morphTo = 0.0;
+    bool m_morphActive = false;
+    QTimer *m_morphTimer = nullptr;
+    QElapsedTimer m_morphClock;
+    ShapeCorner m_morphTargetCorner = ShapeCorner::Medium;
 
     mutable MdChipVariantTokens m_tokens;
     mutable bool m_tokensDirty = true;

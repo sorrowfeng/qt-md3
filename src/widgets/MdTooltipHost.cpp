@@ -16,6 +16,7 @@
 #include <QtGui/QWindow>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QKeyEvent>
+#include <QtGui/QMouseEvent>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QApplication>
 
@@ -116,11 +117,7 @@ void MdTooltipHost::setAnchorPosition(AnchorPosition position)
     }
     m_anchorPosition = position;
     if (m_tooltip) {
-        m_tooltip->setCaretSide(
-            m_caretEnabled
-                ? (position == AnchorPosition::Above ? MdTooltipCaretSide::Bottom
-                                                     : MdTooltipCaretSide::Top)
-                : MdTooltipCaretSide::None);
+        m_tooltip->setCaretSide(caretSideFor(position, m_caretEnabled));
         if (m_showing) {
             placePopup();
         }
@@ -135,14 +132,38 @@ void MdTooltipHost::setCaretEnabled(bool enabled)
     }
     m_caretEnabled = enabled;
     ensureTooltip();
-    m_tooltip->setCaretSide(
-        enabled ? (m_anchorPosition == AnchorPosition::Above ? MdTooltipCaretSide::Bottom
-                                                             : MdTooltipCaretSide::Top)
-                : MdTooltipCaretSide::None);
+    m_tooltip->setCaretSide(caretSideFor(m_anchorPosition, enabled));
     if (m_showing) {
         placePopup();
     }
     emit caretEnabledChanged(m_caretEnabled);
+}
+
+MdTooltipCaretSide MdTooltipHost::caretSideFor(AnchorPosition position, bool enabled)
+{
+    if (!enabled) {
+        return MdTooltipCaretSide::None;
+    }
+    // The caret points back at the anchor: Bottom when the tip sits above,
+    // Top when below, Right when the tip sits to the anchor's left, Left
+    // when to the right. Start/End resolve through Left/Right at paint time
+    // — the caret follows the *rendered* side, so the host maps them once
+    // the popup has been placed; here the LTR reading is the default.
+    switch (position) {
+    case AnchorPosition::Above:
+        return MdTooltipCaretSide::Bottom;
+    case AnchorPosition::Below:
+        return MdTooltipCaretSide::Top;
+    case AnchorPosition::Left:
+    case AnchorPosition::Start:
+        return MdTooltipCaretSide::Right;
+    case AnchorPosition::Right:
+    case AnchorPosition::End:
+        return MdTooltipCaretSide::Left;
+    default:
+        break;
+    }
+    return MdTooltipCaretSide::None;
 }
 
 void MdTooltipHost::ensureTooltip()
@@ -156,11 +177,7 @@ void MdTooltipHost::ensureTooltip()
     m_tooltip->setWindowFlag(Qt::ToolTip, true);
     m_tooltip->setAttribute(Qt::WA_TranslucentBackground);
     m_tooltip->setAttribute(Qt::WA_NoSystemBackground);
-    m_tooltip->setCaretSide(
-        m_caretEnabled
-            ? (m_anchorPosition == AnchorPosition::Above ? MdTooltipCaretSide::Bottom
-                                                         : MdTooltipCaretSide::Top)
-            : MdTooltipCaretSide::None);
+    m_tooltip->setCaretSide(caretSideFor(m_anchorPosition, m_caretEnabled));
     connect(m_tooltip, &MdTooltip::actionClicked, this, &MdTooltipHost::actionClicked);
     // Escape from the popup itself dismisses too (a Tab may have moved focus
     // into an action-bearing tooltip).
@@ -215,24 +232,86 @@ void MdTooltipHost::placePopup()
         available = screen->availableGeometry();
     }
     const QSize size = surfaceSize();
+    const bool rtl = m_anchor->layoutDirection() == Qt::RightToLeft;
 
-    const bool above = m_anchorPosition == AnchorPosition::Above;
-    const QPoint surface = above
-        ? MdTooltipStyle::abovePopupPosition(anchorRect, size, available,
-                                             MdTooltipTokens::kAnchorSpacing)
-        : MdTooltipStyle::richPopupPosition(anchorRect, size, available,
-                                            MdTooltipTokens::kAnchorSpacing);
+    // Compose TooltipPositionProviderImpl: the placement flips to the
+    // opposite side when it would clip `available`, then both axes are
+    // coerced into the window. Start/End resolve through the layout
+    // direction.
+    QPoint surface;
+    AnchorPosition resolved = m_anchorPosition;
+    const bool rich = m_tooltip->variant() == MdTooltipVariant::Rich;
+    switch (m_anchorPosition) {
+    case AnchorPosition::Below:
+        // The rich Below path keeps Compose's still-shipping rich provider
+        // (start-aligned); plain Below uses the modern belowPositioning.
+        if (rich) {
+            surface = MdTooltipStyle::richPopupPosition(anchorRect, size, available,
+                                                        MdTooltipTokens::kAnchorSpacing);
+        } else {
+            surface = MdTooltipStyle::belowPopupPosition(anchorRect, size, available,
+                                                         MdTooltipTokens::kAnchorSpacing);
+        }
+        break;
+    case AnchorPosition::Left:
+        surface = MdTooltipStyle::leftPopupPosition(anchorRect, size, available,
+                                                    MdTooltipTokens::kAnchorSpacing);
+        break;
+    case AnchorPosition::Right:
+        surface = MdTooltipStyle::rightPopupPosition(anchorRect, size, available,
+                                                     MdTooltipTokens::kAnchorSpacing);
+        break;
+    case AnchorPosition::Start:
+        resolved = rtl ? AnchorPosition::Right : AnchorPosition::Left;
+        surface = rtl ? MdTooltipStyle::rightPopupPosition(anchorRect, size, available,
+                                                           MdTooltipTokens::kAnchorSpacing)
+                      : MdTooltipStyle::leftPopupPosition(anchorRect, size, available,
+                                                          MdTooltipTokens::kAnchorSpacing);
+        break;
+    case AnchorPosition::End:
+        resolved = rtl ? AnchorPosition::Left : AnchorPosition::Right;
+        surface = rtl ? MdTooltipStyle::leftPopupPosition(anchorRect, size, available,
+                                                          MdTooltipTokens::kAnchorSpacing)
+                      : MdTooltipStyle::rightPopupPosition(anchorRect, size, available,
+                                                           MdTooltipTokens::kAnchorSpacing);
+        break;
+    case AnchorPosition::Above:
+    default:
+        // The Above provider (the modern Compose default): centre → start →
+        // end horizontally, above → below vertically.
+        surface = MdTooltipStyle::abovePopupPosition(anchorRect, size, available,
+                                                     MdTooltipTokens::kAnchorSpacing);
+        break;
+    }
+
+    // The caret follows the *resolved* side (Start/End flip under RTL).
+    if (m_caretEnabled) {
+        m_tooltip->setCaretSide(caretSideFor(resolved, true));
+    }
 
     // The caret keeps its tip exactly kAnchorSpacing from the anchor
     // (recorded divergence: Compose draws the caret INTO the gap, overlapping
     // the anchor by caret - spacing).
-    const bool rich = m_tooltip->variant() == MdTooltipVariant::Rich;
-    const qreal horizontal = rich ? MdTooltipTokens::kShadowMargin : 0.0;
+    const bool horizontalPlacement =
+        resolved == AnchorPosition::Left || resolved == AnchorPosition::Right;
+    const qreal shadowHorizontal = rich ? MdTooltipTokens::kShadowMargin : 0.0;
     const qreal shadowVertical = rich ? MdTooltipTokens::kShadowMargin : 0.0;
-    const qreal caretMargin =
-        m_caretEnabled ? MdTooltipTokens::kCaretMargin : 0.0;
-    const int surfaceY = above ? surface.y() - int(caretMargin) : surface.y() + int(caretMargin);
-    const QPoint widgetTopLeft(surface.x() - int(horizontal),
+    const qreal caretMargin = m_caretEnabled ? MdTooltipTokens::kCaretMargin : 0.0;
+    // The caret margin sits on the anchor-facing edge.
+    int surfaceX = surface.x();
+    int surfaceY = surface.y();
+    if (horizontalPlacement) {
+        if (resolved == AnchorPosition::Left) {
+            surfaceX += int(caretMargin);
+        } else {
+            surfaceX -= int(caretMargin);
+        }
+    } else if (resolved == AnchorPosition::Above) {
+        surfaceY -= int(caretMargin);
+    } else {
+        surfaceY += int(caretMargin);
+    }
+    const QPoint widgetTopLeft(surfaceX - int(shadowHorizontal),
                                surfaceY - int(shadowVertical));
 
     const QSize widgetSize = m_tooltip->sizeHint();
@@ -265,6 +344,12 @@ void MdTooltipHost::showTooltip(bool fromHover)
         m_autoHideTimer->stop();
     }
 
+    // Outside-click dismissal of a persistent tooltip (the Compose
+    // contract). A transient tooltip already dies on pointer leave / timeout.
+    if (m_persistent && qApp != nullptr) {
+        qApp->installEventFilter(this);
+    }
+
     startTransition(Phase::Entering);
 }
 
@@ -274,6 +359,9 @@ void MdTooltipHost::dismiss()
         return;
     }
     m_autoHideTimer->stop();
+    if (qApp != nullptr) {
+        qApp->removeEventFilter(this);
+    }
     if (globalShowingHost() == this) {
         globalShowingHost() = nullptr;
     }
@@ -294,6 +382,32 @@ bool MdTooltipHost::eventFilter(QObject *watched, QEvent *event)
             return true;
         }
         return QWidget::eventFilter(watched, event);
+    }
+    // Outside-click dismissal for a persistent tooltip: any press that lands
+    // outside the popup and outside the anchor closes it (Compose's
+    // documented contract for actionable rich tooltips). The filter is
+    // installed on qApp, so `watched` is the receiving object — not qApp.
+    if (m_persistent && m_showing
+        && (event->type() == QEvent::MouseButtonPress
+            || event->type() == QEvent::TouchBegin)
+        && watched != m_tooltip && watched != m_anchor) {
+        // A press on anything that is not the anchor, the popup, or one of
+        // their children is an outside click. Prefer widget topology over
+        // global coordinates — synthetic test events do not always carry a
+        // usable global position.
+        auto *watchedWidget = qobject_cast<QWidget *>(watched);
+        const bool insideTooltip =
+            m_tooltip != nullptr
+            && (watchedWidget == m_tooltip
+                || (watchedWidget != nullptr && m_tooltip->isAncestorOf(watchedWidget)));
+        const bool insideAnchor =
+            m_anchor != nullptr
+            && (watchedWidget == m_anchor
+                || (watchedWidget != nullptr && m_anchor->isAncestorOf(watchedWidget)));
+        if (!insideTooltip && !insideAnchor) {
+            dismiss();
+        }
+        return false;
     }
     if (watched != m_anchor) {
         return QWidget::eventFilter(watched, event);

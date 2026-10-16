@@ -61,6 +61,12 @@ private slots:
     void determinateSpringSettlesAndIsInterruptible();
     void renderSmokeLinear();
     void renderSmokeCircular();
+    void waveRowsAreTranscribedAndOptIn();
+    void waveUsesWithWaveGeometry();
+    void wavePhaseScrollsOneWavelengthPerSecond();
+    void indicatorAmplitudeFollowsComposeRule();
+    void linearWaveSegmentPeaksAtPublishedAmplitude();
+    void waveRenderSmoke();
 
 private:
     MdProgressIndicator *m_linear = nullptr;
@@ -430,6 +436,128 @@ void TestMd3ProgressIndicator::renderSmokeCircular()
     // is covered, the 9 o'clock point is bare track.
     QCOMPARE(pixelColorAt(circular, QPointF(20, 2)), primary);
     QCOMPARE(pixelColorAt(circular, QPointF(2, 20)), track);
+}
+
+void TestMd3ProgressIndicator::waveRowsAreTranscribedAndOptIn()
+{
+    const MdProgressIndicatorTokens linear =
+        MdProgressIndicatorTokens::resolve(ProgressIndicatorShape::Linear);
+    QCOMPARE(linear.linearWaveAmplitude, 3.0);
+    QCOMPARE(linear.linearWaveWavelength, 40.0);
+    QCOMPARE(linear.linearIndeterminateWaveWavelength, 20.0);
+    QCOMPARE(linear.linearWithWaveHeight, 10.0);
+
+    const MdProgressIndicatorTokens circular =
+        MdProgressIndicatorTokens::resolve(ProgressIndicatorShape::Circular);
+    QCOMPARE(circular.circularWaveAmplitude, 1.6);
+    QCOMPARE(circular.circularWaveWavelength, 15.0);
+    QCOMPARE(circular.circularWithWaveSize, 48.0);
+
+    // Opt-in: the non-wave baseline is the default.
+    QVERIFY(!m_linear->isWave());
+    m_linear->setWave(true);
+    QVERIFY(m_linear->isWave());
+    m_linear->setWave(false);
+    QVERIFY(!m_linear->isWave());
+}
+
+void TestMd3ProgressIndicator::waveUsesWithWaveGeometry()
+{
+    MdProgressIndicator linear;
+    linear.setWave(true);
+    // `linear.with-wave-height` 10 px replaces the 4 px baseline height.
+    QCOMPARE(linear.sizeHint().height(), 10);
+
+    MdProgressIndicator circular(ProgressIndicatorShape::Circular);
+    circular.setWave(true);
+    // `circular.with-wave-size` 48 px replaces the 40 px baseline.
+    QCOMPARE(circular.sizeHint().width(), 48);
+    QCOMPARE(circular.sizeHint().height(), 48);
+}
+
+void TestMd3ProgressIndicator::wavePhaseScrollsOneWavelengthPerSecond()
+{
+    // Default waveSpeed == wavelength → one full 0→1 cycle per second
+    // (Compose updateOffsetAnimation: duration = (wavelength / waveSpeed)*1000).
+    QVERIFY(closeTo(MdProgressIndicatorStyle::wavePhase(0, 40.0, 40.0), 0.0));
+    QVERIFY(closeTo(MdProgressIndicatorStyle::wavePhase(500, 40.0, 40.0), 0.5));
+    QVERIFY(closeTo(MdProgressIndicatorStyle::wavePhase(1000, 40.0, 40.0), 0.0)); // wraps
+    // Twice the speed → half the period.
+    QVERIFY(closeTo(MdProgressIndicatorStyle::wavePhase(250, 40.0, 80.0), 0.5));
+    // No speed / no wavelength → no motion.
+    QCOMPARE(MdProgressIndicatorStyle::wavePhase(500, 0.0, 40.0), 0.0);
+    QCOMPARE(MdProgressIndicatorStyle::wavePhase(500, 40.0, 0.0), 0.0);
+}
+
+void TestMd3ProgressIndicator::indicatorAmplitudeFollowsComposeRule()
+{
+    // WavyProgressIndicatorDefaults.indicatorAmplitude:
+    // 0 at or below 10 % and at or above 95 %, 1 in between; 1 while
+    // indeterminate.
+    QCOMPARE(MdProgressIndicatorStyle::indicatorAmplitude(0.0, false), 0.0);
+    QCOMPARE(MdProgressIndicatorStyle::indicatorAmplitude(0.1, false), 0.0);
+    QCOMPARE(MdProgressIndicatorStyle::indicatorAmplitude(0.11, false), 1.0);
+    QCOMPARE(MdProgressIndicatorStyle::indicatorAmplitude(0.5, false), 1.0);
+    QCOMPARE(MdProgressIndicatorStyle::indicatorAmplitude(0.95, false), 0.0);
+    QCOMPARE(MdProgressIndicatorStyle::indicatorAmplitude(1.0, false), 0.0);
+    QCOMPARE(MdProgressIndicatorStyle::indicatorAmplitude(0.0, true), 1.0);
+}
+
+void TestMd3ProgressIndicator::linearWaveSegmentPeaksAtPublishedAmplitude()
+{
+    // The Compose quadratic chain peaks at (height - strokeWidth) / 2.
+    // With the with-wave height 10 and thickness 4 that is exactly the
+    // published `linear.wave-amplitude` 3 px.
+    const qreal height = 10.0;
+    const qreal stroke = 4.0;
+    const qreal wavelength = 40.0;
+    const qreal peak = (height - stroke) / 2.0;
+    QCOMPARE(peak, 3.0);
+
+    // Sample the segment and confirm the drawn peak matches, and that
+    // amplitude 0 flattens onto the centreline.
+    const QPainterPath full = MdProgressIndicatorStyle::linearWaveSegment(
+        100.0, height, stroke, 0.0, 1.0, 1.0, 0.0, wavelength);
+    QVERIFY(!full.isEmpty());
+    qreal minY = 1e9;
+    qreal maxY = -1e9;
+    for (int i = 0; i <= 200; ++i) {
+        const QPointF p = full.pointAtPercent(qreal(i) / 200.0);
+        minY = qMin(minY, p.y());
+        maxY = qMax(maxY, p.y());
+    }
+    // The wave sits on the centreline (height/2 = 5) and peaks ±3 around it.
+    QVERIFY(closeTo((maxY - minY) / 2.0, peak, 0.15));
+    QVERIFY(closeTo((maxY + minY) / 2.0, height / 2.0, 0.15));
+
+    const QPainterPath flat = MdProgressIndicatorStyle::linearWaveSegment(
+        100.0, height, stroke, 0.0, 1.0, 0.0, 0.0, wavelength);
+    for (int i = 0; i <= 20; ++i) {
+        QVERIFY(closeTo(flat.pointAtPercent(qreal(i) / 20.0).y(), height / 2.0, 0.01));
+    }
+}
+
+void TestMd3ProgressIndicator::waveRenderSmoke()
+{
+    MdProgressIndicator wave;
+    wave.setWave(true);
+    wave.resize(100, 10);
+    wave.show();
+    wave.setValue(0.5);
+    // Let the amplitude morph (effects-default spring) settle.
+    QTest::qWait(600);
+
+    const QColor primary = MdTheme::instance().color(ColorRole::Primary);
+    const QColor track = MdTheme::instance().color(ColorRole::SecondaryContainer);
+    // A pixel on the active wave should be primary; past the 50 % point the
+    // track is secondary-container.
+    const QColor mid = pixelColorAt(wave, QPointF(50, 5));
+    const QColor far = pixelColorAt(wave, QPointF(95, 5));
+    // The wave moves, so the exact mid pixel varies — just require that
+    // *something* was painted (not the transparent default) and the far
+    // side is track.
+    QVERIFY(mid.alpha() > 0);
+    QCOMPARE(far, track);
 }
 
 QTEST_MAIN(TestMd3ProgressIndicator)

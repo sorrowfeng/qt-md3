@@ -199,6 +199,38 @@ void ProgressIndicatorPage::build(GalleryContext &context)
                             linearSize.height())});
     }
 
+    // --- Expressive wave -------------------------------------------------------------------
+    context.section(L("波浪 —— Expressive", "Wave — Expressive"));
+    context.paragraph(L(
+        "wave 打开导出中的 Expressive 波浪行：linear.wave-amplitude 3 px / "
+        "wavelength 40 px（不定态 20 px）/ with-wave-height 10 px。波形是 Compose "
+        "WavyProgressIndicator 的二次贝塞尔链，相位每秒走一个波长，振幅在 10% 与 95% "
+        "处由 MdSpring 收放。",
+        "wave turns on the export's Expressive wave rows: linear.wave-amplitude 3 px / "
+        "wavelength 40 px (indeterminate 20 px) / with-wave-height 10 px. The path is "
+        "Compose WavyProgressIndicator's quadratic Bezier chain; the phase scrolls one "
+        "wavelength per second and the amplitude morphs on MdSpring at the 10 % / 95 % "
+        "marks."));
+    {
+        const QRectF band = context.band(10.0 * 2.0 + kStackGap);
+        md::MdProgressIndicator *waveBar = indicator(
+            QStringLiteral("l-wave"), md::ProgressIndicatorShape::Linear,
+            [](md::MdProgressIndicator *w) {
+                w->setWave(true);
+                w->setValue(0.55);
+            });
+        m_slots.append(ProgressSlot{waveBar, QRectF(band.topLeft(), QSizeF(kIndicatorWidth, 10.0))});
+
+        md::MdProgressIndicator *waveSpin = indicator(
+            QStringLiteral("l-wave-spin"), md::ProgressIndicatorShape::Linear,
+            [](md::MdProgressIndicator *w) {
+                w->setWave(true);
+                w->setIndeterminate(true);
+            });
+        m_slots.append(ProgressSlot{
+            waveSpin, QRectF(band.left(), band.top() + 10.0 + kStackGap, kIndicatorWidth, 10.0)});
+    }
+
     // --- circular ----------------------------------------------------------------------------
     context.section(L("圆形", "Circular"));
     context.paragraph(L(
@@ -253,7 +285,7 @@ void ProgressIndicatorPage::build(GalleryContext &context)
         "5332 ms with per-segment easing"));
     context.detail(QStringLiteral(
         "gap           the Expressive wave rows (amplitude 3 / 1.6 px, wavelength 40 / 15 px, "
-        "with-wave 10 px / 48 px) are carried but not rendered — the family's registered gap, "
+        "with-wave 10 px / 48 px) are rendered by the opt-in wave flag — the family's registered gap, "
         "Compose's WavyProgressIndicator is the porting source"));
     context.space(8.0);
     context.detail(L("TestMd3ProgressIndicator 将合并导出的行、废弃行的转录、关键帧"

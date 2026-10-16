@@ -8,6 +8,7 @@
 #include <QtCore/QEasingCurve>
 #include <QtCore/QRectF>
 #include <QtCore/QSizeF>
+#include <QtGui/QPainterPath>
 
 class QPainter;
 
@@ -96,6 +97,40 @@ public:
     /// keyframe rule's animation-timing-function.
     static QColor fourColorAt(const MdProgressIndicatorTokens &tokens,
                               ProgressIndicatorShape shape, qreal cycleProgress);
+
+    // --- Expressive wave (Compose WavyProgressIndicator.kt + the
+    //     *WavyProgressModifiers internals) ------------------------------------
+    //
+    // The wave is a chain of quadratic Beziers alternating above/below the
+    // centreline: anchors on the centreline every half-wavelength, control
+    // points at ±(height − strokeWidth) so the plotted peak is half that —
+    // `(withWaveHeight − thickness) / 2`, which is exactly the published
+    // linear amplitude of 3 px (and the circular 1.6 px on its arc).
+    // Travel is the Compose waveOffset contract: shift the drawn segment
+    // along the full path by `waveOffset * wavelength` and compensate with a
+    // translation, so the wave appears to scroll without the path moving.
+    /// The full linear wave path in widget coordinates (centred on
+    /// `height / 2`), built at maximum amplitude — the Compose
+    /// `updateFullPaths` construction. `amplitude == 0` yields the flat
+    /// baseline line.
+    static QPainterPath linearWavePath(qreal width, qreal height, qreal wavelength,
+                                       qreal strokeWidth);
+    /// The drawn segment `[startFraction, endFraction]` of the wave chain,
+    /// Y-scaled to `amplitude` (0..1) and shifted by `waveOffset` (0..1 of
+    /// one wavelength) — Compose's `updateDrawPaths` transform. `strokeWidth`
+    /// is the active-indicator thickness, which sets the Bezier control
+    /// height exactly as Compose's `updateFullPaths` does.
+    static QPainterPath linearWaveSegment(qreal width, qreal height, qreal strokeWidth,
+                                          qreal startFraction, qreal endFraction, qreal amplitude,
+                                          qreal waveOffset, qreal wavelength);
+    /// Compose's `waveOffset` for a steady scroll: one full 0→1 cycle every
+    /// `wavelength / waveSpeed` seconds (the default waveSpeed equals the
+    /// wavelength, i.e. one wavelength per second).
+    static qreal wavePhase(qint64 elapsedMs, qreal wavelength, qreal waveSpeed);
+    /// Compose `WavyProgressIndicatorDefaults.indicatorAmplitude`: 0 at or
+    /// below 10 % and at or above 95 % of progress, 1 in between. 1 while
+    /// indeterminate.
+    static qreal indicatorAmplitude(qreal progress, bool indeterminate);
 
     // --- layout ---------------------------------------------------------------
     struct Layout

@@ -34,10 +34,11 @@ MdSideSheet::MdSideSheet(MdSideSheetKind kind, MdSideSheetEdge edge, QWidget *pa
     , m_edge(edge)
 {
     // MDC's defaults: a behavior-created sheet starts hidden (the dialog
-    // starts expanded with its enter animation); a docked standard sheet
-    // sits expanded in the layout from the start.
-    m_state = m_target = kind == MdSideSheetKind::Standard ? MdSideSheetState::Expanded
-                                                           : MdSideSheetState::Hidden;
+    // starts expanded with its enter animation); a docked standard sheet —
+    // and the detached floating sheet — sit expanded from the start.
+    m_state = m_target = (kind == MdSideSheetKind::Standard || kind == MdSideSheetKind::Detached)
+        ? MdSideSheetState::Expanded
+        : MdSideSheetState::Hidden;
 
     init();
 }
@@ -76,8 +77,8 @@ void MdSideSheet::init()
     });
     m_animationClock = new QElapsedTimer();
 
-    if (m_kind == MdSideSheetKind::Standard) {
-        // A standard sheet starts visible at its expanded anchor.
+    if (m_kind == MdSideSheetKind::Standard || m_kind == MdSideSheetKind::Detached) {
+        // A standard (and detached) sheet starts visible at its expanded anchor.
         snapToAnchor();
     }
 }
@@ -162,6 +163,9 @@ const MdSideSheetTokens &MdSideSheet::tokens() const
 qreal MdSideSheet::currentOffset() const
 {
     if (parentWidget()) {
+        if (m_kind == MdSideSheetKind::Detached) {
+            return qreal(x()) + MdSideSheetTokens::kDetachedMargin;
+        }
         return m_edge == MdSideSheetEdge::Right
             ? qreal(x()) + MdSideSheetTokens::kShadowMargin
             : qreal(x());
@@ -183,6 +187,10 @@ void MdSideSheet::setState(MdSideSheetState state)
 
 QRectF MdSideSheet::containerRect() const
 {
+    if (m_kind == MdSideSheetKind::Detached) {
+        const qreal d = MdSideSheetTokens::kDetachedMargin;
+        return QRectF(rect()).adjusted(d, d, -d, -d);
+    }
     const qreal m = MdSideSheetTokens::kShadowMargin;
     return m_edge == MdSideSheetEdge::Right ? QRectF(rect()).adjusted(m, m, 0.0, -m)
                                             : QRectF(rect()).adjusted(0.0, m, -m, -m);
@@ -196,8 +204,12 @@ MdSideSheetStyle::Layout MdSideSheet::currentLayout() const
 
 qreal MdSideSheet::sheetWidth() const
 {
-    // The container's width: the widget rect carries the inner shadow margin
-    // only (the docked edge is flush).
+    // The container's width: a docked sheet's widget rect carries the inner
+    // shadow margin only (the docked edge is flush); a detached sheet has
+    // `kDetachedMargin` on both sides.
+    if (m_kind == MdSideSheetKind::Detached) {
+        return qMax(0.0, qreal(width()) - 2.0 * MdSideSheetTokens::kDetachedMargin);
+    }
     return qMax(0.0, qreal(width()) - MdSideSheetTokens::kShadowMargin);
 }
 
@@ -258,11 +270,18 @@ void MdSideSheet::applyOffset(qreal offset)
     if (parentWidget() && m_geometryManaged) {
         // The container x is the anchor; the widget sits one shadow margin
         // to the LEFT of it on the right edge (the margin is on the inner
-        // side), flush on the left edge.
-        const int x = int(std::round(m_edge == MdSideSheetEdge::Right
-                                         ? offset - MdSideSheetTokens::kShadowMargin
-                                         : offset));
-        const int y = 0;
+        // side), flush on the left edge. A detached sheet carries
+        // `kDetachedMargin` on every side.
+        qreal margin = 0.0;
+        if (m_kind == MdSideSheetKind::Detached) {
+            margin = MdSideSheetTokens::kDetachedMargin;
+        } else if (m_edge == MdSideSheetEdge::Right) {
+            margin = MdSideSheetTokens::kShadowMargin;
+        }
+        const int x = int(std::round(offset - margin));
+        const int y = m_kind == MdSideSheetKind::Detached
+            ? int(MdSideSheetTokens::kDetachedMargin)
+            : 0;
         if (pos() != QPoint(x, y)) {
             move(x, y);
         }

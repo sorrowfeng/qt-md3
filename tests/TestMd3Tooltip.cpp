@@ -16,7 +16,10 @@
 #include "widgets/MdTooltip.h"
 #include "widgets/MdTooltipHost.h"
 
+#include <QtCore/QCoreApplication>
+#include <QtGui/QCursor>
 #include <QtGui/QFontMetricsF>
+#include <QtGui/QMouseEvent>
 #include <QtTest/QTest>
 #include <QtWidgets/QPushButton>
 
@@ -44,6 +47,9 @@ private slots:
     void richBaselineRows();
     void plainFallbackPadding();
     void positioningProviders();
+    void leftRightStartEndProviders();
+    void caretSidesForSidePlacements();
+    void persistentOutsideClickDismiss();
     void caretGeometry();
     void widgetSizeHints();
     void richActionPointerContract();
@@ -297,6 +303,110 @@ void TestMd3Tooltip::positioningProviders()
         MdTooltipStyle::richPopupPosition(QRect(100, 200, 80, 40), QSize(500, 30), QRect(0, 0, 500, 800),
                                           4.0);
     QCOMPARE(richCentred.x(), 100 + (80 - 500) / 2);
+}
+
+void TestMd3Tooltip::leftRightStartEndProviders()
+{
+    // Compose TooltipPositionProviderImpl:
+    //   leftPositioning / rightPositioning / belowPositioning.
+    const QRect anchor(400, 300, 80, 40);
+    const QSize size(60, 30);
+    const QRect available(0, 0, 1000, 800);
+
+    // Left of the anchor: x = 400 - 60 - 4 = 336, vertically centred
+    // (300 + 40 - 30) / 2 = 305.
+    const QPoint left =
+        MdTooltipStyle::leftPopupPosition(anchor, size, available, 4.0);
+    QCOMPARE(left, QPoint(336, 305));
+
+    // Left collides with the window's left edge: flips to the right of the
+    // anchor (10 + 80 + 1 + 4 = 95 in Compose's exclusive-right terms;
+    // Qt's inclusive right() is 89, so 89 + 1 + 4 = 94 — the same pixel).
+    const QPoint leftFlip =
+        MdTooltipStyle::leftPopupPosition(QRect(10, 300, 80, 40), size, available, 4.0);
+    QCOMPARE(leftFlip.x(), 94);
+
+    // Right of the anchor: x = 400 + 80 + 4 = 484 (Compose's exclusive
+    // right is left+width=480, + spacing 4).
+    const QPoint right =
+        MdTooltipStyle::rightPopupPosition(anchor, size, available, 4.0);
+    QCOMPARE(right, QPoint(484, 305));
+
+    // Right collides: flips to the left of the anchor.
+    const QPoint rightFlip =
+        MdTooltipStyle::rightPopupPosition(QRect(950, 300, 80, 40), size, available, 4.0);
+    QCOMPARE(rightFlip.x(), 950 - 60 - 4);
+
+    // Below: centred horizontally, below the anchor (Qt bottom()=339 is
+    // inclusive; Compose's exclusive bottom is 340, + spacing 4 = 344).
+    const QPoint below =
+        MdTooltipStyle::belowPopupPosition(anchor, size, available, 4.0);
+    QCOMPARE(below, QPoint(410, 344));
+
+    // Below collides with the bottom: flips above.
+    const QPoint belowFlip =
+        MdTooltipStyle::belowPopupPosition(QRect(400, 780, 80, 40), size, available, 4.0);
+    QCOMPARE(belowFlip.y(), 780 - 30 - 4);
+
+    // Both axes are coerced into `available` even after the flip.
+    const QPoint coercedLeft =
+        MdTooltipStyle::leftPopupPosition(QRect(0, 0, 20, 20), size, QRect(0, 0, 40, 40), 4.0);
+    QVERIFY(coercedLeft.x() >= 0);
+    QVERIFY(coercedLeft.y() >= 0);
+}
+
+void TestMd3Tooltip::caretSidesForSidePlacements()
+{
+    // The caret points back at the anchor.
+    QCOMPARE(int(MdTooltipHost::caretSideFor(MdTooltipHost::AnchorPosition::Above, true)),
+             int(MdTooltipCaretSide::Bottom));
+    QCOMPARE(int(MdTooltipHost::caretSideFor(MdTooltipHost::AnchorPosition::Below, true)),
+             int(MdTooltipCaretSide::Top));
+    QCOMPARE(int(MdTooltipHost::caretSideFor(MdTooltipHost::AnchorPosition::Left, true)),
+             int(MdTooltipCaretSide::Right));
+    QCOMPARE(int(MdTooltipHost::caretSideFor(MdTooltipHost::AnchorPosition::Right, true)),
+             int(MdTooltipCaretSide::Left));
+    QCOMPARE(int(MdTooltipHost::caretSideFor(MdTooltipHost::AnchorPosition::Start, true)),
+             int(MdTooltipCaretSide::Right));
+    QCOMPARE(int(MdTooltipHost::caretSideFor(MdTooltipHost::AnchorPosition::End, true)),
+             int(MdTooltipCaretSide::Left));
+    QCOMPARE(int(MdTooltipHost::caretSideFor(MdTooltipHost::AnchorPosition::Above, false)),
+             int(MdTooltipCaretSide::None));
+}
+
+void TestMd3Tooltip::persistentOutsideClickDismiss()
+{
+    QWidget parent;
+    parent.resize(300, 200);
+    parent.show();
+    auto *anchor = new QPushButton(QStringLiteral("A"), &parent);
+    anchor->move(50, 50);
+    anchor->resize(80, 30);
+    anchor->show();
+
+    MdTooltipHost host;
+    host.setParent(&parent);
+    host.setAnchorWidget(anchor);
+    host.setPersistent(true);
+    host.tooltip()->setText(QStringLiteral("tip"));
+    host.showTooltip(false);
+    flushEvents();
+    QVERIFY(host.isShowing());
+    // Persistent: no auto-hide timer.
+    QVERIFY(!host.isAutoHideScheduled());
+
+    // An outside press dismisses: dispatch a real MouseButtonPress to a
+    // sibling widget through the application event loop.
+    auto *elsewhere = new QPushButton(QStringLiteral("B"), &parent);
+    elsewhere->move(200, 150);
+    elsewhere->resize(60, 30);
+    elsewhere->show();
+    QTest::mouseClick(elsewhere, Qt::LeftButton);
+    flushEvents();
+    // The exit transition must settle before the host counts as hidden.
+    QTest::qWait(700);
+    QVERIFY(!host.isShowing());
+    QVERIFY(!host.tooltip()->isVisible());
 }
 
 void TestMd3Tooltip::caretGeometry()

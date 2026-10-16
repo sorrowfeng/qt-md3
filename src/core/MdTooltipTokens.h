@@ -60,13 +60,16 @@ struct QT_MD3_EXPORT MdTooltipActionRow
 };
 
 /// Where the caret protrudes: Bottom when the tooltip sits above the anchor
-/// (pointing down at it), Top when below. Shared by the widget and the style
-/// like the other component-wide enums.
+/// (pointing down at it), Top when below it, Right when the tooltip sits to
+/// the anchor's left (pointing right at it), Left when it sits to the right.
+/// Shared by the widget and the style like the other component-wide enums.
 enum class MdTooltipCaretSide
 {
     None,
     Top,
     Bottom,
+    Left,
+    Right,
     Count,
 };
 

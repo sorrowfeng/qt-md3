@@ -116,6 +116,20 @@ public:
                                     const QRect &available,
                                     qreal spacing);
 
+    /// The `TooltipAnchorPosition.Left` provider: to the anchor's left,
+    /// flipping right on a left-edge collision, vertically centred — both
+    /// axes coerced into `available` (Compose `leftPositioning`).
+    static QPoint leftPopupPosition(const QRect &anchorRect, const QSize &size,
+                                    const QRect &available, qreal spacing);
+    /// The `TooltipAnchorPosition.Right` provider — `rightPositioning`.
+    static QPoint rightPopupPosition(const QRect &anchorRect, const QSize &size,
+                                     const QRect &available, qreal spacing);
+    /// The `TooltipAnchorPosition.Below` provider: centred horizontally,
+    /// below the anchor or above it when the bottom would clip —
+    /// `belowPositioning`.
+    static QPoint belowPopupPosition(const QRect &anchorRect, const QSize &size,
+                                     const QRect &available, qreal spacing);
+
     // --- painting -----------------------------------------------------------
     void drawWidget(QPainter *painter, QWidget *widget) override;
 

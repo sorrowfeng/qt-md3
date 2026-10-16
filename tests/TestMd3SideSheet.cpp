@@ -68,6 +68,9 @@ private slots:
     void layoutRightModal();
     void layoutLeftModal();
     void layoutStandardAndContent();
+    void layoutDetachedMarginsAndCornerLarge();
+    void floatingTokenRows();
+    void detachedStartsExpanded();
 
     // --- widget ----------------------------------------------------------------
     void stateDefaultsAndSnap();
@@ -242,6 +245,42 @@ void TestMd3SideSheet::layoutStandardAndContent()
 }
 
 // --- widget -----------------------------------------------------------------------
+
+void TestMd3SideSheet::layoutDetachedMarginsAndCornerLarge()
+{
+    const MdSideSheetTokens tokens;
+    // `detached.container.shape` = corner-large on every corner (md-sys-shape
+    // corner-large = 16 px in this codebase — see MdSystemTokens::cornerRadius),
+    // and kDetachedMargin (16 px) on every edge — MDC's
+    // Widget.Material3.SideSheet.Detached.
+    const auto detached = MdSideSheetStyle::layoutFor(MdSideSheetEdge::Right,
+                                                      MdSideSheetKind::Detached, 288.0, 400.0,
+                                                      false, tokens);
+    QCOMPARE(detached.container, QRectF(16.0, 16.0, 256.0, 368.0));
+    const QList<qreal> largeRadii{16.0, 16.0, 16.0, 16.0};
+    QCOMPARE(detached.radii, largeRadii);
+}
+
+void TestMd3SideSheet::floatingTokenRows()
+{
+    // `_md-comp-sheet-floating.scss` (34.0.21):
+    //   floating.container.color = surface-container-low
+    //   floating.container.elevation = level1
+    //   floating.container.shape = corner-extra-large
+    const MdSideSheetTokens tokens;
+    QCOMPARE(int(tokens.floatingContainerColor), int(ColorRole::SurfaceContainerLow));
+    QCOMPARE(int(tokens.floatingContainerElevation), int(ElevationLevel::Level1));
+    QCOMPARE(int(tokens.floatingContainerShape), int(ShapeCorner::ExtraLarge));
+}
+
+void TestMd3SideSheet::detachedStartsExpanded()
+{
+    QWidget parent;
+    parent.resize(600, 400);
+    MdSideSheet detached(MdSideSheetKind::Detached, MdSideSheetEdge::Right, &parent);
+    // Like the standard sheet, a detached floating sheet sits expanded.
+    QCOMPARE(detached.state(), MdSideSheetState::Expanded);
+}
 
 void TestMd3SideSheet::stateDefaultsAndSnap()
 {

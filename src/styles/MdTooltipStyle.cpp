@@ -304,6 +304,56 @@ QPoint MdTooltipStyle::richPopupPosition(const QRect &anchorRect,
     return QPoint(x, y);
 }
 
+QPoint MdTooltipStyle::leftPopupPosition(const QRect &anchorRect, const QSize &size,
+                                         const QRect &available, qreal spacing)
+{
+    // Compose TooltipPositionProviderImpl.leftPositioning:
+    //   "Horizontal alignment preference: left -> right; Vertical: center"
+    // Compose's IntRect.bottom is exclusive (top + height); Qt's QRect::bottom
+    // is inclusive, so the centre line uses top + height.
+    int x = anchorRect.left() - (size.width() + int(spacing));
+    if (x < available.left()) {
+        x = anchorRect.right() + 1 + int(spacing);
+    }
+    x = qBound(available.left(), x, qMax(available.left(), available.right() - size.width() + 1));
+
+    int y = (anchorRect.top() + anchorRect.top() + anchorRect.height() - size.height()) / 2;
+    y = qBound(available.top(), y, qMax(available.top(), available.bottom() - size.height() + 1));
+    return QPoint(x, y);
+}
+
+QPoint MdTooltipStyle::rightPopupPosition(const QRect &anchorRect, const QSize &size,
+                                          const QRect &available, qreal spacing)
+{
+    // Compose rightPositioning: prefer the right of the anchor, flip left on
+    // a right-edge collision, vertically centred.
+    int x = anchorRect.right() + 1 + int(spacing);
+    if (x + size.width() > available.right() + 1) {
+        x = anchorRect.left() - (size.width() + int(spacing));
+    }
+    x = qBound(available.left(), x, qMax(available.left(), available.right() - size.width() + 1));
+
+    int y = (anchorRect.top() + anchorRect.top() + anchorRect.height() - size.height()) / 2;
+    y = qBound(available.top(), y, qMax(available.top(), available.bottom() - size.height() + 1));
+    return QPoint(x, y);
+}
+
+QPoint MdTooltipStyle::belowPopupPosition(const QRect &anchorRect, const QSize &size,
+                                          const QRect &available, qreal spacing)
+{
+    // Compose belowPositioning: centred horizontally (middle -> start ->
+    // end), below preferred, above on a bottom-edge collision.
+    int x = anchorRect.left() + (anchorRect.width() - size.width()) / 2;
+    x = qBound(available.left(), x, qMax(available.left(), available.right() - size.width() + 1));
+
+    int y = anchorRect.bottom() + 1 + int(spacing);
+    if (y + size.height() > available.bottom() + 1) {
+        y = anchorRect.top() - size.height() - int(spacing);
+    }
+    y = qBound(available.top(), y, qMax(available.top(), available.bottom() - size.height() + 1));
+    return QPoint(x, y);
+}
+
 void MdTooltipStyle::drawWidget(QPainter *painter, QWidget *widget)
 {
     auto *tooltip = qobject_cast<MdTooltip *>(widget);

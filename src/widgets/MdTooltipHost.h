@@ -24,7 +24,10 @@
 //     spatial-fast spring (TooltipBox animates exactly these two).
 //
 // The persistent flag (TooltipState.isPersistent) default false — an
-// actionable rich tooltip is the documented case for setting it true.
+// actionable rich tooltip is the documented case for setting it true. A
+// persistent tooltip does not auto-hide and survives pointer leave; an
+// outside click dismisses it (the Compose contract that was previously
+// unported).
 
 #include "core/MdTooltipTokens.h"
 #include "core/MdTypes.h"
@@ -46,7 +49,8 @@ class QT_MD3_EXPORT MdTooltipHost : public QWidget
 
     Q_PROPERTY(bool persistent READ isPersistent WRITE setPersistent NOTIFY persistentChanged)
     /// Where the popup sits relative to the anchor. Left / right / start /
-    /// end positioning is not ported (see docs/porting-todo.md).
+    /// end flip to the opposite side when they would clip the window
+    /// (Compose `TooltipPositionProviderImpl`).
     Q_PROPERTY(md::MdTooltipHost::AnchorPosition anchorPosition READ anchorPosition WRITE
                    setAnchorPosition NOTIFY anchorPositionChanged)
     /// Forwarded to the tooltip popup's caret side (Bottom above the anchor,
@@ -59,6 +63,10 @@ public:
     {
         Above,
         Below,
+        Left,
+        Right,
+        Start,
+        End,
         Count,
     };
     Q_ENUM(AnchorPosition)
@@ -104,6 +112,11 @@ public:
     qreal currentOpacity() const { return m_opacity; }
     qreal currentScale() const { return m_scale; }
     bool isTransitioning() const { return m_phase != Phase::Idle; }
+
+    /// The caret side a placement points at (Bottom above the anchor, Top
+    /// below, Right left-of, Left right-of). Start/End use the LTR reading
+    /// here; placePopup corrects the caret for RTL.
+    static MdTooltipCaretSide caretSideFor(AnchorPosition position, bool enabled);
 
 signals:
     void persistentChanged(bool persistent);

@@ -153,7 +153,10 @@ void MdChipStyle::paintChip(QPainter &painter,
     const int selection = chip.isSelected() ? 1 : 0;
     const MdChipKind kind = chip.kind();
     const MdChipSurfaceTokens &surface = tokens.surface[int(kind)];
-    const qreal radius = cornerRadius(tokens);
+    // The Expressive corner morph (opt-in) drives the radius; otherwise the
+    // published container-shape row.
+    const qreal radius = chip.hasCornerMorph() ? chip.morphCornerRadius()
+                                               : cornerRadius(tokens);
     const QRectF chipRect(QPointF(0.0, 0.0), QSizeF(qreal(chip.width()), qreal(chip.height())));
     const QList<qreal> radii{radius, radius, radius, radius};
     const QPainterPath chipPath = MdShape::roundedRect(chipRect, radii);

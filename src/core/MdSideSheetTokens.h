@@ -28,9 +28,6 @@
 //
 // Recorded, not applied:
 //
-//   * `detached.container.shape` = corner-large — the detached sheet (16 px
-//     margins all around, a floating card) is a separate presentation the
-//     port does not ship;
 //   * the `surface-tint-layer.color` row is deprecated (tonal surfaces
 //     replaced tint layers) and NOT carried;
 //   * the focus-indicator rows (secondary, sys thickness / outer offset) —
@@ -40,6 +37,15 @@
 //     INSIDE the sheet's content — the sheet surface paints none of them,
 //     and the content is the caller's widgets (a text button placed inside
 //     picks the rows up from the button family).
+//
+// Two presentations beyond the docked pair are now carried:
+//
+//   * `detached.container.shape` = corner-large and the detached margins
+//     (`kDetachedMargin`, 16 px on every edge) — `MdSideSheetKind::Detached`,
+//     MDC's `Widget.Material3.SideSheet.Detached`;
+//   * the Expressive floating sheet (`_md-comp-sheet-floating.scss`,
+//     `md.comp.sheet.floating.*`) — surface-container-low at level 1 with
+//     `corner-extra-large`. The token rows live in `floating*` below.
 //
 // The spec's headline is title-large in on-surface-variant; the divider is
 // `outline`. Both paint on the sheet surface.
@@ -61,11 +67,15 @@ enum class MdSideSheetState
 /// Standard (persistent, docked) or modal. The kinds differ in paint (colors,
 /// elevation, the start-corner radius) and defaults, not in their anchors —
 /// both anchor Hidden and Expanded (MDC's behavior has the two states for
-/// every configuration).
+/// every configuration). `Detached` is MDC's
+/// `Widget.Material3.SideSheet.Detached`: the sheet floats with
+/// `kDetachedMargin` on every edge and `detached.container.shape`
+/// (corner-large) all around.
 enum class MdSideSheetKind
 {
     Standard,
     Modal,
+    Detached,
 };
 
 /// Which edge the sheet docks against — MDC's `Sheet.SheetEdge` / its
@@ -95,9 +105,20 @@ struct QT_MD3_EXPORT MdSideSheetTokens
     qreal containerWidth = 256.0;
     /// `container.height` = 100% — the sheet is as tall as its parent.
     /// The widget sizes itself to the parent's height.
-    /// `detached.container.shape` = corner-large and the detached
-    /// presentation (16 px margins) are recorded, not ported.
+    /// `detached.container.shape` = corner-large (the detached sheet's
+    /// all-around radius; MdSideSheetKind::Detached paints it).
     ShapeCorner detachedShape = ShapeCorner::Large;
+
+    // --- floating: md.comp.sheet.floating.container.* -----------------------
+    // `_md-comp-sheet-floating.scss` (34.0.21), the Expressive floating
+    // sheet's whole published set. The deprecated surface-tint-layer row is
+    // not carried (same rule as the docked set).
+    /// `floating.container.color` — surface-container-low.
+    ColorRole floatingContainerColor = ColorRole::SurfaceContainerLow;
+    /// `floating.container.elevation` — level1.
+    ElevationLevel floatingContainerElevation = ElevationLevel::Level1;
+    /// `floating.container.shape` — corner-extra-large.
+    ShapeCorner floatingContainerShape = ShapeCorner::ExtraLarge;
 
     // --- headline: md.comp.sheet.side.docked.headline.* ---------------------
     /// title-large, in on-surface-variant.

@@ -79,6 +79,7 @@ private:
     QHash<QString, md::MdButton *> m_buttonBank;
     QVector<ButtonSlot> m_buttonSlots;
     md::MdSideSheetHost *m_demoHost = nullptr;
+    md::MdSideSheet *m_detached = nullptr;
 };
 
 SideSheetPage::SideSheetPage(QWidget *parent)
@@ -230,6 +231,26 @@ void SideSheetPage::build(GalleryContext &context)
         const QRectF band = context.band(buttonHeight);
         m_buttonSlots.append(
             ButtonSlot{demo, QRectF(band.topLeft(), QSizeF(buttonWidth, buttonHeight))});
+    }
+
+    // --- detached -----------------------------------------------------------------
+    context.section(L("分离式（Detached）", "Detached"));
+    context.paragraph(L(
+        "Widget.Material3.SideSheet.Detached：四边 16 px 页边距、corner-large（24）全圆角，"
+        "用 Expressive floating 令牌（surface-container-low / level 1）。导出里"
+        "detached.container.shape 与 _md-comp-sheet-floating.scss 都已转录。",
+        "Widget.Material3.SideSheet.Detached: 16 px margins on every edge, corner-large "
+        "(24) all around, painted with the Expressive floating tokens "
+        "(surface-container-low / level 1). Both detached.container.shape and "
+        "_md-comp-sheet-floating.scss are transcribed from the export."));
+    {
+        const QRectF band = context.band(200.0);
+        Q_UNUSED(band);
+        if (!m_detached) {
+            m_detached = new md::MdSideSheet(md::MdSideSheetKind::Detached,
+                                             md::MdSideSheetEdge::Right, this);
+            m_detached->setGeometryManaged(true);
+        }
     }
 
     // --- token facts -------------------------------------------------------------------

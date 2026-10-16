@@ -25,10 +25,17 @@
 // state rows at all — no hover, no press, no focus indicator, no disabled
 // row. Like MdBadge, the whole interaction contract is "nothing happens".
 //
-// One recorded gap: the export's wave rows (amplitude / wavelength and the
-// with-wave container sizes) are published, non-deprecated Expressive tokens
-// that neither material-web nor this port renders yet — see
-// docs/porting-todo.md for the registered question.
+// The Expressive **wave** rows (linear amplitude 3 px / wavelength 40 px,
+// indeterminate wavelength 20 px, with-wave height 10 px; circular amplitude
+// 1.6 px / wavelength 15 px, with-wave size 48 px) are published,
+// non-deprecated tokens. `wave` (default false, the non-wave baseline) turns
+// on the wavy track: Compose's `LinearWavyProgressIndicator` /
+// `CircularWavyProgressIndicator` (androidx material3 `WavyProgressIndicator.kt`
+// + the `*WavyProgressModifiers` internals) is the rendering source. The
+// wave's phase scrolls at `waveSpeed` (default one wavelength per second);
+// the amplitude morphs on MdSpring — the engineering-spec spring rule, where
+// Compose runs `IncreasingAmplitudeAnimationSpec` /
+// `DecreasingAmplitudeAnimationSpec` tweens.
 
 #include "core/MdProgressIndicatorTokens.h"
 #include "core/MdTypes.h"
@@ -54,6 +61,9 @@ class QT_MD3_EXPORT MdProgressIndicator : public QWidget
     Q_PROPERTY(qreal max READ max WRITE setMax NOTIFY maxChanged)
     Q_PROPERTY(qreal buffer READ buffer WRITE setBuffer NOTIFY bufferChanged)
     Q_PROPERTY(bool fourColor READ isFourColor WRITE setFourColor NOTIFY fourColorChanged)
+    /// Render the Expressive wavy track (the export's wave rows). Default
+    /// false — the non-wave baseline material-web draws.
+    Q_PROPERTY(bool wave READ isWave WRITE setWave NOTIFY waveChanged)
 
 public:
     explicit MdProgressIndicator(QWidget *parent = nullptr);
@@ -86,6 +96,17 @@ public:
     /// instead of the single active-indicator colour.
     bool isFourColor() const { return m_fourColor; }
     void setFourColor(bool fourColor);
+
+    /// The Expressive wavy track. When on, the widget grows to the
+    /// with-wave container size and the active indicator is drawn as a
+    /// travelling wave (Compose `LinearWavyProgressIndicator` /
+    /// `CircularWavyProgressIndicator`).
+    bool isWave() const { return m_wave; }
+    void setWave(bool wave);
+
+    /// The wave amplitude currently drawn, 0..1 (1 = the published
+    /// amplitude pixel). Morphs on MdSpring when the target flips.
+    qreal waveAmplitude() const { return m_waveAmplitude; }
 
     /// The determinate fraction the *painting* currently shows — the animated
     /// display value, not `value / max`.
@@ -121,6 +142,7 @@ signals:
     void maxChanged(qreal max);
     void bufferChanged(qreal buffer);
     void fourColorChanged(bool fourColor);
+    void waveChanged(bool wave);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -143,6 +165,12 @@ private:
     /// current display fraction.
     void transitionDisplayFraction();
     void onTransitionTick();
+    /// Target wave amplitude from the published Compose `indicatorAmplitude`
+    /// rule: 0 below 10 % and at/above 95 % of progress, 1 in between. 1 for
+    /// the indeterminate cycle.
+    qreal waveAmplitudeTarget() const;
+    /// Start/stop the amplitude morph when the target flips.
+    void updateWaveAmplitude();
 
     ProgressIndicatorShape m_shape = ProgressIndicatorShape::Linear;
     bool m_indeterminate = false;
@@ -163,6 +191,13 @@ private:
     qreal m_displayFrom = 0.0;
     qreal m_displayTo = 0.0;
     bool m_transitionActive = false;
+
+    bool m_wave = false;
+    qreal m_waveAmplitude = 0.0;
+    qreal m_waveAmpFrom = 0.0;
+    qreal m_waveAmpTo = 0.0;
+    bool m_waveAmpActive = false;
+    QElapsedTimer m_waveAmpClock;
 };
 
 } // namespace md

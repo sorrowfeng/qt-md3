@@ -526,15 +526,24 @@ locked by `TestMd3ProgressIndicator`. Five facts shape the implementation:
   the background/border colour smoothly between keyframe marks
   (0/15/25/40/50/65/75/90 %), linear-timed for the linear shape and riding
   the indeterminate easing per segment for the circular one.
-* **The registered gap: the wave rows.** The export publishes non-deprecated
-  Expressive wave tokens — linear amplitude 3 px / wavelength 40 px,
-  indeterminate wavelength 20 px, with-wave height 10 px; circular amplitude
-  1.6 px / wavelength 15 px, with-wave size 48 px. Neither material-web
-  (which predates Expressive) nor this port renders them. **Open question:
-  port the wave rendering from Compose's `WavyLinearProgressIndicator` /
-  `WavyCircularProgressIndicator`** (amplitude animation on indeterminate,
-  wave phase shift, the with-wave container sizes). Until then the token
-  struct carries every value and the painter draws the non-wave baseline.
+* **The wave rows are ported** (opt-in `wave`). The export publishes
+  non-deprecated Expressive wave tokens — linear amplitude 3 px /
+  wavelength 40 px, indeterminate wavelength 20 px, with-wave height 10 px;
+  circular amplitude 1.6 px / wavelength 15 px, with-wave size 48 px.
+  material-web predates Expressive and renders none of them; the rendering
+  source is Compose's `WavyProgressIndicator.kt` +
+  `internal/{Linear,Circular}WavyProgressModifiers.kt` (`LinearWavyProgressIndicator` /
+  `CircularWavyProgressIndicator`). The linear wave is the Compose quadratic
+  Bezier chain (anchors every half-wavelength on the centreline, controls at
+  ±(height − strokeWidth) so the peak is the published 3 px); the circular
+  wave is `CircularShapes`'s RoundedPolygon star (numVertices =
+  max(5, round(2πr / wavelength)), innerRadius 0.75, rounding {0.35, 0.4},
+  innerRounding {0.5}) morphed from a circle. Phase scrolls at `waveSpeed`
+  (default one wavelength per second — Compose `updateOffsetAnimation`);
+  amplitude morphs on MdSpring (the engineering-spec spring rule, where
+  Compose runs Increasing/DecreasingAmplitudeAnimationSpec tweens). The
+  determinate amplitude rule is Compose `indicatorAmplitude`: 0 at or below
+  10 % and at or above 95 %, 1 in between.
 
 Two smaller divergences, both recorded: the circular geometry follows
 Compose (stroke centred so the ring spans exactly `size`; material-web's
@@ -654,7 +663,7 @@ shape it:
   surface into the 4 px anchor gap — overlapping the anchor by
   caret − spacing — while this port reserves an 8 px caret margin in the
   widget rect and keeps the tip exactly `kAnchorSpacing` from the anchor.
-  (2) Left / right / start / end popup positioning is not ported; the host
+  (2) Placements now cover Above / Below / Left / Right / Start / End; the host
   offers Above (the modern `Above` provider: centre→start→end, above→below,
   coerced) and Below with the rich start-aligned provider Compose still
   ships.
@@ -665,7 +674,7 @@ shape it:
   platforms synthesise an Enter when a window shows. Persistent default
   false (Compose `rememberTooltipState`); an actionable rich tooltip is the
   documented case for setting it true. Outside-click dismissal of a
-  persistent tooltip is not ported yet.
+  persistent tooltip dismisses on an outside click (ported).
 
 #### Card (ported)
 
@@ -809,9 +818,9 @@ content padding and neither does this class.
   radius on the start pair) — the paint follows the token export + MDC, the
   16 dp note is recorded. (3) The detached presentation (16 px margins all
   around, `detached.container.shape` = corner-large, the
-  `Widget.Material3.SideSheet.Detached` style) is recorded, not ported. (4)
+  `Widget.Material3.SideSheet.Detached` style) is now ported as MdSideSheetKind::Detached. (4)
   The Expressive floating sheet (`_md-comp-sheet-floating.scss`) is a
-  separate token set — recorded, not ported. (5) MDC's coplanar sibling
+  separate token set — now carried on MdSideSheetTokens (floatingContainer*) and painted by MdSideSheetKind::Detached. (5) MDC's coplanar sibling
   layout (`updateCoplanarSiblingLayoutParams` — the content beside a docked
   sheet reflows to make room as it slides) needs a coordinating parent
   layout the port's overlay model does not have — recorded. (6) The
@@ -861,7 +870,7 @@ content padding and neither does this class.
   "Padding between elements 8dp"; the port takes the spec value and records
   the conflict. (2) The specs page's leading/trailing 16 px padding is the
   caller's margin — Compose's contentPadding shift path
-  (`createShiftedKeylineListForContentPadding`) is recorded, not ported.
+  (`createShiftedKeylineListForContentPadding`) is recorded.
   (3) Only the multi-browse strategy is ported; hero, center-aligned hero,
   uncontained and full-screen are separate keyline functions in Compose and
   are recorded, not ported. (4) The snap settle runs the effects-default
@@ -1485,7 +1494,7 @@ and by the page 35 gallery shot. Four published families over one widget:
 `ElevatedInputChip` upstream either, so its elevated kind mirrors the flat
 one). The pinned divergences and gaps:
 
-* **The Expressive corner morph is opt-in upstream and not ported.** Compose's
+* **The Expressive corner morph is opt-in upstream and now ported (MdChip.cornerMorph).** Compose's
   second `SelectableChip` overload morphs between the `ChipsTokens` shapes
   (unselected `corner-medium`, selected `corner-full`, pressed
   `corner-small`) on the fast spatial spring — but only through the explicit

@@ -4,11 +4,14 @@
 
 #include "core/MdFocusRing.h"
 #include "core/MdIcon.h"
+#include "core/MdMotion.h"
 #include "core/MdRipple.h"
+#include "core/MdShape.h"
 #include "core/MdTheme.h"
 #include "core/MdTypeScale.h"
 
 #include <cmath>
+#include <QtCore/QTimer>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QFontMetricsF>
 #include <QtGui/QKeyEvent>
@@ -44,6 +47,29 @@ void MdChip::init()
     m_focusRing = new MdFocusRingController(this);
     connect(m_focusRing, &MdFocusRingController::repaintRequested, this,
             qOverload<>(&QWidget::update));
+
+    m_morphTimer = new QTimer(this);
+    m_morphTimer->setInterval(16);
+    m_morphTimer->setTimerType(Qt::PreciseTimer);
+    connect(m_morphTimer, &QTimer::timeout, this, &MdChip::onMorphTick);
+
+    // Selection and press both move the morph target (Compose's
+    // shapeByInteraction).
+    connect(this, &QAbstractButton::toggled, this, [this](bool) {
+        if (m_cornerMorph) {
+            retargetMorph();
+        }
+    });
+    connect(this, &QAbstractButton::pressed, this, [this]() {
+        if (m_cornerMorph) {
+            retargetMorph();
+        }
+    });
+    connect(this, &QAbstractButton::released, this, [this]() {
+        if (m_cornerMorph) {
+            retargetMorph();
+        }
+    });
 
     MdStyleBase::connectThemeUpdate(this, &MdChip::onThemeChanged);
     MdChipStyle::shared();
@@ -149,6 +175,102 @@ void MdChip::setDragged(bool dragged)
     m_dragged = dragged;
     update();
     emit draggedChanged(m_dragged);
+}
+
+void MdChip::setCornerMorph(bool enabled)
+{
+    if (m_cornerMorph == enabled) {
+        return;
+    }
+    m_cornerMorph = enabled;
+    if (enabled) {
+        // Snap to the target and morph from there.
+        m_morphRadius = MdShape::resolvedRadius(morphTargetCorner(), QSizeF(width(), height()));
+        retargetMorph();
+    } else {
+        m_morphActive = false;
+        if (m_morphTimer) {
+            m_morphTimer->stop();
+        }
+    }
+    update();
+    emit cornerMorphChanged(m_cornerMorph);
+}
+
+ShapeCorner MdChip::morphTargetCorner() const
+{
+    // Compose Chip.kt shapeByInteraction:
+    //   if (isPressed) shapes.pressedShape
+    //   else if (selected) shapes.selectedShape
+    //   else shapes.shape
+    // ChipsTokens: PressedShape = CornerSmall, SelectedShape = CornerFull,
+    // UnselectedShape = CornerMedium.
+    if (isDown()) {
+        return ShapeCorner::Small;
+    }
+    if (isSelected()) {
+        return ShapeCorner::Full;
+    }
+    return ShapeCorner::Medium;
+}
+
+void MdChip::retargetMorph()
+{
+    if (m_morphTimer == nullptr) {
+        return;
+    }
+    const ShapeCorner target = morphTargetCorner();
+    const qreal targetRadius =
+        MdShape::resolvedRadius(target, QSizeF(qreal(width()), qreal(height())));
+    m_morphTargetCorner = target;
+    if (qFuzzyCompare(m_morphRadius + 1.0, targetRadius + 1.0)) {
+        m_morphTo = targetRadius;
+        m_morphActive = false;
+        m_morphTimer->stop();
+        update();
+        return;
+    }
+    // Interruptible: freeze the currently shown radius and morph from it
+    // (Compose AnimatedShapeState.animateToShape).
+    m_morphFrom = m_morphRadius;
+    m_morphTo = targetRadius;
+    m_morphActive = true;
+    m_morphClock.restart();
+    m_morphTimer->start();
+}
+
+void MdChip::onMorphTick()
+{
+    if (!m_morphActive) {
+        m_morphTimer->stop();
+        return;
+    }
+    // Compose runs the morph on MotionSchemeKeyTokens.FastSpatial —
+    // MdSpring SpatialFast, the engineering-spec spring rule.
+    const MdSpring spring = MdMotion::spring(MotionSpring::SpatialFast);
+    const qreal seconds = qreal(m_morphClock.elapsed()) / 1000.0;
+    const qreal progress = spring.valueAt(seconds);
+    m_morphRadius = m_morphFrom + (m_morphTo - m_morphFrom) * progress;
+    if (progress >= 1.0 || qreal(m_morphClock.elapsed()) >= spring.settlingDurationMs()) {
+        m_morphRadius = m_morphTo;
+        m_morphActive = false;
+        m_morphTimer->stop();
+    }
+    update();
+}
+
+qreal MdChip::morphCornerRadius() const
+{
+    if (!m_cornerMorph) {
+        return MdShape::resolvedRadius(chipTokens().containerShape,
+                                       QSizeF(qreal(width()), qreal(height())));
+    }
+    // Size changes move a Full/Small radius; keep the resting value honest
+    // without restarting the spring.
+    if (!m_morphActive) {
+        return MdShape::resolvedRadius(morphTargetCorner(), QSizeF(qreal(width()), qreal(height())));
+    }
+    return m_morphRadius;
 }
 
 // ---------------------------------------------------------------------------

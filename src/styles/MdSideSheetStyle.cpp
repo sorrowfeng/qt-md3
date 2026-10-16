@@ -101,17 +101,28 @@ MdSideSheetStyle::Layout MdSideSheetStyle::layoutFor(MdSideSheetEdge edge, MdSid
     // The widget rect carries the shadow margin on the top/bottom edges and
     // the INNER (content-facing) edge; the DOCKED edge is flush because a
     // docked sheet is edge-to-edge with the parent's edge, and the hidden
-    // slide clips outside the parent anyway.
+    // slide clips outside the parent anyway. The DETACHED presentation
+    // floats with `kDetachedMargin` on every edge (MDC's
+    // `Widget.Material3.SideSheet.Detached`).
     const qreal m = MdSideSheetTokens::kShadowMargin;
     const QRectF widget(0.0, 0.0, width, height);
-    layout.container = edge == MdSideSheetEdge::Right ? widget.adjusted(m, m, 0.0, -m)
-                                                      : widget.adjusted(0.0, m, -m, -m);
+    if (kind == MdSideSheetKind::Detached) {
+        const qreal d = MdSideSheetTokens::kDetachedMargin;
+        layout.container = widget.adjusted(d, d, -d, -d);
+    } else {
+        layout.container = edge == MdSideSheetEdge::Right ? widget.adjusted(m, m, 0.0, -m)
+                                                          : widget.adjusted(0.0, m, -m, -m);
+    }
 
     // Corner radii: standard = corner-none (all square, flush against the
     // edge); modal = corner-large-start — the START pair faces the app
     // content. For a right-docked sheet the start pair is TL / BL; for a
     // left-docked sheet the content faces right, so the pair is TR / BR.
-    if (kind == MdSideSheetKind::Modal) {
+    // Detached = `detached.container.shape` (corner-large) on every corner.
+    if (kind == MdSideSheetKind::Detached) {
+        const qreal r = MdShape::resolvedRadius(tokens.detachedShape, layout.container.size());
+        layout.radii = {r, r, r, r};
+    } else if (kind == MdSideSheetKind::Modal) {
         const qreal r = MdShape::resolvedRadius(tokens.modalContainerShape,
                                                 layout.container.size());
         layout.radii = edge == MdSideSheetEdge::Right ? QList<qreal>{r, 0.0, 0.0, r}
@@ -149,10 +160,23 @@ void MdSideSheetStyle::paintSheet(QPainter &painter, const MdSideSheet &sheet,
     const QPainterPath path = MdShape::roundedRect(layout.container, layout.radii);
 
     // 1. Shadow — the standard sheet rides level 0 (no shadow), the modal
-    //    sheet level 1.
-    const ElevationLevel elevation = sheet.kind() == MdSideSheetKind::Modal
-        ? tokens.modalContainerElevation
-        : tokens.standardContainerElevation;
+    //    sheet level 1, the detached sheet the Expressive floating level 1
+    //    (`md.comp.sheet.floating.container.elevation`).
+    ElevationLevel elevation = tokens.standardContainerElevation;
+    ColorRole containerColor = tokens.standardContainerColor;
+    switch (sheet.kind()) {
+    case MdSideSheetKind::Modal:
+        elevation = tokens.modalContainerElevation;
+        containerColor = tokens.modalContainerColor;
+        break;
+    case MdSideSheetKind::Detached:
+        elevation = tokens.floatingContainerElevation;
+        containerColor = tokens.floatingContainerColor;
+        break;
+    case MdSideSheetKind::Standard:
+    default:
+        break;
+    }
     MdElevation::drawShadow(&painter, layout.container, layout.radii.isEmpty()
                                                        ? 0.0
                                                        : layout.radii.first(),
@@ -160,9 +184,7 @@ void MdSideSheetStyle::paintSheet(QPainter &painter, const MdSideSheet &sheet,
 
     // 2. Container.
     painter.setPen(Qt::NoPen);
-    painter.setBrush(theme.color(sheet.kind() == MdSideSheetKind::Modal
-                                     ? tokens.modalContainerColor
-                                     : tokens.standardContainerColor));
+    painter.setBrush(theme.color(containerColor));
     painter.drawPath(path);
 
     // 3. The optional divider along the content-facing edge.

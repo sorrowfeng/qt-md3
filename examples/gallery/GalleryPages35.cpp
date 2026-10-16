@@ -486,6 +486,28 @@ void ChipPage::build(GalleryContext &context)
         context.space(16.0);
     }
 
+    // --- Expressive corner morph ----------------------------------------------------
+    context.section(L("Expressive 圆角变形（可选）", "Expressive corner morph (opt-in)"));
+    context.paragraph(L(
+        "Compose 第二个 SelectableChip 重载在 ChipsTokens 三个形状间变形：未选中 "
+        "corner-medium 12、选中 corner-full、按下 corner-small 8，动画是 fast spatial "
+        "弹簧。导出默认永远是 corner-small，所以这里是可选开关。",
+        "Compose's second SelectableChip overload morphs between the ChipsTokens trio: "
+        "unselected corner-medium 12, selected corner-full, pressed corner-small 8, on the "
+        "fast spatial spring. The export keeps corner-small in every state, so this is an "
+        "opt-in switch."));
+    {
+        auto *morph = chip(QStringLiteral("morph-filter"));
+        morph->setVariant(md::MdChipVariant::Filter);
+        morph->setCheckable(true);
+        morph->setCornerMorph(true);
+        morph->setText(L("点我变形", "Click to morph"));
+        addRow({{QStringLiteral("morph"), morph}});
+        context.detail(L("cornerMorph=true：medium → full → small，SpatialFast 弹簧。",
+                         "cornerMorph=true: medium → full → small on the SpatialFast spring."));
+        context.space(16.0);
+    }
+
     // --- what this page is pinned to -----------------------------------------
     context.section(L("本页锁定的令牌事实", "Token facts this page is pinned to"));
     context.paragraph(L(

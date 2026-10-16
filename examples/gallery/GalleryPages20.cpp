@@ -24,6 +24,8 @@ namespace gallery {
 
 namespace {
 
+constexpr qreal kStackGap = 20.0;
+
 /// One banked tooltip plus the content-local rect the latest build() gave it.
 struct TooltipSlot
 {
@@ -241,6 +243,41 @@ void TooltipPage::build(GalleryContext &context)
         demoHost->tooltip()->setText(L("这是宿主弹出的 tooltip。", "The host raised this tooltip."));
         const QRectF band = context.band(40.0);
         m_hostSlots.append(HostSlot{demoHost, QRectF(band.topLeft(), QSizeF(160.0, 40.0))});
+    }
+
+    // --- placements + persistent ---------------------------------------------------
+    context.section(L("方位与常驻", "Placements & persistent"));
+    context.paragraph(L(
+        "AnchorPosition 现在覆盖 Above / Below / Left / Right / Start / End，越界时翻到"
+        "对侧并夹进窗口（Compose TooltipPositionProviderImpl）。常驻 tooltip 不自动"
+        "消失，点击外部关闭。",
+        "AnchorPosition now covers Above / Below / Left / Right / Start / End, flipping to "
+        "the opposite side on a window-edge collision and coercing into the window (Compose "
+        "TooltipPositionProviderImpl). A persistent tooltip never self-dismisses and closes "
+        "on an outside click."));
+    {
+        const QRectF band = context.band(40.0 * 2.0 + kStackGap);
+        md::MdButton *leftAnchor = demoButton(QStringLiteral("place-left"),
+                                              L("左侧", "Left"));
+        md::MdTooltipHost *leftHost = host(QStringLiteral("place-left"), leftAnchor);
+        leftHost->setAnchorPosition(md::MdTooltipHost::AnchorPosition::Left);
+        leftHost->setCaretEnabled(true);
+        leftHost->tooltip()->setText(L("锚点左侧", "Left of the anchor"));
+        m_hostSlots.append(
+            HostSlot{leftHost, QRectF(band.left() + 200.0, band.top(), 160.0, 40.0)});
+
+        md::MdButton *persistAnchor = demoButton(QStringLiteral("place-persist"),
+                                                 L("常驻", "Persistent"));
+        md::MdTooltipHost *persistHost = host(QStringLiteral("place-persist"), persistAnchor);
+        persistHost->setPersistent(true);
+        persistHost->setAnchorPosition(md::MdTooltipHost::AnchorPosition::Above);
+        persistHost->tooltip()->setVariant(md::MdTooltipVariant::Rich);
+        persistHost->tooltip()->setTitle(L("常驻提示", "Persistent"));
+        persistHost->tooltip()->setText(L("不会自动消失；点击外部关闭。",
+                                          "No auto-hide; outside click closes it."));
+        persistHost->tooltip()->setActionLabel(L("关闭", "Dismiss"));
+        m_hostSlots.append(HostSlot{
+            persistHost, QRectF(band.left(), band.top() + 40.0 + kStackGap, 160.0, 40.0)});
     }
 
     // --- token facts -----------------------------------------------------------------

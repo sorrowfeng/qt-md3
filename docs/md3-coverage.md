@@ -298,13 +298,7 @@ smoothed:
   `background`/`border-color` smoothly between keyframe marks (0/15/25/40/
   50/65/75/90 %), linear-timed for the linear shape and riding the
   indeterminate easing per segment for the circular one;
-* **the registered gap: the wave rows.** The export publishes non-deprecated
-  Expressive wave tokens (linear amplitude 3 / wavelength 40, indeterminate
-  wavelength 20, with-wave height 10; circular amplitude 1.6 / wavelength
-  15, with-wave size 48). Neither material-web (which predates Expressive)
-  nor this port renders them; the token struct carries every value, and
-  Compose's `WavyLinearProgressIndicator` / `WavyCircularProgressIndicator`
-  are the porting source recorded in porting-todo.md.
+* **the wave rows are ported** (opt-in `wave`). The export's non-deprecated Expressive wave tokens (linear amplitude 3 / wavelength 40, indeterminate wavelength 20, with-wave height 10; circular amplitude 1.6 / wavelength 15, with-wave size 48) are rendered from Compose `WavyProgressIndicator.kt` + the `*WavyProgressModifiers` internals: the linear quadratic Bezier chain, the circular RoundedPolygon star morph, the one-wavelength-per-second phase, and the 10 % / 95 % amplitude rule.
 
 ## 1.4 Containment
 
@@ -642,7 +636,7 @@ Six transcription notes are pinned by `TestMd3Chip` rather than smoothed:
   and pass straight to the `Surface` — a selection's container/label change is
   instant. The icons appearing and disappearing *do* animate
   (`AnimatingChipContent`), a presence animation, not a colour one.
-* **the Expressive corner morph is opt-in upstream and not ported.** Compose's
+* **the Expressive corner morph is opt-in upstream and now ported (MdChip.cornerMorph).** Compose's
   second `SelectableChip` overload morphs between the `ChipsTokens` shapes
   (unselected `corner-medium`, selected `corner-full`, pressed `corner-small`)
   on the fast spatial spring — but only through the explicit `shapes`
