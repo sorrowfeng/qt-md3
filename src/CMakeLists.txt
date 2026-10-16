@@ -211,6 +211,13 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdColorPicker.h
     widgets/MdDockWidget.h
     widgets/MdDockManager.h
+    widgets/MdDescriptions.h
+    widgets/MdTimeline.h
+    widgets/MdImage.h
+    widgets/MdWatermark.h
+    widgets/MdTransfer.h
+    widgets/MdMentions.h
+    widgets/MdBackTop.h
 )
 
 set(QT_MD3_SOURCES
@@ -407,6 +414,13 @@ set(QT_MD3_SOURCES
     widgets/MdColorPicker.cpp
     widgets/MdDockWidget.cpp
     widgets/MdDockManager.cpp
+    widgets/MdDescriptions.cpp
+    widgets/MdTimeline.cpp
+    widgets/MdImage.cpp
+    widgets/MdWatermark.cpp
+    widgets/MdTransfer.cpp
+    widgets/MdMentions.cpp
+    widgets/MdBackTop.cpp
 )
 
 set(QT_MD3_RESOURCES

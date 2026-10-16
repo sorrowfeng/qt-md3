@@ -1959,12 +1959,18 @@ Landed (with tests + gallery page 48 "Qt extensions"):
 | `MdAutoComplete` | QCompleter | Text field + exposed dropdown | `MdTextField` + `MdMenu` popup (the `MdSelect` exposed-dropdown reading). Filter modes `Contains` (default, case-insensitive substring), `StartsWith`, `Custom` (host filters via `filterRequested` and publishes `setFilteredItems`). `maxVisible` caps the list. Down/Up walk, Enter commits, Esc closes. `Q_PROPERTY text / labelText / placeholderText / filter / maxVisible / popupVisible`. |
 | `MdColorPicker` | QColorDialog | Dialog + Slider(HSV) + Text field(Hex) | MD3 has no colour-swatch spec; assembled from the families that do: three `MdSlider`s (H 0–360, S 0–100, V 0–100) + a filled `MdTextField` hex code + a `ShapeCorner::Full` swatch disc with an `outline-variant` ring (the identity-disc reading MdAvatar uses). Sliders, hex field and swatch stay in sync both ways. `Q_PROPERTY color / hue / saturation / value / hexVisible / swatchShape`. |
 | `MdDockWidget` / `MdDockManager` | QDockWidget | Side sheet + surface container | `MdDockWidget`: 48 px header row (`TitleMedium` label, trailing `MdIconButton` close) + content widget, `surface-container` surface, `outline-variant` header divider — the Side sheet header language. `Q_PROPERTY title / area / closable / open`. `MdDockManager`: center + left / right / bottom areas (each an `MdSplitter` stack), `showGuide(area)` paints a `secondary-container` `ShapeCorner::Medium` shape highlight over the drop zone while dragging. `Q_PROPERTY centerWidget / leftWidth / rightWidth / bottomHeight / guideVisible`. |
+| `MdDescriptions` | — | 键值列表，label / body typography 对比 | Label in `LabelMedium` / `on-surface-variant` against value in `BodyMedium` / `on-surface`. Vertical (label above value) or Horizontal (label left of value); 1..N columns; optional `outline-variant` row rules. List one-line inset (16 px) and padding floor. `Q_PROPERTY items / layout / columns / bordered / rowSpacing`. Pure paint widget. |
+| `MdTimeline` | — | List + 连线 | List one-line rows (56 px floor, TitleMedium headline + BodyMedium supporting) joined by a 1 px `outline-variant` connector and 8 px status dots. Status `Default` / `Active` / `Complete` / `Error` maps to `outline-variant` / `primary` (ringed) / `primary` / `error`. Optional timestamps. `Q_PROPERTY items / connectorVisible / timestampsVisible`. Non-interactive. |
+| `MdImage` | — | Full-screen dialog + 手势 | Tile: `surface-container-lowest` under the pixmap, `ShapeCorner` clip (default Medium), `Contain` / `Cover` / `None` fit. Click opens a full-screen preview (`md.sys.color.scrim` + close IconButton); wheel zooms, drag pans, Esc / close exits. `Q_PROPERTY pixmap / source / fit / shape / previewEnabled / altText`. |
+| `MdWatermark` | — | on-surface 低透明度平铺 | `md.sys.color.on-surface` at the state-layer hover opacity (`md.comp.state-layer.hover.opacity` 0.08), tiled at a configurable angle over text or a pixmap. Mouse-transparent (`WA_TransparentForMouseEvents`). `Q_PROPERTY text / pixmap / angle / gap / fontSize / opacity`. |
+| `MdTransfer` | — | List × 2 + Buttons | Two List panels (`surface-container` chrome, 56 px rows, `secondary-container` selection) plus a Text `MdButton` chevron pair in the middle gutter. Value model `MdTransferItem`. Up/Down/Home/End walk, Left/Right switch panel, Space toggles. `Q_PROPERTY sourceTitle / targetTitle / sourceItems / targetItems / multiSelect`. Signals `movedToTarget` / `movedToSource`. |
+| `MdMentions` | — | Text field + Menu 弹层 | `MdTextField` + `MdMenu` popup (the exposed-dropdown reading). Typing the `trigger` (`@`) opens a filtered suggestion menu; Enter / click commits `@Name`. Esc closes and keeps the typed text. `Q_PROPERTY text / labelText / placeholderText / trigger / items / popupVisible / maxVisible`. |
+| `MdBackTop` | — | FAB 的 small variant | A real `MdFab` (`FabSize::Small` 40 px, `FabVariant::Surface`, `arrow_upward`) that appears once a watched `QAbstractScrollArea`'s vertical offset passes `visibilityThreshold` (default 320) and scrolls it back to 0 on activation. `Q_PROPERTY visibilityThreshold / iconName / buttonVisible / scrollArea`. |
 
 Still open (remaining appendix D rows): MdInputDialog,
 MdStackedWidget, MdResult,
-MdBreadcrumb, MdTimeline,
-MdImage, MdQRCode, MdWatermark, MdLog, MdCascader,
-MdTransfer, MdMentions,
+MdBreadcrumb,
+MdQRCode, MdLog, MdCascader,
 MdPlainTextEdit, MdMasonry, MdDrawer,
 MdTour / MdCoachMark,
-MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor, MdBackTop.
+MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor.

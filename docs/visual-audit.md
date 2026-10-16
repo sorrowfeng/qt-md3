@@ -1260,3 +1260,21 @@ Note: MdPopover / MdPopconfirm / MdMenu are Qt::Popup top-levels. The gallery
 demonstrates them from trigger buttons rather than setVisible(true), because
 a permanently-shown Qt::Popup floats over every other gallery page and breaks
 TestMd3GalleryClick's hit-test sweep.
+
+## Stage 2 Qt extensions (detail & overlay batch)
+
+Page 54 (qt-extensions-detail) shows MdDescriptions / MdTimeline / MdImage /
+MdWatermark / MdTransfer / MdMentions / MdBackTop as live widgets. Semantics
+pinned by unit tests (Label/Body contrast and columns, status-dot colours and
+connector, image fit/shape and preview open/close, watermark tiling and
+opacity clamp, shuttle selection and move operations, mention trigger query
+and commit, scroll-threshold visibility and scrollToTop, non-blank render).
+Side-by-side capture against official Material is still pending with the rest
+of the Stage 2 visual QA round — MD3 publishes no descriptions, timeline,
+image, watermark, transfer, mentions or back-top family, so these are anchored
+on the families that do exist (List one-line metrics, LabelMedium/BodyMedium
+type scale, FAB small, Text field + Menu, scrim + IconButton). Every colour
+they paint is already a published role (on-surface, on-surface-variant,
+outline-variant, primary, error, surface-container, secondary-container,
+surface-container-lowest, scrim). MdWatermark's 0.08 stamp opacity is the
+state-layer hover reading (`md.comp.state-layer.hover.opacity`).

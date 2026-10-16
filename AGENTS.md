@@ -168,13 +168,15 @@ recorded in docs/porting-todo.md and the cross-cutting table in
 docs/md3-coverage.md.
 
 Stage 2 (Qt extensions) is underway. Landed so far (tests + gallery pages
-48/49/50/51/52): `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`,
+48/49/50/51/52/53/54): `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`,
 `MdTable`, `MdAvatar`, `MdWindow`, `MdFileDialog`, `MdInputNumber`,
 `MdScaffold`, `MdMenuBar`, `MdStatusBar`, `MdSplitter`, `MdPagination`,
 `MdEmptyState`, `MdSkeleton`, `MdSteps` / `MdStepper`, `MdUpload`, `MdRate`,
 `MdFlex`, `MdGrid`, `MdSpace`, `MdCollapse`, `MdNotification`,
 `MdTree` / `MdTreeSelect`, `MdStatistic`, `MdPopover` / `MdPopconfirm`,
-`MdAutoComplete`, `MdColorPicker`, `MdDockWidget` / `MdDockManager`.
+`MdAutoComplete`, `MdColorPicker`, `MdDockWidget` / `MdDockManager`,
+`MdDescriptions`, `MdTimeline`, `MdImage`, `MdWatermark`, `MdTransfer`,
+`MdMentions`, `MdBackTop`.
 The remaining appendix D rows are listed in
 docs/porting-todo.md.
 

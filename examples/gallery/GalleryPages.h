@@ -256,6 +256,9 @@ GalleryPage *createStage2LayoutPage();
 /// Page 53. Stage 2 entry & overlay extensions (MdStatistic + MdPopover +
 /// MdPopconfirm + MdAutoComplete + MdColorPicker + MdDockWidget / MdDockManager).
 GalleryPage *createStage2EntryPage();
+/// Page 54. Stage 2 detail & overlay extensions (MdDescriptions + MdTimeline +
+/// MdImage + MdWatermark + MdTransfer + MdMentions + MdBackTop).
+GalleryPage *createStage2DetailPage();
 
 // ---------------------------------------------------------------------------
 // Showcase screens

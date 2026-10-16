@@ -1821,6 +1821,154 @@ set_tests_properties(TestMd3Dock PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Dock)
 
+# --- Stage 2 detail & overlay batch ----------------------------------------
+add_executable(TestMd3Descriptions
+    TestMd3Descriptions.cpp
+)
+
+target_link_libraries(TestMd3Descriptions
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Descriptions COMMAND TestMd3Descriptions)
+set_tests_properties(TestMd3Descriptions PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Descriptions)
+
+add_executable(TestMd3Timeline
+    TestMd3Timeline.cpp
+)
+
+target_link_libraries(TestMd3Timeline
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Timeline COMMAND TestMd3Timeline)
+set_tests_properties(TestMd3Timeline PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Timeline)
+
+add_executable(TestMd3Image
+    TestMd3Image.cpp
+)
+
+target_link_libraries(TestMd3Image
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Image COMMAND TestMd3Image)
+set_tests_properties(TestMd3Image PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Image)
+
+add_executable(TestMd3Watermark
+    TestMd3Watermark.cpp
+)
+
+target_link_libraries(TestMd3Watermark
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Watermark COMMAND TestMd3Watermark)
+set_tests_properties(TestMd3Watermark PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Watermark)
+
+add_executable(TestMd3Transfer
+    TestMd3Transfer.cpp
+)
+
+target_link_libraries(TestMd3Transfer
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Transfer COMMAND TestMd3Transfer)
+set_tests_properties(TestMd3Transfer PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Transfer)
+
+add_executable(TestMd3Mentions
+    TestMd3Mentions.cpp
+)
+
+target_link_libraries(TestMd3Mentions
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Mentions COMMAND TestMd3Mentions)
+set_tests_properties(TestMd3Mentions PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Mentions)
+
+add_executable(TestMd3BackTop
+    TestMd3BackTop.cpp
+)
+
+target_link_libraries(TestMd3BackTop
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3BackTop COMMAND TestMd3BackTop)
+set_tests_properties(TestMd3BackTop PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3BackTop)
+
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
@@ -1876,6 +2024,7 @@ add_executable(TestMd3GalleryClick
     ${GALLERY_DIR}/GalleryPages51.cpp
     ${GALLERY_DIR}/GalleryPages52.cpp
     ${GALLERY_DIR}/GalleryPages53.cpp
+    ${GALLERY_DIR}/GalleryPages54.cpp
     ${GALLERY_DIR}/GalleryPages44.cpp
     ${GALLERY_DIR}/GalleryPages45.cpp
     ${GALLERY_DIR}/GalleryPages46.cpp

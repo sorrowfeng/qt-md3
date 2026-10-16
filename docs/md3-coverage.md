@@ -857,7 +857,7 @@ as done is treated as a defect, not a rounding error.
 ## Stage 2 progress (Qt extensions)
 
 Stage 1 is green. Stage 2 public headers under src/widgets/ are tracked by
-TestMd3CoveragePolicy (reports the live count). As of the entry & overlay
+TestMd3CoveragePolicy (reports the live count). As of the detail & overlay
 batch the landed set is:
 
 MdWindow, MdFileDialog, MdMessageBox, MdScrollBar, MdScrollArea,
@@ -866,6 +866,8 @@ MdMenuBar, MdStatusBar, MdSplitter, MdPagination, MdEmptyState,
 MdSkeleton, MdSteps, MdStepper, MdUpload, MdRate, MdFlex,
 MdGrid, MdSpace, MdCollapse, MdNotification, MdTree, MdTreeSelect,
 MdStatistic, MdPopover, MdPopconfirm, MdAutoComplete, MdColorPicker,
-MdDockWidget, MdDockManager.
+MdDockWidget, MdDockManager,
+MdDescriptions, MdTimeline, MdImage, MdWatermark, MdTransfer,
+MdMentions, MdBackTop.
 
-Each has a dedicated CTest binary and a gallery page (48 / 49 / 50 / 51 / 52 / 53).
+Each has a dedicated CTest binary and a gallery page (48 / 49 / 50 / 51 / 52 / 53 / 54).
