@@ -19,12 +19,15 @@
 
 #include "core/MdLoadingIndicatorTokens.h"
 #include "core/MdMaterialShapes.h"
+#include "core/MdShape.h"
 #include "core/MdTheme.h"
 #include "core/MdTypes.h"
 #include "styles/MdLoadingIndicatorStyle.h"
 #include "widgets/MdLoadingIndicator.h"
 
 #include <QtGui/QImage>
+
+#include <cmath>
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 #include <QtTest/QTest>
@@ -69,6 +72,8 @@ private slots:
     void tokenVariantOverrides();
     void shapeEngineNormalizedBounds();
     void shapeCatalogueGeometry();
+    void decorativeShapeCatalogue();
+    void decorativeShapePaths();
     void morphEndpoints();
     void morphIntermediateStaysWithin();
     void springMath();
@@ -189,6 +194,62 @@ void TestMd3LoadingIndicator::shapeCatalogueGeometry()
     QVERIFY(maxRadius - minRadius < 0.01);
 }
 
+void TestMd3LoadingIndicator::decorativeShapeCatalogue()
+{
+    // The full M3 Expressive decorative shape library (MaterialShapes.kt).
+    QCOMPARE(MdMaterialShapes::decorativeShapeCount(), 35);
+    QCOMPARE(MdShape::decorativeShapeCount(), 35);
+
+    QStringList names;
+    for (int i = 0; i < MdMaterialShapes::decorativeShapeCount(); ++i) {
+        const QString name = MdMaterialShapes::decorativeShapeName(i);
+        QVERIFY(!name.isEmpty());
+        QVERIFY(!names.contains(name));
+        names << name;
+
+        const MdRoundedPolygon shape = MdMaterialShapes::decorativeShape(i);
+        QVERIFY(!shape.cubics().isEmpty());
+
+        // Every catalogue entry is normalized into the unit square.
+        double bounds[4];
+        shape.calculateBounds(bounds);
+        const double side = std::max(bounds[2] - bounds[0], bounds[3] - bounds[1]);
+        QVERIFY(side > 0.0);
+        QVERIFY(side <= 1.0 + 1e-6);
+        QVERIFY(bounds[0] >= -1e-6);
+        QVERIFY(bounds[1] >= -1e-6);
+        QVERIFY(bounds[2] <= 1.0 + 1e-6);
+        QVERIFY(bounds[3] <= 1.0 + 1e-6);
+    }
+    QCOMPARE(names.size(), 35);
+    QCOMPARE(names.first(), QStringLiteral("circle"));
+    QCOMPARE(names.last(), QStringLiteral("heart"));
+
+    // Out-of-range access degrades safely.
+    QCOMPARE(MdMaterialShapes::decorativeShapeName(-1), QString());
+    QCOMPARE(MdMaterialShapes::decorativeShapeName(35), QString());
+}
+
+void TestMd3LoadingIndicator::decorativeShapePaths()
+{
+    // Each catalogue entry flattens to a non-empty QPainterPath, and any pair
+    // interpolates through MdMorph (the "interpolation pairs" of the library).
+    for (int i = 0; i < MdMaterialShapes::decorativeShapeCount(); ++i) {
+        const QPainterPath path = MdShape::decorativeShapePath(i);
+        QVERIFY(!path.isEmpty());
+        QVERIFY(path.elementCount() > 2);
+    }
+
+    // A representative morph pair: circle -> heart.
+    const MdMorph morph(MdMaterialShapes::circle(), MdMaterialShapes::heart());
+    const QPainterPath mid = morph.pathAt(0.5);
+    QVERIFY(!mid.isEmpty());
+    // Endpoints are the two shapes' sample sets, so the mid frame is a blend.
+    const QVector<QPointF> start = morph.samplesAt(0.0);
+    const QVector<QPointF> end = morph.samplesAt(1.0);
+    QCOMPARE(start.size(), end.size());
+    QCOMPARE(start.size(), morph.sampleCount());
+}
 void TestMd3LoadingIndicator::morphEndpoints()
 {
     // progress 0 reproduces the start outline; progress 1 the end outline.

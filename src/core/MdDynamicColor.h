@@ -30,7 +30,8 @@ public:
     static MdDynamicScheme create(Argb seed,
                                  ThemeMode mode,
                                  SchemeVariant variant,
-                                 ContrastLevel contrast = ContrastLevel::Standard);
+                                 ContrastLevel contrast = ContrastLevel::Standard,
+                                 ColorSpecVersion specVersion = ColorSpecVersion::Spec2021);
 
     Argb sourceColor() const { return m_sourceColor; }
     MdHct sourceHct() const { return m_sourceHct; }
@@ -38,6 +39,7 @@ public:
     bool isDark() const { return m_mode == ThemeMode::Dark; }
     SchemeVariant variant() const { return m_variant; }
     ContrastLevel contrastLevel() const { return m_contrast; }
+    ColorSpecVersion specVersion() const { return m_specVersion; }
 
     const MdTonalPalette &primaryPalette() const { return m_primary; }
     const MdTonalPalette &secondaryPalette() const { return m_secondary; }
@@ -71,6 +73,7 @@ private:
     ThemeMode m_mode = ThemeMode::Light;
     SchemeVariant m_variant = SchemeVariant::TonalSpot;
     ContrastLevel m_contrast = ContrastLevel::Standard;
+    ColorSpecVersion m_specVersion = ColorSpecVersion::Spec2021;
 
     MdTonalPalette m_primary;
     MdTonalPalette m_secondary;

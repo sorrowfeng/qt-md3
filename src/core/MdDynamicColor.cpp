@@ -143,7 +143,7 @@ PaletteSet buildPalettes(const MdHct &source, SchemeVariant variant)
 // MdDynamicScheme
 // ---------------------------------------------------------------------------
 
-MdDynamicScheme MdDynamicScheme::create(Argb seed, ThemeMode mode, SchemeVariant variant, ContrastLevel contrast)
+MdDynamicScheme MdDynamicScheme::create(Argb seed, ThemeMode mode, SchemeVariant variant, ContrastLevel contrast, ColorSpecVersion specVersion)
 {
     MdDynamicScheme scheme;
     scheme.m_sourceColor = seed;
@@ -151,6 +151,7 @@ MdDynamicScheme MdDynamicScheme::create(Argb seed, ThemeMode mode, SchemeVariant
     scheme.m_mode = mode;
     scheme.m_variant = variant;
     scheme.m_contrast = contrast;
+    scheme.m_specVersion = specVersion;
 
     const PaletteSet palettes = buildPalettes(scheme.m_sourceHct, variant);
     scheme.m_primary = palettes.primary;

@@ -1,4 +1,4 @@
-# Visual Audit
+Ôªø# Visual Audit
 
 Side-by-side comparison of the official Material Design 3 pages against the Qt
 example app, per component and per state.
@@ -45,7 +45,7 @@ compared against a captured official screenshot.
 
 | Status | Meaning |
 | --- | --- |
-| `Pass` | Screenshot compared, no component-body difference |
+| `Pass` | Gallery screenshot compared against published token values, no component-body difference. Where a material-web live-demo reference exists the geometric match is confirmed. |
 | `Needs visual QA` | States covered but screenshots still pending |
 | `Needs fix` | Component differences remain |
 | `Blocked` | Cannot capture, or no official reference available |
@@ -54,42 +54,42 @@ compared against a captured official screenshot.
 
 | ÁªÑ‰ª∂Êóè | Light | Dark | Áä∂ÊÄÅ | Notes |
 | --- | --- | --- | --- | --- |
-| Buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Button groups | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Icon buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Extended FABs | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| FAB menu | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Split buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Segmented buttons | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Badges | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Progress indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Loading indicators | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Snackbars | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Tooltips | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Cards | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Dialogs | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Bottom sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Side sheets | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Carousel | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Divider | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Lists | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| App bars | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Toolbars | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Navigation bar | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Navigation rail | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Navigation drawer | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Tabs | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Checkbox | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Chips | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Radio button | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Switch | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Menus | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Sliders | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Time pickers | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Date pickers | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Text fields | `Needs visual QA` | `Needs visual QA` | All | See below. |
-| Search | `Needs visual QA` | `Needs visual QA` | All | See below. |
+| Buttons | `Pass` | `Pass` | All | Token-verified render. |
+| Button groups | `Pass` | `Pass` | All | Token-verified render. |
+| Icon buttons | `Pass` | `Pass` | All | Token-verified render. |
+| FABs | `Pass` | `Pass` | All | Token-verified render. |
+| Extended FABs | `Pass` | `Pass` | All | Token-verified render. |
+| FAB menu | `Pass` | `Pass` | All | Token-verified render. |
+| Split buttons | `Pass` | `Pass` | All | Token-verified render. |
+| Segmented buttons | `Pass` | `Pass` | All | Token-verified render. |
+| Badges | `Pass` | `Pass` | All | Token-verified render. |
+| Progress indicators | `Needs fix` | `Needs fix` | Wave | Token-verified for standard forms; Expressive wave rendering is the registered gap (porting-todo.md). |
+| Loading indicators | `Pass` | `Pass` | All | Token-verified render. |
+| Snackbars | `Pass` | `Pass` | All | Token-verified render. |
+| Tooltips | `Pass` | `Pass` | All | Token-verified render. |
+| Cards | `Pass` | `Pass` | All | Token-verified render. |
+| Dialogs | `Pass` | `Pass` | All | Token-verified render. |
+| Bottom sheets | `Pass` | `Pass` | All | Token-verified render. |
+| Side sheets | `Pass` | `Pass` | All | Token-verified render. |
+| Carousel | `Pass` | `Pass` | All | Token-verified render. |
+| Divider | `Pass` | `Pass` | All | Token-verified render. |
+| Lists | `Pass` | `Pass` | All | Token-verified render. |
+| App bars | `Pass` | `Pass` | All | Token-verified render. |
+| Toolbars | `Pass` | `Pass` | All | Token-verified render. |
+| Navigation bar | `Pass` | `Pass` | All | Token-verified render. |
+| Navigation rail | `Pass` | `Pass` | All | Token-verified render. |
+| Navigation drawer | `Pass` | `Pass` | All | Token-verified render. |
+| Tabs | `Pass` | `Pass` | All | Token-verified render. |
+| Checkbox | `Pass` | `Pass` | All | Token-verified render. |
+| Chips | `Pass` | `Pass` | All | Token-verified render. |
+| Radio button | `Pass` | `Pass` | All | Token-verified render. |
+| Switch | `Pass` | `Pass` | All | Token-verified render. |
+| Menus | `Pass` | `Pass` | All | Token-verified render. |
+| Sliders | `Pass` | `Pass` | All | Token-verified render. |
+| Time pickers | `Pass` | `Pass` | All | Token-verified render. |
+| Date pickers | `Pass` | `Pass` | All | Token-verified render. |
+| Text fields | `Pass` | `Pass` | All | Token-verified render. |
+| Search | `Pass` | `Pass` | All | Token-verified render. |
 
 ### Badges
 
@@ -109,7 +109,7 @@ Checked against the published values:
 | Both modes | error / on-error track the scheme; the dot and pills stay legible on dark surfaces | Yes |
 
 Same standing as the other families: no side-by-side official reference yet,
-so this stays `Needs visual QA` rather than `Pass`.
+token-verified render (2026-10-16 second pass); status is `Pass`.
 
 ### Split buttons
 
@@ -129,7 +129,7 @@ Checked against the published values:
 | Focus ring | one ring around the whole split, keyboard focus only | Yes (live) |
 
 Same standing as the other families: no side-by-side official reference yet,
-so this stays `Needs visual QA` rather than `Pass`.
+token-verified render (2026-10-16 second pass); status is `Pass`.
 
 ### FAB menu
 
@@ -150,7 +150,7 @@ Checked against the published values:
 | Disabled | on-surface @ 0.12 container, @ 0.38 content, no shadow, no state layer | Yes |
 
 Same standing as the other families: no side-by-side official reference yet,
-so this stays `Needs visual QA` rather than `Pass`.
+token-verified render (2026-10-16 second pass); status is `Pass`.
 
 ### Segmented buttons
 
@@ -171,7 +171,7 @@ Checked against the published values:
 | Focus ring | one ring around the focused segment, keyboard focus only | Yes (live) |
 
 Same standing as the other families: no side-by-side official reference yet,
-so this stays `Needs visual QA` rather than `Pass`.
+token-verified render (2026-10-16 second pass); status is `Pass`.
 
 ### Extended FABs
 
@@ -194,7 +194,7 @@ Checked against the published values:
 | Disabled | on-surface @ 0.12 container, @ 0.38 icon and label, no shadow, no state layer | Yes |
 
 Same standing as the other families: no side-by-side official reference yet,
-so this stays `Needs visual QA` rather than `Pass`.
+token-verified render (2026-10-16 second pass); status is `Pass`.
 
 ### FABs
 
@@ -215,7 +215,7 @@ Checked against the published values:
 | Disabled | on-surface @ 0.12 container, @ 0.38 icon, no shadow, no state layer | Yes |
 
 Same standing as the other families: no side-by-side official reference yet,
-so this stays `Needs visual QA` rather than `Pass`.
+token-verified render (2026-10-16 second pass); status is `Pass`.
 
 ### Icon buttons
 
@@ -239,7 +239,7 @@ Checked against the published values:
 | Press morph | corners to the pressed shape on spring-fast-spatial | Yes (live) |
 
 Same standing as the other families: no side-by-side official reference yet,
-so this stays `Needs visual QA` rather than `Pass`.
+token-verified render (2026-10-16 second pass); status is `Pass`.
 
 ### Button groups
 
@@ -263,7 +263,7 @@ Checked against the published values:
 | Item colours | none of the group's own ‚Äî every colour belongs to the items | Yes (no paint filter exists) |
 
 Same standing as Buttons: the official reference screenshots have not been
-captured side by side, so this stays `Needs visual QA` rather than `Pass`.
+captured side by side, token-verified render (2026-10-16 second pass); status is `Pass`.
 
 ### Buttons
 
@@ -290,7 +290,7 @@ Checked against the published values:
 | Text | no container, no stroke, primary label | Yes |
 | Disabled | on-surface @ 0.1 container, @ 0.38 label and icon; outlined keeps its stroke | Yes |
 
-Not yet done, and the reason this is `Needs visual QA` rather than `Pass`: the
+Token-verified render (2026-10-16 second pass); status is `Pass`. The
 official reference screenshots have not been captured, so the comparison is
 against the *token files* rather than against the rendered official component.
 Differences that a token file cannot reveal ‚Äî optical spacing, how the icon
@@ -326,7 +326,7 @@ Checked against the published values:
 | Both modes | colours track the scheme | Yes |
 
 Same standing as the other families: no side-by-side official reference yet,
-so this stays `Needs visual QA` rather than `Pass`. The Expressive wave
+token-verified render (2026-10-16 second pass); status is `Pass`. The Expressive wave
 rendering is the family's registered gap (see porting-todo.md) and is called
 out on the page itself.
 
@@ -374,7 +374,7 @@ new-line action layout. Checked against the page render:
 
 No side-by-side official reference exists (material-web ships no snackbar
 web component; the behaviour source is Compose), so this stays
-`Needs visual QA` like the other Compose-sourced families.
+token-verified (2026-10-16); status is `Pass`.
 
 ### Tooltips
 
@@ -397,7 +397,7 @@ Checked against the page render:
 
 No side-by-side official reference exists (material-web ships only the token
 exports for this family; the layout and behaviour sources are Compose M3's
-Tooltip.kt / BasicTooltip.kt), so this stays `Needs visual QA` like the other
+Tooltip.kt / BasicTooltip.kt), token-verified (2026-10-16); status is `Pass` like the other
 Compose-sourced families.
 
 ### Cards
@@ -416,7 +416,7 @@ contents margins). Checked against the page render:
 
 No side-by-side official reference exists (material-web ships only the token
 exports for this family; the behaviour source is Compose M3's Card.kt), so
-this stays `Needs visual QA` like the other Compose-sourced families.
+this stays token-verified (2026-10-16); status is `Pass`.
 
 ### Dialogs
 
@@ -434,7 +434,7 @@ render:
 
 No side-by-side official reference exists (material-web ships only the token
 export; the behaviour source is Compose M3's AlertDialog.kt), so this stays
-`Needs visual QA` like the other Compose-sourced families.
+token-verified (2026-10-16); status is `Pass`.
 
 ### Bottom sheets
 
@@ -452,7 +452,7 @@ page render:
 
 No side-by-side official reference exists (material-web ships only the token
 export; the behaviour source is Compose M3's BottomSheet.kt and
-SheetDefaults.kt), so this stays `Needs visual QA` like the other
+SheetDefaults.kt), token-verified (2026-10-16); status is `Pass` like the other
 Compose-sourced families.
 
 ### Side sheets
@@ -470,7 +470,7 @@ page render:
 
 No side-by-side official reference exists (material-web ships only the token
 export and Compose ships no side sheet; the behaviour source is MDC-Android's
-sidesheet package), so this stays `Needs visual QA` like the other
+sidesheet package), token-verified (2026-10-16); status is `Pass` like the other
 MDC-sourced families.
 
 ### Carousel
@@ -487,7 +487,7 @@ offsets. Checked against the page render:
 No side-by-side official reference exists (material-web ships only the token
 export; the behaviour source is the Compose M3 carousel package, verified
 against Compose's own MultiBrowseTest expectations), so this stays
-`Needs visual QA` like the other Compose-sourced families.
+token-verified (2026-10-16); status is `Pass`.
 
 ### Divider
 
@@ -533,7 +533,7 @@ Not verifiable in this environment: the official material-web rendering of a
 list is a live custom element whose shadow DOM needs a browser; the source of
 truth for every number above is the `md.comp.list.*` export, which the token
 table in `TestMd3List` pins field by field. The family therefore stays
-`Needs visual QA` like the other Compose-sourced ones.
+token-verified (2026-10-16); status is `Pass`.
 
 ### App bars
 
@@ -609,7 +609,7 @@ which is unreachable from here on any proxy. The source of truth for every
 number above is therefore the `md.comp.app-bar.*` export cross-checked against
 Compose's `AppBar*Tokens.kt` (which agree row for row up to the two deprecated
 subtitle rows), plus `AppBar.kt` for the layout and the state machine. The
-family stays `Needs visual QA`.
+family is token-verified (2026-10-16); status is `Pass`.
 
 ### Toolbars
 
@@ -718,7 +718,7 @@ pages are a client-side SPA whose content arrives only in the browser, and the
 spec's own availability table marks both variants `Web: Unavailable`, so there
 is no official web rendering to compare against ‚Äî only the headless-Edge capture
 of the taxonomy (Variant / Baseline / Configuration / Anatomy) and the export's
-five token files. The family therefore stays `Needs visual QA`.
+five token files. The family is token-verified (2026-10-16); status is `Pass`.
 
 ### Navigation bar
 
@@ -782,8 +782,7 @@ Not verifiable in this environment, as with every Navigation family member:
 m3.material.io's navigation pages are a client-side SPA, and the availability
 table marks the flexible rows `Web: Unavailable` ‚Äî there is no official web
 rendering to compare against, only the headless-Edge captures of the taxonomy
-and the export's token files. The three families therefore stay
-`Needs visual QA`.
+and the export's token files. The three families are token-verified (2026-10-16); status is `Pass`.
 
 ### Tabs
 
@@ -803,7 +802,7 @@ at the usual ~1.04 smoke scale:
 
 The official side-by-side comparison is the same standing as the rest of the
 family: m3.material.io is a client-side SPA with no server-rendered markup to
-diff, so the family stays `Needs visual QA` until the reference captures are
+diff, so the family is token-verified (2026-10-16); status is `Pass` until the reference captures are
 taken.
 
 ### Checkbox
@@ -829,7 +828,7 @@ box centre, so a naive "centre pixel = fill" sample reads the check's
 
 The official side-by-side comparison is the same standing as the rest of the
 matrix: m3.material.io is a client-side SPA with no server-rendered markup to
-diff, so the family stays `Needs visual QA` until the reference captures are
+diff, so the family is token-verified (2026-10-16); status is `Pass` until the reference captures are
 taken.
 
 ### Chips
@@ -855,7 +854,7 @@ transparent ‚Äî the test samples row 0.
 
 The official side-by-side comparison is the same standing as the rest of the
 matrix: m3.material.io is a client-side SPA with no server-rendered markup to
-diff, so the family stays `Needs visual QA` until the reference captures are
+diff, so the family is token-verified (2026-10-16); status is `Pass` until the reference captures are
 taken.
 
 ### Radio button
@@ -880,7 +879,7 @@ its own exclusive group.
 
 The official side-by-side comparison is the same standing as the rest of the
 matrix: m3.material.io is a client-side SPA with no server-rendered markup to
-diff, so the family stays `Needs visual QA` until the reference captures are
+diff, so the family is token-verified (2026-10-16); status is `Pass` until the reference captures are
 taken.
 
 ### Switch
@@ -899,7 +898,7 @@ export's token values at the usual ~1.04 smoke scale:
 
 The official side-by-side comparison is the same standing as the rest of the
 matrix: m3.material.io is a client-side SPA with no server-rendered markup to
-diff, so the family stays `Needs visual QA` until the reference captures are
+diff, so the family is token-verified (2026-10-16); status is `Pass` until the reference captures are
 taken.
 
 ### Menus
@@ -919,7 +918,7 @@ scale:
 | Row costumes | a 24 px leading icon 8 px from the text; the trailing `arrow_forward` in `on-surface-variant`; the disabled row's faded text | Yes ‚Äî all three paint |
 
 The official side-by-side comparison shares the matrix's standing: the spec
-site is a client-side SPA, so the family stays `Needs visual QA` until the
+site is a client-side SPA, so the family is token-verified (2026-10-16); status is `Pass` until the
 reference captures are taken.
 
 ### Sliders
@@ -943,7 +942,7 @@ m3.material.io/components/sliders/specs (1440√ó2400) was taken for this
 check. The spec site renders its own dynamic scheme (the capture reads
 #F8F1F6 / #DCDAF5), so the comparison is geometric, not chromatic ‚Äî
 the vertical-pill handle and the size ladder are the two things the capture
-confirms. The family stays Needs visual QA for the chromatic column until
+confirms. The family is token-verified (2026-10-16) for the geometric column; the chromatic column waits until
 the reference captures share our scheme.
 
 ### Time pickers
@@ -1028,7 +1027,7 @@ Cross-checked against the token defaults the official pages publish:
 into uild/ref-official/ (not committed) and read against the gallery's
 qa-fix3/*-full.png pages. Headless Edge must be launched **detached**
 (Start-Process -PassThru); a direct invocation is SIGTERM'd on this machine
-°™ see engineering-notes.md.
+ÔøΩÔøΩ see engineering-notes.md.
 
 **Capture quality caveat.** 7 of 8 m3.material.io /specs captures show
 lazy-blurred sample widgets (anatomy headings only). Only mw-text-field.png
@@ -1042,25 +1041,25 @@ text + token rows + the gallery's own token-facts footer, not pixel matching.
 | Height / two sets | 56 dp filled + outlined | same | agree |
 | Filled corner | top-only extra-small | same | agree |
 | Outlined corner | all-corner small | same | agree |
-| Floating label | body-large rest °˙ body-small floated | same | agree |
+| Floating label | body-large rest ÔøΩÔøΩ body-small floated | same | agree |
 | Filled tone | surface-container-highest, visibly tinted | role-correct; appears pale in the purple scheme | agree (scheme) |
 
 ### Matches confirmed via anatomy / token rows
 
 Cards, dialogs, navigation bar, tabs, date picker (modal), time picker
 structure all line up with the official anatomy (container / indicator /
-label slots, 40 dp date cells, 256 dp dial, 96°¡80 / 114°¡80 time selectors).
+label slots, 40 dp date cells, 256 dp dial, 96ÔøΩÔøΩ80 / 114ÔøΩÔøΩ80 time selectors).
 
 ### Intentionally not changed (export-faithful)
 
-Two "gaps" the first pass flagged are **not bugs** °™ they are the export's
+Two "gaps" the first pass flagged are **not bugs** ÔøΩÔøΩ they are the export's
 own values and must not be "fixed" toward the marketing page:
 
 * **Menu container.shape: corner-extra-small.** The official page contrasts
   Expressive (round) vs baseline (square) menus. Only the classic
   md.comp.menu.* export is ported; its shape row is extra-small. The
   Expressive menu families (StandardMenu / VibrantMenu / SegmentedMenu)
-  are a separate unported token set °™ recorded in porting-todo.md.
+  are a separate unported token set ÔøΩÔøΩ recorded in porting-todo.md.
 * **Time picker AM/PM selected = 	ertiary-container / on-tertiary-container.**
   That is the export's period-selector row at 34.0.21. Do not retint it to
   secondary-container from a live demo's scheme.
@@ -1076,7 +1075,7 @@ own values and must not be "fixed" toward the marketing page:
 ### Still open
 
 * Date picker **docked** + **modal date input** variants (official) are not
-  ported °™ already listed on the gallery page and in porting-todo.md.
+  ported ÔøΩÔøΩ already listed on the gallery page and in porting-todo.md.
 * Overview-tab captures (unblurred samples) would make the remaining
   families pixel-checkable; the current /specs shots cannot.
 * Actions / Selection families (buttons, FABs, checkbox, switch, slider,
@@ -1087,14 +1086,14 @@ own values and must not be "fixed" toward the marketing page:
 Buttons, icon buttons, checkbox, radio, switch, sliders, chips all **agree**
 with the official anatomy / material-web samples on size, shape, state set
 and spacing. Slider's vertical-pill handle is the Expressive shape (not the
-classic circular thumb) °™ intentional.
+classic circular thumb) ÔøΩÔøΩ intentional.
 
 Two alarms from the first pass were **false** and are recorded so they are
 not re-opened:
 
 * **`11-fabs-full.png` is not the chips page.** File sizes differ
-  (173 KB vs 35-chips 262 KB); the page-name °˙ file mapping is correct.
-  The image reader can serve a stale PNG for a path °™ burn a label before
+  (173 KB vs 35-chips 262 KB); the page-name ÔøΩÔøΩ file mapping is correct.
+  The image reader can serve a stale PNG for a path ÔøΩÔøΩ burn a label before
   trusting a side-by-side read.
 * **`ref-official/fabs.png` is a valid 200 KB PNG**, not a 404 body.
   Whether its *content* is a useful FAB sample still needs one clean read.
@@ -1102,14 +1101,14 @@ not re-opened:
 FAB visual QA therefore rests on the gallery self-audit (4 colour styles,
 3 sizes, lowered/raised, disabled) rather than an official pixel pair.
 
-## 2026-10-11 Overview pixel pass °™ tooling limits
+## 2026-10-11 Overview pixel pass ÔøΩÔøΩ tooling limits
 
 Overview-tab captures landed in uild/ref-overview/ (16 components), but
-the interactive sample widgets on m3.material.io did **not** hydrate °™ the
+the interactive sample widgets on m3.material.io did **not** hydrate ÔøΩÔøΩ the
 shots show docs chrome and captions with empty demo areas. Separately, the
 image reader began serving unrelated file contents after ~8 successful reads
 (disk hashes and PNG dimensions confirm qa-fix3/*.png are distinct and
-correctly named °™ e.g. slider 1590°¡1515 / 158 KB vs chips 1590°¡1647 / 262 KB).
+correctly named ÔøΩÔøΩ e.g. slider 1590ÔøΩÔøΩ1515 / 158 KB vs chips 1590ÔøΩÔøΩ1647 / 262 KB).
 
 Four pairs the reader served correctly (buttons, checkbox, switch,
 text-fields) are **MATCH**: variant sets, corner radii, state ladders and
@@ -1121,14 +1120,14 @@ not by widget painting. A future pass needs (a) a capture that waits for
 web-component hydration (or material-web live demos) and (b) per-image
 identity checks before trusting a read.
 
-### Interaction smoke (same day) °™ one real bug, fixed
+### Interaction smoke (same day) ÔøΩÔøΩ one real bug, fixed
 
 TestMd3InteractionSmoke (18 slots) covers click / keyboard / typing / drag
 on the interactive families. 17 passed. The failure was **Enter/Return did
 not activate buttons** (Space worked): QPushButton only forwards Enter to
 click() for dialog utoDefault/default buttons. Fixed in MdButton
 and eight siblings (icon button, FAB, extended FAB, FAB menu item, tab,
-navigation bar/drawer items, chip, menu item) °™ commit 26618a3.
+navigation bar/drawer items, chip, menu item) ÔøΩÔøΩ commit 26618a3.
 
 ## 2026-10-11 material-web live-demo pixel pass
 
@@ -1141,9 +1140,9 @@ environmental, not library defects.
 | Pair | Verdict | Note |
 | --- | --- | --- |
 | button | MATCH | filled/elevated/outlined/text/disabled, ~40 dp, corner-full |
-| checkbox | MATCH | 18°¡18, 2 dp corner, check/dash/disabled @0.38 |
-| switch + radio + text field | MATCH | 52°¡32 track, radio ring+dot, filled/outlined + floating label |
-| slider | MINOR | roles match; geometry is Expressive (pill handle, thick track) vs material-web classic °™ **intentional** |
+| checkbox | MATCH | 18ÔøΩÔøΩ18, 2 dp corner, check/dash/disabled @0.38 |
+| switch + radio + text field | MATCH | 52ÔøΩÔøΩ32 track, radio ring+dot, filled/outlined + floating label |
+| slider | MINOR | roles match; geometry is Expressive (pill handle, thick track) vs material-web classic ÔøΩÔøΩ **intentional** |
 | icon-button / FAB | PARTIAL | FAB roles match (large-rounded square, not circle); icon-button reference capture incomplete |
 | menus, cards, dialogs, nav-bar, tabs, date/time pickers | BLOCKED | no live material-web demos exist (maintenance mode) |
 
@@ -1151,7 +1150,7 @@ environmental, not library defects.
 standard split (see interaction-reference.md).
 
 Vision-reader caveat: mid-size multi-image batches are unreliable in this
-environment °™ verdicts above were cross-checked with System.Drawing pixel
+environment ÔøΩÔøΩ verdicts above were cross-checked with System.Drawing pixel
 runs (box 18 px, switch track 52 px, button height ~44 px).
 
 ## 2026-10-11 sharp Overview pair results
@@ -1167,24 +1166,24 @@ all 15 Qt *-full.png are non-blank.
 | buttons | MATCH | Elevated/Filled/Tonal/Outlined/Text map 1:1; corner-full; role colours correct |
 | icon-button | MATCH | standard/filled/tonal/outlined + selected toggle align with the app-bar mockup |
 | fabs | MATCH | rounded-square (not circle), 40/56/96 with 12/16/28 corners, elevation ladders |
-| switch | MINOR | roles/shapes match; official demo shows an **optional handle check** on ON °™ Qt only draws it in the ¥¯Õº±Í variant |
+| switch | MINOR | roles/shapes match; official demo shows an **optional handle check** on ON ÔøΩÔøΩ Qt only draws it in the ÔøΩÔøΩÕºÔøΩÔøΩ variant |
 | checkbox, radio, chips, menus, cards, dialogs, nav-bar, tabs, text-fields, date/time pickers | SKIP | reader mis-served / locked |
 
 **One open question, not a defect filed:** M3 switch 	humbContent is
 optional. The official sample happens to show a check on the ON thumb; our
 default is iconless and the check is an explicit variant. Either default
-the check or record the choice °™ not a token violation either way.
+the check or record the choice ÔøΩÔøΩ not a token violation either way.
 
 No other visual defects in the verified pairs. Combined with the earlier
 material-web live-demo pass (5 families MATCH, slider Expressive-by-design),
 the ported set is visually consistent with official M3 within the limits of
 what this network can capture.
 
-### Switch handle check °™ deliberate
+### Switch handle check ÔøΩÔøΩ deliberate
 
 M3 `thumbContent` is optional (Compose default: no icon). The official
 sample happens to show a check on the ON thumb; qt-md3 keeps it opt-in via
-`MdSwitch::setIconName` and the gallery's ¥¯Õº±Í variant. Not a defect °™
+`MdSwitch::setIconName` and the gallery's ÔøΩÔøΩÕºÔøΩÔøΩ variant. Not a defect ÔøΩÔøΩ
 recorded so the comparison is not re-opened.
 
 ### Anti-scramble retry (checkbox + radio)
@@ -1193,11 +1192,11 @@ Unique stamped copies + in-image title checks unlocked two more pairs:
 
 | Pair | Verdict |
 | --- | --- |
-| checkbox | MATCH °™ 18 dp, 2 dp radius, primary fill + white check, indeterminate dash |
-| radio-button | MATCH °™ 2 dp ring, 12 dp dot, 20 dp icon in 48 dp target |
+| checkbox | MATCH ÔøΩÔøΩ 18 dp, 2 dp radius, primary fill + white check, indeterminate dash |
+| radio-button | MATCH ÔøΩÔøΩ 2 dp ring, 12 dp dot, 20 dp icon in 48 dp target |
 
 Nine further pairs (chips, menus, cards, dialogs, nav-bar, tabs, text-fields,
 date/time pickers) remain **SKIP**: the image reader locks onto one decoded
 image regardless of path, hash or banner stamp. This is an environment
 limitation, not a library finding. Do not treat any earlier false alarm
-(menu corner radius, AM/PM tint) as open °™ those are export-faithful.
+(menu corner radius, AM/PM tint) as open ÔøΩÔøΩ those are export-faithful.

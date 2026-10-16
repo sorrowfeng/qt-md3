@@ -52,7 +52,8 @@ public:
     static MdColorScheme dynamic(const QColor &seed,
                                  ThemeMode mode,
                                  SchemeVariant variant = SchemeVariant::TonalSpot,
-                                 ContrastLevel contrast = ContrastLevel::Standard);
+                                 ContrastLevel contrast = ContrastLevel::Standard,
+                                 ColorSpecVersion specVersion = ColorSpecVersion::Spec2021);
 
     QColor color(ColorRole role) const;
     void setColor(ColorRole role, const QColor &color);
@@ -62,6 +63,7 @@ public:
     bool isDynamic() const { return m_dynamic; }
     SchemeVariant variant() const { return m_variant; }
     ContrastLevel contrastLevel() const { return m_contrast; }
+    ColorSpecVersion specVersion() const { return m_specVersion; }
     QColor seedColor() const { return m_seed; }
 
     /// Hex string for a role, e.g. "#6750a4" — used by the token audit test.
@@ -74,6 +76,7 @@ private:
     ThemeMode m_mode = ThemeMode::Light;
     SchemeVariant m_variant = SchemeVariant::TonalSpot;
     ContrastLevel m_contrast = ContrastLevel::Standard;
+    ColorSpecVersion m_specVersion = ColorSpecVersion::Spec2021;
     QColor m_seed;
     bool m_dynamic = false;
 };

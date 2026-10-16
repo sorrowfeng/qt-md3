@@ -419,16 +419,19 @@ MdColorScheme MdColorScheme::baseline(ThemeMode mode, ContrastLevel level)
 MdColorScheme MdColorScheme::dynamic(const QColor &seed,
                                      ThemeMode mode,
                                      SchemeVariant variant,
-                                     ContrastLevel contrast)
+                                     ContrastLevel contrast,
+                                     ColorSpecVersion specVersion)
 {
     const Argb seedArgb = MdColorMath::argbFromHex(seed.name(QColor::HexRgb));
-    const MdDynamicScheme dynamicScheme = MdDynamicScheme::create(seedArgb, mode, variant, contrast);
+    const MdDynamicScheme dynamicScheme =
+        MdDynamicScheme::create(seedArgb, mode, variant, contrast, specVersion);
 
     MdColorScheme scheme;
     scheme.m_mode = mode;
     scheme.m_dynamic = true;
     scheme.m_variant = variant;
     scheme.m_contrast = contrast;
+    scheme.m_specVersion = specVersion;
     scheme.m_seed = seed;
     for (int i = 0; i < int(ColorRole::Count); ++i) {
         const ColorRole role = static_cast<ColorRole>(i);

@@ -43,7 +43,7 @@ void MdTheme::applyChange(Fn &&mutate)
 void MdTheme::rebuildScheme()
 {
     if (m_dynamicColor) {
-        m_scheme = MdColorScheme::dynamic(m_seedColor, m_mode, m_variant, m_contrast);
+        m_scheme = MdColorScheme::dynamic(m_seedColor, m_mode, m_variant, m_contrast, m_specVersion);
     } else {
         // The static baseline honours the contrast level too: material-web
         // publishes six sets, one per (mode, level) pair.
@@ -109,6 +109,14 @@ void MdTheme::setContrastLevel(ContrastLevel level)
         return;
     }
     applyChange([this, level] { m_contrast = level; });
+}
+
+void MdTheme::setColorSpecVersion(ColorSpecVersion version)
+{
+    if (version == m_specVersion) {
+        return;
+    }
+    applyChange([this, version] { m_specVersion = version; });
 }
 
 void MdTheme::setDensity(Density density)

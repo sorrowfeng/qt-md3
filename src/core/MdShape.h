@@ -14,6 +14,7 @@
 #include "QtMd3Export.h"
 
 #include <QtCore/QList>
+#include <QtCore/QString>
 #include <QtCore/QRectF>
 #include <QtCore/QSizeF>
 #include <QtGui/QPainterPath>
@@ -54,9 +55,16 @@ public:
                                          const QList<qreal> &toRadii,
                                          qreal t);
 
-    /// Number of M3 Expressive decorative shapes currently available.
-    /// 0 until the 35-path catalogue is ported (see docs/porting-todo.md).
+    /// Number of M3 Expressive decorative shapes in the catalogue (35).
+    /// Paths are normalised to the unit square; any pair can be interpolated
+    /// with MdMorph (see MdMaterialShapes).
     static int decorativeShapeCount();
+
+    /// Stable name for a decorative shape ("circle", "heart", ...).
+    static QString decorativeShapeName(int index);
+
+    /// The normalised QPainterPath of decorative shape `index` (0..34).
+    static QPainterPath decorativeShapePath(int index);
 };
 
 } // namespace md

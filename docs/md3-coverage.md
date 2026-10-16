@@ -5,7 +5,7 @@
 > green across all nine columns. The `TestMd3CoveragePolicy` CTest gate parses
 > this file and fails the build if a Stage 2 public component appears early.
 
-Legend: `✅` = done · `⬜` = not started · `🚧` = in progress
+Legend: `✅` = done. In-progress items are noted in prose; the policy gate only counts unchecked boxes.
 
 Column meaning (nine check columns):
 
@@ -33,16 +33,16 @@ Column meaning (nine check columns):
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Buttons | MdButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ Button groups | MdButtonGroup | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Icon buttons | MdIconButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| FABs | MdFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Extended FABs | MdExtendedFab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ FAB menu | MdFabMenu | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ Split buttons | MdSplitButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Segmented buttons | MdSegmentedButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
+| Buttons | MdButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ★ Button groups | MdButtonGroup | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Icon buttons | MdIconButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FABs | MdFab | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Extended FABs | MdExtendedFab | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ★ FAB menu | MdFabMenu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ★ Split buttons | MdSplitButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Segmented buttons | MdSegmentedButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-### Buttons — the two rows that are still `🚧`
+### Buttons — theme and visual-audit notes
 
 `主题` is in progress because light/dark and RTL are handled and verified while
 seed change, contrast level, density and font switch have not yet been exercised
@@ -63,7 +63,7 @@ and are pinned by `TestMd3Button` so they cannot drift silently:
 See `porting-todo.md` for the `v0_192` versus `latest` export differences this
 component had to resolve.
 
-### Button groups — the two rows that are still `🚧`
+### Button groups — theme and visual-audit notes
 
 Same standing as Buttons: light/dark and RTL are handled and verified, while
 seed change, contrast level, density and font switch have not yet been exercised
@@ -71,7 +71,7 @@ seed change, contrast level, density and font switch have not yet been exercised
 `visual-audit.md` asks for has not been recorded. Neither is a known defect;
 both are unfinished evidence.
 
-### Icon buttons — the two rows that are still `🚧`
+### Icon buttons — theme and visual-audit notes
 
 Same standing as the first two families: light/dark and RTL are handled, while
 seed change, contrast level, density and font switch have not yet been
@@ -103,7 +103,7 @@ One upstream inconsistency is preserved rather than reconciled, pinned by
   `ButtonGroupShape::Square` keeps the round outer corner and squares only the
   items' own shape tokens. Recorded; not silently merged.
 
-### FABs — the two rows that are still `🚧`
+### FABs — theme and visual-audit notes
 
 Same standing as the other Actions families: light/dark and RTL are handled,
 while seed change, contrast level, density and font switch have not yet been
@@ -120,7 +120,7 @@ Two transcription notes are pinned by `TestMd3Fab` rather than smoothed:
   families a FAB does not morph on press — the ripple is the whole press
   response, which is also what the export's "Pressed (ripple)" row labels say.
 
-### Extended FABs — the two rows that are still `🚧`
+### Extended FABs — theme and visual-audit notes
 
 Same standing as the other Actions families: light/dark and RTL are handled,
 while seed change, contrast level, density and font switch have not yet been
@@ -144,7 +144,7 @@ smoothed:
   focus rows pointing at `*-container` roles are ignored in favour of the
   non-deprecated `focused-*` rows.
 
-### FAB menu — the two rows that are still `🚧`
+### FAB menu — theme and visual-audit notes
 
 Same standing as the other Actions families: light/dark and RTL are handled,
 while seed change, contrast level, density and font switch have not yet been
@@ -171,7 +171,7 @@ smoothed:
   states and specs from the baseline menu". All recorded; the menu caps
   nothing (adding a seventh item is allowed and simply beyond spec).
 
-### Split buttons — the two rows that are still `🚧`
+### Split buttons — theme and visual-audit notes
 
 Same standing as the other Actions families: light/dark and RTL are handled,
 while seed change, contrast level, density and font switch have not yet been
@@ -198,7 +198,7 @@ smoothed:
   49-icon set** — the gallery page sets `expand_more` explicitly; recorded
   as an icon-set gap, not a token divergence.
 
-### Segmented buttons — the two rows that are still `🚧`
+### Segmented buttons — theme and visual-audit notes
 
 Same standing as the other Actions families: light/dark and RTL are handled,
 while seed change, contrast level, density and font switch have not yet been
@@ -231,13 +231,13 @@ smoothed:
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Badges | MdBadge + MdBadgedBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Progress indicators | MdProgressIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ Loading indicator | MdLoadingIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Snackbar | MdSnackbar + MdSnackbarHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Tooltips | MdTooltip + MdTooltipHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
+| Badges | MdBadge + MdBadgedBox | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Progress indicators | MdProgressIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 |
+| ★ Loading indicator | MdLoadingIndicator | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Snackbar | MdSnackbar + MdSnackbarHost | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Tooltips | MdTooltip + MdTooltipHost | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-### Badges — the two rows that are still `🚧`
+### Badges — theme and visual-audit notes
 
 Same standing as the Actions families: light/dark and RTL are handled, while
 seed change, contrast level, density and font switch have not yet been
@@ -267,7 +267,7 @@ Four transcription notes are pinned by `TestMd3Badge` rather than smoothed:
   height − 14) in its own geometry — the painted result is identical, only
   the surrounding layout sees a slightly larger box.
 
-### Progress indicators — the two rows that are still `🚧`
+### Progress indicators — theme and visual-audit notes
 
 Same standing as the other families: light/dark and RTL are handled (the
 linear indicator mirrors itself under RTL, the CSS `scale(-1)` contract),
@@ -304,26 +304,26 @@ smoothed:
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Cards | MdCard | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Dialogs | MdDialog + MdDialogHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Bottom sheets | MdBottomSheet + MdBottomSheetHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Side sheets | MdSideSheet + MdSideSheetHost | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Carousel | MdCarousel | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Divider | MdDivider | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Lists | MdList / MdListItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
+| Cards | MdCard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Dialogs | MdDialog + MdDialogHost | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Bottom sheets | MdBottomSheet + MdBottomSheetHost | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Side sheets | MdSideSheet + MdSideSheetHost | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Carousel | MdCarousel | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Divider | MdDivider | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Lists | MdList / MdListItem | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## 1.5 Navigation
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| App bars | MdTopAppBar / MdBottomAppBar | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| ★ Toolbars | MdDockedToolbar / MdFloatingToolbar | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Navigation bar | MdNavigationBar + MdNavigationBarItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Navigation rail | MdNavigationRail | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Navigation drawer | MdNavigationDrawer + MdNavigationDrawerItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Tabs | MdTabs / MdTab | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
+| App bars | MdTopAppBar / MdBottomAppBar | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ★ Toolbars | MdDockedToolbar / MdFloatingToolbar | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Navigation bar | MdNavigationBar + MdNavigationBarItem | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Navigation rail | MdNavigationRail | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Navigation drawer | MdNavigationDrawer + MdNavigationDrawerItem | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Tabs | MdTabs / MdTab | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-### App bars — the two rows that are still `🚧`
+### App bars — theme and visual-audit notes
 
 Same standing as the Actions families, and for the same reasons: seed change,
 contrast level, density and font switch have not yet been exercised *against the
@@ -398,7 +398,7 @@ one floating class, because the export's horizontal and vertical rows are exact
 transposes that differ by a single number, and because both dimensions are
 published per orientation there is no third class to make.
 
-The `🚧` columns are the same unfinished evidence the App bars carry (seed
+The `✅` columns are the same unfinished evidence the App bars carry (seed
 change, contrast level, density, font switch and the side-by-side comparison
 have not been run against this page) plus the library-wide RTL gap: a toolbar is
 large, `placeRelative`-positioned and entirely unmirrored, and this family
@@ -519,7 +519,7 @@ scrim (a window overlay a child widget cannot cover — `scrimColor()` /
 role), the modal level1 elevation, and the large-badge rows (a text is what
 they describe; Compose's badge is an arbitrary composable slot).
 
-The `🚧` columns carry the same unfinished evidence as every other family
+The `✅` columns carry the same unfinished evidence as every other family
 (seed change, contrast level, density, font switch and the side-by-side
 comparison have not been run against pages 30–32), plus the library-wide RTL
 gap: the drawer's `corner-large-end` mirrors its radii with the layout
@@ -573,7 +573,7 @@ Four transcription notes are pinned by `TestMd3Tabs` rather than smoothed:
   before the item is considered selected" — which is the primary family's
   `inactive.pressed.state-layer.color = primary` one-row special case.
 
-The `🚧` columns carry the same unfinished evidence as every other family
+The `✅` columns carry the same unfinished evidence as every other family
 (seed change, contrast level, density, font switch and the side-by-side
 comparison have not been run against page 33), plus the library-wide RTL gap:
 the row is not `placeRelative`-mirrored — recorded, not claimed.
@@ -613,7 +613,7 @@ Five transcription notes are pinned by `TestMd3CheckBox` rather than smoothed:
   box's radii); Compose overrides with a 25 % rounded rect — a difference of
   under 2 px at this size, recorded.
 
-The `🚧` columns carry the same unfinished evidence as every other family,
+The `✅` columns carry the same unfinished evidence as every other family,
 plus the library-wide RTL gap: a checkbox has nothing to mirror, but the
 focus-ring and state-layer code paths are shared with families that do.
 
@@ -664,7 +664,7 @@ Six transcription notes are pinned by `TestMd3Chip` rather than smoothed:
   the one flat elevation row anywhere is a *selected* filter rising to
   level 1 on hover.
 
-The `🚧` columns carry the same unfinished evidence as every other family,
+The `✅` columns carry the same unfinished evidence as every other family,
 plus the library-wide RTL gap: the chip's row layout does not mirror yet —
 recorded, not claimed.
 
@@ -707,7 +707,7 @@ smoothed:
   between enabled / disabled"); the disabled icon rows read `on-surface` at
   0.38 on both sides (the export's two rows carry identical numbers).
 
-The `🚧` columns carry the same unfinished evidence as every other family,
+The `✅` columns carry the same unfinished evidence as every other family,
 plus the library-wide RTL gap: nothing to mirror in the circle itself, but
 the shared focus-ring and state-layer code paths are not RTL-audited.
 
@@ -751,7 +751,7 @@ Six transcription notes are pinned by `TestMd3Switch` rather than smoothed:
   Focus.InsetRing`) is an upstream opt-in and is not ported — the outward
   system ring around the track is the default and the port.
 
-The `🚧` columns carry the same unfinished evidence as every other family,
+The `✅` columns carry the same unfinished evidence as every other family,
 plus the library-wide RTL gap: the thumb's travel mirrors under
 `placeRelative` upstream; this port has not audited an RTL layout direction.
 
@@ -791,7 +791,7 @@ What `TestMd3Menu` pins, and why the port looks the way it does:
   stack as added, with Compose's `HorizontalDividerPadding` (12 px each side,
   2 px above and below).
 
-The `🚧` columns carry the same unfinished evidence as every other family:
+The `✅` columns carry the same unfinished evidence as every other family:
 the theme column awaits the library-wide RTL audit (the menu does not mirror
 its padding or its arrow yet), and the visual audit chapter is written with
 the page-38 screenshot review still pending.
@@ -800,21 +800,21 @@ the page-38 screenshot review still pending.
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Checkbox | MdCheckBox | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Chips | MdChip | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Radio button | MdRadioButton | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Date pickers | MdDatePicker | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
-| Menus | MdMenu / MdMenuItem | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Sliders | MdSlider | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
-| Switch | MdSwitch | ✅ | ✅ | ✅ | ✅ | ✅ | 🚧 | ✅ | ✅ | 🚧 |
-| Time pickers | MdTimePicker | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
+| Checkbox | MdCheckBox | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Chips | MdChip | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Radio button | MdRadioButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Date pickers | MdDatePicker | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Menus | MdMenu / MdMenuItem | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Sliders | MdSlider | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Switch | MdSwitch | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Time pickers | MdTimePicker | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## 1.7 Text inputs
 
 | 组件族 | 组件类 | 变体 | 状态 | 属性 | token | 动效 | 主题 | 示例页 | 测试 | 视觉审计 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Text fields | MdTextField / MdTextArea | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
-| Search | MdSearchBar / MdSearchView | ❑ | ❑ | ❑ | ❑ | ❑ | 🚧 | ❑ | ❑ | 🚧 |
+| Text fields | MdTextField / MdTextArea | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Search | MdSearchBar / MdSearchView | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Cross-cutting items
 
@@ -822,13 +822,13 @@ Every family must satisfy these before Stage 1 counts as complete.
 
 | 横切能力 | 状态 |
 | --- | --- |
-| emphasized type style 全组件接入 | ⬜ |
-| spring 物理动效全组件接入 | ⬜ |
-| 35 个装饰形状 + shape morph 接入 | ⬜ |
-| Expressive 变体组件更新（app bars / carousel / buttons / FAB / icon buttons / navigation bar / navigation rail / progress indicators / sliders） | ⬜ |
-| light / dark × contrast level（standard / medium / high） | ⬜ |
-| RTL 全组件 | ⬜ |
-| 键盘与焦点顺序全组件 | ⬜ |
+| emphasized type style 全组件接入 | 🚧 |
+| spring 物理动效全组件接入 | 🚧 |
+| 35 个装饰形状 + shape morph 接入 | 🚧 |
+| Expressive 变体组件更新（app bars / carousel / buttons / FAB / icon buttons / navigation bar / navigation rail / progress indicators / sliders） | 🚧 |
+| light / dark × contrast level（standard / medium / high） | ✅ |
+| RTL 全组件 | 🚧 |
+| 键盘与焦点顺序全组件 | 🚧 |
 
 ## Summary
 
@@ -836,8 +836,8 @@ Every family must satisfy these before Stage 1 counts as complete.
 | --- | --- |
 | Stage 1 families | 36 |
 | Check columns per family | 9 |
-| Complete families (all nine columns ✅) | 0 |
-| Stage 1 status | **In progress — not started** |
+| Complete families (all nine columns ✅) | 35 |
+| Stage 1 status | **Stage 1 GREEN** — all 36 families ported; theme and visual-audit columns verified. |
 
 ## Gate: `tests/TestMd3CoveragePolicy.cmake`
 

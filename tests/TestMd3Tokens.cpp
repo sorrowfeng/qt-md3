@@ -279,6 +279,11 @@ void TestMd3Tokens::lineHeightAdaptsToScript()
 {
     QCOMPARE(MdTypeScale::lineHeightMultiplier(ScriptCategory::Small), 1.0);
     QCOMPARE(MdTypeScale::lineHeightMultiplier(ScriptCategory::Medium), 1.07);
+    // Large / ExtraLarge are not yet sourced (docs/porting-todo.md) and
+    // deliberately fall back to Medium's 1.07. Pin the fallback so a future
+    // source can replace it deliberately rather than by accident.
+    QCOMPARE(MdTypeScale::lineHeightMultiplier(ScriptCategory::Large), 1.07);
+    QCOMPARE(MdTypeScale::lineHeightMultiplier(ScriptCategory::ExtraLarge), 1.07);
 
     // A Chinese label must not reuse the Latin line height.
     const qreal latin = MdTypeScale::lineHeight(TypeStyle::BodyMedium, TypeEmphasis::Baseline,

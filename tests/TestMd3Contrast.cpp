@@ -169,6 +169,7 @@ private slots:
     void mcuSchemeExpectationsMatch();
     void dynamicTonalSpotIsNotTheStaticBaseline();
     void baselineSchemeIsThePublishedTokenSet();
+    void colorSpecVersionsSelectSurfaceTones();
 };
 
 void TestMd3Contrast::contrastLevelValuesMatchMaterialColorUtilities()
@@ -770,5 +771,51 @@ void TestMd3Contrast::baselineSchemeIsThePublishedTokenSet()
     }
 }
 
+void TestMd3Contrast::colorSpecVersionsSelectSurfaceTones()
+{
+    // ColorSpec2025 changes the surface family's tone table (ColorSpec2025.java
+    // Surfaces [S]). The 2021 table is unchanged; only the selected spec
+    // version moves the tones.
+    const Argb seed = 0xFF6750A4u;
+
+    const MdDynamicScheme s2021 = MdDynamicScheme::create(
+        seed, ThemeMode::Dark, SchemeVariant::TonalSpot, ContrastLevel::Standard,
+        ColorSpecVersion::Spec2021);
+    const MdDynamicScheme s2025 = MdDynamicScheme::create(
+        seed, ThemeMode::Dark, SchemeVariant::TonalSpot, ContrastLevel::Standard,
+        ColorSpecVersion::Spec2025);
+
+    QCOMPARE(s2021.specVersion(), ColorSpecVersion::Spec2021);
+    QCOMPARE(s2025.specVersion(), ColorSpecVersion::Spec2025);
+
+    // Dark surface: 2021 = T6, 2025 = T4.
+    QCOMPARE(MdColorSpec2021::rawTone(s2021, ColorRole::Surface), 6.0);
+    QCOMPARE(MdColorSpec2021::rawTone(s2025, ColorRole::Surface), 4.0);
+
+    // Dark surface-bright: 2021 = T24, 2025 = T18.
+    QCOMPARE(MdColorSpec2021::rawTone(s2021, ColorRole::SurfaceBright), 24.0);
+    QCOMPARE(MdColorSpec2021::rawTone(s2025, ColorRole::SurfaceBright), 18.0);
+
+    // Light surface stays at 98 for a non-yellow, non-vibrant scheme in both.
+    const MdDynamicScheme l2021 = MdDynamicScheme::create(
+        seed, ThemeMode::Light, SchemeVariant::TonalSpot, ContrastLevel::Standard,
+        ColorSpecVersion::Spec2021);
+    const MdDynamicScheme l2025 = MdDynamicScheme::create(
+        seed, ThemeMode::Light, SchemeVariant::TonalSpot, ContrastLevel::Standard,
+        ColorSpecVersion::Spec2025);
+    QCOMPARE(MdColorSpec2021::rawTone(l2021, ColorRole::Surface), 98.0);
+    QCOMPARE(MdColorSpec2021::rawTone(l2025, ColorRole::Surface), 98.0);
+
+    // 2026 currently shares 2025's surfaces (CMF is not a qt-md3 variant).
+    const MdDynamicScheme s2026 = MdDynamicScheme::create(
+        seed, ThemeMode::Dark, SchemeVariant::TonalSpot, ContrastLevel::Standard,
+        ColorSpecVersion::Spec2026);
+    QCOMPARE(MdColorSpec2021::rawTone(s2026, ColorRole::Surface), 4.0);
+
+    // Non-surface roles are unchanged across versions (2025/2026 rows still
+    // fall back to the 2021 solve; see docs/porting-todo.md).
+    QCOMPARE(MdColorSpec2021::rawTone(s2021, ColorRole::Primary),
+             MdColorSpec2021::rawTone(s2025, ColorRole::Primary));
+}
 QTEST_MAIN(TestMd3Contrast)
 #include "TestMd3Contrast.moc"

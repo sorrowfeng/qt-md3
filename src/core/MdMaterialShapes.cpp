@@ -802,6 +802,299 @@ MdRoundedPolygon softBurst()
     return shape;
 }
 
+// --- the rest of the 35-entry catalogue (MaterialShapes.kt, verbatim) -------
+
+namespace {
+
+// MaterialShapes.kt's shared CornerRounding constants.
+MdCornerRounding round15() { return MdCornerRounding { 0.15, 0.0 }; }
+MdCornerRounding round20() { return MdCornerRounding { 0.2, 0.0 }; }
+MdCornerRounding round30() { return MdCornerRounding { 0.3, 0.0 }; }
+MdCornerRounding round50() { return MdCornerRounding { 0.5, 0.0 }; }
+MdCornerRounding round100() { return MdCornerRounding { 1.0, 0.0 }; }
+
+// A regular numVertices-gon with per-vertex rounding — RoundedPolygon(
+// numVertices=…, perVertexRounding=…), which the public factories do not
+// expose directly.
+MdRoundedPolygon regularRounded(int numVertices,
+                                const QVector<MdCornerRounding> &perVertex,
+                                double radius = 1.0,
+                                const QPointF &center = QPointF(0.0, 0.0))
+{
+    Q_ASSERT(numVertices >= 3);
+    Q_ASSERT(perVertex.size() == numVertices);
+    QVector<double> vertices(numVertices * 2);
+    for (int i = 0; i < numVertices; ++i) {
+        const QPointF vertex =
+            radialToCartesian(radius, kPi / numVertices * 2.0 * i) + center;
+        vertices[i * 2] = vertex.x();
+        vertices[i * 2 + 1] = vertex.y();
+    }
+    return MdRoundedPolygon(vertices, MdCornerRounding::unrounded(), perVertex, center);
+}
+
+MdRoundedPolygon custom0(const QVector<MdRoundedPolygon::Vertex> &points, int reps,
+                         bool mirroring = false)
+{
+    return MdRoundedPolygon::custom(points, reps, QPointF(0.5, 0.5), mirroring);
+}
+
+MdRoundedPolygon::Vertex pt(double x, double y, double radius = 0.0, double smoothing = 0.0)
+{
+    return { QPointF(x, y), radius > 0.0 ? MdCornerRounding { radius, smoothing }
+                                         : MdCornerRounding::unrounded() };
+}
+
+} // namespace
+
+MdRoundedPolygon square()
+{
+    static const MdRoundedPolygon shape =
+        MdRoundedPolygon::rectangle(1.0, 1.0, round30()).normalized();
+    return shape;
+}
+
+MdRoundedPolygon slanted()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.926, 0.970, 0.189, 0.811), pt(-0.021, 0.967, 0.187, 0.057) }, 2)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon arch()
+{
+    static const MdRoundedPolygon shape =
+        regularRounded(4, { round100(), round100(), round20(), round20() })
+            .transformed(rotateZDegrees(-135.0))
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon fan()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(1.004, 1.000, 0.148, 0.417), pt(0.000, 1.000, 0.151),
+                  pt(0.000, -0.003, 0.148), pt(0.978, 0.020, 0.803) },
+                1)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon arrow()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 0.892, 0.313), pt(-0.216, 1.050, 0.207),
+                  pt(0.499, -0.160, 0.215, 1.000), pt(1.225, 1.060, 0.211) },
+                1)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon semiCircle()
+{
+    static const MdRoundedPolygon shape =
+        MdRoundedPolygon::rectangle(1.6, 1.0, MdCornerRounding::unrounded(),
+                                    { round20(), round20(), round100(), round100() })
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon triangle()
+{
+    static const MdRoundedPolygon shape =
+        MdRoundedPolygon::regular(3, 1.0, QPointF(0.0, 0.0), round20())
+            .transformed(rotateZDegrees(-90.0))
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon diamond()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 1.096, 0.151, 0.524), pt(0.040, 0.500, 0.159) }, 2)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon clamShell()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.171, 0.841, 0.159), pt(-0.020, 0.500, 0.140),
+                  pt(0.170, 0.159, 0.159) },
+                2)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon gem()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.499, 1.023, 0.241, 0.778), pt(-0.005, 0.792, 0.208),
+                  pt(0.073, 0.258, 0.228), pt(0.433, 0.000, 0.491) },
+                1, true)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon verySunny()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 1.080, 0.085), pt(0.358, 0.843, 0.085) }, 8).normalized();
+    return shape;
+}
+
+MdRoundedPolygon cookie6Sided()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.723, 0.884, 0.394), pt(0.500, 1.099, 0.398) }, 6).normalized();
+    return shape;
+}
+
+MdRoundedPolygon cookie7Sided()
+{
+    static const MdRoundedPolygon shape =
+        MdRoundedPolygon::star(7, 1.0, 0.75, round50())
+            .transformed(rotateZDegrees(-90.0))
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon cookie12Sided()
+{
+    static const MdRoundedPolygon shape =
+        MdRoundedPolygon::star(12, 1.0, 0.8, round50())
+            .transformed(rotateZDegrees(-90.0))
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon ghostish()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 0.0, 1.000), pt(1.0, 0.0, 1.000), pt(1.0, 1.140, 0.254, 0.106),
+                  pt(0.575, 0.906, 0.253) },
+                1, true)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon clover4Leaf()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 0.074), pt(0.725, -0.099, 0.476) }, 4, true).normalized();
+    return shape;
+}
+
+MdRoundedPolygon clover8Leaf()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 0.036), pt(0.758, -0.101, 0.209) }, 8).normalized();
+    return shape;
+}
+
+MdRoundedPolygon burst()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, -0.006, 0.006), pt(0.592, 0.158, 0.006) }, 12).normalized();
+    return shape;
+}
+
+MdRoundedPolygon boom()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.457, 0.296, 0.007), pt(0.500, -0.051, 0.007) }, 15).normalized();
+    return shape;
+}
+
+MdRoundedPolygon softBoom()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.733, 0.454), pt(0.839, 0.437, 0.532),
+                  pt(0.949, 0.449, 0.439, 1.000), pt(0.998, 0.478, 0.174) },
+                16, true)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon flower()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.370, 0.187), pt(0.416, 0.049, 0.381), pt(0.479, 0.001, 0.095) }, 8, true)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon puffy()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 0.053),
+                  pt(0.545, -0.040, 0.405),
+                  pt(0.670, -0.035, 0.426),
+                  pt(0.717, 0.066, 0.574),
+                  pt(0.722, 0.128),
+                  pt(0.777, 0.002, 0.360),
+                  pt(0.914, 0.149, 0.660),
+                  pt(0.926, 0.289, 0.660),
+                  pt(0.881, 0.346),
+                  pt(0.940, 0.344, 0.126),
+                  pt(1.003, 0.437, 0.255) },
+                2, true)
+            .transformed(scaleMatrix(1.0, 0.742))
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon puffyDiamond()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.870, 0.130, 0.146), pt(0.818, 0.357), pt(1.000, 0.332, 0.853) }, 4, true)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon pixelCircle()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 0.000), pt(0.704, 0.000), pt(0.704, 0.065), pt(0.843, 0.065),
+                  pt(0.843, 0.148), pt(0.926, 0.148), pt(0.926, 0.296), pt(1.000, 0.296) },
+                2, true)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon pixelTriangle()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.110, 0.500), pt(0.113, 0.000), pt(0.287, 0.000), pt(0.287, 0.087),
+                  pt(0.421, 0.087), pt(0.421, 0.170), pt(0.560, 0.170), pt(0.560, 0.265),
+                  pt(0.674, 0.265), pt(0.675, 0.344), pt(0.789, 0.344), pt(0.789, 0.439),
+                  pt(0.888, 0.439) },
+                1, true)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon bun()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.796, 0.500), pt(0.853, 0.518, 1.000), pt(0.992, 0.631, 1.000),
+                  pt(0.968, 1.000, 1.000) },
+                2, true)
+            .normalized();
+    return shape;
+}
+
+MdRoundedPolygon heart()
+{
+    static const MdRoundedPolygon shape =
+        custom0({ pt(0.500, 0.268, 0.016), pt(0.792, -0.066, 0.958), pt(1.064, 0.276, 1.000),
+                  pt(0.501, 0.946, 0.129) },
+                1, true)
+            .normalized();
+    return shape;
+}
+
 MdRoundedPolygon circleRotatedForDeterminate()
 {
     // DeterminateIndicatorPolygons[0]: Circle transformed by rotateZ(360/20).
@@ -818,6 +1111,102 @@ QList<MdRoundedPolygon> indeterminatePolygons()
     return polygons;
 }
 
+
+// --- the 35-entry catalogue, as an indexed list ----------------------------
+
+int decorativeShapeCount()
+{
+    return 35;
+}
+
+QString decorativeShapeName(int index)
+{
+    static const char *kNames[] = {
+        "circle",       "square",       "slanted",      "arch",
+        "fan",          "arrow",        "semi-circle",  "oval",
+        "pill",         "triangle",     "diamond",      "clam-shell",
+        "pentagon",     "gem",          "sunny",        "very-sunny",
+        "cookie-4",     "cookie-6",     "cookie-7",     "cookie-9",
+        "cookie-12",    "ghostish",     "clover-4",     "clover-8",
+        "burst",        "soft-burst",   "boom",         "soft-boom",
+        "flower",       "puffy",        "puffy-diamond","pixel-circle",
+        "pixel-triangle","bun",         "heart",
+    };
+    static_assert(sizeof(kNames) / sizeof(kNames[0]) == 35, "catalogue size");
+    if (index < 0 || index >= 35) {
+        return QString();
+    }
+    return QString::fromUtf8(kNames[index]);
+}
+
+MdRoundedPolygon decorativeShape(int index)
+{
+    switch (index) {
+    case 0: return circle();
+    case 1: return square();
+    case 2: return slanted();
+    case 3: return arch();
+    case 4: return fan();
+    case 5: return arrow();
+    case 6: return semiCircle();
+    case 7: return oval();
+    case 8: return pill();
+    case 9: return triangle();
+    case 10: return diamond();
+    case 11: return clamShell();
+    case 12: return pentagon();
+    case 13: return gem();
+    case 14: return sunny();
+    case 15: return verySunny();
+    case 16: return cookie4Sided();
+    case 17: return cookie6Sided();
+    case 18: return cookie7Sided();
+    case 19: return cookie9Sided();
+    case 20: return cookie12Sided();
+    case 21: return ghostish();
+    case 22: return clover4Leaf();
+    case 23: return clover8Leaf();
+    case 24: return burst();
+    case 25: return softBurst();
+    case 26: return boom();
+    case 27: return softBoom();
+    case 28: return flower();
+    case 29: return puffy();
+    case 30: return puffyDiamond();
+    case 31: return pixelCircle();
+    case 32: return pixelTriangle();
+    case 33: return bun();
+    case 34: return heart();
+    default: return circle();
+    }
+}
+
+QList<MdRoundedPolygon> decorativeShapes()
+{
+    QList<MdRoundedPolygon> shapes;
+    shapes.reserve(decorativeShapeCount());
+    for (int i = 0; i < decorativeShapeCount(); ++i) {
+        shapes.append(decorativeShape(i));
+    }
+    return shapes;
+}
+
+QPainterPath toPath(const MdRoundedPolygon &polygon)
+{
+    QPainterPath path;
+    const QList<MdCubic> &cubics = polygon.cubics();
+    if (cubics.isEmpty()) {
+        return path;
+    }
+    path.moveTo(cubics.first().anchor0X(), cubics.first().anchor0Y());
+    for (const MdCubic &cubic : cubics) {
+        path.cubicTo(cubic.control0X(), cubic.control0Y(),
+                     cubic.control1X(), cubic.control1Y(),
+                     cubic.anchor1X(), cubic.anchor1Y());
+    }
+    path.closeSubpath();
+    return path;
+}
 } // namespace MdMaterialShapes
 
 // ---------------------------------------------------------------------------

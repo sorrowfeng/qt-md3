@@ -58,7 +58,18 @@ enum class ContrastLevel {
     Count,
 };
 
-/// Every enum in this header ends with a `Count` sentinel so callers can
+/// Which ColorSpec tone tables a dynamic scheme solves against.
+/// material-color-utilities ColorSpec.SpecVersion. The 2021 tables are the
+/// ones material-web reproduces and the ones md.sys.color audits against;
+/// 2025 / 2026 change the surface and accent tone assignments.
+enum class ColorSpecVersion {
+    Spec2021,
+    Spec2025,
+    Spec2026,
+    Count,
+};
+
+/// Every enum in this header ends with a Count sentinel so callers can
 /// enumerate the full set without hard-coding a size. Keep that invariant.
 
 /// Layout direction, mirroring Qt::LayoutDirection but kept inside the token
@@ -538,6 +549,7 @@ QT_MD3_EXPORT QString iconSetName(MdIconSet set);
 QT_MD3_EXPORT QString themeModeName(ThemeMode mode);
 QT_MD3_EXPORT QString schemeVariantName(SchemeVariant variant);
 QT_MD3_EXPORT QString contrastLevelName(ContrastLevel level);
+QT_MD3_EXPORT QString colorSpecVersionName(ColorSpecVersion version);
 QT_MD3_EXPORT QString typeEmphasisName(TypeEmphasis emphasis);
 QT_MD3_EXPORT QString scriptCategoryName(ScriptCategory category);
 QT_MD3_EXPORT QString stateLayerKindName(StateLayerKind kind);
@@ -565,6 +577,7 @@ QT_MD3_EXPORT QString buttonGroupSelectionName(ButtonGroupSelection selection);
 Q_DECLARE_METATYPE(md::ThemeMode)
 Q_DECLARE_METATYPE(md::SchemeVariant)
 Q_DECLARE_METATYPE(md::ContrastLevel)
+Q_DECLARE_METATYPE(md::ColorSpecVersion)
 Q_DECLARE_METATYPE(md::ColorRole)
 Q_DECLARE_METATYPE(md::TypeStyle)
 Q_DECLARE_METATYPE(md::TypeEmphasis)

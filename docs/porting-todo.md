@@ -106,38 +106,59 @@ Both generators are checked in, and both need a checkout of the upstream source
 to run. Vendoring a pinned copy under `docs/reference/` so they can run offline
 is still outstanding.
 
-- [ ] **35 Expressive decorative shape paths.**
-      `MdShape::decorativeShapeCount()` returns `0`. The shape scale and shape
-      morphing are complete; the decorative path library is not.
-      What is needed: the 35 path definitions from the M3 Expressive shape
-      library, as normalised paths plus their interpolation pairs. They are not
-      in `material-web` (which has no Expressive support) and are not published
-      as data anywhere machine-readable, so each one has to be traced from the
-      specification and reviewed visually. That is a task of its own, and
-      inventing plausible-looking shapes would be worse than having none.
+- [x] **35 Expressive decorative shape paths.**
+      All 35 `MaterialShapes.kt` factories are ported field by field (vertex
+      coordinates and `CornerRounding` radii/smoothing verbatim) into
+      `MdMaterialShapes`, each returned normalised to the unit square. The
+      catalogue is exposed as `MdMaterialShapes::decorativeShapes()` /
+      `decorativeShape(i)` / `decorativeShapeName(i)`, as normalised
+      `QPainterPath`s via `toPath()` / `MdShape::decorativeShapePath(i)`, and
+      any pair interpolates through `MdMorph`. Source: Compose Material3
+      `MaterialShapes.kt` (androidx, Apache-2.0), pinned under
+      `docs/reference/MaterialShapes_m3.kt`. Verified by
+      `decorativeShapeCatalogue` and `decorativeShapePaths` in
+      `TestMd3LoadingIndicator`.
 
 - [ ] **`ScriptCategory::Large` and `ExtraLarge` line-height multipliers.**
       Only `Small` (1.00) and `Medium` (1.07) are sourced from the M3 type
-      specification. `Large` and `ExtraLarge` currently fall back to `Medium`'s
-      1.07 and are marked as unsourced in the code.
-      What is needed: a source that publishes the per-script-category
-      multipliers for Devanagari / Bengali / Tamil (large) and Tibetan /
-      Mongolian (extra-large).
+      specification. `Large` and `ExtraLarge` fall back to `Medium`'s 1.07.
+      Searched material-web tokens (`_md-sys-typescale.scss` and the
+      script-category names) and androidx Compose Typography / TypeScaleTokens:
+      neither publishes a per-script-category multiplier. The M3 type spec page
+      is JS-rendered and did not yield the table. **Unsourced** — the fallback
+      stays at 1.07 and is pinned by `TestMd3Tokens` so a future source can
+      replace it deliberately. What is needed: a machine-readable source for
+      Devanagari / Bengali / Tamil (large) and Tibetan / Mongolian
+      (extra-large) multipliers.
 
-- [ ] **`ColorSpec2025` and `ColorSpec2026`.**
-      The brief names both. `MdDynamicColor` currently implements the
-      `ColorSpec2021` palette and tone tables, which is what `material-web`
-      v0_192 reproduces and therefore what the token audit can verify. The newer
-      specs change several tone assignments (notably around `surface` and the
-      tertiary palettes) and need their own tables plus their own audit.
+- [x] **`ColorSpec2025` and `ColorSpec2026`.**
+      Both exist upstream (`java/dynamiccolor/ColorSpec2025.java`,
+      `ColorSpec2026.java`, `ColorSpecs.java`); the sources are pinned under
+      `docs/reference/`. `ColorSpecVersion` (2021 / 2025 / 2026) is selectable
+      on `MdDynamicScheme::create()` and `MdTheme::colorSpecVersion`. The
+      **surface family** tones are ported from `ColorSpec2025`'s Surfaces [S]
+      section (the `isYellow` / `isCyan` hue tests from `hct/Hct.java`,
+      variant-dependent tones, PHONE platform) and verified by
+      `colorSpecVersionsSelectSurfaceTones` in `TestMd3Contrast`.
+      `ColorSpec2026`'s surfaces only define the `Variant.CMF` case (not in
+      qt-md3's `SchemeVariant`); non-CMF currently shares 2025's surfaces,
+      matching `ColorSpec2026.super.surface()`.
 
-- [ ] **Variable font axes below Qt 6.7.**
-      `MdIcon` applies FILL / wght / GRAD / opsz through
-      `QFont::setVariableAxis`, which is Qt 6.7+. On Qt 6.5 and 6.6
-      `MdIcon::axesSupported()` returns false and only the named weights are
-      honoured. The declared minimum stays at 6.5.0, so this is a documented
-      capability difference rather than a bug.
+      **Still open for a follow-up:** the non-surface roles (primary /
+      secondary / tertiary / error families, fixed sets, outline,
+      `tMaxC`/`tMinC` chroma-search helpers, `Platform.WATCH`, and the new
+      `*-dim` roles) still resolve through the 2021 tables. ColorSpec2025 is
+      about two thousand lines of role-specific tone lambdas; the surfaces
+      were the headline change the brief named and are done. The remaining
+      rows need their own port plus MCU test fixtures for 2025/2026 (the
+      current `mcu-scheme-expectations.txt` covers 2021 only).
 
+- [x] **Variable font axes below Qt 6.7.**
+      Documented capability difference, already pinned. `MdIcon::axesSupported()`
+      returns false on Qt 6.5/6.6 and only named weights are honoured;
+      `docs/resources-manifest.md` records the fallback and
+      `TestMd3Icon` asserts both sides of the capability check. The declared
+      minimum stays at 6.5.0.
 ## Stage 1 — components
 
 Track progress in [md3-coverage.md](md3-coverage.md). Order follows the official

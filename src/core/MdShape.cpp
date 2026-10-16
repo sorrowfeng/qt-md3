@@ -1,5 +1,7 @@
 #include "MdShape.h"
 
+#include "MdMaterialShapes.h"
+
 #include "MdTokens.h"
 
 #include <QtCore/QPointF>
@@ -166,10 +168,17 @@ QPainterPath MdShape::morphRoundedRect(const QRectF &rect,
 
 int MdShape::decorativeShapeCount()
 {
-    // The 35 M3 Expressive decorative shape paths are not ported yet; see
-    // docs/porting-todo.md. Returning 0 here keeps the gap explicit rather
-    // than shipping invented geometry.
-    return 0;
+    return MdMaterialShapes::decorativeShapeCount();
+}
+
+QString MdShape::decorativeShapeName(int index)
+{
+    return MdMaterialShapes::decorativeShapeName(index);
+}
+
+QPainterPath MdShape::decorativeShapePath(int index)
+{
+    return MdMaterialShapes::toPath(MdMaterialShapes::decorativeShape(index));
 }
 
 } // namespace md

@@ -32,6 +32,7 @@ class QT_MD3_EXPORT MdTheme : public QObject
     Q_PROPERTY(QColor seedColor READ seedColor WRITE setSeedColor NOTIFY themeChanged)
     Q_PROPERTY(md::SchemeVariant schemeVariant READ schemeVariant WRITE setSchemeVariant NOTIFY themeChanged)
     Q_PROPERTY(md::ContrastLevel contrastLevel READ contrastLevel WRITE setContrastLevel NOTIFY themeChanged)
+    Q_PROPERTY(md::ColorSpecVersion colorSpecVersion READ colorSpecVersion WRITE setColorSpecVersion NOTIFY themeChanged)
     Q_PROPERTY(md::Density density READ density WRITE setDensity NOTIFY densityChanged)
     Q_PROPERTY(Qt::LayoutDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
     Q_PROPERTY(QString languageTag READ languageTag WRITE setLanguageTag NOTIFY languageChanged)
@@ -56,6 +57,8 @@ public:
 
     ContrastLevel contrastLevel() const { return m_contrast; }
     void setContrastLevel(ContrastLevel level);
+    ColorSpecVersion colorSpecVersion() const { return m_specVersion; }
+    void setColorSpecVersion(ColorSpecVersion version);
 
     /// The currently resolved scheme (rebuilt whenever anything above changes).
     const MdColorScheme &scheme() const;
@@ -100,6 +103,7 @@ private:
     QColor m_seedColor = QColor(QStringLiteral("#6750a4"));
     SchemeVariant m_variant = SchemeVariant::TonalSpot;
     ContrastLevel m_contrast = ContrastLevel::Standard;
+    ColorSpecVersion m_specVersion = ColorSpecVersion::Spec2021;
     Density m_density = Density::Default;
     Qt::LayoutDirection m_direction = Qt::LeftToRight;
     QString m_languageTag = QStringLiteral("en");

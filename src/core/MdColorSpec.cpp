@@ -568,6 +568,65 @@ double findDesiredChromaByTone(double hue, double chroma, double tone, bool byDe
 
 /// The role table's tone function, evaluated for one scheme. This is the
 /// `.setTone(...)` lambda from ColorSpec2021, in full.
+// Hct.isYellow / isCyan — hue range tests from hct/Hct.java.
+bool hueIsYellow(double hue) { return hue >= 105.0 && hue < 125.0; }
+bool hueIsCyan(double hue) { return hue >= 170.0 && hue < 207.0; }
+
+/// ColorSpec2025's surface-family tones for the PHONE platform. Returns false
+/// when the role has no 2025 override (the caller falls back to 2021).
+/// Source: dynamiccolor/ColorSpec2025.java, Surfaces [S] section.
+bool spec2025SurfaceTone(const MdDynamicScheme &scheme, ColorRole role, double *toneOut)
+{
+    const bool isDark = scheme.isDark();
+    const bool isYellow = hueIsYellow(scheme.neutralPalette().hue());
+    const bool vibrant = scheme.variant() == SchemeVariant::Vibrant;
+    switch (role) {
+    case ColorRole::Background:
+    case ColorRole::Surface:
+        *toneOut = isDark ? 4.0 : (isYellow ? 99.0 : vibrant ? 97.0 : 98.0);
+        return true;
+    case ColorRole::SurfaceDim:
+        *toneOut = isDark ? 4.0 : (isYellow ? 90.0 : vibrant ? 85.0 : 87.0);
+        return true;
+    case ColorRole::SurfaceBright:
+        *toneOut = isDark ? 18.0 : (isYellow ? 99.0 : vibrant ? 97.0 : 98.0);
+        return true;
+    case ColorRole::SurfaceContainerLowest:
+        *toneOut = isDark ? 0.0 : 100.0;
+        return true;
+    case ColorRole::SurfaceContainerLow:
+        *toneOut = isDark ? 6.0 : (isYellow ? 98.0 : vibrant ? 95.0 : 96.0);
+        return true;
+    case ColorRole::SurfaceContainer:
+        *toneOut = isDark ? 9.0 : (isYellow ? 96.0 : vibrant ? 92.0 : 94.0);
+        return true;
+    case ColorRole::SurfaceContainerHigh:
+        *toneOut = isDark ? 12.0 : (isYellow ? 94.0 : vibrant ? 88.0 : 90.0);
+        return true;
+    case ColorRole::SurfaceContainerHighest:
+        *toneOut = isDark ? 17.0 : (isYellow ? 92.0 : vibrant ? 85.0 : 87.0);
+        return true;
+    case ColorRole::OnBackground:
+    case ColorRole::OnSurface:
+        // 2025 remaps on_background to on_surface; the tone is the 2021
+        // on-surface solve, except WATCH forces 100 (PHONE keeps 2021).
+        return false;
+    default:
+        return false;
+    }
+}
+
+/// ColorSpec2026's surface-family tones. Upstream only defines them for the
+/// CMF variant and returns 0.0 otherwise ("Undefined use case"); that is kept
+/// verbatim rather than invented.
+bool spec2026SurfaceTone(const MdDynamicScheme &scheme, ColorRole role, double *toneOut)
+{
+    // Variant.CMF is not in qt-md3's SchemeVariant yet, so 2026 surface tones
+    // have no defined value here. Fall through to 2025's, which is what
+    // ColorSpec2026.super.surface() would resolve to for the shared variants.
+    return spec2025SurfaceTone(scheme, role, toneOut);
+}
+
 double rawToneOf(const MdDynamicScheme &scheme, ColorRole role)
 {
     const bool isDark = scheme.isDark();
@@ -576,6 +635,18 @@ double rawToneOf(const MdDynamicScheme &scheme, ColorRole role)
     const bool fidelity = scheme.variant() == SchemeVariant::Fidelity
                           || scheme.variant() == SchemeVariant::Content;
     const double sourceTone = scheme.sourceHct().tone();
+
+    // Newer specs replace the surface family's tone table. Checked first so
+    // the 2025 / 2026 numbers win over the 2021 ones for those roles.
+    if (scheme.specVersion() != ColorSpecVersion::Spec2021) {
+        double overridden = 0.0;
+        const bool hit = scheme.specVersion() == ColorSpecVersion::Spec2026
+                             ? spec2026SurfaceTone(scheme, role, &overridden)
+                             : spec2025SurfaceTone(scheme, role, &overridden);
+        if (hit) {
+            return overridden;
+        }
+    }
 
     switch (role) {
     case ColorRole::Background:

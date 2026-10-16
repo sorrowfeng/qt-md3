@@ -210,6 +210,17 @@ QString contrastLevelName(ContrastLevel level)
     return QStringLiteral("unknown");
 }
 
+QString colorSpecVersionName(ColorSpecVersion version)
+{
+    switch (version) {
+    case ColorSpecVersion::Spec2021: return QStringLiteral("2021");
+    case ColorSpecVersion::Spec2025: return QStringLiteral("2025");
+    case ColorSpecVersion::Spec2026: return QStringLiteral("2026");
+    case ColorSpecVersion::Count: break;
+    }
+    return QStringLiteral("unknown");
+}
+
 QString typeEmphasisName(TypeEmphasis emphasis)
 {
     switch (emphasis) {

@@ -1,20 +1,20 @@
 #ifndef MD_MATERIAL_SHAPES_H
 #define MD_MATERIAL_SHAPES_H
 
-// MdMaterialShapes — the geometry engine behind the M3 Expressive shape
+// MdMaterialShapes 鈥?the geometry engine behind the M3 Expressive shape
 // morphing (the loading indicator family, and any later consumer of the
 // Expressive shape language).
 //
 // Provenance, ported field by field from androidx (Apache-2.0):
 //
-//   * graphics-shapes Cubic / RoundedPolygon — the polygon-with-corner-
-//     rounding to cubic Bézier construction, including the two-step cut
+//   * graphics-shapes Cubic / RoundedPolygon 鈥?the polygon-with-corner-
+//     rounding to cubic B茅zier construction, including the two-step cut
 //     negotiation between adjacent corners, the smoothing flanking curves,
 //     the first-corner split (the outline starts at the middle of corner 0's
 //     arc) and the zero-length cubic dropping. `normalized()` and the two
 //     bounds calculations (axis-aligned and max-rotation square) are the
 //     same algorithms.
-//   * compose.material3 MaterialShapes — the shape factories. Only the
+//   * compose.material3 MaterialShapes 鈥?the shape factories. Only the
 //     shapes the loading indicator sequence needs are ported (circle, oval,
 //     pill, pentagon, sunny, cookie4, cookie9, soft-burst); the generic
 //     polygon/star/custom machinery is exposed so more of the catalogue can
@@ -33,6 +33,7 @@
 #include "QtMd3Export.h"
 
 #include <QtCore/QList>
+#include <QtCore/QString>
 #include <QtCore/QPointF>
 #include <QtCore/QVector>
 #include <QtGui/QTransform>
@@ -41,7 +42,7 @@ class QPainterPath;
 
 namespace md {
 
-/// One cubic Bézier segment — the anchor/control layout mirrors
+/// One cubic B茅zier segment 鈥?the anchor/control layout mirrors
 /// graphics-shapes' Cubic (8 coordinates, anchors at 0/6).
 struct QT_MD3_EXPORT MdCubic
 {
@@ -70,14 +71,14 @@ struct QT_MD3_EXPORT MdCubic
     /// A straight segment between two anchors (controls at thirds).
     static MdCubic straightLine(double x0, double y0, double x1, double y1);
     /// The cubic approximating the shorter arc from (x0,y0) to (x1,y1)
-    /// around (centerX, centerY) — both anchors equidistant from the center.
+    /// around (centerX, centerY) 鈥?both anchors equidistant from the center.
     static MdCubic circularArc(double centerX, double centerY, double x0, double y0,
                                double x1, double y1);
     /// A degenerate cubic located at one point.
     static MdCubic empty(double x, double y);
 };
 
-/// Corner rounding parameters — graphics-shapes' CornerRounding. A radius of
+/// Corner rounding parameters 鈥?graphics-shapes' CornerRounding. A radius of
 /// 0 (or `Unrounded`) keeps the corner sharp; `smoothing` (0..1) replaces the
 /// pure circular arc with a three-curve smoothing construction.
 struct QT_MD3_EXPORT MdCornerRounding
@@ -90,7 +91,7 @@ struct QT_MD3_EXPORT MdCornerRounding
     static constexpr MdCornerRounding unrounded() { return {}; }
 };
 
-/// A polygon whose corners may be rounded — the port of graphics-shapes'
+/// A polygon whose corners may be rounded 鈥?the port of graphics-shapes'
 /// RoundedPolygon. Constructed from vertices plus per-vertex rounding; the
 /// resulting outline is the cubic list. The engine's distance epsilon and
 /// the cut-negotiation between neighbouring corners are the reference's.
@@ -121,7 +122,7 @@ public:
                                       const QVector<MdCornerRounding> &perVertexRounding = {},
                                       const QPointF &center = QPointF(0.0, 0.0));
     /// Shapes.kt circle(): a polygon whose rounding approximates the circle
-    /// of `radius`; the polygon radius is inflated by 1/cos(π/n).
+    /// of `radius`; the polygon radius is inflated by 1/cos(蟺/n).
     static MdRoundedPolygon circle(int numVertices = 10, double radius = 1.0,
                                    const QPointF &center = QPointF(0.0, 0.0));
     /// Shapes.kt star(): every other vertex on the inner radius.
@@ -139,9 +140,9 @@ public:
     const QList<MdCubic> &cubics() const { return m_cubics; }
     const QPointF &center() const { return m_center; }
 
-    /// Move/resize so the outline fits the (0,0)→(1,1) square, centred when
+    /// Move/resize so the outline fits the (0,0)鈫?1,1) square, centred when
     /// there is slack in one direction (RoundedPolygon.normalized(), which
-    /// normalizes against the *approximate* control-point bounds — the
+    /// normalizes against the *approximate* control-point bounds 鈥?the
     /// reference contract, kept for shape-for-shape fidelity).
     MdRoundedPolygon normalized() const;
     /// An affine transform of this polygon (cubics and center).
@@ -149,12 +150,12 @@ public:
 
     /// The exact axis-aligned bounds (left/top/right/bottom).
     void calculateBounds(double bounds[4]) const;
-    /// The axis-aligned bounds of all anchors and control points — the
+    /// The axis-aligned bounds of all anchors and control points 鈥?the
     /// reference's `approximate` variant, the one `normalized()` and the
     /// scale-factor calculation actually use (control points may sit
     /// slightly outside the true curve).
     void calculateApproximateBounds(double bounds[4]) const;
-    /// The square that holds the shape in *any* rotation — the largest
+    /// The square that holds the shape in *any* rotation 鈥?the largest
     /// anchor/midpoint distance from the center (RoundedPolygon's contract).
     void calculateMaxBounds(double bounds[4]) const;
 
@@ -163,18 +164,62 @@ private:
     QPointF m_center;
 };
 
-/// The Material shape catalogue entries the loading indicator sequence needs
-/// (MaterialShapes.kt, each returned normalized to the unit square).
+/// The M3 Expressive decorative shape catalogue — all 35 MaterialShapes.kt
+/// entries, each returned normalized to the unit square. Vertex coordinates
+/// and CornerRounding values are transcribed verbatim from Compose Material3
+/// `MaterialShapes.kt` (androidx, Apache-2.0); see docs/reference/ for the
+/// pinned source. Any pair of these outlines can be interpolated with MdMorph.
 namespace MdMaterialShapes {
 
+// --- the 35 catalogue entries (MaterialShapes.kt, in declaration order) ----
 QT_MD3_EXPORT MdRoundedPolygon circle();
+QT_MD3_EXPORT MdRoundedPolygon square();
+QT_MD3_EXPORT MdRoundedPolygon slanted();
+QT_MD3_EXPORT MdRoundedPolygon arch();
+QT_MD3_EXPORT MdRoundedPolygon fan();
+QT_MD3_EXPORT MdRoundedPolygon arrow();
+QT_MD3_EXPORT MdRoundedPolygon semiCircle();
 QT_MD3_EXPORT MdRoundedPolygon oval();
 QT_MD3_EXPORT MdRoundedPolygon pill();
+QT_MD3_EXPORT MdRoundedPolygon triangle();
+QT_MD3_EXPORT MdRoundedPolygon diamond();
+QT_MD3_EXPORT MdRoundedPolygon clamShell();
 QT_MD3_EXPORT MdRoundedPolygon pentagon();
+QT_MD3_EXPORT MdRoundedPolygon gem();
 QT_MD3_EXPORT MdRoundedPolygon sunny();
+QT_MD3_EXPORT MdRoundedPolygon verySunny();
 QT_MD3_EXPORT MdRoundedPolygon cookie4Sided();
+QT_MD3_EXPORT MdRoundedPolygon cookie6Sided();
+QT_MD3_EXPORT MdRoundedPolygon cookie7Sided();
 QT_MD3_EXPORT MdRoundedPolygon cookie9Sided();
+QT_MD3_EXPORT MdRoundedPolygon cookie12Sided();
+QT_MD3_EXPORT MdRoundedPolygon ghostish();
+QT_MD3_EXPORT MdRoundedPolygon clover4Leaf();
+QT_MD3_EXPORT MdRoundedPolygon clover8Leaf();
+QT_MD3_EXPORT MdRoundedPolygon burst();
 QT_MD3_EXPORT MdRoundedPolygon softBurst();
+QT_MD3_EXPORT MdRoundedPolygon boom();
+QT_MD3_EXPORT MdRoundedPolygon softBoom();
+QT_MD3_EXPORT MdRoundedPolygon flower();
+QT_MD3_EXPORT MdRoundedPolygon puffy();
+QT_MD3_EXPORT MdRoundedPolygon puffyDiamond();
+QT_MD3_EXPORT MdRoundedPolygon pixelCircle();
+QT_MD3_EXPORT MdRoundedPolygon pixelTriangle();
+QT_MD3_EXPORT MdRoundedPolygon bun();
+QT_MD3_EXPORT MdRoundedPolygon heart();
+
+/// Number of decorative shapes in the catalogue (35).
+QT_MD3_EXPORT int decorativeShapeCount();
+/// Stable name for `index` ("circle", "soft-burst", ...), empty when out of range.
+QT_MD3_EXPORT QString decorativeShapeName(int index);
+/// The normalized polygon at `index`; out of range yields circle().
+QT_MD3_EXPORT MdRoundedPolygon decorativeShape(int index);
+/// All 35, in catalogue order.
+QT_MD3_EXPORT QList<MdRoundedPolygon> decorativeShapes();
+
+/// Flatten a polygon's cubic outline to a QPainterPath (the "normalised path"
+/// form of a decorative shape).
+QT_MD3_EXPORT QPainterPath toPath(const MdRoundedPolygon &polygon);
 
 /// Compose's determinate sequence rotates the circle by 360/20 degrees so it
 /// morphs into the soft burst (which carries the same rotation) smoothly.
@@ -186,7 +231,7 @@ QT_MD3_EXPORT QList<MdRoundedPolygon> indeterminatePolygons();
 
 } // namespace MdMaterialShapes
 
-/// The morph between two (already normalized) polygons — see the header
+/// The morph between two (already normalized) polygons 鈥?see the header
 /// comment for why this is radial sampling rather than the reference's
 /// feature-matched cubics.
 class QT_MD3_EXPORT MdMorph
@@ -196,7 +241,7 @@ public:
                      int angularSamples = 240);
 
     /// The interpolated outline at `progress` (0 = start, 1 = end; values
-    /// outside extrapolate linearly — the spring's bounce uses that).
+    /// outside extrapolate linearly 鈥?the spring's bounce uses that).
     QPainterPath pathAt(double progress) const;
 
     /// The sampled outline of one side, in sample order (exposed for tests).
@@ -211,7 +256,7 @@ private:
 
     int m_sampleCount = 0;
     // Angular sample tables for each side: the unwrapped angle per sample
-    // (ascending, spanning exactly one 2π turn — a virtual closing sample
+    // (ascending, spanning exactly one 2蟺 turn 鈥?a virtual closing sample
     // pins the span) and the matching radius from the polygon center. Both
     // sides are queried in the same absolute angle space.
     QVector<double> m_startAngles;

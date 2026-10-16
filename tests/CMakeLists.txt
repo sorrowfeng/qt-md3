@@ -1160,6 +1160,31 @@ set_tests_properties(TestMd3InteractionSmoke PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3InteractionSmoke)
 
+# TestMd3ThemeMatrix — theme coverage evidence for every Stage 1 family.
+# Exercises light/dark, seed change, contrast level, density, RTL and font
+# switch against one representative widget per family. The coverage matrix's
+# 主题 column must reflect what this suite actually verifies.
+add_executable(TestMd3ThemeMatrix
+    TestMd3ThemeMatrix.cpp
+)
+
+target_link_libraries(TestMd3ThemeMatrix
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3ThemeMatrix COMMAND TestMd3ThemeMatrix)
+set_tests_properties(TestMd3ThemeMatrix PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3ThemeMatrix)
+
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
