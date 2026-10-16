@@ -11,6 +11,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 #include <QtGui/QResizeEvent>
+#include <QtMath>
 
 namespace md {
 

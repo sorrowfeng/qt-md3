@@ -7,6 +7,7 @@
 
 #include <QtGui/QPaintEvent>
 #include <QtGui/QPainter>
+#include <QtMath>
 #include <cmath>
 
 namespace md {

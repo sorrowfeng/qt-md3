@@ -15,6 +15,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtCore/QTimer>
+#include <QtMath>
 
 namespace md {
 
