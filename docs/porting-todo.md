@@ -1,4 +1,4 @@
-# Porting TODO
+﻿# Porting TODO
 
 Upstream gaps and outstanding work. Stage 1 must be green before any Stage 2 item
 is started (see [md3-coverage.md](md3-coverage.md)).
@@ -1740,7 +1740,8 @@ divergences and gaps:
   inactive-container-opacity, label-container-height (read as the value
   indicator's minimum size), the label.label-text.* family, state-layer-size,
   with-overlap.*, the with-tick-marks.* opacities.
-* **The range slider is one widget, not two** — material-web ships ange with
+* **The range slider is one widget, not two** — material-web ships 
+ange with
   alueStart / alueEnd on one element; this port carries the same pair.
   Compose separates RangeSlider; the single-widget contract is the
   material-web one.
@@ -1942,13 +1943,18 @@ Landed (with tests + gallery page 48 "Qt extensions"):
 | `MdSplitter` | QSplitter | outline-variant divider + hover handle | Resting 1 px `outline-variant` hairline (Divider token). Hover/drag fades in a 32×3 `outline` pill handle. `Q_PROPERTY orientation` with NOTIFY; handleWidth / handleBarLength / dividerColor overrides. |
 | `MdPagination` | — | Text button + Icon button composition | Page numbers are `MdButton` Text (current = Filled primary). Prev/next are `MdIconButton` standard/xsmall (`chevron_left` / `chevron_right`). Optional first/last buttons. Ellipsis hops are non-interactive labels. Left/Right/Home/End walk; 1-based `currentPage` in `[1, pageCount]`. |
 | `MdEmptyState` | — | Display typography + shape + Text button | `surface-variant` art disc (`ShapeCorner::ExtraLarge`, optional Material Symbols glyph) + Headline title + Body description + Text `MdButton` action. Optional caller `artWidget` replaces the disc. |
+| `MdSkeleton` | — | Surface-container-highest placeholder + shimmer | Base fill `surface-container-highest`, shimmer highlight `surface-container-high` (the next surface-ladder step). Silhouettes: Rect / Circle / TextLine. Shimmer is phase-driven on the animation clock (the progress-indicator wave phase rule); no `QEasingCurve` on the path. Cycle 1400 ms = `duration-extra-long4` x 2. Non-interactive. |
+| `MdSteps` / `MdStepper` | — | Progress indicator semantics + shape | Discs on `ShapeCorner::Full`. Complete = `primary` / `on-primary` + check; current = `primary-container` / `on-primary-container`; upcoming = `surface-container-highest` / `on-surface-variant`. Connectors: `outline-variant` to `primary` once the preceding step is complete (the progress track / active-indicator pair). Horizontal / vertical; 0-based `currentStep`; labels; optional `readOnly`. Left/Right (or Up/Down) walk, Home/End jump; `:focus-visible` ring. `MdStepper.h` is the appendix D alternate name. |
+| `MdUpload` | — | List + Progress indicator + Icon button | List one-line rows (56 px), outline-variant dividers, leading `description` glyph. Transfer progress is a real `MdProgressIndicator` (linear, determinate). Remove is a real `MdIconButton` standard/xsmall (`close`). `Q_PROPERTY files` (QList of `MdUploadFile`), `addFile` / `setFileProgress` / `removeFile` / `clearFiles`, `fileRemoved`. |
+| `MdRate` | — | Icon button + selected state | Star (`star` / `star_border`) or heart (`favorite` / `favorite_border`) glyphs. Selected fill `primary`, unselected `on-surface-variant`. 48 px cells (icon-button 40 px container + focus margin). Optional half fill (clipped glyph) and hover preview. `Q_PROPERTY value / max / readOnly / halfSteps / glyph`. Left/Right/Up/Down, Home/End, digits; `:focus-visible` ring. |
+| `MdFlex` | — | MD3 layout flex / spacing scale | Pure container. `direction` (Row/Column), `justify` (Start/Center/End/SpaceBetween/SpaceAround/SpaceEvenly), `align` (Start/Center/End/Stretch), `gap` (spacing scale), `wrap`. Spacing scale steps 0 / 4 / 8 / 12 / 16 / 24 / 32 on the MD3 4 dp base unit. `md.sys.layout.*` is not a published token family in the export (recorded, not invented silently). RTL mirrors the main axis. |
 
 Still open (remaining appendix D rows): MdInputDialog,
 MdStackedWidget, MdDockWidget /
-MdDockManager, MdTree / MdTreeSelect, MdResult, MdSkeleton,
-MdBreadcrumb, MdSteps / MdStepper, MdTimeline, MdDescriptions,
+MdDockManager, MdTree / MdTreeSelect, MdResult,
+MdBreadcrumb, MdTimeline,
 MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog, MdCascader,
-MdTransfer, MdUpload, MdColorPicker, MdRate, MdMentions, MdAutoComplete,
-MdPlainTextEdit, MdFlex, MdGrid, MdSpace, MdMasonry, MdDrawer,
+MdTransfer, MdColorPicker, MdMentions, MdAutoComplete,
+MdPlainTextEdit, MdGrid, MdSpace, MdMasonry, MdDrawer,
 MdPopover, MdPopconfirm, MdNotification, MdCollapse, MdTour / MdCoachMark,
 MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor, MdBackTop.

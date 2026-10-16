@@ -1,4 +1,4 @@
-# AGENTS.md — working agreement for qt-md3
+﻿# AGENTS.md — working agreement for qt-md3
 
 This file tells humans and AI agents how work happens in this repository. Read it
 before touching code.
@@ -168,10 +168,10 @@ recorded in docs/porting-todo.md and the cross-cutting table in
 docs/md3-coverage.md.
 
 Stage 2 (Qt extensions) is underway. Landed so far (tests + gallery pages
-48/49/50): `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`,
+48/49/50/51): `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`,
 `MdTable`, `MdAvatar`, `MdWindow`, `MdFileDialog`, `MdInputNumber`,
 `MdScaffold`, `MdMenuBar`, `MdStatusBar`, `MdSplitter`, `MdPagination`,
-`MdEmptyState`. The remaining appendix D rows are listed in
+`MdEmptyState`, `MdSkeleton`, `MdSteps` / `MdStepper`, `MdUpload`, `MdRate`, `MdFlex`. The remaining appendix D rows are listed in
 docs/porting-todo.md.
 
 Before starting a component, read

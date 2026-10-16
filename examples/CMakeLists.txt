@@ -1,4 +1,4 @@
-# qt-md3 example application: the component gallery.
+﻿# qt-md3 example application: the component gallery.
 #
 # The gallery is the inspection surface for the library and is built into the
 # project's build/ directory. Each public component gets its own page plus a
@@ -57,6 +57,7 @@ add_executable(qt-md3-example
     gallery/GalleryPages48.cpp
     gallery/GalleryPages49.cpp
     gallery/GalleryPages50.cpp
+    gallery/GalleryPages51.cpp
     gallery/GalleryWindow.cpp
 )
 

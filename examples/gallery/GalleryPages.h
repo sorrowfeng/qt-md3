@@ -247,6 +247,9 @@ GalleryPage *createStage2ShellPage();
 /// Page 50. Stage 2 app-chrome extensions (MdMenuBar + MdStatusBar +
 /// MdSplitter + MdPagination + MdEmptyState).
 GalleryPage *createStage2ChromePage();
+/// Page 51. Stage 2 data & layout extensions (MdSkeleton + MdSteps +
+/// MdUpload + MdRate + MdFlex).
+GalleryPage *createStage2DataPage();
 
 // ---------------------------------------------------------------------------
 // Showcase screens

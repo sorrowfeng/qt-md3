@@ -1210,3 +1210,16 @@ against official Material chrome (desktop menu bar, status bar) is still
 pending with the rest of the Stage 2 visual QA round; the splitter's
 outline-variant hairline and the empty-state art disc are already token-sourced
 (outline-variant, surface-variant) so they need measurement, not invention.
+
+## Stage 2 Qt extensions (data & layout batch)
+
+Page 51 (qt-extensions-data) shows MdSkeleton / MdSteps / MdUpload / MdRate /
+MdFlex as live widgets. Semantics pinned by unit tests (token colours,
+properties, keyboard, non-blank render). Side-by-side capture against official
+Material is still pending with the rest of the Stage 2 visual QA round; every
+colour these five paint is already a published role (surface-container-highest /
+-high, primary / on-primary / primary-container, outline-variant,
+on-surface-variant), so they need measurement, not invention. MdFlex's spacing
+scale (0 / 4 / 8 / 12 / 16 / 24 / 32) is the MD3 4 dp base-unit ladder the
+component exports actually use — recorded in porting-todo.md because
+`md.sys.layout.*` is not a published token family in the export.

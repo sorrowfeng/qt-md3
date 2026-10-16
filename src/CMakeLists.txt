@@ -192,6 +192,12 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdSplitter.h
     widgets/MdPagination.h
     widgets/MdEmptyState.h
+    widgets/MdSkeleton.h
+    widgets/MdSteps.h
+    widgets/MdStepper.h
+    widgets/MdUpload.h
+    widgets/MdRate.h
+    widgets/MdFlex.h
 )
 
 set(QT_MD3_SOURCES
@@ -370,6 +376,11 @@ set(QT_MD3_SOURCES
     widgets/MdSplitter.cpp
     widgets/MdPagination.cpp
     widgets/MdEmptyState.cpp
+    widgets/MdSkeleton.cpp
+    widgets/MdSteps.cpp
+    widgets/MdUpload.cpp
+    widgets/MdRate.cpp
+    widgets/MdFlex.cpp
 )
 
 set(QT_MD3_RESOURCES

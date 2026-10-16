@@ -862,6 +862,7 @@ the landed set is:
 
 MdWindow, MdFileDialog, MdMessageBox, MdScrollBar, MdScrollArea,
 MdSelect, MdInputNumber, MdTable, MdAvatar, MdScaffold,
-MdMenuBar, MdStatusBar, MdSplitter, MdPagination, MdEmptyState.
+MdMenuBar, MdStatusBar, MdSplitter, MdPagination, MdEmptyState,
+MdSkeleton, MdSteps, MdStepper, MdUpload, MdRate, MdFlex.
 
-Each has a dedicated CTest binary and a gallery page (48 / 49 / 50).
+Each has a dedicated CTest binary and a gallery page (48 / 49 / 50 / 51).
