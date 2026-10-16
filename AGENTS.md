@@ -167,6 +167,11 @@ official captures, and MdTextArea as a separate multiline widget — are
 recorded in docs/porting-todo.md and the cross-cutting table in
 docs/md3-coverage.md.
 
+Stage 2 (Qt extensions) is underway. Landed so far (tests + gallery page 48/49):
+`MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`, `MdTable`,
+`MdAvatar`, `MdWindow`, `MdFileDialog`, `MdInputNumber`, `MdScaffold`. The
+remaining appendix D rows are listed in docs/porting-todo.md.
+
 Before starting a component, read
 [`docs/project-status.md`](docs/project-status.md) for the module inventory and
 [`docs/porting-todo.md`](docs/porting-todo.md) for the open gaps with the

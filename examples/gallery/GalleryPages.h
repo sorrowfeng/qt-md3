@@ -241,6 +241,9 @@ GalleryPage *createTextFieldPage();
 GalleryPage *createSearchPage();
 /// Page 48. Stage 2 Qt extensions (MdScrollBar + MdSelect).
 GalleryPage *createStage2Page();
+/// Page 49. Stage 2 shell & input extensions (MdWindow + MdFileDialog +
+/// MdInputNumber + MdScaffold).
+GalleryPage *createStage2ShellPage();
 
 // ---------------------------------------------------------------------------
 // Showcase screens

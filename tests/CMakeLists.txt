@@ -1313,6 +1313,90 @@ set_tests_properties(TestMd3Table PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3Table)
 
+add_executable(TestMd3InputNumber
+    TestMd3InputNumber.cpp
+)
+
+target_link_libraries(TestMd3InputNumber
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3InputNumber COMMAND TestMd3InputNumber)
+set_tests_properties(TestMd3InputNumber PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3InputNumber)
+
+add_executable(TestMd3Scaffold
+    TestMd3Scaffold.cpp
+)
+
+target_link_libraries(TestMd3Scaffold
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Scaffold COMMAND TestMd3Scaffold)
+set_tests_properties(TestMd3Scaffold PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Scaffold)
+
+add_executable(TestMd3Window
+    TestMd3Window.cpp
+)
+
+target_link_libraries(TestMd3Window
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Window COMMAND TestMd3Window)
+set_tests_properties(TestMd3Window PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Window)
+
+add_executable(TestMd3FileDialog
+    TestMd3FileDialog.cpp
+)
+
+target_link_libraries(TestMd3FileDialog
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3FileDialog COMMAND TestMd3FileDialog)
+set_tests_properties(TestMd3FileDialog PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3FileDialog)
+
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
@@ -1363,6 +1447,7 @@ add_executable(TestMd3GalleryClick
     ${GALLERY_DIR}/GalleryPages43.cpp
     ${GALLERY_DIR}/GalleryPages47.cpp
     ${GALLERY_DIR}/GalleryPages48.cpp
+    ${GALLERY_DIR}/GalleryPages49.cpp
     ${GALLERY_DIR}/GalleryPages44.cpp
     ${GALLERY_DIR}/GalleryPages45.cpp
     ${GALLERY_DIR}/GalleryPages46.cpp

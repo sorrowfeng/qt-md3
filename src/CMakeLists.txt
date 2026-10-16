@@ -183,6 +183,10 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdScrollArea.h
     widgets/MdTable.h
     widgets/MdAvatar.h
+    widgets/MdInputNumber.h
+    widgets/MdScaffold.h
+    widgets/MdWindow.h
+    widgets/MdFileDialog.h
 )
 
 set(QT_MD3_SOURCES
@@ -352,6 +356,10 @@ set(QT_MD3_SOURCES
     widgets/MdScrollArea.cpp
     widgets/MdTable.cpp
     widgets/MdAvatar.cpp
+    widgets/MdInputNumber.cpp
+    widgets/MdScaffold.cpp
+    widgets/MdWindow.cpp
+    widgets/MdFileDialog.cpp
 )
 
 set(QT_MD3_RESOURCES

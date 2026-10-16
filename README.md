@@ -1,4 +1,4 @@
-# qt-md3
+﻿# qt-md3
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Qt](https://img.shields.io/badge/Qt-6%20%7C%205-green.svg)](https://www.qt.io)
@@ -35,7 +35,7 @@ system:
 | Foundation modules | `21` |
 | Public components | `12` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`) |
 | CTest entries | `23` (all green) |
-| Stage 2 (Qt extensions) | Not started — gated until Stage 1 is green |
+| Stage 2 (Qt extensions) | In progress — 10 landed (ScrollBar, Select, MessageBox, ScrollArea, Table, Avatar, Window, FileDialog, InputNumber, Scaffold); remaining appendix D rows in docs/porting-todo.md |
 
 Progress is tracked in [docs/md3-coverage.md](docs/md3-coverage.md), the single
 source of truth for the Stage 1 → Stage 2 switch. Current state:

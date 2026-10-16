@@ -537,6 +537,7 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         createTextFieldPage(),
         createSearchPage(),
         createStage2Page(),
+        createStage2ShellPage(),
         createDynamicColourPage(),
         createShowcaseMailPage(),
         createShowcaseMusicPage(),

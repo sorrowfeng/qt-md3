@@ -1933,13 +1933,17 @@ Landed (with tests + gallery page 48 "Qt extensions"):
 | `MdScrollArea` | QScrollArea | surface + MdScrollBar | composes `MdScrollBar`; no frame; viewport fills `surface` |
 | `MdTable` | QTableView | List row semantics + surface-container header | MD3 has no data-table spec. Header surface-container + label-large; rows list one-line height (56); hover 0.08 / selected secondary-container; outline-variant dividers; optional alternating surface-container-lowest/low. String-grid API (`setRowCount` / `setCellText` / `setCellWidget`), not a QAbstractItemModel wrapper. |
 | `MdAvatar` | — | shape Full + surface-variant + on-surface-variant | promoted from the list leading-avatar slot; initials or 24 px icon |
+| `MdWindow` | frameless main window | Surface + Top app bar; title-bar buttons are IconButtons | Surface background, 64 px title bar (title-large / on-surface), chrome = three `MdIconButton` standard/xsmall (minimize / maximize / close). Floating: extra-large corner + outline-variant hairline; maximised: square. Drag-to-move, edge resize, double-click title toggles max. Works embedded (gallery/tests) and as a top-level `Qt::FramelessWindowHint` window. |
+| `MdFileDialog` | QFileDialog | Dialog + Navigation drawer (left) + List + Text field | Composition widget. Chrome = `md.comp.dialog.*` (surface-container-high, level 3, extra-large). Left location rail follows drawer item selected state (secondary-container). File list follows List row semantics (56 px, hover 0.08, selected secondary-container, outline-variant dividers). Path/name = filled `MdTextField`. Actions = Filled/Text `MdButton`. QDir-backed listing with name filters; OpenFile / OpenDirectory / SaveFile modes. |
+| `MdInputNumber` | QSpinBox / QDoubleSpinBox | Text field + Icon button steppers | `MdTextField` anchor (filled / outlined) with a trailing pair of xsmall `MdIconButton` (`arrow_drop_up` / `arrow_drop_down`). Q_PROPERTY value/min/max/step/decimals/prefix/suffix. Clamps to [min, max]; Up/Down keys and stepper clicks step; bad edits raise the field error overlay and restore the last good string. |
+| `MdScaffold` | — | App bar + Navigation + FAB + body page skeleton | Pure layout composition: optional Top app bar, navigation (Start rail / End / Bottom bar), end pane, body and FAB. Paints only `md.sys.color.surface`; slots are caller-owned Stage 1 widgets. FAB placements: EndFloat / StartFloat / BottomCenter / EndDocked. RTL-aware. |
 
-Still open (remaining appendix D rows): MdWindow, MdFileDialog, MdInputDialog,
+Still open (remaining appendix D rows): MdInputDialog,
 MdMenuBar, MdStatusBar, MdSplitter, MdStackedWidget, MdDockWidget /
 MdDockManager, MdTree / MdTreeSelect, MdEmptyState / MdResult, MdSkeleton,
 MdPagination, MdBreadcrumb, MdSteps / MdStepper, MdTimeline, MdDescriptions,
-MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog, MdInputNumber, MdCascader,
+MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog, MdCascader,
 MdTransfer, MdUpload, MdColorPicker, MdRate, MdMentions, MdAutoComplete,
-MdPlainTextEdit, MdFlex, MdGrid, MdSpace, MdScaffold, MdMasonry, MdDrawer,
+MdPlainTextEdit, MdFlex, MdGrid, MdSpace, MdMasonry, MdDrawer,
 MdPopover, MdPopconfirm, MdNotification, MdCollapse, MdTour / MdCoachMark,
 MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor, MdBackTop.
