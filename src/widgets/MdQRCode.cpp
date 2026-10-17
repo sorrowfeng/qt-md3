@@ -156,7 +156,13 @@ void MdQRCode::regenerate()
     // Demo matrix only — stable per payload, finder-like corners so the
     // silhouette reads as a code. Real codes come in through setMatrix().
     m_dimension = kDemoDimension;
-    m_modules = QList<bool>(m_dimension * m_dimension, false);
+    // QList(size, value) and QList::fill are Qt 6-only; grow with append,
+    // which is the portable spelling on Qt 5.
+    m_modules.clear();
+    m_modules.reserve(m_dimension * m_dimension);
+    for (int i = 0; i < m_dimension * m_dimension; ++i) {
+        m_modules.append(false);
+    }
 
     quint32 state = 2166136261u;
     const QByteArray utf8 = m_text.toUtf8();

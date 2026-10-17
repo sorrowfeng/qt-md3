@@ -160,4 +160,9 @@ private:
 
 } // namespace md
 
+// Incomplete QObject subclass in menuOpened.
+// Opaque + registered: either macro alone leaves the pointer unusable on Qt 5.
+Q_DECLARE_OPAQUE_POINTER(md::MdMenu *)
+Q_DECLARE_METATYPE(md::MdMenu *)
+
 #endif // MD_MENU_BAR_H

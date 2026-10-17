@@ -30,6 +30,18 @@
 #include <QtWidgets/QAbstractScrollArea>
 #include <QtWidgets/QWidget>
 
+// QAbstractScrollArea* is not a predefined Qt metatype. Q_PROPERTY / the
+// scrollAreaChanged signal make moc emit qRegisterMetaType, which is a
+// static_assert on Qt 5 unless the pointer is declared opaque *and*
+// registered (Q_DECLARE_OPAQUE_POINTER alone only turns off the QObject
+// auto-registration path). Shared guard with MdAnchor.h so both headers can
+// appear in one mocs_compilation TU.
+#ifndef QT_MD3_META_QABSTRACTSCROLLAREA_PTR
+#define QT_MD3_META_QABSTRACTSCROLLAREA_PTR
+Q_DECLARE_OPAQUE_POINTER(QAbstractScrollArea *)
+Q_DECLARE_METATYPE(QAbstractScrollArea *)
+#endif
+
 namespace md {
 
 class MdFab;

@@ -34,7 +34,13 @@
 class QAbstractScrollArea;
 class QPaintEvent;
 
+// Shared guard with MdBackTop.h — see the note there. Opaque + registered
+// together; either macro alone leaves the pointer unusable on Qt 5.
+#ifndef QT_MD3_META_QABSTRACTSCROLLAREA_PTR
+#define QT_MD3_META_QABSTRACTSCROLLAREA_PTR
 Q_DECLARE_OPAQUE_POINTER(QAbstractScrollArea *)
+Q_DECLARE_METATYPE(QAbstractScrollArea *)
+#endif
 
 namespace md {
 

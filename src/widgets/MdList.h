@@ -172,4 +172,9 @@ private:
 
 Q_DECLARE_METATYPE(md::MdList::SelectionMode)
 
+// Incomplete QObject subclass in itemActivated / selectionChanged.
+// Opaque + registered: either macro alone leaves the pointer unusable on Qt 5.
+Q_DECLARE_OPAQUE_POINTER(md::MdListItem *)
+Q_DECLARE_METATYPE(md::MdListItem *)
+
 #endif // MD_LIST_H

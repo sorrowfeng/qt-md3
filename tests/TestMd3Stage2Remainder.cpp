@@ -6,6 +6,7 @@
 
 #include "TestMd3Common.h"
 
+#include "core/MdFont.h"
 #include "core/MdTheme.h"
 #include "core/MdTypes.h"
 #include "widgets/MdBreadcrumb.h"
@@ -57,6 +58,9 @@ private slots:
     void initTestCase()
     {
         MdTheme::instance().setSeedColor(QColor(0x6750A4));
+        // Offscreen has no font database on some Windows kits; the bundled
+        // Roboto is enough for the text-only render smokes (MdBreadcrumb).
+        MdFont::registerBundledFonts();
     }
 
     // --- MdInputDialog ------------------------------------------------------
