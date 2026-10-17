@@ -167,8 +167,8 @@ official captures, and MdTextArea as a separate multiline widget — are
 recorded in docs/porting-todo.md and the cross-cutting table in
 docs/md3-coverage.md.
 
-Stage 2 (Qt extensions) is underway. Landed so far (tests + gallery pages
-48/49/50/51/52/53/54): `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`,
+Stage 2 (Qt extensions) is underway. All appendix D rows are landed (tests +
+gallery pages 48/49/50/51/52/53/54/55): `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`,
 `MdTable`, `MdAvatar`, `MdWindow`, `MdFileDialog`, `MdInputNumber`,
 `MdScaffold`, `MdMenuBar`, `MdStatusBar`, `MdSplitter`, `MdPagination`,
 `MdEmptyState`, `MdSkeleton`, `MdSteps` / `MdStepper`, `MdUpload`, `MdRate`,
@@ -176,8 +176,11 @@ Stage 2 (Qt extensions) is underway. Landed so far (tests + gallery pages
 `MdTree` / `MdTreeSelect`, `MdStatistic`, `MdPopover` / `MdPopconfirm`,
 `MdAutoComplete`, `MdColorPicker`, `MdDockWidget` / `MdDockManager`,
 `MdDescriptions`, `MdTimeline`, `MdImage`, `MdWatermark`, `MdTransfer`,
-`MdMentions`, `MdBackTop`.
-The remaining appendix D rows are listed in
+`MdMentions`, `MdBackTop`, `MdInputDialog`, `MdStackedWidget`, `MdResult`,
+`MdBreadcrumb`, `MdQRCode`, `MdLog`, `MdCascader`, `MdPlainTextEdit`,
+`MdMasonry`, `MdDrawer`, `MdTour` / `MdCoachMark`, `MdRibbon`,
+`MdNav` / `MdNavItem`, `MdAffix` / `MdAnchor`.
+Library-wide gaps that are not components are listed in
 docs/porting-todo.md.
 
 Before starting a component, read

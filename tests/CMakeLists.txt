@@ -1969,6 +1969,28 @@ set_tests_properties(TestMd3BackTop PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3BackTop)
 
+# --- Stage 2 remainder batch (appendix D tail) ------------------------------
+add_executable(TestMd3Stage2Remainder
+    TestMd3Stage2Remainder.cpp
+)
+
+target_link_libraries(TestMd3Stage2Remainder
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Stage2Remainder COMMAND TestMd3Stage2Remainder)
+set_tests_properties(TestMd3Stage2Remainder PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Stage2Remainder)
+
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
 # banked page children, so stacking / placement / hit-testing faults in the
@@ -2025,6 +2047,7 @@ add_executable(TestMd3GalleryClick
     ${GALLERY_DIR}/GalleryPages52.cpp
     ${GALLERY_DIR}/GalleryPages53.cpp
     ${GALLERY_DIR}/GalleryPages54.cpp
+    ${GALLERY_DIR}/GalleryPages55.cpp
     ${GALLERY_DIR}/GalleryPages44.cpp
     ${GALLERY_DIR}/GalleryPages45.cpp
     ${GALLERY_DIR}/GalleryPages46.cpp

@@ -857,17 +857,19 @@ as done is treated as a defect, not a rounding error.
 ## Stage 2 progress (Qt extensions)
 
 Stage 1 is green. Stage 2 public headers under src/widgets/ are tracked by
-TestMd3CoveragePolicy (reports the live count). As of the detail & overlay
-batch the landed set is:
+TestMd3CoveragePolicy (reports the live count — 55 as of the remainder
+batch). Appendix D is closed. The landed set is:
 
-MdWindow, MdFileDialog, MdMessageBox, MdScrollBar, MdScrollArea,
-MdSelect, MdInputNumber, MdTable, MdAvatar, MdScaffold,
-MdMenuBar, MdStatusBar, MdSplitter, MdPagination, MdEmptyState,
-MdSkeleton, MdSteps, MdStepper, MdUpload, MdRate, MdFlex,
-MdGrid, MdSpace, MdCollapse, MdNotification, MdTree, MdTreeSelect,
-MdStatistic, MdPopover, MdPopconfirm, MdAutoComplete, MdColorPicker,
+MdWindow, MdFileDialog, MdMessageBox, MdInputDialog, MdMenuBar, MdStatusBar,
+MdScrollBar, MdScrollArea, MdSplitter, MdStackedWidget,
 MdDockWidget, MdDockManager,
-MdDescriptions, MdTimeline, MdImage, MdWatermark, MdTransfer,
-MdMentions, MdBackTop.
+MdTable, MdTree, MdTreeSelect, MdAvatar, MdEmptyState, MdResult,
+MdSkeleton, MdPagination, MdBreadcrumb, MdSteps, MdStepper, MdTimeline,
+MdDescriptions, MdStatistic, MdImage, MdQRCode, MdWatermark, MdLog,
+MdSelect, MdInputNumber, MdCascader, MdTransfer, MdUpload, MdColorPicker,
+MdRate, MdMentions, MdAutoComplete, MdPlainTextEdit,
+MdFlex, MdGrid, MdSpace, MdScaffold, MdMasonry,
+MdDrawer, MdPopover, MdPopconfirm, MdNotification, MdCollapse,
+MdTour, MdCoachMark, MdRibbon, MdNav, MdNavItem, MdAffix, MdAnchor, MdBackTop.
 
-Each has a dedicated CTest binary and a gallery page (48 / 49 / 50 / 51 / 52 / 53 / 54).
+Each has a dedicated CTest binary and a gallery page (48 / 49 / 50 / 51 / 52 / 53 / 54 / 55).

@@ -1278,3 +1278,21 @@ they paint is already a published role (on-surface, on-surface-variant,
 outline-variant, primary, error, surface-container, secondary-container,
 surface-container-lowest, scrim). MdWatermark's 0.08 stamp opacity is the
 state-layer hover reading (`md.comp.state-layer.hover.opacity`).
+## Stage 2 Qt extensions (remainder batch)
+
+Landed: MdInputDialog, MdStackedWidget, MdResult, MdBreadcrumb, MdQRCode,
+MdLog, MdCascader, MdPlainTextEdit, MdMasonry, MdDrawer, MdTour /
+MdCoachMark, MdRibbon, MdNav / MdNavItem, MdAffix / MdAnchor as live widgets
+on gallery page 55. Semantics pinned by TestMd3Stage2Remainder (dialog
+accept/reject, stacked page switch, result status colours, breadcrumb trail,
+log levels, edit find/replace, drawer open, nav selection, QR matrix,
+masonry columns, anchor rows, tour steps, ribbon band, cascader tree,
+non-blank renders). Side-by-side capture against official Material is still
+pending with the rest of the Stage 2 visual QA round — MD3 publishes none of
+these families, so they are anchored on the families that do exist (Dialog +
+Text field + Buttons, Surface container, Display typography + Text button,
+Label typography + separators, Navigation drawer / rail items, Toolbar +
+Tabs, Scrim + shape highlight). Every colour they paint is already a
+published role (surface, surface-container, surface-container-low/high,
+on-surface, on-surface-variant, primary/container, tertiary/container,
+error/container, outline-variant, secondary-container, scrim).

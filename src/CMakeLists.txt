@@ -218,6 +218,20 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdTransfer.h
     widgets/MdMentions.h
     widgets/MdBackTop.h
+    widgets/MdInputDialog.h
+    widgets/MdStackedWidget.h
+    widgets/MdResult.h
+    widgets/MdBreadcrumb.h
+    widgets/MdQRCode.h
+    widgets/MdLog.h
+    widgets/MdPlainTextEdit.h
+    widgets/MdCascader.h
+    widgets/MdMasonry.h
+    widgets/MdDrawer.h
+    widgets/MdTour.h
+    widgets/MdRibbon.h
+    widgets/MdNav.h
+    widgets/MdAnchor.h
 )
 
 set(QT_MD3_SOURCES
@@ -421,6 +435,20 @@ set(QT_MD3_SOURCES
     widgets/MdTransfer.cpp
     widgets/MdMentions.cpp
     widgets/MdBackTop.cpp
+    widgets/MdInputDialog.cpp
+    widgets/MdStackedWidget.cpp
+    widgets/MdResult.cpp
+    widgets/MdBreadcrumb.cpp
+    widgets/MdQRCode.cpp
+    widgets/MdLog.cpp
+    widgets/MdPlainTextEdit.cpp
+    widgets/MdCascader.cpp
+    widgets/MdMasonry.cpp
+    widgets/MdDrawer.cpp
+    widgets/MdTour.cpp
+    widgets/MdRibbon.cpp
+    widgets/MdNav.cpp
+    widgets/MdAnchor.cpp
 )
 
 set(QT_MD3_RESOURCES

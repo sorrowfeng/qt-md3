@@ -259,6 +259,9 @@ GalleryPage *createStage2EntryPage();
 /// Page 54. Stage 2 detail & overlay extensions (MdDescriptions + MdTimeline +
 /// MdImage + MdWatermark + MdTransfer + MdMentions + MdBackTop).
 GalleryPage *createStage2DetailPage();
+/// Page 55. Stage 2 remainder (MdResult + MdBreadcrumb + MdLog + MdQRCode +
+/// MdNav + MdStackedWidget + MdDrawer + MdPlainTextEdit).
+GalleryPage *createStage2RemainderPage();
 
 // ---------------------------------------------------------------------------
 // Showcase screens
