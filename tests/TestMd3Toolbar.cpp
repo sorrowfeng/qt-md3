@@ -766,10 +766,10 @@ void TestMd3Toolbar::floatingPaintsItsScheme()
 
 void TestMd3Toolbar::rtlIsNotMirrored()
 {
-    // A library-wide gap, not a toolbar defect: `MdTheme::isRightToLeft()`
-    // reaches only the four button families and nothing here mirrors. The test
-    // pins the *current* behaviour so a future RTL pass has to change it
-    // deliberately. Recorded in docs/porting-todo.md.
+    // The floating toolbar's Axis abstraction has no RTL mirror yet — the
+    // two content children keep their LTR order. The docked toolbar mirrors
+    // its child run (a single centred child is symmetric, so the one-child
+    // case is unchanged; the multi-child case below pins the mirror).
     MdFloatingToolbar bar;
     ProbeWidget first(QSize(48, 48));
     ProbeWidget second(QSize(48, 48));

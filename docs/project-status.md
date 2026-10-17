@@ -1,4 +1,4 @@
-# Project Status
+﻿# Project Status
 
 Last updated: 2026-10-12
 
@@ -327,6 +327,15 @@ Library-wide gaps that are not components (RTL audit, the Stage 2 visual QA
 round against official captures, MdTextArea as a separate multiline widget)
 are recorded in [porting-todo.md](porting-todo.md) and the cross-cutting
 table in [md3-coverage.md](md3-coverage.md).
+
+**2026-10-18: Stage 2 internal visual QA closed.** Light + dark gallery
+captures of pages 48-55 were reviewed and every Stage 2 control is recorded
+Pass in [visual-audit.md](visual-audit.md) (the "Stage 2 visual QA round"
+section). `MdQRCode` now carries a real ISO/IEC 18004 encoder
+(`core/MdQrEncoder`, byte mode, versions 1-10, EC L/M) instead of the demo
+mixer; `TestMd3QRCode` covers the capacity table, structure and a data-path
+round trip, and the gallery screenshot's module grid was reverse-extracted
+and checked against the standard's finders / timing / dark module / alignment.
 
 Each component lands as its own commit and must satisfy all twelve Definition
 of Done items before the next one starts, including an independent gallery

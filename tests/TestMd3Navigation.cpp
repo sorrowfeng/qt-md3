@@ -209,7 +209,7 @@ private slots:
     void drawerEndShapeMirrorsInRtl();
 
     // --- cross-cutting ------------------------------------------------------
-    void rtlIsNotMirrored();
+    void rtlMirrorsItems();
 };
 
 void TestMd3Navigation::init()
@@ -1292,23 +1292,27 @@ void TestMd3Navigation::drawerEndShapeMirrorsInRtl()
 // Cross-cutting
 // ---------------------------------------------------------------------------
 
-void TestMd3Navigation::rtlIsNotMirrored()
+void TestMd3Navigation::rtlMirrorsItems()
 {
-    // A library-wide gap, not a navigation defect: `MdTheme::isRightToLeft()`
-    // reaches only the four button families and nothing here mirrors. The test
-    // pins the *current* behaviour so a future RTL pass has to change it
-    // deliberately. Recorded in docs/porting-todo.md.
+    // The library-wide RTL audit: the item run mirrors so the first item
+    // sits at the right edge under RTL. Recorded in docs/porting-todo.md.
     MdNavigationBar bar;
     addItems(bar, 3);
     bar.resize(360, 80);
 
-    const QList<QRectF> before = MdNavigationBarStyle::layoutFor(bar, bar.tokens()).itemBoxes;
+    const QList<QRectF> ltr = MdNavigationBarStyle::layoutFor(bar, bar.tokens()).itemBoxes;
     bar.setLayoutDirection(Qt::RightToLeft);
-    const QList<QRectF> after = MdNavigationBarStyle::layoutFor(bar, bar.tokens()).itemBoxes;
+    const QList<QRectF> rtl = MdNavigationBarStyle::layoutFor(bar, bar.tokens()).itemBoxes;
 
-    QCOMPARE(after.size(), before.size());
-    for (int i = 0; i < before.size(); ++i) {
-        QCOMPARE(after.at(i), before.at(i));
+    QCOMPARE(rtl.size(), ltr.size());
+    // First item at the left in LTR, at the right in RTL.
+    QVERIFY(ltr.first().left() < ltr.last().left());
+    QVERIFY(rtl.first().left() > rtl.last().left());
+    // Each box is a true mirror inside the bar's width.
+    for (int i = 0; i < ltr.size(); ++i) {
+        const qreal w = bar.width();
+        QVERIFY(qFuzzyCompare((w - ltr.at(i).right()) + 1.0, rtl.at(i).left() + 1.0));
+        QCOMPARE(ltr.at(i).width(), rtl.at(i).width());
     }
 }
 

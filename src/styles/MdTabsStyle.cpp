@@ -64,6 +64,11 @@ MdTabsStyle::Layout MdTabsStyle::layoutFor(const MdTabs &tabs, const MdTabsToken
             out.tabRects.append(QRectF(qreal(i) * tabWidth, 0.0, tabWidth, rowHeight));
         }
         out.contentWidth = rowWidth;
+        if (tabs.layoutDirection() == Qt::RightToLeft) {
+            for (QRectF &r : out.tabRects) {
+                r.moveLeft(rowWidth - r.left() - r.width());
+            }
+        }
         return out;
     }
 
@@ -78,6 +83,14 @@ MdTabsStyle::Layout MdTabsStyle::layoutFor(const MdTabs &tabs, const MdTabsToken
         x += tabWidth;
     }
     out.contentWidth = x + t.scrollableEdgePadding;
+    // RTL: the tab walk mirrors so the first tab sits at the right edge.
+    if (tabs.layoutDirection() == Qt::RightToLeft) {
+        const qreal w = qMax<qreal>(qreal(tabs.width()), 0.0);
+        for (QRectF &r : out.tabRects) {
+            r.moveLeft(w - r.left() - r.width());
+        }
+    }
+
     return out;
 }
 

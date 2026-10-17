@@ -62,7 +62,11 @@ void MdInputNumber::init()
     // The steppers own the trailing slot; the field must not paint its own
     // trailing icon on top of them.
     m_field->setTrailingIconName(QString());
-    m_field->setContentsMargins(0, 0, kTextTrailingReserve, 0);
+    {
+        const bool rtl = MdStyleBase::isRtl(this);
+        m_field->setContentsMargins(rtl ? kTextTrailingReserve : 0, 0,
+                                    rtl ? 0 : kTextTrailingReserve, 0);
+    }
 
     m_up = new MdIconButton(QStringLiteral("arrow_drop_up"), this);
     m_up->setVariant(IconButtonVariant::Standard);
@@ -288,7 +292,9 @@ void MdInputNumber::setSteppersVisible(bool visible)
         m_down->setVisible(visible);
     }
     if (m_field) {
-        m_field->setContentsMargins(0, 0, visible ? kTextTrailingReserve : 0, 0);
+        const bool rtl = MdStyleBase::isRtl(this);
+        const int reserve = visible ? kTextTrailingReserve : 0;
+        m_field->setContentsMargins(rtl ? reserve : 0, 0, rtl ? 0 : reserve, 0);
     }
     layoutChildren();
     emit steppersVisibleChanged(visible);
@@ -362,6 +368,11 @@ void MdInputNumber::changeEvent(QEvent *event)
             m_down->setEnabled(isEnabled() && !isReadOnly() && isStepperEnabled(false));
         }
         update();
+    }
+    if (event->type() == QEvent::LayoutDirectionChange && m_field) {
+        const bool rtl = MdStyleBase::isRtl(this);
+        const int reserve = m_steppersVisible ? kTextTrailingReserve : 0;
+        m_field->setContentsMargins(rtl ? reserve : 0, 0, rtl ? 0 : reserve, 0);
     }
 }
 

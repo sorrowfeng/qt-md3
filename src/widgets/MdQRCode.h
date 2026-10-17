@@ -6,18 +6,18 @@
 // Semantic anchor (appendix D): "Surface container + outline 描边（如需）".
 //
 // A matrix-visual QR display: a surface-container card whose centre holds a
-// square module grid drawn from a caller-supplied matrix (or from the
-// widget's own tiny encoder for short payloads).
+// square module grid drawn from the widget's ISO/IEC 18004 encoder (or from a
+// caller-supplied matrix).
 //
 //   container surface-container, ShapeCorner::Medium
 //   modules   on-surface squares on surface (the QR's dark/light pair)
 //   quiet     a module-scale quiet zone the spec requires (4 modules)
 //
 // MD3 has no QR family; the control is the surface reading of any 2-D code.
-// The encoder here is a *visual* module generator suitable for demos and
-// tests — it is not an ISO/IEC 18004 conformant encoder. Callers that need
-// a scannable code feed a real matrix via `setMatrix()`; the widget never
-// invents a token for that distinction.
+// `setText()` encodes the payload with `MdQrEncoder` — byte mode, versions
+// 1-10, error correction L/M (see `core/MdQrEncoder.h` for the subset and the
+// ISO/IEC 18004 citations). A payload that does not fit leaves the previous
+// matrix in place; `setMatrix()` still accepts a pre-encoded grid verbatim.
 //
 // There is no QSS.
 
@@ -37,8 +37,8 @@ class QT_MD3_EXPORT MdQRCode : public QWidget
 {
     Q_OBJECT
 
-    /// Payload text. Setting it regenerates the demo matrix (see the header
-    /// note on the encoder's scope).
+    /// Payload text. Setting it regenerates the module matrix through the
+    /// ISO/IEC 18004 encoder (see the header note on the supported subset).
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     /// Edge of one module, in logical px (default 4).
     Q_PROPERTY(int moduleSize READ moduleSize WRITE setModuleSize NOTIFY moduleSizeChanged)

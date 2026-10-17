@@ -79,6 +79,13 @@ MdNavigationBarStyle::Layout MdNavigationBarStyle::layoutFor(const MdNavigationB
         x += each + gap;
     }
 
+    // RTL: the item run mirrors so the first item sits at the right edge.
+    if (bar.layoutDirection() == Qt::RightToLeft) {
+        for (QRectF &box : layout.itemBoxes) {
+            box.moveLeft(rect.left() + rect.width() - box.left() - box.width());
+        }
+    }
+
     return layout;
 }
 

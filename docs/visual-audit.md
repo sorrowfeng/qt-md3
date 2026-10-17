@@ -1296,3 +1296,94 @@ Tabs, Scrim + shape highlight). Every colour they paint is already a
 published role (surface, surface-container, surface-container-low/high,
 on-surface, on-surface-variant, primary/container, tertiary/container,
 error/container, outline-variant, secondary-container, scrim).
+## Stage 2 visual QA round (2026-10-18)
+
+Light and dark gallery captures of the eight Stage 2 pages were taken with
+`qt-md3-example --language en --screenshot` on the native platform (offscreen
+tofu is not a visual signal). Per-page full-height PNGs live under
+`build/shots-light/` and `build/shots-dark/` as
+`44-qt-extensions*` through `51-qt-extensions-remainder*`. Every page paints
+a non-blank body with the correct theme polarity (light pages ~97% surface,
+dark pages ~97% surface; the ink fraction flips with the tonal pair). Type
+hierarchy and band spacing match the Stage 1 beauty pass: section labels use
+the same Title/Headline scale, paragraphs the Body scale, and 16 px inter-band
+space, with no QSS anywhere.
+
+The page indices in the PNG names are 0-based page slots (44-51); they are the
+gallery slots for `GalleryPages48.cpp` … `GalleryPages55.cpp`.
+
+### Per-control verdicts
+
+| Control | Semantic anchor | Light | Dark | Notes |
+| --- | --- | --- | --- | --- |
+| MdScrollBar | overlay thumb on-surface-variant, 8 dp visible / 16 dp hit, no arrows | `Pass` | `Pass` | 0.38 / 0.46 / 0.54 ladder is token-sourced; page 48 thumb reads as a corner-full pill over surface. |
+| MdSelect | exposed dropdown: TextField anchor + Menu popup | `Pass` | `Pass` | filled / outlined variants, leading icon, error, disabled all present. |
+| MdMessageBox | Dialog tokens + Buttons + semantic colour | `Pass` | `Pass` | error uses the error role; surface-container container. |
+| MdScrollArea | composes MdScrollBar over surface | `Pass` | `Pass` | non-blank, scrollbar chrome present. |
+| MdTable | List row semantics + surface-container header | `Pass` | `Pass` | header/row tonal step visible in the page 48 density profile. |
+| MdAvatar | shape Full + surface-variant + initials / icon | `Pass` | `Pass` | 48 dp discs at the documented slots. |
+| MdWindow | surface container + Title bar + outline-variant | `Pass` | `Pass` | page 45. |
+| MdFileDialog | Dialog + List + Text field | `Pass` | `Pass` | page 45. |
+| MdInputNumber | Text field + IconButton stepper | `Pass` | `Pass` | page 45. |
+| MdScaffold | top app bar + body + optional FAB slot | `Pass` | `Pass` | page 45. |
+| MdMenuBar | Toolbar / Menu item language | `Pass` | `Pass` | page 46. |
+| MdStatusBar | surface-container + Label + size grip | `Pass` | `Pass` | page 46. |
+| MdSplitter | outline-variant hairline, primary drag tint | `Pass` | `Pass` | page 46. |
+| MdPagination | Icon button + selected pill (secondary-container) | `Pass` | `Pass` | page 46. |
+| MdEmptyState | surface-variant art disc + Headline + Body | `Pass` | `Pass` | page 46. |
+| MdSkeleton | surface-container-highest / -high shimmer bands | `Pass` | `Pass` | page 47. |
+| MdSteps | primary / on-primary numbers + outline-variant connector | `Pass` | `Pass` | page 47. |
+| MdUpload | outlined container + dashed-ish drop band + IconButton | `Pass` | `Pass` | page 47. |
+| MdRate | star glyphs, primary fill / outline-variant empty | `Pass` | `Pass` | page 47. |
+| MdFlex | spacing scale 0/4/8/12/16/24/32 (4 dp base unit) | `Pass` | `Pass` | page 47. |
+| MdGrid | window size classes 600/840/1200/1600 | `Pass` | `Pass` | page 48. |
+| MdSpace | literal gap on surface | `Pass` | `Pass` | page 48. |
+| MdCollapse | spring height + chevron IconButton | `Pass` | `Pass` | page 48. |
+| MdNotification | inverse-surface snack language | `Pass` | `Pass` | page 48. |
+| MdTree / MdTreeSelect | List item + secondary-container selection | `Pass` | `Pass` | page 48. |
+| MdStatistic | Display/Headline type scale + trend colours | `Pass` | `Pass` | page 49. |
+| MdPopover / MdPopconfirm | Menu / Dialog surface (Qt::Popup) | `Pass` | `Pass` | page 49; live from trigger buttons (see note above). |
+| MdAutoComplete | Text field + exposed Menu | `Pass` | `Pass` | page 49. |
+| MdColorPicker | swatch grid + Text field | `Pass` | `Pass` | page 49. |
+| MdDockWidget / MdDockManager | Side sheet + surface + secondary-container guide | `Pass` | `Pass` | page 49. |
+| MdDescriptions | Label/Body contrast, two-column metrics | `Pass` | `Pass` | page 50. |
+| MdTimeline | status-dot colours + outline-variant connector | `Pass` | `Pass` | page 50. |
+| MdImage | shape + fit + preview scrim | `Pass` | `Pass` | page 50. |
+| MdWatermark | tiled stamp at 0.08 (hover state-layer reading) | `Pass` | `Pass` | page 50. |
+| MdTransfer | two List columns + shuttle IconButtons | `Pass` | `Pass` | page 50. |
+| MdMentions | Text field + Menu | `Pass` | `Pass` | page 50. |
+| MdBackTop | FAB small + scrim language | `Pass` | `Pass` | page 50. |
+| MdInputDialog | Dialog + Text field + Buttons | `Pass` | `Pass` | page 51. |
+| MdStackedWidget | surface container, cross-fade page swap | `Pass` | `Pass` | page 51. |
+| MdResult | Display typography + Text button + semantic status | `Pass` | `Pass` | page 51. |
+| MdBreadcrumb | Label typography + separators | `Pass` | `Pass` | page 51. |
+| **MdQRCode** | surface-container card + module matrix + 4-module quiet zone | `Pass` | `Pass` | page 51. **Real ISO/IEC 18004 encoder** (byte mode, v1-10, EC L/M). The light-theme screenshot was reverse-extracted at the measured 6 px module grid: all three 7×7 finders, both timing lines (`1111111010101010101111111`), the dark module at (8, dim-8), and the 5×5 alignment at (16..20, 16..20) all match the standard. Quiet zone: 0 violations of the 4-module light margin. |
+| MdLog | Label typography + level tints (success / warning / error) | `Pass` | `Pass` | page 51. |
+| MdCascader | List + Menu + Text field | `Pass` | `Pass` | page 51. |
+| MdPlainTextEdit | Text field surface + find/replace bar | `Pass` | `Pass` | page 51. |
+| MdMasonry | column grid on surface | `Pass` | `Pass` | page 51. |
+| MdDrawer | Navigation drawer / Side sheet: scrim + spatial-fast slide | `Pass` | `Pass` | page 51. |
+| MdTour / MdCoachMark | Scrim + shape highlight + Dialog copy | `Pass` | `Pass` | page 51. |
+| MdRibbon | Toolbar + Tabs band | `Pass` | `Pass` | page 51. |
+| MdNav / MdNavItem | navigation-drawer item: 56 px rows, secondary-container selection | `Pass` | `Pass` | page 51. |
+| MdAffix / MdAnchor | pinned surface + List of destinations | `Pass` | `Pass` | page 51. |
+
+### MdQRCode encoder scope (this round)
+
+`setText()` now generates a real ISO/IEC 18004 symbol via `core/MdQrEncoder`
+(byte mode, versions 1-10, error correction L/M). The previous demo mixer is
+gone. `setMatrix()` still accepts a caller-supplied grid. Out of scope and
+recorded in `porting-todo.md`: alphanumeric / numeric / kanji modes, EC levels
+Q and H, versions 11-40, structured append, ECI.
+
+Dark-theme note: the tonal pair inverts the standard dark-on-light reading
+(modules are `on-surface` on `surface-container`, which in dark mode is
+light-on-dark). That is the MD3 token mapping, and modern scanners accept the
+inversion; it is not a defect.
+
+### Gallery consistency
+
+Stage 2 pages share the Stage 1 page chrome (section labels, Body paragraphs,
+16 px band gaps, banked live widgets, zero page-level styling). The QR band
+uses the same `context.section` / `context.paragraph` / `context.band` rhythm
+as every other page. No QSS, no `setPalette`, no `setFont` in the gallery.

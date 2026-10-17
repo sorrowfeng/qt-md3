@@ -328,13 +328,15 @@ smoothed:
 Same standing as the Actions families, and for the same reasons: seed change,
 contrast level, density and font switch have not yet been exercised *against the
 app bar page*, and the side-by-side reference comparison has not been recorded.
-Neither is a known defect; both are unfinished evidence. **RTL is a third gap,
-and it is the tracked cross-cutting one**: `MdTheme::isRightToLeft()` is honoured
-by the four button families and by nothing else, so an RTL app bar keeps its
-navigation on the left rather than mirroring the way Compose's `placeRelative`
-does. The app bar is simply the first family to say so out loud instead of
-claiming the mirroring; see "RTL 全组件" under Cross-cutting items and the entry
-in [porting-todo.md](porting-todo.md).
+Neither is a known defect; both are unfinished evidence. **RTL was a third gap
+and is now largely closed**: the library-wide audit (TestMd3Rtl) covers
+geometry mirroring (leading/trailing swaps, motion vectors) and text direction
+(MdStyleBase::leadingAlignment). App bars, list items, tabs, text fields,
+navigation bar, docked toolbar, badges, tree and the Stage 2 widgets
+(InputNumber, Breadcrumb, Drawer, Nav, Menu, Chip, Slider, Switch, Divider,
+Grid, Flex, etc.) all mirror under RTL. Remaining known gap: the floating
+toolbar's Axis abstraction has no RTL pass yet. See "RTL 全组件" under
+Cross-cutting items and the entry in [porting-todo.md](porting-todo.md).
 
 Six transcription notes are pinned by `TestMd3AppBar` and the page-28 pixel
 audit rather than smoothed:
@@ -827,7 +829,7 @@ Every family must satisfy these before Stage 1 counts as complete.
 | 35 个装饰形状 + shape morph 接入 | 🚧 |
 | Expressive 变体组件更新（app bars / carousel / buttons / FAB / icon buttons / navigation bar / navigation rail / progress indicators / sliders） | 🚧 |
 | light / dark × contrast level（standard / medium / high） | ✅ |
-| RTL 全组件 | 🚧 |
+| RTL 全组件 | ✅ (floating toolbar Axis gap remains) |
 | 键盘与焦点顺序全组件 | 🚧 |
 
 ## Summary

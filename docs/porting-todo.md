@@ -1851,7 +1851,7 @@ above and in docs/md3-coverage.md's cross-cutting table.
 ## Library-wide RTL audit (2026-10)
 
 The audit that every family's RTL: not mirrored note referred to is now
-done — TestMd3Rtl (9 slots) locks both halves:
+done — TestMd3Rtl (13 slots) locks both halves:
 
 * **geometry mirrors** — leading / trailing slots swap sides and the motion
   vectors (the switch thumb travel, the slider handle fraction) measure from
@@ -1862,11 +1862,27 @@ done — TestMd3Rtl (9 slots) locks both halves:
   AlignRight under RTL instead of the literal AlignLeft; every drawText
   that means "leading" routes through it.
 
+Families with geometry mirroring confirmed by this audit pass: MdButton /
+MdButtonGroup / MdSegmentedButton / MdSplitButton / MdIconButton / MdFab /
+MdExtendedFab / MdFabMenu (four button families + FAB), MdChip, MdSwitch,
+MdSlider, MdMenu / MdExpressiveMenu, MdSearchBar, MdTextField (leading and
+trailing icon rects), MdTextArea, MdListItem (leading/trailing/text column),
+MdTopAppBar (navigation/actions/title slots), MdTabs (tab walk), MdNavigationBar
+(item run), MdDockedToolbar (child run), MdBadgedBox (badge anchors to logical
+end), MdTree (indent from leading edge, chevron glyph flips), MdNavigationDrawer /
+MdNavigationDrawerItem, MdDivider, MdProgressIndicator (linear indicator
+mirrors), MdBreadcrumb (separator glyph flips), MdDrawer, MdNav, MdGrid,
+MdFlex, MdMenuBar, MdUpload, MdImage, MdTimeline, MdDescriptions, MdStatistic,
+MdInputNumber (stepper pair + text margin), MdTooltipHost, MdSnackbar,
+MdDialog, MdDatePicker / MdTimePicker (text alignment; grid numerals stay LTR).
+
 What the audit deliberately does **not** mirror: the date / time picker grid
 numerals and the calendar's weekday labels stay LTR — dates are written LTR
 in Arabic-script locales too (the 	extDirection override in material-web's
-text field exists for exactly this). The older per-family notes below stay
-as the record of what each port looked like *before* the audit.
+text field exists for exactly this). The floating toolbar's `Axis`
+abstraction has no RTL pass yet — its slot run keeps the LTR order under
+RTL. The older per-family notes below stay as the record of what each port
+looked like *before* the audit.
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three
@@ -1974,7 +1990,7 @@ Landed (with tests + gallery page 48 "Qt extensions"):
 | `MdPlainTextEdit` | QPlainTextEdit | Text field multiline 编辑能力 | Stage 1 text-area chrome (filled / outlined variant, floating label, supporting text, error) over a QPlainTextEdit, plus line numbers gutter, current-line highlight (state-layer hover 0.08), find/replace API, and Ctrl+Wheel zoom (0.5..3.0). `Q_PROPERTY labelText / supportingText / error / variant / lineNumbersVisible / currentLineHighlight / zoomFactor`. |
 | `MdDrawer` | — | 复用 Navigation drawer / Side sheet | Edge-anchored panel (Start / End / Top / Bottom, RTL-mirrored Start/End) with Modal (scrim 0.32) or Standard (docked) kinds. Slide on the `SpatialFast` spring. Reuses the navigation-drawer container rows: `surface-container-low` at level1 when modal, `surface` at level0 when docked. `Q_PROPERTY edge / kind / open / panelSize / headline`. |
 | `MdNav` / `MdNavItem` | — | 复用 Navigation rail / drawer item | Full-width 56 px rows with leading 24 px glyph + label-large caption + optional badge, secondary-container selection — the navigation-drawer item language. `MdNav` is the column/strip; `MdNavItem` the row. `Q_PROPERTY text / iconName / badgeText / selected / itemEnabled` on the item; `currentIndex / orientation / itemLabelsVisible` on the nav. |
-| `MdQRCode` | — | Surface container + outline | Surface-container card with a module matrix and a 4-module quiet zone. `setMatrix(dimension, modules)` accepts a real encoded matrix; `setText` regenerates a *visual* demo pattern (documented as non-ISO — callers that need a scannable code feed a real matrix). `Q_PROPERTY text / moduleSize / quietZone`. |
+| `MdQRCode` | — | Surface container + outline | Surface-container card with a module matrix and a 4-module quiet zone. `setText` encodes a real ISO/IEC 18004 symbol via `core/MdQrEncoder` (byte mode, versions 1-10, EC L/M); `setMatrix(dimension, modules)` still accepts a caller-supplied grid. `Q_PROPERTY text / moduleSize / quietZone`. |
 | `MdMasonry` | — | grid 变体 | Free-height (staggered) multi-column container: children keep their own heightHint and columns fill shortest-first. Column count derives from the MdGrid window size classes unless pinned. Gap is the MdFlex spacing ladder. Pure container; paints nothing. `Q_PROPERTY columns / gap / effectiveSizeClass`. |
 | `MdCascader` | — | Cascading menu 横向展开 | Read-only `MdTextField` trigger opening a horizontal strip of menu-sized panels, one per level of an `MdCascaderNode` value tree. List one-line rows (56 px), secondary-container selection. A leaf commits the label path; a branch advances. `Q_PROPERTY currentPath / labelText / placeholderText / popupVisible`. |
 | `MdAffix` / `MdAnchor` | — | 滚动吸附与锚点 | `MdAffix` pins a child to a scroll viewport's edge once the content scrolls past `offset` (surface-container when pinned). `MdAnchor` is the link list that scrolls a `QAbstractScrollArea` to registered Y anchors; the current anchor tracks the scroll offset. List one-line rows (56 px), secondary-container selection. `Q_PROPERTY scrollArea / offset / pinned` and `items / currentIndex / scrollArea`. |
@@ -1985,3 +2001,24 @@ All appendix D rows are now landed (tests + gallery page 55). Remaining
 library-wide gaps are non-component: the RTL audit, the Stage 2 visual QA
 round against official captures, and MdTextArea as a separate multiline
 widget.
+
+### MdQrEncoder subset (recorded 2026-10-18)
+
+`core/MdQrEncoder` is a self-contained ISO/IEC 18004:2015 encoder covering
+**byte mode, versions 1-10, error correction L and M**. Capacity, EC block
+structure, alignment positions, format BCH(15,5) and version BCH(18,6) are
+transcribed from the standard's tables (cited in the `.cpp`). Verified by
+`TestMd3QRCode` (capacity table, version selection, finder/timing/dark-module
+structure, format-info BCH, and a data-path round trip that unmasks and
+unpacks the bit stream back to the payload) and by reverse-extracting the
+gallery screenshot's module grid.
+
+Out of scope — extend here if a payload needs it:
+
+* alphanumeric / numeric / kanji / ECI / structured append modes
+* error correction levels Q (~25%) and H (~30%)
+* versions 11-40 (character count indicator already widens at v10)
+* micro QR and rMQR
+
+The widget's `setMatrix()` path remains for callers that already hold a
+pre-encoded grid (any version, any EC).

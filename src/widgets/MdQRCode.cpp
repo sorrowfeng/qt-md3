@@ -1,5 +1,6 @@
 #include "MdQRCode.h"
 
+#include "core/MdQrEncoder.h"
 #include "core/MdShape.h"
 #include "core/MdTheme.h"
 #include "styles/MdStyleBase.h"
@@ -14,20 +15,11 @@ namespace md {
 namespace {
 
 /// Quiet zone in modules, per the QR family's own scanning requirement.
+/// ISO/IEC 18004:2015 9.1 (light margin, 4 modules).
 constexpr int kQuietModules = 4;
 constexpr int kMinModule = 2;
 constexpr int kMaxModule = 16;
 constexpr int kDemoDimension = 21;
-
-/// Tiny non-ISO demo mixer. See the header note: this paints a stable
-/// module pattern from the payload; it is not a scannable encoder.
-quint32 mix32(quint32 &state)
-{
-    state ^= state << 13;
-    state ^= state >> 17;
-    state ^= state << 5;
-    return state;
-}
 
 } // namespace
 
@@ -153,62 +145,15 @@ QSize MdQRCode::minimumSizeHint() const
 
 void MdQRCode::regenerate()
 {
-    // Demo matrix only — stable per payload, finder-like corners so the
-    // silhouette reads as a code. Real codes come in through setMatrix().
-    m_dimension = kDemoDimension;
-    // QList(size, value) and QList::fill are Qt 6-only; grow with append,
-    // which is the portable spelling on Qt 5.
-    m_modules.clear();
-    m_modules.reserve(m_dimension * m_dimension);
-    for (int i = 0; i < m_dimension * m_dimension; ++i) {
-        m_modules.append(false);
+    // ISO/IEC 18004 byte-mode encode via MdQrEncoder (versions 1-10, EC M).
+    // A payload that does not fit leaves the previous matrix untouched so the
+    // widget never paints a half-true code.
+    const MdQrEncodeResult result = MdQrEncoder::encodeText(m_text, MdQrEcLevel::M);
+    if (!result.ok || result.dimension <= 0) {
+        return;
     }
-
-    quint32 state = 2166136261u;
-    const QByteArray utf8 = m_text.toUtf8();
-    for (int i = 0; i < utf8.size(); ++i) {
-        state ^= quint32(uchar(utf8.at(i)));
-        state *= 16777619u;
-    }
-    if (state == 0) {
-        state = 0x9e3779b9u;
-    }
-
-    auto setDark = [this](int x, int y, bool dark) {
-        if (x >= 0 && y >= 0 && x < m_dimension && y < m_dimension) {
-            m_modules[y * m_dimension + x] = dark;
-        }
-    };
-
-    // Finder-like eyes at three corners (7x7 ring + 3x3 core).
-    auto eye = [&](int ox, int oy) {
-        for (int y = 0; y < 7; ++y) {
-            for (int x = 0; x < 7; ++x) {
-                const bool ring = x == 0 || x == 6 || y == 0 || y == 6;
-                const bool core = x >= 2 && x <= 4 && y >= 2 && y <= 4;
-                setDark(ox + x, oy + y, ring || core);
-            }
-        }
-    };
-    eye(0, 0);
-    eye(m_dimension - 7, 0);
-    eye(0, m_dimension - 7);
-
-    // Timing-like rows and a seeded fill elsewhere.
-    for (int i = 8; i < m_dimension - 8; ++i) {
-        setDark(i, 6, i % 2 == 0);
-        setDark(6, i, i % 2 == 0);
-    }
-    for (int y = 0; y < m_dimension; ++y) {
-        for (int x = 0; x < m_dimension; ++x) {
-            const bool nearEye = (x < 8 && y < 8) || (x >= m_dimension - 8 && y < 8)
-                                 || (x < 8 && y >= m_dimension - 8);
-            if (nearEye || x == 6 || y == 6) {
-                continue;
-            }
-            setDark(x, y, (mix32(state) & 1u) != 0u);
-        }
-    }
+    m_dimension = result.dimension;
+    m_modules = result.modules;
 
     updateGeometry();
     update();

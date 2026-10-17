@@ -395,7 +395,9 @@ QRectF MdTree::chevronRectForRow(int row) const
         return QRectF();
     }
     const Row &r = rows.at(row);
-    const qreal x = r.depth * m_indent;
+    const bool rtl = layoutDirection() == Qt::RightToLeft;
+    const qreal x = rtl ? width() - (r.depth * m_indent) - kChevronBox
+                        : r.depth * m_indent;
     return QRectF(x, row * m_rowHeight, kChevronBox, m_rowHeight);
 }
 
@@ -473,14 +475,16 @@ void MdTree::paintEvent(QPaintEvent *event)
         }
 
         // Leading disclosure chevron for nodes with children.
-        const qreal indentX = row.depth * m_indent;
+        const bool rtl = layoutDirection() == Qt::RightToLeft;
+        const qreal indentX = rtl ? width() - row.depth * m_indent - kChevronBox
+                                  : row.depth * m_indent;
         if (row.hasChildren) {
             const QRectF chevron(indentX + (kChevronBox - kChevronSize) / 2.0,
                                  rowRect.center().y() - kChevronSize / 2.0,
                                  kChevronSize, kChevronSize);
             const QString glyph = row.item->isExpanded()
                 ? QStringLiteral("expand_less")
-                : QStringLiteral("chevron_right");
+                : (rtl ? QStringLiteral("chevron_left") : QStringLiteral("chevron_right"));
             const QColor chevronColour = selected ? onSecondaryContainer
                                                   : onSurfaceVariant;
             if (!MdIcon::paint(&painter, chevron, glyph, chevronColour)) {
@@ -510,11 +514,12 @@ void MdTree::paintEvent(QPaintEvent *event)
         const qreal textRight = width() - kTextInset;
         const QRectF textRect(textLeft, rowRect.top(),
                               qMax(0.0, textRight - textLeft), rowRect.height());
+        const int textAlign = int(MdStyleBase::leadingAlignment(this) | Qt::AlignVCenter);
         const QColor textColour = selected ? onSecondaryContainer : onSurface;
         if (row.item->supportingText().isEmpty()) {
             painter.setFont(headlineFont);
             painter.setPen(textColour);
-            painter.drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter,
+            painter.drawText(textRect, textAlign,
                              row.item->text());
         } else {
             const qreal line = qMin(rowRect.height() / 2.0, 28.0);
@@ -524,11 +529,11 @@ void MdTree::paintEvent(QPaintEvent *event)
                           textRect.width(), line);
             painter.setFont(headlineFont);
             painter.setPen(textColour);
-            painter.drawText(top, Qt::AlignLeft | Qt::AlignVCenter,
+            painter.drawText(top, textAlign,
                              row.item->text());
             painter.setFont(supportFont);
             painter.setPen(selected ? onSecondaryContainer : onSurfaceVariant);
-            painter.drawText(bottom, Qt::AlignLeft | Qt::AlignVCenter,
+            painter.drawText(bottom, textAlign,
                              row.item->supportingText());
         }
 

@@ -25,6 +25,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdStateLayer.h
     core/MdRipple.h
     core/MdFocusRing.h
+    core/MdQrEncoder.h
     core/MdBadgeTokens.h
     core/MdButtonTokens.h
     core/MdBottomSheetTokens.h
@@ -250,6 +251,7 @@ set(QT_MD3_SOURCES
     core/MdStateLayer.cpp
     core/MdRipple.cpp
     core/MdFocusRing.cpp
+    core/MdQrEncoder.cpp
     core/MdBadgeTokens.cpp
     core/MdButtonTokens.cpp
     core/MdBottomSheetTokens.cpp

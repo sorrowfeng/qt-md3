@@ -290,6 +290,29 @@ MdTopAppBarStyle::Layout MdTopAppBarStyle::layoutFor(const MdTopAppBar &bar,
     const qreal width = rect.width();
     const bool hasSubtitle = !bar.subtitle().isEmpty();
 
+    // RTL: navigation, actions and title slots mirror across the bar width.
+    const bool rtl = bar.layoutDirection() == Qt::RightToLeft;
+    const auto mirrorLayout = [width, rtl](Layout &l) {
+        if (!rtl) {
+            return;
+        }
+        const auto mirror = [width](QRectF &r) {
+            if (r.isValid()) {
+                r.moveLeft(width - r.left() - r.width());
+            }
+        };
+        mirror(l.navigation);
+        mirror(l.actions);
+        for (QRectF &box : l.actionBoxes) {
+            mirror(box);
+        }
+        mirror(l.center);
+        mirror(l.leadingTitle);
+        mirror(l.leadingSubtitle);
+        mirror(l.title);
+        mirror(l.subtitle);
+    };
+
     // Every slot in Compose's `TopAppBarLayout` is wrapped in a Box whose box
     // carries the 4 px on its own edge, and those Boxes exist even when their
     // content is empty. Reproducing that is what makes the second row's title
@@ -386,6 +409,7 @@ MdTopAppBarStyle::Layout MdTopAppBarStyle::layoutFor(const MdTopAppBar &bar,
     // app bar a *configuration* of the bar rather than a sixth layout.
     if (bar.centerWidget() != nullptr) {
         layout.hasTitle = false;
+        mirrorLayout(layout);
         return layout;
     }
 
@@ -460,6 +484,7 @@ MdTopAppBarStyle::Layout MdTopAppBarStyle::layoutFor(const MdTopAppBar &bar,
                                          expanded.subtitleHeight);
             }
         }
+        mirrorLayout(layout);
         return layout;
     }
 
@@ -471,6 +496,7 @@ MdTopAppBarStyle::Layout MdTopAppBarStyle::layoutFor(const MdTopAppBar &bar,
 
     if (column.width <= 0.0) {
         layout.hasTitle = false;
+        mirrorLayout(layout);
         return layout;
     }
 
@@ -482,7 +508,8 @@ MdTopAppBarStyle::Layout MdTopAppBarStyle::layoutFor(const MdTopAppBar &bar,
         layout.subtitle = QRectF(x + pad, top + column.titleHeight, column.width,
                                  column.subtitleHeight);
     }
-    return layout;
+    mirrorLayout(layout);
+        return layout;
 }
 
 void MdTopAppBarStyle::paintTopAppBar(QPainter &painter, const MdTopAppBar &bar,

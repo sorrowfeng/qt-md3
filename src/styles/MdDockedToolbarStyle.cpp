@@ -90,6 +90,14 @@ MdDockedToolbarStyle::Layout MdDockedToolbarStyle::layoutFor(const MdDockedToolb
         x += size.width() + gap;
     }
 
+    // RTL: the child run mirrors so the first child sits at the right edge.
+    if (toolbar.layoutDirection() == Qt::RightToLeft) {
+        const qreal w = expanded.left() + expanded.width();
+        for (QRectF &box : layout.childBoxes) {
+            box.moveLeft(w - box.left() - box.width());
+        }
+    }
+
     return layout;
 }
 

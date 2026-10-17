@@ -171,7 +171,9 @@ QRectF MdTextField::leadingIconRect() const
     }
     const MdTextFieldTokens &tokens = textFieldTokens();
     const qreal size = tokens.iconSize;
-    const qreal x = 16.0;
+    const qreal x = layoutDirection() == Qt::RightToLeft
+                        ? containerRect().width() - 16.0 - size
+                        : 16.0;
     const qreal y = (containerRect().height() - size) / 2.0;
     return QRectF(x, y, size, size);
 }
@@ -183,7 +185,9 @@ QRectF MdTextField::trailingIconRect() const
     }
     const MdTextFieldTokens &tokens = textFieldTokens();
     const qreal size = tokens.iconSize;
-    const qreal x = containerRect().width() - 16.0 - size;
+    const qreal x = layoutDirection() == Qt::RightToLeft
+                        ? 16.0
+                        : containerRect().width() - 16.0 - size;
     const qreal y = (containerRect().height() - size) / 2.0;
     return QRectF(x, y, size, size);
 }

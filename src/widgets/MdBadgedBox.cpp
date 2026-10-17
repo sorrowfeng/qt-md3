@@ -85,9 +85,12 @@ void MdBadgedBox::layoutChildren()
     const QSizeF badgeSize(m_badge->sizeHint());
 
     // The content fills the box minus the reserved overhang, mirroring
-    // Compose's "the anchor fills the BadgedBox".
+    // Compose's "the anchor fills the BadgedBox". The overhang sits at the
+    // badge's end edge: right in LTR, left in RTL.
     if (m_content) {
-        const QRectF contentRect(0.0, overhang.height(),
+        const bool contentRtl = layoutDirection() == Qt::RightToLeft;
+        const qreal contentX = contentRtl ? overhang.width() : 0.0;
+        const QRectF contentRect(contentX, overhang.height(),
                                  qMax<qreal>(width() - overhang.width(), 0.0),
                                  qMax<qreal>(height() - overhang.height(), 0.0));
         const QRect target(contentRect.toRect());
@@ -104,8 +107,12 @@ void MdBadgedBox::layoutChildren()
     const qreal verticalOffset =
         m_badge->hasContent() ? kContentVerticalOffset : kDotOffset;
 
-    const qreal left = (m_content ? m_content->geometry().right() + 1 : qreal(width()))
-                       - horizontalOffset;
+    const bool rtl = layoutDirection() == Qt::RightToLeft;
+    const qreal contentEnd = m_content ? m_content->geometry().right() + 1 : qreal(width());
+    const qreal contentStart = m_content ? m_content->geometry().left() : 0.0;
+    const qreal left = rtl
+                           ? contentStart + horizontalOffset - badgeSize.width()
+                           : contentEnd - horizontalOffset;
     const qreal top = overhang.height() - (badgeSize.height() - verticalOffset);
     const QRect target(int(std::round(left)), int(std::round(top)), int(badgeSize.width()),
                        int(badgeSize.height()));

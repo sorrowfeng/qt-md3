@@ -367,6 +367,23 @@ MdListItemStyle::Layout MdListItemStyle::layoutFor(const MdListItem &item,
         }
     }
 
+    // RTL: leading/trailing slots and the text column mirror across the
+    // item's width so the leading content sits at the right edge.
+    if (item.layoutDirection() == Qt::RightToLeft) {
+        const qreal w = widgetRect.left() + width;
+        const auto mirror = [w](QRectF &r) {
+            if (r.isValid()) {
+                r.moveLeft(w - r.left() - r.width());
+            }
+        };
+        mirror(layout.leading);
+        mirror(layout.trailing);
+        mirror(layout.overline);
+        mirror(layout.headline);
+        mirror(layout.supporting);
+        mirror(layout.trailingSupporting);
+    }
+
     return layout;
 }
 

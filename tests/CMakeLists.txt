@@ -1,4 +1,4 @@
-# qt-md3 tests.
+﻿# qt-md3 tests.
 #
 # As in the example directory, the Qt runtime is deployed next to the binaries
 # so `ctest` works from a plain shell rather than only from one that happens to
@@ -1990,6 +1990,29 @@ set_tests_properties(TestMd3Stage2Remainder PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3Stage2Remainder)
+
+# TestMd3QRCode — ISO/IEC 18004 encoder (byte mode, versions 1-10, EC L/M)
+# plus MdQRCode wiring. Structural validity + data-path round trip.
+add_executable(TestMd3QRCode
+    TestMd3QRCode.cpp
+)
+
+target_link_libraries(TestMd3QRCode
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3QRCode COMMAND TestMd3QRCode)
+set_tests_properties(TestMd3QRCode PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3QRCode)
+
 
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the
