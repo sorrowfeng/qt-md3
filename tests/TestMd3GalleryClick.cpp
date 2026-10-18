@@ -19,6 +19,8 @@
 #include "widgets/MdMenu.h"
 #include "widgets/MdList.h"
 #include "widgets/MdListItem.h"
+#include "widgets/MdNavigationBar.h"
+#include "widgets/MdNavigationBarItem.h"
 #include "widgets/MdRadioButton.h"
 #include "widgets/MdSegmentedButton.h"
 #include "widgets/MdSlider.h"
@@ -100,6 +102,63 @@ void clickCentre(QWidget *widget)
     Q_UNUSED(global);
 }
 
+/// Send a genuine press / move / release drag in widget-local coordinates.
+/// QTest::mouseMove alone never synthesises a MouseMove under the offscreen
+/// platform, so a slider never sees the drag without these events.
+void dragSequence(QWidget &widget, const QPoint &from, const QPoint &to)
+{
+    QMouseEvent press(QEvent::MouseButtonPress, QPointF(from),
+                      QPointF(widget.mapToGlobal(from)), Qt::LeftButton,
+                      Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(&widget, &press);
+    QMouseEvent move(QEvent::MouseMove, QPointF(to),
+                     QPointF(widget.mapToGlobal(to)), Qt::LeftButton,
+                     Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(&widget, &move);
+    QMouseEvent release(QEvent::MouseButtonRelease, QPointF(to),
+                        QPointF(widget.mapToGlobal(to)), Qt::LeftButton,
+                        Qt::NoButton, Qt::NoModifier);
+    QApplication::sendEvent(&widget, &release);
+}
+
+/// Pump events for ms so animations, theme fan-out and layout settle.
+void pump(int ms)
+{
+    QElapsedTimer clock;
+    clock.start();
+    while (clock.elapsed() < ms) {
+        QCoreApplication::processEvents();
+        QThread::msleep(4);
+    }
+    QCoreApplication::processEvents();
+}
+
+/// Force a page through paintEvent, which re-runs build() — the path a
+/// clobbering build() uses to wipe a click the user just made.
+void forceRebuild(QWidget *page)
+{
+    if (page == nullptr) {
+        return;
+    }
+    page->repaint();
+    QCoreApplication::processEvents();
+}
+
+/// Child of the page carrying the given objectName, or null.
+QWidget *namedChild(QWidget *page, const char *name)
+{
+    if (page == nullptr) {
+        return nullptr;
+    }
+    const QList<QWidget *> all = page->findChildren<QWidget *>();
+    for (QWidget *w : all) {
+        if (w->objectName() == QLatin1String(name)) {
+            return w;
+        }
+    }
+    return nullptr;
+}
+
 } // namespace
 
 class TestMd3GalleryClick : public QObject
@@ -132,6 +191,12 @@ private slots:
     void showcaseMusicPageClickEmits();
     void showcaseSettingsPageClickToggles();
     void dynamicColourPageClickChangesProbe();
+    void mailInboxFullJourney();
+    void musicPlayerFullJourney();
+    void settingsFullJourney();
+    void dynamicColourFullJourney();
+    void keyboardJourney();
+    void darkSeedInteractionPass();
 
     // Diagnostic: every enabled interactive child of a page must be the
     // hit-test winner at its own centre. Reports the first cover/geometry
@@ -1177,6 +1242,378 @@ void TestMd3GalleryClick::hitTestSweep()
     QVERIFY2(failures.isEmpty(), qPrintable(failures.join(QStringLiteral("\n"))));
 }
 
+// ---------------------------------------------------------------------------
+// Full user journeys on the product showcases
+// ---------------------------------------------------------------------------
+
+void TestMd3GalleryClick::mailInboxFullJourney()
+{
+    const int page = pageIndexBySlug(QStringLiteral("showcase-mail"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+    QWidget *pageW = m_window->pageWidget(page);
+    QVERIFY(pageW);
+
+    // 1. Click a list row that is not already selected: activated + selected.
+    MdListItem *row = qobject_cast<MdListItem *>(namedChild(pageW, "m2"));
+    if (row == nullptr) {
+        const QList<MdListItem *> items = liveWidgets<MdListItem>(*m_window, page);
+        for (MdListItem *item : items) {
+            if (item->isInteractive() && !item->isSelected()) {
+                row = item;
+                break;
+            }
+        }
+    }
+    QVERIFY2(row != nullptr, "mail journey: no clickable unselected row");
+    QSignalSpy activated(row, &MdListItem::activated);
+    clickCentre(row);
+    QVERIFY2(activated.count() >= 1, "mail journey: row click did not activate");
+    QVERIFY2(row->isSelected(), "mail journey: row click did not select");
+
+    // 2. Type into search and press Enter.
+    MdSearchBar *search = qobject_cast<MdSearchBar *>(namedChild(pageW, "mail-search"));
+    if (search == nullptr) {
+        const QList<MdSearchBar *> bars = liveWidgets<MdSearchBar>(*m_window, page);
+        QVERIFY2(!bars.isEmpty(), "mail journey: no search bar");
+        search = bars.first();
+    }
+    clickCentre(search);
+    QVERIFY2(search->hasFocus(), "mail journey: search did not take focus");
+    search->clear();
+    QTest::keyClicks(search, QStringLiteral("invoice"));
+    QCOMPARE(search->text(), QStringLiteral("invoice"));
+    QSignalSpy searchSpy(search, &MdSearchBar::searchRequested);
+    QTest::keyClick(search, Qt::Key_Return);
+    QCOMPARE(searchSpy.count(), 1);
+
+    // 3. Toggle a filter chip and prove the state survives a rebuild.
+    MdChip *unread = qobject_cast<MdChip *>(namedChild(pageW, "unread"));
+    QVERIFY2(unread != nullptr, "mail journey: no Unread filter chip");
+    const bool chipBefore = unread->isChecked();
+    QSignalSpy chipSpy(unread, &QAbstractButton::clicked);
+    clickCentre(unread);
+    QCOMPARE(chipSpy.count(), 1);
+    QVERIFY(unread->isChecked() != chipBefore);
+    forceRebuild(pageW);
+    QVERIFY2(unread->isChecked() != chipBefore,
+             "mail journey: filter chip state was clobbered by build()");
+
+    // 4. Compose FAB emits clicked.
+    MdFab *fab = qobject_cast<MdFab *>(namedChild(pageW, "compose"));
+    QVERIFY2(fab != nullptr, "mail journey: no compose FAB");
+    QSignalSpy fabSpy(fab, &QAbstractButton::clicked);
+    clickCentre(fab);
+    QCOMPARE(fabSpy.count(), 1);
+
+    // 5. Switch the bottom navigation destination.
+    MdNavigationBar *nav = liveWidgets<MdNavigationBar>(*m_window, page).value(0);
+    QVERIFY(nav != nullptr);
+    QVERIFY(nav->count() >= 2);
+    const int beforeIndex = nav->currentIndex();
+    MdNavigationBarItem *other = nav->itemAt(beforeIndex == 0 ? 1 : 0);
+    QVERIFY(other != nullptr);
+    QSignalSpy navSpy(nav, &MdNavigationBar::currentIndexChanged);
+    clickCentre(other);
+    QVERIFY(navSpy.count() >= 1);
+    QVERIFY(nav->currentIndex() != beforeIndex);
+}
+
+void TestMd3GalleryClick::musicPlayerFullJourney()
+{
+    const int page = pageIndexBySlug(QStringLiteral("showcase-music"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+    QWidget *pageW = m_window->pageWidget(page);
+    QVERIFY(pageW);
+
+    // 1. Drag the scrubber.
+    MdSlider *slider = qobject_cast<MdSlider *>(namedChild(pageW, "scrubber"));
+    if (slider == nullptr) {
+        const QList<MdSlider *> sliders = liveWidgets<MdSlider>(*m_window, page);
+        QVERIFY2(!sliders.isEmpty(), "music journey: no scrubber");
+        slider = sliders.first();
+    }
+    const qreal valueBefore = slider->value();
+    QSignalSpy valueSpy(slider, &MdSlider::valueChanged);
+    const QRect r = slider->rect();
+    dragSequence(*slider, QPoint(r.left() + 4, r.center().y()),
+                 QPoint(r.right() - 8, r.center().y()));
+    QVERIFY2(valueSpy.count() >= 1, "music journey: scrubber drag produced no valueChanged");
+    QVERIFY(slider->value() != valueBefore);
+
+    // 2. Transport buttons emit clicked.
+    MdFab *play = qobject_cast<MdFab *>(namedChild(pageW, "play"));
+    QVERIFY2(play != nullptr, "music journey: no play FAB");
+    QSignalSpy playSpy(play, &QAbstractButton::clicked);
+    clickCentre(play);
+    QCOMPARE(playSpy.count(), 1);
+
+    MdIconButton *next = qobject_cast<MdIconButton *>(namedChild(pageW, "next"));
+    QVERIFY2(next != nullptr, "music journey: no next transport button");
+    QSignalSpy nextSpy(next, &QAbstractButton::clicked);
+    clickCentre(next);
+    QCOMPARE(nextSpy.count(), 1);
+
+    // 3. Toggle a playlist chip; the state must survive build().
+    MdChip *focus = qobject_cast<MdChip *>(namedChild(pageW, "focus"));
+    QVERIFY2(focus != nullptr, "music journey: no Focus playlist chip");
+    const bool chipBefore = focus->isChecked();
+    QSignalSpy chipSpy(focus, &QAbstractButton::clicked);
+    clickCentre(focus);
+    QCOMPARE(chipSpy.count(), 1);
+    QVERIFY(focus->isChecked() != chipBefore);
+    forceRebuild(pageW);
+    QVERIFY2(focus->isChecked() != chipBefore,
+             "music journey: playlist chip state was clobbered by build()");
+}
+
+void TestMd3GalleryClick::settingsFullJourney()
+{
+    const int page = pageIndexBySlug(QStringLiteral("showcase-settings"));
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+    QWidget *pageW = m_window->pageWidget(page);
+    QVERIFY(pageW);
+
+    // 1. Flip the dark switch; it must survive build() and move the theme.
+    MdSwitch *dark = qobject_cast<MdSwitch *>(namedChild(pageW, "dark"));
+    QVERIFY2(dark != nullptr, "settings journey: no dark switch");
+    const bool darkBefore = dark->isChecked();
+    const ThemeMode modeBefore = MdTheme::instance().themeMode();
+    QSignalSpy darkSpy(dark, &QAbstractButton::clicked);
+    clickCentre(dark);
+    QCOMPARE(darkSpy.count(), 1);
+    QVERIFY(dark->isChecked() != darkBefore);
+    QVERIFY(MdTheme::instance().themeMode() != modeBefore);
+    forceRebuild(pageW);
+    QVERIFY2(dark->isChecked() != darkBefore,
+             "settings journey: dark switch state was clobbered by build()");
+    // Flip back so later steps start from a known mode.
+    clickCentre(dark);
+    pump(20);
+
+    // 2. Select a radio; exclusivity and stickiness across build().
+    MdRadioButton *light = qobject_cast<MdRadioButton *>(namedChild(pageW, "theme-light"));
+    MdRadioButton *system = qobject_cast<MdRadioButton *>(namedChild(pageW, "theme-system"));
+    QVERIFY(light != nullptr);
+    QVERIFY(system != nullptr);
+    QSignalSpy lightSpy(light, &QAbstractButton::clicked);
+    clickCentre(light);
+    QCOMPARE(lightSpy.count(), 1);
+    QVERIFY(light->isChecked());
+    QVERIFY(!system->isChecked());
+    forceRebuild(pageW);
+    QVERIFY2(light->isChecked() && !system->isChecked(),
+             "settings journey: radio selection was clobbered by build()");
+
+    // 3. Drag the text-size slider.
+    const QList<MdSlider *> sliders = liveWidgets<MdSlider>(*m_window, page);
+    QVERIFY2(!sliders.isEmpty(), "settings journey: no slider");
+    MdSlider *slider = sliders.first();
+    const qreal valueBefore = slider->value();
+    QSignalSpy valueSpy(slider, &MdSlider::valueChanged);
+    const QRect r = slider->rect();
+    dragSequence(*slider, QPoint(r.center().x(), r.center().y()),
+                 QPoint(r.right() - 4, r.center().y()));
+    QVERIFY(valueSpy.count() >= 1);
+    QVERIFY(slider->value() != valueBefore);
+
+    // 4. Open the language menu and pick an item.
+    MdButton *langButton = qobject_cast<MdButton *>(namedChild(pageW, "language-button"));
+    QVERIFY2(langButton != nullptr, "settings journey: no language button");
+    MdMenu *langMenu = qobject_cast<MdMenu *>(namedChild(pageW, "language-menu"));
+    QVERIFY2(langMenu != nullptr, "settings journey: no language menu");
+    QVERIFY2(!langMenu->isVisible(), "settings journey: language menu already open");
+
+    clickCentre(langButton);
+    QVERIFY2(langMenu->isVisible(), "settings journey: language menu did not open");
+    pump(400); // open animation
+
+    const QList<MdMenuItem *> items = langMenu->items();
+    QVERIFY(items.size() >= 2);
+    MdMenuItem *pick = items.at(1); // English
+    QVERIFY(pick->isEnabled());
+    QSignalSpy pickSpy(pick, &QAbstractButton::clicked);
+    clickCentre(pick);
+    QCOMPARE(pickSpy.count(), 1);
+    QVERIFY2(!langMenu->isVisible(), "settings journey: menu stayed open after pick");
+    QCOMPARE(langButton->text(), pick->text());
+
+    // 5. Re-open and dismiss with Esc.
+    clickCentre(langButton);
+    QVERIFY(langMenu->isVisible());
+    pump(400);
+    QSignalSpy closedSpy(langMenu, &MdMenu::closed);
+    QTest::keyClick(langMenu, Qt::Key_Escape);
+    QVERIFY2(!langMenu->isVisible(), "settings journey: Esc did not close the menu");
+    QVERIFY(closedSpy.count() >= 1);
+}
+
+void TestMd3GalleryClick::dynamicColourFullJourney()
+{
+    int page = pageIndexBySlug(QStringLiteral("dynamic-colour"));
+    if (page < 0) {
+        page = pageIndexBySlug(QStringLiteral("Dynamic colour"));
+    }
+    QVERIFY(page >= 0);
+    settle(*m_window, page);
+    QWidget *pageW = m_window->pageWidget(page);
+    QVERIFY(pageW);
+
+    const QColor originalSeed = MdTheme::instance().seedColor();
+    const SchemeVariant originalVariant = MdTheme::instance().schemeVariant();
+    const ThemeMode originalMode = MdTheme::instance().themeMode();
+
+    // 1. Click a seed swatch: theme seed moves and the probe recolours.
+    QWidget *probe = namedChild(pageW, "dynamic-colour-probe");
+    QVERIFY(probe != nullptr);
+    QWidget *seed = namedChild(pageW, "seed-swatch-3"); // green
+    QVERIFY2(seed != nullptr, "dynamic journey: no seed-swatch-3");
+    const QPixmap before = probe->grab();
+    clickCentre(seed);
+    settle(*m_window, page);
+    QCOMPARE(MdTheme::instance().seedColor(), QColor("#2E7D32"));
+    const QPixmap after = probe->grab();
+    QVERIFY(!before.isNull() && !after.isNull());
+    QVERIFY(before.toImage() != after.toImage());
+
+    // 2. Switch the scheme variant.
+    QWidget *variantChip = namedChild(pageW, "variant-chip-1"); // Vibrant
+    QVERIFY2(variantChip != nullptr, "dynamic journey: no variant-chip-1");
+    clickCentre(variantChip);
+    settle(*m_window, page);
+    QCOMPARE(int(MdTheme::instance().schemeVariant()), int(SchemeVariant::Vibrant));
+
+    // 3. Toggle dark via the mode chip.
+    QWidget *modeChip = namedChild(pageW, "action-mode");
+    QVERIFY2(modeChip != nullptr, "dynamic journey: no action-mode chip");
+    clickCentre(modeChip);
+    settle(*m_window, page);
+    QVERIFY(MdTheme::instance().themeMode() != originalMode);
+
+    // Restore.
+    MdTheme::instance().setSeedColor(originalSeed);
+    MdTheme::instance().setSchemeVariant(originalVariant);
+    MdTheme::instance().setThemeMode(originalMode);
+    pump(20);
+}
+
+void TestMd3GalleryClick::keyboardJourney()
+{
+    // Mail: Tab into the search field, type, Enter to activate.
+    int mail = pageIndexBySlug(QStringLiteral("showcase-mail"));
+    QVERIFY(mail >= 0);
+    settle(*m_window, mail);
+    QWidget *mailW = m_window->pageWidget(mail);
+    MdSearchBar *search = qobject_cast<MdSearchBar *>(namedChild(mailW, "mail-search"));
+    QVERIFY(search != nullptr);
+    search->clear();
+    search->setFocus(Qt::TabFocusReason);
+    QVERIFY2(search->hasFocus(), "keyboard: Tab did not land in search");
+    QTest::keyClicks(search, QStringLiteral("keyboard"));
+    QCOMPARE(search->text(), QStringLiteral("keyboard"));
+    QSignalSpy searchSpy(search, &MdSearchBar::searchRequested);
+    QTest::keyClick(search, Qt::Key_Enter);
+    QCOMPARE(searchSpy.count(), 1);
+
+    // Mail: Space on a focused chip toggles it.
+    MdChip *starred = qobject_cast<MdChip *>(namedChild(mailW, "starred"));
+    QVERIFY(starred != nullptr);
+    const bool starredBefore = starred->isChecked();
+    starred->setFocus(Qt::TabFocusReason);
+    QVERIFY(starred->hasFocus());
+    QTest::keyClick(starred, Qt::Key_Space);
+    QVERIFY(starred->isChecked() != starredBefore);
+
+    // Settings: Esc closes the language popup.
+    int settings = pageIndexBySlug(QStringLiteral("showcase-settings"));
+    QVERIFY(settings >= 0);
+    settle(*m_window, settings);
+    QWidget *settingsW = m_window->pageWidget(settings);
+    MdButton *langButton = qobject_cast<MdButton *>(namedChild(settingsW, "language-button"));
+    MdMenu *langMenu = qobject_cast<MdMenu *>(namedChild(settingsW, "language-menu"));
+    QVERIFY(langButton != nullptr && langMenu != nullptr);
+    clickCentre(langButton);
+    QVERIFY(langMenu->isVisible());
+    pump(400);
+    QTest::keyClick(langMenu, Qt::Key_Escape);
+    QVERIFY2(!langMenu->isVisible(), "keyboard: Esc did not close the language menu");
+}
+
+void TestMd3GalleryClick::darkSeedInteractionPass()
+{
+    // One non-default seed under dark theme: the same journeys must still
+    // accept clicks, type and toggles.
+    const QColor originalSeed = MdTheme::instance().seedColor();
+    const ThemeMode originalMode = MdTheme::instance().themeMode();
+    MdTheme::instance().setSeedColor(QColor("#E8710A"));
+    MdTheme::instance().setThemeMode(ThemeMode::Dark);
+    pump(30);
+
+    int mail = pageIndexBySlug(QStringLiteral("showcase-mail"));
+    QVERIFY(mail >= 0);
+    settle(*m_window, mail);
+    QWidget *mailW = m_window->pageWidget(mail);
+    QVERIFY(mailW);
+
+    MdListItem *row = qobject_cast<MdListItem *>(namedChild(mailW, "m3"));
+    QVERIFY(row != nullptr);
+    QSignalSpy activated(row, &MdListItem::activated);
+    clickCentre(row);
+    QVERIFY(activated.count() >= 1);
+
+    MdChip *work = qobject_cast<MdChip *>(namedChild(mailW, "work"));
+    QVERIFY(work != nullptr);
+    const bool workBefore = work->isChecked();
+    clickCentre(work);
+    QVERIFY(work->isChecked() != workBefore);
+    forceRebuild(mailW);
+    QVERIFY2(work->isChecked() != workBefore,
+             "dark+seed: chip state was clobbered by build()");
+
+    MdSearchBar *search = qobject_cast<MdSearchBar *>(namedChild(mailW, "mail-search"));
+    QVERIFY(search != nullptr);
+    clickCentre(search);
+    search->clear();
+    QTest::keyClicks(search, QStringLiteral("dark"));
+    QCOMPARE(search->text(), QStringLiteral("dark"));
+
+    int music = pageIndexBySlug(QStringLiteral("showcase-music"));
+    QVERIFY(music >= 0);
+    settle(*m_window, music);
+    QWidget *musicW = m_window->pageWidget(music);
+    MdSlider *slider = qobject_cast<MdSlider *>(namedChild(musicW, "scrubber"));
+    QVERIFY(slider != nullptr);
+    const qreal valueBefore = slider->value();
+    QSignalSpy valueSpy(slider, &MdSlider::valueChanged);
+    const QRect r = slider->rect();
+    // Seek away from the current value either way so the drag always moves
+    // the handle, even when an earlier journey left it at an extreme.
+    const bool seekUp = slider->value() < 50.0;
+    const QPoint from = seekUp ? QPoint(r.left() + 4, r.center().y())
+                               : QPoint(r.right() - 4, r.center().y());
+    const QPoint to = seekUp ? QPoint(r.right() - 8, r.center().y())
+                             : QPoint(r.left() + 8, r.center().y());
+    dragSequence(*slider, from, to);
+    QVERIFY(valueSpy.count() >= 1);
+    QVERIFY(slider->value() != valueBefore);
+
+    int settings = pageIndexBySlug(QStringLiteral("showcase-settings"));
+    QVERIFY(settings >= 0);
+    settle(*m_window, settings);
+    QWidget *settingsW = m_window->pageWidget(settings);
+    MdRadioButton *light = qobject_cast<MdRadioButton *>(namedChild(settingsW, "theme-light"));
+    QVERIFY(light != nullptr);
+    clickCentre(light);
+    QVERIFY(light->isChecked());
+    forceRebuild(settingsW);
+    QVERIFY(light->isChecked());
+
+    MdTheme::instance().setSeedColor(originalSeed);
+    MdTheme::instance().setThemeMode(originalMode);
+    pump(20);
+}
 QTEST_MAIN(TestMd3GalleryClick)
 
 #include "TestMd3GalleryClick.moc"

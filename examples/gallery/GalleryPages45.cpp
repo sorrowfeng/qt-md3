@@ -18,6 +18,7 @@
 #include "I18n.h"
 
 #include <QtCore/QHash>
+#include <QtCore/QSet>
 #include <QtCore/QVector>
 
 #include <cmath>
@@ -90,6 +91,9 @@ private:
     md::MdList *m_list = nullptr;
     QHash<QString, md::MdListItem *> m_items;
     QVector<Slot> m_slots;
+    /// Ids whose interaction state has already been seeded from the scene.
+    /// build() re-runs on every measure/paint and must not clobber a click.
+    QSet<QString> m_stateSeeded;
 };
 
 ShowcaseMusicPage::ShowcaseMusicPage(QWidget *parent)
@@ -123,6 +127,7 @@ md::MdIconButton *ShowcaseMusicPage::iconButton(const QString &id, const QString
         return found.value();
     }
     auto *created = new md::MdIconButton(icon, this);
+    created->setObjectName(id);
     created->hide();
     m_iconButtons.insert(id, created);
     return created;
@@ -136,6 +141,7 @@ md::MdFab *ShowcaseMusicPage::transportFab()
     // Primary play: the one filled large control, so the screen spends its
     // colour ceremony on the action that matters.
     m_playFab = new md::MdFab(QStringLiteral("play_arrow"), this);
+    m_playFab->setObjectName(QStringLiteral("play"));
     m_playFab->setVariant(md::FabVariant::Primary);
     m_playFab->setFabSize(md::FabSize::Large);
     m_playFab->hide();
@@ -146,6 +152,7 @@ md::MdSlider *ShowcaseMusicPage::progressSlider()
 {
     if (m_slider == nullptr) {
         m_slider = new md::MdSlider(this);
+        m_slider->setObjectName(QStringLiteral("scrubber"));
         m_slider->setMin(0.0);
         m_slider->setMax(100.0);
         m_slider->setValue(32.0);
@@ -161,6 +168,7 @@ md::MdChip *ShowcaseMusicPage::chip(const QString &id, const QString &label)
         return found.value();
     }
     auto *created = new md::MdChip(label, this);
+    created->setObjectName(id);
     created->setVariant(md::MdChipVariant::Filter);
     created->hide();
     m_chips.insert(id, created);
@@ -327,8 +335,12 @@ void ShowcaseMusicPage::build(GalleryContext &context)
         };
         qreal chipX = left + 28.0;
         for (const ChipEntry &entry : entries) {
-            md::MdChip *c = chip(QString::fromUtf8(entry.id), L(entry.zh, entry.en));
-            c->setChecked(entry.selected);
+            const QString id = QString::fromUtf8(entry.id);
+            md::MdChip *c = chip(id, L(entry.zh, entry.en));
+            if (!m_stateSeeded.contains(id)) {
+                c->setChecked(entry.selected);
+                m_stateSeeded.insert(id);
+            }
             const qreal w = qMax<qreal>(c->sizeHint().width(), 72.0);
             m_slots.append(Slot{c, QRectF(chipX, y, w, chipHeight)});
             chipX += w + 8.0;

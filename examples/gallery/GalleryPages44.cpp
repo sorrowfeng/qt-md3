@@ -173,6 +173,7 @@ md::MdIconButton *ShowcaseMailPage::iconButton(const QString &id, const QString 
         return found.value();
     }
     auto *created = new md::MdIconButton(icon, this);
+    created->setObjectName(id);
     created->hide();
     m_iconButtons.insert(id, created);
     return created;
@@ -196,6 +197,7 @@ md::MdSearchBar *ShowcaseMailPage::searchBar()
 {
     if (m_search == nullptr) {
         m_search = new md::MdSearchBar(this);
+        m_search->setObjectName(QStringLiteral("mail-search"));
         m_search->hide();
     }
     return m_search;
@@ -208,6 +210,7 @@ md::MdChip *ShowcaseMailPage::chip(const QString &id, const QString &label)
         return found.value();
     }
     auto *created = new md::MdChip(label, this);
+    created->setObjectName(id);
     created->setVariant(md::MdChipVariant::Filter);
     created->hide();
     m_chips.insert(id, created);
@@ -231,6 +234,7 @@ md::MdListItem *ShowcaseMailPage::mailItem(const QString &id)
         return found.value();
     }
     auto *created = new md::MdListItem(this);
+    created->setObjectName(id);
     created->setInteractive(true);
     created->setLeadingKind(md::MdListItem::LeadingKind::Avatar);
     m_items.insert(id, created);
@@ -241,6 +245,7 @@ md::MdFab *ShowcaseMailPage::composeFab()
 {
     if (m_fab == nullptr) {
         m_fab = new md::MdFab(QStringLiteral("edit"), this);
+        m_fab->setObjectName(QStringLiteral("compose"));
         m_fab->setVariant(md::FabVariant::Tertiary);
         m_fab->setFabSize(md::FabSize::Large);
         m_fab->hide();
@@ -265,6 +270,7 @@ md::MdNavigationBarItem *ShowcaseMailPage::navItem(const QString &id, const QStr
         return found.value();
     }
     auto *created = new md::MdNavigationBarItem(label, icon, this);
+    created->setObjectName(id);
     created->hide();
     m_navItems.insert(id, created);
     return created;

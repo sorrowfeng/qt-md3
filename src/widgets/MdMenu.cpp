@@ -305,6 +305,13 @@ void MdMenu::addItem(MdMenuItem *item)
     item->show();
     m_items.append(item);
     m_rows.append(item);
+    // Activation dismisses a real popup (the `closed()` contract); an
+    // embedded surface (window flags stripped to Qt::Widget) stays put.
+    connect(item, &QAbstractButton::clicked, this, [this] {
+        if (isWindow()) {
+            closeAndAccept();
+        }
+    });
     relayout();
 }
 

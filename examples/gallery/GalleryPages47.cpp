@@ -497,6 +497,7 @@ void DynamicColourPage::build(GalleryContext &context)
                     auto *created =
                         new VariantChip(variants[i].variant, QString::fromUtf8(variants[i].label),
                                         this);
+                    created->setObjectName(QStringLiteral("variant-chip-%1").arg(i));
                     connect(created, &VariantChip::picked, this, &DynamicColourPage::applyVariant);
                     m_variants.append(created);
                     return created;
@@ -510,6 +511,7 @@ void DynamicColourPage::build(GalleryContext &context)
         const QRectF band = context.band(40.0);
         m_modeChip = bank<ActionChip>(QStringLiteral("mode"), [this] {
             auto *created = new ActionChip(QStringLiteral("mode"), this);
+            created->setObjectName(QStringLiteral("action-mode"));
             connect(created, &ActionChip::picked, this, [] {
                 md::MdTheme::instance().toggleThemeMode();
             });
@@ -517,6 +519,7 @@ void DynamicColourPage::build(GalleryContext &context)
         });
         m_contrastChip = bank<ActionChip>(QStringLiteral("contrast"), [this] {
             auto *created = new ActionChip(QStringLiteral("contrast"), this);
+            created->setObjectName(QStringLiteral("action-contrast"));
             connect(created, &ActionChip::picked, this, [] {
                 md::MdTheme &theme = md::MdTheme::instance();
                 const int next = (int(theme.contrastLevel()) + 1) % int(md::ContrastLevel::Count);
@@ -526,6 +529,7 @@ void DynamicColourPage::build(GalleryContext &context)
         });
         m_dynamicChip = bank<ActionChip>(QStringLiteral("dynamic"), [this] {
             auto *created = new ActionChip(QStringLiteral("dynamic"), this);
+            created->setObjectName(QStringLiteral("action-dynamic"));
             connect(created, &ActionChip::picked, this, [] {
                 md::MdTheme &theme = md::MdTheme::instance();
                 theme.setDynamicColor(!theme.isDynamicColor());

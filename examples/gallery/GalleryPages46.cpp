@@ -8,6 +8,8 @@
 
 #include "GalleryPages.h"
 
+#include "core/MdTheme.h"
+
 #include "widgets/MdButton.h"
 #include "widgets/MdIconButton.h"
 #include "widgets/MdMenu.h"
@@ -18,6 +20,8 @@
 #include "I18n.h"
 
 #include <QtCore/QHash>
+#include <QtCore/QSet>
+#include <QtCore/QStringList>
 #include <QtCore/QVector>
 
 #include <cmath>
@@ -73,6 +77,9 @@ private:
     md::MdButton *m_menuButton = nullptr;
     md::MdMenu *m_menu = nullptr;
     QVector<Slot> m_slots;
+    /// Ids whose interaction state has already been seeded from the scene.
+    /// build() re-runs on every measure/paint and must not clobber a click.
+    QSet<QString> m_stateSeeded;
 };
 
 ShowcaseSettingsPage::ShowcaseSettingsPage(QWidget *parent)
@@ -118,7 +125,15 @@ md::MdSwitch *ShowcaseSettingsPage::toggle(const QString &id)
         return found.value();
     }
     auto *created = new md::MdSwitch(this);
+    created->setObjectName(id);
     created->hide();
+    if (id == QLatin1String("dark")) {
+        // The row claims "switch between light and dark surfaces", so the
+        // control has to drive MdTheme rather than only flip its own thumb.
+        connect(created, &QAbstractButton::clicked, this, [] {
+            md::MdTheme::instance().toggleThemeMode();
+        });
+    }
     m_switches.insert(id, created);
     return created;
 }
@@ -130,7 +145,17 @@ md::MdRadioButton *ShowcaseSettingsPage::radio(const QString &id, const QString 
         return found.value();
     }
     auto *created = new md::MdRadioButton(label, this);
+    created->setObjectName(id);
     created->hide();
+    if (id == QLatin1String("theme-light")) {
+        connect(created, &QAbstractButton::clicked, this, [] {
+            md::MdTheme::instance().setThemeMode(md::ThemeMode::Light);
+        });
+    } else if (id == QLatin1String("theme-dark")) {
+        connect(created, &QAbstractButton::clicked, this, [] {
+            md::MdTheme::instance().setThemeMode(md::ThemeMode::Dark);
+        });
+    }
     m_radios.insert(id, created);
     return created;
 }
@@ -151,9 +176,15 @@ md::MdButton *ShowcaseSettingsPage::menuButton()
 {
     if (m_menuButton == nullptr) {
         m_menuButton = new md::MdButton(this);
+        m_menuButton->setObjectName(QStringLiteral("language-button"));
         m_menuButton->setVariant(md::ButtonVariant::Outlined);
         m_menuButton->setTrailingIcon(QStringLiteral("expand_more"));
         m_menuButton->hide();
+        connect(m_menuButton, &QAbstractButton::clicked, this, [this] {
+            md::MdMenu *popup = menu();
+            const QPoint topLeft = m_menuButton->mapToGlobal(QPoint(0, 0));
+            popup->popup(QRect(topLeft, m_menuButton->size()));
+        });
     }
     return m_menuButton;
 }
@@ -162,10 +193,25 @@ md::MdMenu *ShowcaseSettingsPage::menu()
 {
     if (m_menu == nullptr) {
         m_menu = new md::MdMenu(this);
-        m_menu->addItem(L("简体中文", "Simplified Chinese"));
-        m_menu->addItem(L("英语", "English"));
-        m_menu->addDivider();
-        m_menu->addItem(L("跟随系统", "Follow system"));
+        m_menu->setObjectName(QStringLiteral("language-menu"));
+        const QStringList labels = {
+            L("简体中文", "Simplified Chinese"),
+            L("英语", "English"),
+            QString(), // divider
+            L("跟随系统", "Follow system"),
+        };
+        for (const QString &label : labels) {
+            if (label.isEmpty()) {
+                m_menu->addDivider();
+                continue;
+            }
+            md::MdMenuItem *item = m_menu->addItem(label);
+            connect(item, &QAbstractButton::clicked, this, [this, item] {
+                if (m_menuButton != nullptr) {
+                    m_menuButton->setText(item->text());
+                }
+            });
+        }
     }
     return m_menu;
 }
@@ -315,7 +361,10 @@ void ShowcaseSettingsPage::build(GalleryContext &context)
             md::MdRadioButton *dark = radio(QStringLiteral("theme-dark"), L("深色", "Dark"));
             md::MdRadioButton *system = radio(QStringLiteral("theme-system"),
                                               L("跟随系统", "System"));
-            system->setChecked(true);
+            if (!m_stateSeeded.contains(QStringLiteral("theme-system"))) {
+                system->setChecked(true);
+                m_stateSeeded.insert(QStringLiteral("theme-system"));
+            }
             const qreal radioW = 96.0;
             const qreal baseX = panel.right() - 3.0 * radioW - 16.0;
             m_slots.append(Slot{light, QRectF(baseX, rowY + 12.0, radioW, 40.0)});
