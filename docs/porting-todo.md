@@ -1,4 +1,4 @@
-# Porting TODO
+﻿# Porting TODO
 
 Upstream gaps and outstanding work. Stage 1 must be green before any Stage 2 item
 is started (see [md3-coverage.md](md3-coverage.md)).
@@ -1275,12 +1275,13 @@ Twelve divergences and gaps were found and are recorded rather than smoothed:
   interactive-size concept beside the container), not a toolbar one — recorded
   here because it is the toolbar that shows the difference. It is the icon-button
   family's sibling of the `MdFab` 80 px gap above.
-* **RTL is not mirrored**, as everywhere else in this library:
-  `MdTheme::isRightToLeft()` reaches only the four button families, and neither
-  toolbar reads it. A toolbar is the largest `placeRelative`-positioned
-  component in the set, so the gap is proportionally the most visible here.
-  `TestMd3Toolbar::rtlIsNotMirrored` pins the current behaviour so a future RTL
-  pass has to change it deliberately.
+* **RTL mirrors the slot run.** `MdFloatingToolbarStyle::layoutFor` places the
+  leading / content / trailing run along the Axis' main direction and then
+  flips the whole run on that axis under `Qt::RightToLeft` — the same pass
+  `MdDockedToolbarStyle` takes on its horizontal row, written in main/cross so
+  the vertical toolbar's top-to-bottom run flips too. `TestMd3Toolbar::
+  rtlMirrorsTheSlotRun` pins the flip in both orientations and the LTR walk
+  that must stay put.
 * **`MdToolbarFabPosition` is one enum, not two.** Compose splits the concept
   into `FloatingToolbarHorizontalFabPosition {Start, End}` and
   `FloatingToolbarVerticalFabPosition {Top, Bottom}`; both are the same two
@@ -1868,7 +1869,8 @@ MdExtendedFab / MdFabMenu (four button families + FAB), MdChip, MdSwitch,
 MdSlider, MdMenu / MdExpressiveMenu, MdSearchBar, MdTextField (leading and
 trailing icon rects), MdTextArea, MdListItem (leading/trailing/text column),
 MdTopAppBar (navigation/actions/title slots), MdTabs (tab walk), MdNavigationBar
-(item run), MdDockedToolbar (child run), MdBadgedBox (badge anchors to logical
+(item run), MdDockedToolbar (child run),
+MdFloatingToolbar (slot run, both orientations), MdBadgedBox (badge anchors to logical
 end), MdTree (indent from leading edge, chevron glyph flips), MdNavigationDrawer /
 MdNavigationDrawerItem, MdDivider, MdProgressIndicator (linear indicator
 mirrors), MdBreadcrumb (separator glyph flips), MdDrawer, MdNav, MdGrid,
@@ -1879,10 +1881,10 @@ MdDialog, MdDatePicker / MdTimePicker (text alignment; grid numerals stay LTR).
 What the audit deliberately does **not** mirror: the date / time picker grid
 numerals and the calendar's weekday labels stay LTR — dates are written LTR
 in Arabic-script locales too (the 	extDirection override in material-web's
-text field exists for exactly this). The floating toolbar's `Axis`
-abstraction has no RTL pass yet — its slot run keeps the LTR order under
-RTL. The older per-family notes below stay as the record of what each port
-looked like *before* the audit.
+text field exists for exactly this). The floating toolbar's slot run now
+mirrors on its main axis under RTL (both orientations), closing the last
+geometry gap this audit tracked. The older per-family notes below stay as the
+record of what each port looked like *before* the audit.
 ### Gallery scaffolding fixes found while building the first component
 
 The button page is the first page with real child widgets, which exposed three

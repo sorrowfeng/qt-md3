@@ -1,4 +1,4 @@
-# MD3 Coverage Matrix
+﻿# MD3 Coverage Matrix
 
 > **This file is the single source of truth for the Stage 1 → Stage 2 switch.**
 > Stage 2 (Qt extension components) must not begin until every Stage 1 family is
@@ -334,8 +334,9 @@ geometry mirroring (leading/trailing swaps, motion vectors) and text direction
 (MdStyleBase::leadingAlignment). App bars, list items, tabs, text fields,
 navigation bar, docked toolbar, badges, tree and the Stage 2 widgets
 (InputNumber, Breadcrumb, Drawer, Nav, Menu, Chip, Slider, Switch, Divider,
-Grid, Flex, etc.) all mirror under RTL. Remaining known gap: the floating
-toolbar's Axis abstraction has no RTL pass yet. See "RTL 全组件" under
+Grid, Flex, etc.) all mirror under RTL. The floating toolbar's slot run now
+mirrors on its main axis (both orientations), so the RTL column is closed.
+See "RTL 全组件" under
 Cross-cutting items and the entry in [porting-todo.md](porting-todo.md).
 
 Six transcription notes are pinned by `TestMd3AppBar` and the page-28 pixel
@@ -402,9 +403,8 @@ published per orientation there is no third class to make.
 
 The `✅` columns are the same unfinished evidence the App bars carry (seed
 change, contrast level, density, font switch and the side-by-side comparison
-have not been run against this page) plus the library-wide RTL gap: a toolbar is
-large, `placeRelative`-positioned and entirely unmirrored, and this family
-records that rather than claiming otherwise.
+have not been run against this page) The library-wide RTL gap is closed: the floating toolbar's slot run mirrors
+on its main axis and the docked row mirrors its child run.
 
 Eight transcription notes are pinned by `TestMd3Toolbar` rather than smoothed:
 
@@ -829,7 +829,7 @@ Every family must satisfy these before Stage 1 counts as complete.
 | 35 个装饰形状 + shape morph 接入 | 🚧 |
 | Expressive 变体组件更新（app bars / carousel / buttons / FAB / icon buttons / navigation bar / navigation rail / progress indicators / sliders） | 🚧 |
 | light / dark × contrast level（standard / medium / high） | ✅ |
-| RTL 全组件 | ✅ (floating toolbar Axis gap remains) |
+| RTL 全组件 | ✅ |
 | 键盘与焦点顺序全组件 | 🚧 |
 
 ## Summary

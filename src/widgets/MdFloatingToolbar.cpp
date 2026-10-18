@@ -392,9 +392,9 @@ void MdFloatingToolbar::changeEvent(QEvent *event)
     QWidget::changeEvent(event);
     switch (event->type()) {
     case QEvent::LayoutDirectionChange:
-        // A relayout, and nothing more: the toolbar is not mirrored in RTL.
-        // See the matching note in the other bars and the library-level entry
-        // in docs/porting-todo.md.
+        // The slot run mirrors on the main axis in RTL (see
+        // `MdFloatingToolbarStyle::layoutFor`), so the layout has to be
+        // recomputed — not just repainted.
         placeChildren();
         update();
         break;

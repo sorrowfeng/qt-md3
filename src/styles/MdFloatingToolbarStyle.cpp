@@ -44,6 +44,22 @@ struct Axis
     qreal mainEnd(const QRectF &r) const { return horizontal ? r.right() : r.bottom(); }
     qreal crossStart(const QRectF &r) const { return horizontal ? r.top() : r.left(); }
     qreal crossExtent(const QRectF &r) const { return horizontal ? r.height() : r.width(); }
+
+    /// Flip `box` to the opposite side of the main-axis span
+    /// `[anchorMainStart, anchorMainStart + anchorMainExtent]`. Used for the
+    /// RTL mirror: the run is placed left-to-right (top-to-bottom when
+    /// vertical) and then flipped as a whole, the same pass
+    /// `MdDockedToolbarStyle` takes on its horizontal row.
+    void mirrorMain(QRectF *box, qreal anchorMainStart, qreal anchorMainExtent) const
+    {
+        const qreal flipped = 2.0 * anchorMainStart + anchorMainExtent
+                              - mainStart(*box) - mainOf(box->size());
+        if (horizontal) {
+            box->moveLeft(flipped);
+        } else {
+            box->moveTop(flipped);
+        }
+    }
 };
 
 /// Measure a slot's children once, keeping only the extent the layout advances
@@ -236,6 +252,25 @@ MdFloatingToolbarStyle::Layout MdFloatingToolbarStyle::layoutFor(
     placeSlot(slotsVisible ? leadingSizes : none, &layout.leadingChildBoxes);
     placeSlot(contentSizes, &layout.contentChildBoxes);
     placeSlot(slotsVisible ? trailingSizes : none, &layout.trailingChildBoxes);
+
+    // RTL: the run mirrors on the main axis — first child at the trailing
+    // edge — for both orientations. `Axis` writes everything in main/cross,
+    // so the same flip covers the vertical toolbar's top-to-bottom run; the
+    // cross axis is left alone. Matches `MdDockedToolbarStyle::layoutFor`'s
+    // childBoxes pass (there the expanded bar is the anchor; here the expanded
+    // pill, whose centre is the band's centre).
+    if (isRtl(&toolbar)) {
+        const qreal anchorMainStart = axis.mainStart(expandedPill);
+        const qreal anchorMainExtent = axis.mainOf(expandedPill.size());
+        const auto mirrorRun = [&](QList<QRectF> *boxes) {
+            for (QRectF &box : *boxes) {
+                axis.mirrorMain(&box, anchorMainStart, anchorMainExtent);
+            }
+        };
+        mirrorRun(&layout.leadingChildBoxes);
+        mirrorRun(&layout.contentChildBoxes);
+        mirrorRun(&layout.trailingChildBoxes);
+    }
 
     // --- the action button --------------------------------------------------
     if (hasFab) {

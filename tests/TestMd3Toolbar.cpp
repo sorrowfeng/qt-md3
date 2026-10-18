@@ -126,7 +126,7 @@ private slots:
     void floatingPaintsItsScheme();
 
     // --- cross-cutting ------------------------------------------------------
-    void rtlIsNotMirrored();
+    void rtlMirrorsTheSlotRun();
 };
 
 void TestMd3Toolbar::init()
@@ -764,23 +764,77 @@ void TestMd3Toolbar::floatingPaintsItsScheme()
 // Cross-cutting
 // ---------------------------------------------------------------------------
 
-void TestMd3Toolbar::rtlIsNotMirrored()
+void TestMd3Toolbar::rtlMirrorsTheSlotRun()
 {
-    // The floating toolbar's Axis abstraction has no RTL mirror yet — the
-    // two content children keep their LTR order. The docked toolbar mirrors
-    // its child run (a single centred child is symmetric, so the one-child
-    // case is unchanged; the multi-child case below pins the mirror).
+    // The floating toolbar's Axis abstraction places every slot in main/cross
+    // and then mirrors the whole run on the main axis under RTL — first child
+    // at the trailing edge — for both orientations. LTR keeps the published
+    // leading → content → trailing walk. The docked toolbar's own mirror stays
+    // pinned below (a single centred child is symmetric, so the one-child case
+    // is unchanged by either direction).
     MdFloatingToolbar bar;
     ProbeWidget first(QSize(48, 48));
     ProbeWidget second(QSize(48, 48));
     bar.addContentWidget(&first);
     bar.addContentWidget(&second);
-    bar.setLayoutDirection(Qt::RightToLeft);
 
-    const MdFloatingToolbarStyle::Layout layout =
+    bar.setLayoutDirection(Qt::LeftToRight);
+    MdFloatingToolbarStyle::Layout ltr =
         MdFloatingToolbarStyle::layoutFor(bar, bar.tokens());
-    QCOMPARE(layout.contentChildBoxes.at(0), QRectF(18, 18, 48, 48));
-    QCOMPARE(layout.contentChildBoxes.at(1), QRectF(70, 18, 48, 48));
+    QCOMPARE(ltr.contentChildBoxes.at(0), QRectF(18, 18, 48, 48));
+    QCOMPARE(ltr.contentChildBoxes.at(1), QRectF(70, 18, 48, 48));
+    QVERIFY(ltr.contentChildBoxes.at(0).left() < ltr.contentChildBoxes.at(1).left());
+
+    bar.setLayoutDirection(Qt::RightToLeft);
+    MdFloatingToolbarStyle::Layout rtl =
+        MdFloatingToolbarStyle::layoutFor(bar, bar.tokens());
+    QCOMPARE(rtl.contentChildBoxes.at(0), QRectF(70, 18, 48, 48));
+    QCOMPARE(rtl.contentChildBoxes.at(1), QRectF(18, 18, 48, 48));
+    QVERIFY(rtl.contentChildBoxes.at(0).left() > rtl.contentChildBoxes.at(1).left());
+
+    // Vertical is the same arithmetic with the axes swapped: the run walks
+    // top-to-bottom in LTR and mirrors on y under RTL. The cross axis (x) is
+    // left alone.
+    MdFloatingToolbar vertical;
+    vertical.setOrientation(MdToolbarOrientation::Vertical);
+    ProbeWidget third(QSize(48, 48));
+    ProbeWidget fourth(QSize(48, 48));
+    vertical.addContentWidget(&third);
+    vertical.addContentWidget(&fourth);
+
+    vertical.setLayoutDirection(Qt::LeftToRight);
+    MdFloatingToolbarStyle::Layout vLtr =
+        MdFloatingToolbarStyle::layoutFor(vertical, vertical.tokens());
+    QCOMPARE(vLtr.contentChildBoxes.at(0), QRectF(18, 18, 48, 48));
+    QCOMPARE(vLtr.contentChildBoxes.at(1), QRectF(18, 70, 48, 48));
+    QVERIFY(vLtr.contentChildBoxes.at(0).top() < vLtr.contentChildBoxes.at(1).top());
+
+    vertical.setLayoutDirection(Qt::RightToLeft);
+    MdFloatingToolbarStyle::Layout vRtl =
+        MdFloatingToolbarStyle::layoutFor(vertical, vertical.tokens());
+    QCOMPARE(vRtl.contentChildBoxes.at(0), QRectF(18, 70, 48, 48));
+    QCOMPARE(vRtl.contentChildBoxes.at(1), QRectF(18, 18, 48, 48));
+    QVERIFY(vRtl.contentChildBoxes.at(0).top() > vRtl.contentChildBoxes.at(1).top());
+
+    // Leading / trailing slot groups participate in the same run: under RTL
+    // the leading group lands on the trailing side of the content.
+    MdFloatingToolbar mixed;
+    ProbeWidget leading(QSize(48, 48));
+    ProbeWidget mid(QSize(48, 48));
+    ProbeWidget trailing(QSize(48, 48));
+    mixed.setLeadingWidget(&leading);
+    mixed.addContentWidget(&mid);
+    mixed.setTrailingWidget(&trailing);
+    mixed.setLayoutDirection(Qt::RightToLeft);
+
+    const MdFloatingToolbarStyle::Layout mixedLayout =
+        MdFloatingToolbarStyle::layoutFor(mixed, mixed.tokens());
+    QCOMPARE(mixedLayout.leadingChildBoxes.size(), 1);
+    QCOMPARE(mixedLayout.trailingChildBoxes.size(), 1);
+    QVERIFY(mixedLayout.leadingChildBoxes.at(0).left()
+            > mixedLayout.contentChildBoxes.at(0).left());
+    QVERIFY(mixedLayout.contentChildBoxes.at(0).left()
+            > mixedLayout.trailingChildBoxes.at(0).left());
 
     MdDockedToolbar docked;
     ProbeWidget probe(QSize(48, 48));
