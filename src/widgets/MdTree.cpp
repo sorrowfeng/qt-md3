@@ -422,8 +422,6 @@ void MdTree::setHoveredRow(int row)
 
 void MdTree::paintEvent(QPaintEvent *event)
 {
-    Q_UNUSED(event);
-
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
 
@@ -441,7 +439,18 @@ void MdTree::paintEvent(QPaintEvent *event)
 
     painter.fillRect(rect(), surface);
 
-    for (int i = 0; i < rows.size(); ++i) {
+    // Only paint the rows the exposed region touches — same argument as
+    // MdTable: a tall tree scrolled to the bottom must not walk every row on
+    // every repaint.
+    const QRectF exposed = event != nullptr ? QRectF(event->rect()) : QRectF(rect());
+    int firstRow = 0;
+    int lastRow = rows.size() - 1;
+    if (!rows.isEmpty() && m_rowHeight > 0) {
+        firstRow = qBound(0, int(exposed.top() / m_rowHeight), rows.size() - 1);
+        lastRow = qBound(0, int(exposed.bottom() / m_rowHeight), rows.size() - 1);
+    }
+
+    for (int i = firstRow; i <= lastRow; ++i) {
         const Row &row = rows.at(i);
         if (!row.item->isEnabled()) {
             continue;

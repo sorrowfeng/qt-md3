@@ -1,5 +1,6 @@
 #include "MdDesign.h"
 
+#include "MdAccessible.h"
 #include "MdFont.h"
 #include "MdTheme.h"
 #include "MdTypeScale.h"
@@ -37,6 +38,10 @@ QString MdDesign::languageTag()
 void MdDesign::initialize(QApplication *app, const QString &languageTag)
 {
     MdFont::registerBundledFonts();
+    // Accessible factories must be in place before the first widget is
+    // queried by a screen reader; installing here covers hosts that use the
+    // documented startup path.
+    installAccessibleInterfaces();
 
     QString tag = languageTag.trimmed();
     if (tag.isEmpty()) {

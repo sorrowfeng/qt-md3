@@ -2,6 +2,7 @@
 
 #include "styles/MdTabStyle.h"
 
+#include "core/MdAccessible.h"
 #include "core/MdColorMath.h"
 #include "core/MdFocusRing.h"
 #include "core/MdIcon.h"
@@ -40,6 +41,7 @@ void MdTab::init()
     // One selectable page of a set. Checkable is what gives it the selected
     // state, Space/Enter activation and the selected accessibility state;
     // making the set exclusive is the owning row's job.
+    installAccessibleInterfaces();
     setCheckable(true);
     setFocusPolicy(Qt::StrongFocus);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);

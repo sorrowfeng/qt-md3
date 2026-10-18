@@ -25,6 +25,8 @@ namespace md {
 enum class ThemeMode {
     Light,
     Dark,
+    /// Follow the platform palette; resolved to Light or Dark when applied.
+    System,
     Count,
 };
 

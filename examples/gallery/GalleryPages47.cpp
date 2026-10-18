@@ -24,6 +24,7 @@
 
 #include <QtCore/QHash>
 #include <QtCore/QVector>
+#include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPaintEvent>
 #include <QtGui/QResizeEvent>
@@ -112,6 +113,7 @@ public:
     {
         setFixedSize(88, 72);
         setCursor(Qt::PointingHandCursor);
+        setFocusPolicy(Qt::StrongFocus);
     }
 
     QColor seed() const { return m_seed; }
@@ -166,6 +168,17 @@ protected:
         QWidget::mousePressEvent(event);
     }
 
+    void keyPressEvent(QKeyEvent *event) override
+    {
+        if (event->key() == Qt::Key_Space || event->key() == Qt::Key_Return
+            || event->key() == Qt::Key_Enter) {
+            emit picked(m_seed);
+            event->accept();
+            return;
+        }
+        QWidget::keyPressEvent(event);
+    }
+
 private:
     QColor m_seed;
     QString m_label;
@@ -186,6 +199,7 @@ public:
     {
         setFixedSize(int(label.size() * 7.0 + 28.0), 32);
         setCursor(Qt::PointingHandCursor);
+        setFocusPolicy(Qt::StrongFocus);
     }
 
     md::SchemeVariant variant() const { return m_variant; }
@@ -230,6 +244,17 @@ protected:
         QWidget::mousePressEvent(event);
     }
 
+    void keyPressEvent(QKeyEvent *event) override
+    {
+        if (event->key() == Qt::Key_Space || event->key() == Qt::Key_Return
+            || event->key() == Qt::Key_Enter) {
+            emit picked(m_variant);
+            event->accept();
+            return;
+        }
+        QWidget::keyPressEvent(event);
+    }
+
 private:
     md::SchemeVariant m_variant;
     QString m_label;
@@ -248,6 +273,7 @@ public:
     {
         setFixedHeight(32);
         setCursor(Qt::PointingHandCursor);
+        setFocusPolicy(Qt::StrongFocus);
     }
 
     void setLabel(const QString &label)
@@ -289,6 +315,17 @@ protected:
             emit picked();
         }
         QWidget::mousePressEvent(event);
+    }
+
+    void keyPressEvent(QKeyEvent *event) override
+    {
+        if (event->key() == Qt::Key_Space || event->key() == Qt::Key_Return
+            || event->key() == Qt::Key_Enter) {
+            emit picked();
+            event->accept();
+            return;
+        }
+        QWidget::keyPressEvent(event);
     }
 
 private:

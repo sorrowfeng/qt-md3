@@ -2,6 +2,11 @@
 
 #include "MdTypeScale.h"
 
+#include <QtGui/QGuiApplication>
+#include <QtGui/QPalette>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+#include <QtGui/QStyleHints>
+#endif
 #include <QtWidgets/QApplication>
 
 namespace {
@@ -65,17 +70,53 @@ QColor MdTheme::color(ColorRole role) const
     return scheme().color(role);
 }
 
+namespace {
+
+/// Resolve the platform palette to an explicit light/dark mode.
+/// Qt 6.5+ reports the colour scheme directly; earlier builds (and Qt 5)
+/// fall back to the window colour's lightness, which is what the style
+/// already uses to pick its base palette.
+ThemeMode resolveSystemMode()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    if (QGuiApplication::styleHints() != nullptr) {
+        const Qt::ColorScheme scheme = QGuiApplication::styleHints()->colorScheme();
+        if (scheme == Qt::ColorScheme::Dark) {
+            return ThemeMode::Dark;
+        }
+        if (scheme == Qt::ColorScheme::Light) {
+            return ThemeMode::Light;
+        }
+    }
+#endif
+    const QPalette pal = QGuiApplication::palette();
+    return pal.color(QPalette::Window).lightness() < 128 ? ThemeMode::Dark
+                                                         : ThemeMode::Light;
+}
+
+} // namespace
+
 void MdTheme::setThemeMode(ThemeMode mode)
 {
-    if (mode == m_mode) {
+    const ThemeMode resolved =
+        (mode == ThemeMode::System) ? resolveSystemMode() : mode;
+    if (mode == m_preference && resolved == m_mode) {
         return;
     }
-    applyChange([this, mode] { m_mode = mode; });
-    emit themeModeChanged(m_mode);
+    const ThemeMode previous = m_mode;
+    applyChange([this, mode, resolved] {
+        m_preference = mode;
+        m_mode = resolved;
+    });
+    if (resolved != previous) {
+        emit themeModeChanged(m_mode);
+    }
 }
 
 void MdTheme::toggleThemeMode()
 {
+    // Toggle the *effective* mode, and pin the preference so the next
+    // platform flip does not silently undo the user's choice.
     setThemeMode(m_mode == ThemeMode::Light ? ThemeMode::Dark : ThemeMode::Light);
 }
 
@@ -109,6 +150,13 @@ void MdTheme::setContrastLevel(ContrastLevel level)
         return;
     }
     applyChange([this, level] { m_contrast = level; });
+}
+
+void MdTheme::setHighContrast(bool highContrast)
+{
+    // A boolean switch cannot express Reduced / Medium, so it flattens to the
+    // two ends of the published ladder. Hosts that care use setContrastLevel.
+    setContrastLevel(highContrast ? ContrastLevel::High : ContrastLevel::Standard);
 }
 
 void MdTheme::setColorSpecVersion(ColorSpecVersion version)

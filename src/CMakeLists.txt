@@ -73,6 +73,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdTheme.h
     core/MdFont.h
     core/MdDesign.h
+    core/MdAccessible.h
 )
 
 set(QT_MD3_STYLE_HEADERS
@@ -298,6 +299,7 @@ set(QT_MD3_SOURCES
     core/MdTheme.cpp
     core/MdFont.cpp
     core/MdDesign.cpp
+    private/MdAccessible.cpp
     styles/MdStyleBase.cpp
     styles/MdBadgeStyle.cpp
     styles/MdButtonStyle.cpp

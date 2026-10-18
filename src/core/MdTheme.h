@@ -32,6 +32,12 @@ class QT_MD3_EXPORT MdTheme : public QObject
     Q_PROPERTY(QColor seedColor READ seedColor WRITE setSeedColor NOTIFY themeChanged)
     Q_PROPERTY(md::SchemeVariant schemeVariant READ schemeVariant WRITE setSchemeVariant NOTIFY themeChanged)
     Q_PROPERTY(md::ContrastLevel contrastLevel READ contrastLevel WRITE setContrastLevel NOTIFY themeChanged)
+    /// Convenience alias for `contrastLevel == ContrastLevel::High`, for
+    /// hosts that expose a single "high contrast" switch rather than the
+    /// four-level picker. Setting it false lands on `Standard`, not on
+    /// whatever level was in force before; use `setContrastLevel()` when the
+    /// distinction matters.
+    Q_PROPERTY(bool highContrast READ isHighContrast WRITE setHighContrast NOTIFY themeChanged)
     Q_PROPERTY(md::ColorSpecVersion colorSpecVersion READ colorSpecVersion WRITE setColorSpecVersion NOTIFY themeChanged)
     Q_PROPERTY(md::Density density READ density WRITE setDensity NOTIFY densityChanged)
     Q_PROPERTY(Qt::LayoutDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
@@ -42,7 +48,11 @@ public:
     static MdTheme &instance();
 
     // --- colour ----------------------------------------------------------
+    /// The effective light/dark mode the scheme is built from. Never System:
+    /// a System preference is resolved against the platform palette.
     ThemeMode themeMode() const { return m_mode; }
+    /// The preference the caller last asked for (Light, Dark or System).
+    ThemeMode themeModePreference() const { return m_preference; }
     void setThemeMode(ThemeMode mode);
     void toggleThemeMode();
 
@@ -57,6 +67,8 @@ public:
 
     ContrastLevel contrastLevel() const { return m_contrast; }
     void setContrastLevel(ContrastLevel level);
+    bool isHighContrast() const { return m_contrast == ContrastLevel::High; }
+    void setHighContrast(bool highContrast);
     ColorSpecVersion colorSpecVersion() const { return m_specVersion; }
     void setColorSpecVersion(ColorSpecVersion version);
 
@@ -99,6 +111,7 @@ private:
     void applyChange(Fn &&mutate);
 
     ThemeMode m_mode = ThemeMode::Light;
+    ThemeMode m_preference = ThemeMode::Light;
     bool m_dynamicColor = false;
     QColor m_seedColor = QColor(QStringLiteral("#6750a4"));
     SchemeVariant m_variant = SchemeVariant::TonalSpot;

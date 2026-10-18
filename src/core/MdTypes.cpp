@@ -176,6 +176,7 @@ QString themeModeName(ThemeMode mode)
     switch (mode) {
     case ThemeMode::Light: return QStringLiteral("light");
     case ThemeMode::Dark: return QStringLiteral("dark");
+    case ThemeMode::System: return QStringLiteral("system");
     case ThemeMode::Count: break;
     }
     return QStringLiteral("unknown");

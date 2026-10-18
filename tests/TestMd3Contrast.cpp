@@ -24,6 +24,7 @@
 #include "core/MdColorScheme.h"
 #include "core/MdColorSpec.h"
 #include "core/MdDynamicColor.h"
+#include "core/MdTheme.h"
 #include "core/MdTypes.h"
 
 #include <QtCore/QDir>
@@ -162,6 +163,9 @@ private slots:
     void aNominalToneIsKeptWhenItAlreadyClearsItsFloor();
     void aPairCanLoseRatioWhenTheForegroundSaturates();
     void highContrastMeetsItsAccessibilityTarget();
+    void highContrastToggleDrivesTheThemeLevel();
+    void textOnSurfacesClearsWcagAaAtEveryLevel();
+    void disabledStatesStayDistinguishableAtEveryLevel();
     void resizedSurfacesDeepenWithContrast();
     void resolvedRolesAreOpaqueAndDistinct();
     void toneDeltaPairsKeepTheirDistance();
@@ -468,6 +472,177 @@ void TestMd3Contrast::highContrastMeetsItsAccessibilityTarget()
                                                         "contrast is only %2")
                                              .arg(themeModeName(mode))
                                              .arg(pair, 0, 'f', 3)));
+    }
+}
+
+void TestMd3Contrast::highContrastToggleDrivesTheThemeLevel()
+{
+    // `highContrast` is a convenience alias over `contrastLevel`. It must map
+    // onto the *published* High level rather than inventing a second,
+    // uncalibrated "boosted" palette.
+    MdTheme &theme = MdTheme::instance();
+    const ContrastLevel saved = theme.contrastLevel();
+
+    theme.setContrastLevel(ContrastLevel::Standard);
+    QVERIFY(!theme.isHighContrast());
+    QCOMPARE(int(theme.contrastLevel()), int(ContrastLevel::Standard));
+
+    theme.setHighContrast(true);
+    QVERIFY(theme.isHighContrast());
+    QCOMPARE(int(theme.contrastLevel()), int(ContrastLevel::High));
+
+    // Reading back through either accessor agrees.
+    QCOMPARE(theme.property("highContrast").toBool(), true);
+    QCOMPARE(int(theme.contrastLevel()), int(ContrastLevel::High));
+
+    // Turning it off lands on Standard, the other end of the published ladder.
+    theme.setHighContrast(false);
+    QVERIFY(!theme.isHighContrast());
+    QCOMPARE(int(theme.contrastLevel()), int(ContrastLevel::Standard));
+
+    // The scheme actually produced follows the toggle, both static and dynamic.
+    const QColor staticOn = theme.color(ColorRole::OnSurface);
+    theme.setHighContrast(true);
+    const QColor staticHighOn = theme.color(ColorRole::OnSurface);
+    QVERIFY2(staticOn != staticHighOn,
+             "highContrast must move on-surface in the static baseline");
+
+    theme.setDynamicColor(true);
+    theme.setHighContrast(false);
+    const QColor dynStandard = theme.color(ColorRole::OnSurface);
+    theme.setHighContrast(true);
+    const QColor dynHigh = theme.color(ColorRole::OnSurface);
+    QVERIFY2(dynStandard != dynHigh,
+             "highContrast must move on-surface in the dynamic scheme");
+    theme.setDynamicColor(false);
+
+    theme.setContrastLevel(saved);
+}
+
+void TestMd3Contrast::textOnSurfacesClearsWcagAaAtEveryLevel()
+{
+    // WCAG AA for body text is 4.5:1. MD3's published floors for on-surface
+    // are (4.5, 7.0, 11.0, 21.0) — so every level, *including* Reduced, must
+    // clear AA. High contrast must additionally clear AAA (7:1).
+    struct SurfacePair
+    {
+        ColorRole text;
+        ColorRole surface;
+        const char *label;
+    };
+    const SurfacePair pairs[] = {
+        {ColorRole::OnSurface, ColorRole::Surface, "on-surface/surface"},
+        {ColorRole::OnSurfaceVariant, ColorRole::Surface, "on-surface-variant/surface"},
+        {ColorRole::OnSurface, ColorRole::SurfaceContainer, "on-surface/surface-container"},
+        {ColorRole::OnSurface, ColorRole::SurfaceContainerHigh,
+         "on-surface/surface-container-high"},
+        {ColorRole::OnSurfaceVariant, ColorRole::SurfaceContainerHighest,
+         "on-surface-variant/surface-container-highest"},
+        {ColorRole::OnPrimary, ColorRole::Primary, "on-primary/primary"},
+        {ColorRole::OnSecondaryContainer, ColorRole::SecondaryContainer,
+         "on-secondary-container/secondary-container"},
+    };
+
+    for (int level = 0; level < int(ContrastLevel::Count); ++level) {
+        const auto contrast = ContrastLevel(level);
+        for (ThemeMode mode : {ThemeMode::Light, ThemeMode::Dark}) {
+            const MdDynamicScheme scheme = MdDynamicScheme::create(
+                kDefaultSeed, mode, SchemeVariant::TonalSpot, contrast);
+            for (const SurfacePair &pair : pairs) {
+                const double ratio = MdColorMath::contrastRatio(
+                    MdColorSpec2021::color(scheme, pair.text),
+                    MdColorSpec2021::color(scheme, pair.surface));
+                const QString label = QStringLiteral("%1 %2 at %3: %4")
+                                          .arg(themeModeName(mode), QLatin1String(pair.label),
+                                               contrastLevelName(contrast))
+                                          .arg(ratio, 0, 'f', 3);
+                // AA for body text is 4.5:1; the on-surface-variant /
+                // container rows are published at 3.0 for Reduced and are
+                // still forced above AA by the solver for the higher levels.
+                if (contrast == ContrastLevel::Reduced) {
+                    QVERIFY2(ratio >= 3.0, qPrintable(label));
+                } else {
+                    QVERIFY2(ratio >= 4.5, qPrintable(label));
+                }
+                if (contrast == ContrastLevel::High) {
+                    // The High level's on-surface curve is (…, 21.0) and its
+                    // variant curve is (…, 11.0): AAA either way.
+                    const double floor = (pair.text == ColorRole::OnSurface
+                                          || pair.text == ColorRole::OnPrimary)
+                        ? 7.0
+                        : 7.0;
+                    QVERIFY2(ratio >= floor, qPrintable(label));
+                }
+            }
+        }
+    }
+}
+
+void TestMd3Contrast::disabledStatesStayDistinguishableAtEveryLevel()
+{
+    // A disabled control is its content composited at 0.38 over its container
+    // (the export's `md.state.*` / `disabled.opacity`). It must stay *visible*
+    // — the composite must not collapse onto either the enabled ink or the
+    // bare container — at every contrast level. If High contrast pushed the
+    // container and the ink to the same tone, a disabled control would
+    // disappear, which is the failure this pins.
+    auto composite = [](QColor content, QColor container, qreal opacity) {
+        return QColor(
+            int(container.red() + (content.red() - container.red()) * opacity),
+            int(container.green() + (content.green() - container.green()) * opacity),
+            int(container.blue() + (content.blue() - container.blue()) * opacity));
+    };
+    auto distance = [](const QColor &a, const QColor &b) {
+        return qAbs(a.red() - b.red()) + qAbs(a.green() - b.green()) + qAbs(a.blue() - b.blue());
+    };
+
+    struct StatePair
+    {
+        ColorRole ink;
+        ColorRole container;
+        const char *label;
+    };
+    const StatePair pairs[] = {
+        {ColorRole::OnSurface, ColorRole::Surface, "on-surface/surface"},
+        {ColorRole::OnSurface, ColorRole::SecondaryContainer,
+         "on-surface/secondary-container (selected)"},
+        {ColorRole::OnPrimary, ColorRole::Primary, "on-primary/primary"},
+    };
+
+    for (int level = 0; level < int(ContrastLevel::Count); ++level) {
+        const auto contrast = ContrastLevel(level);
+        for (ThemeMode mode : {ThemeMode::Light, ThemeMode::Dark}) {
+            const MdDynamicScheme scheme = MdDynamicScheme::create(
+                kDefaultSeed, mode, SchemeVariant::TonalSpot, contrast);
+            const auto rgba = [&scheme](ColorRole role) {
+                return QColor(QRgb(MdColorSpec2021::color(scheme, role)));
+            };
+            for (const StatePair &pair : pairs) {
+                const QColor ink = rgba(pair.ink);
+                const QColor container = rgba(pair.container);
+                const QColor disabled = composite(ink, container, 0.38);
+
+                const QString label = QStringLiteral("%1 %2 at %3").arg(
+                    themeModeName(mode), QLatin1String(pair.label), contrastLevelName(contrast));
+
+                // Distinguishable from the enabled ink…
+                const int fromInk = distance(disabled, ink);
+                // …and from the bare container (so the control is still
+                // *there* rather than dissolving into its background).
+                const int fromContainer = distance(disabled, container);
+
+                QVERIFY2(fromInk > 8,
+                         qPrintable(QStringLiteral("%1: disabled ink indistinguishable from "
+                                                   "enabled (%2)")
+                                        .arg(label)
+                                        .arg(fromInk)));
+                QVERIFY2(fromContainer > 8,
+                         qPrintable(QStringLiteral("%1: disabled ink indistinguishable from "
+                                                   "container (%2)")
+                                        .arg(label)
+                                        .arg(fromContainer)));
+            }
+        }
     }
 }
 

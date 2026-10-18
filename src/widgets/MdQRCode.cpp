@@ -80,6 +80,17 @@ void MdQRCode::setQuietZone(bool on)
     emit quietZoneChanged(m_quietZone);
 }
 
+
+void MdQRCode::setEcLevel(MdQrEcLevel level)
+{
+    if (level == m_ecLevel || level == MdQrEcLevel::Count) {
+        return;
+    }
+    m_ecLevel = level;
+    emit ecLevelChanged(m_ecLevel);
+    regenerate();
+}
+
 void MdQRCode::setMatrix(int dimension, const QList<bool> &modules)
 {
     if (dimension <= 0 || modules.size() != dimension * dimension) {
@@ -145,10 +156,10 @@ QSize MdQRCode::minimumSizeHint() const
 
 void MdQRCode::regenerate()
 {
-    // ISO/IEC 18004 byte-mode encode via MdQrEncoder (versions 1-10, EC M).
+    // ISO/IEC 18004 byte-mode encode via MdQrEncoder (versions 1-10, EC L/M/Q/H).
     // A payload that does not fit leaves the previous matrix untouched so the
     // widget never paints a half-true code.
-    const MdQrEncodeResult result = MdQrEncoder::encodeText(m_text, MdQrEcLevel::M);
+    const MdQrEncodeResult result = MdQrEncoder::encodeText(m_text, m_ecLevel);
     if (!result.ok || result.dimension <= 0) {
         return;
     }

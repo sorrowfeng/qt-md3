@@ -60,6 +60,11 @@ void MdTextField::setLabelText(const QString &label)
         return;
     }
     m_label = label;
+    // The label is what a screen reader speaks as the field's name; an empty
+    // label must not wipe a name the host set explicitly.
+    if (!label.isEmpty()) {
+        setAccessibleName(label);
+    }
     emit labelTextChanged(label);
     update();
 }

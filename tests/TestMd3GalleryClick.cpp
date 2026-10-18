@@ -1366,6 +1366,35 @@ void TestMd3GalleryClick::musicPlayerFullJourney()
     forceRebuild(pageW);
     QVERIFY2(focus->isChecked() != chipBefore,
              "music journey: playlist chip state was clobbered by build()");
+
+    // 4. Filter chips actually filter the up-next list by track tag.
+    MdChip *chill = qobject_cast<MdChip *>(namedChild(pageW, "chill"));
+    QVERIFY2(chill != nullptr, "music journey: no Chill playlist chip");
+    MdChip *sport = qobject_cast<MdChip *>(namedChild(pageW, "sport"));
+    QVERIFY2(sport != nullptr, "music journey: no Sport playlist chip");
+    // Drive the group to a known single-selection state: only Focus checked.
+    if (chill->isChecked()) {
+        chill->click();
+    }
+    if (sport->isChecked()) {
+        sport->click();
+    }
+    if (!focus->isChecked()) {
+        focus->click();
+    }
+    QVERIFY(focus->isChecked());
+    QVERIFY(!chill->isChecked());
+    QVERIFY(!sport->isChecked());
+
+    // Focus tags t2 only.
+    QWidget *t1 = namedChild(pageW, "t1");
+    QWidget *t2 = namedChild(pageW, "t2");
+    QWidget *t3 = namedChild(pageW, "t3");
+    QVERIFY(t1 != nullptr && t2 != nullptr && t3 != nullptr);
+    settle(*m_window, page);
+    QVERIFY2(t2->isVisibleTo(pageW), "music filter: Focus tag row hidden");
+    QVERIFY2(!t1->isVisibleTo(pageW), "music filter: Chill tag row still shown");
+    QVERIFY2(!t3->isVisibleTo(pageW), "music filter: Sport tag row still shown");
 }
 
 void TestMd3GalleryClick::settingsFullJourney()
@@ -1406,6 +1435,18 @@ void TestMd3GalleryClick::settingsFullJourney()
     forceRebuild(pageW);
     QVERIFY2(light->isChecked() && !system->isChecked(),
              "settings journey: radio selection was clobbered by build()");
+
+    // 2b. The System radio has a real ThemeMode behind it. Clicking it pins
+    //     the preference to System while the effective mode stays Light/Dark.
+    clickCentre(system);
+    QVERIFY(system->isChecked());
+    QVERIFY(!light->isChecked());
+    QCOMPARE(MdTheme::instance().themeModePreference(), ThemeMode::System);
+    QVERIFY(MdTheme::instance().themeMode() == ThemeMode::Light
+            || MdTheme::instance().themeMode() == ThemeMode::Dark);
+    // And an explicit radio repins the preference.
+    clickCentre(light);
+    QCOMPARE(MdTheme::instance().themeModePreference(), ThemeMode::Light);
 
     // 3. Drag the text-size slider.
     const QList<MdSlider *> sliders = liveWidgets<MdSlider>(*m_window, page);
@@ -1539,6 +1580,37 @@ void TestMd3GalleryClick::keyboardJourney()
     pump(400);
     QTest::keyClick(langMenu, Qt::Key_Escape);
     QVERIFY2(!langMenu->isVisible(), "keyboard: Esc did not close the language menu");
+
+    // Dynamic-colour: the seed / variant / mode chips are keyboard-reachable.
+    int dyn = pageIndexBySlug(QStringLiteral("dynamic-colour"));
+    if (dyn < 0) {
+        dyn = pageIndexBySlug(QStringLiteral("Dynamic colour"));
+    }
+    QVERIFY(dyn >= 0);
+    settle(*m_window, dyn);
+    QWidget *dynW = m_window->pageWidget(dyn);
+    QVERIFY(dynW);
+    QWidget *seed = namedChild(dynW, "seed-swatch-3");
+    QVERIFY2(seed != nullptr, "keyboard: no seed-swatch-3");
+    const QColor seedBefore = MdTheme::instance().seedColor();
+    seed->setFocus(Qt::TabFocusReason);
+    QVERIFY2(seed->hasFocus(), "keyboard: seed swatch not focusable");
+    QTest::keyClick(seed, Qt::Key_Space);
+    // Space on the focused swatch must install its seed. seed-swatch-3 is the
+    // green swatch, which is not the default purple, so the seed moves.
+    QVERIFY2(MdTheme::instance().seedColor() != seedBefore,
+             "keyboard: Space on seed swatch did not change the theme seed");
+    QWidget *variant = namedChild(dynW, "variant-chip-1");
+    QVERIFY(variant != nullptr);
+    const SchemeVariant variantBefore = MdTheme::instance().schemeVariant();
+    variant->setFocus(Qt::TabFocusReason);
+    QVERIFY(variant->hasFocus());
+    QTest::keyClick(variant, Qt::Key_Return);
+    // variant-chip-1 is Vibrant; the pick must work without the mouse.
+    QCOMPARE(MdTheme::instance().schemeVariant(), SchemeVariant::Vibrant);
+    // Leave the theme as we found it so later cases are not seed-dependent.
+    MdTheme::instance().setSeedColor(seedBefore);
+    MdTheme::instance().setSchemeVariant(variantBefore);
 }
 
 void TestMd3GalleryClick::darkSeedInteractionPass()

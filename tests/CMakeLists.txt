@@ -1,4 +1,4 @@
-﻿# qt-md3 tests.
+# qt-md3 tests.
 #
 # As in the example directory, the Qt runtime is deployed next to the binaries
 # so `ctest` works from a plain shell rather than only from one that happens to
@@ -2013,6 +2013,30 @@ set_tests_properties(TestMd3QRCode PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3QRCode)
 
+
+# Accessibility interfaces: the roles and states Qt's defaults cannot know
+# (List / ListItem selection, Slider value, PageTab selection) plus the
+# non-empty accessible-name floor for every interactive control.
+add_executable(TestMd3Accessible
+    TestMd3Accessible.cpp
+)
+
+target_link_libraries(TestMd3Accessible
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3Accessible COMMAND TestMd3Accessible)
+set_tests_properties(TestMd3Accessible PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3Accessible)
 
 # TestMd3GalleryClick �� gallery-shell click probe. Unlike TestMd3InteractionSmoke
 # (standalone widgets), this instantiates the real GalleryWindow and drives the

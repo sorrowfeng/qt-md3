@@ -48,12 +48,15 @@ struct Track
     const char *artistEn;
     const char *timeZh;
     const char *timeEn;
+    /// Playlist-chip tag (chill / ocus / sport / av) the up-next
+    /// list is filtered by.
+    const char *tag;
 };
 
 const Track kUpNext[] = {
-    {"t1", "夜曲", "Nocturne", "古星乐队", "Pale Ensemble", "3:42", "3:42"},
-    {"t2", "雨巷", "Rain Alley", "城市回音", "City Echoes", "4:05", "4:05"},
-    {"t3", "远线", "Far Line", "北纬组合", "Latitude", "2:58", "2:58"},
+    {"t1", "夜曲", "Nocturne", "古星乐队", "Pale Ensemble", "3:42", "3:42", "chill"},
+    {"t2", "雨巷", "Rain Alley", "城市回音", "City Echoes", "4:05", "4:05", "focus"},
+    {"t3", "远线", "Far Line", "北纬组合", "Latitude", "2:58", "2:58", "sport"},
 };
 
 } // namespace
@@ -80,6 +83,8 @@ private:
     void layoutChildren();
     void placeChildren();
     void animatePlayScaleTo(qreal target);
+    /// Show only the up-next rows whose track tag matches a checked chip.
+    void applyPlaylistFilter();
 
     md::MdIconButton *iconButton(const QString &id, const QString &icon);
     md::MdFab *transportFab();
@@ -233,6 +238,8 @@ md::MdChip *ShowcaseMusicPage::chip(const QString &id, const QString &label)
     created->setObjectName(id);
     created->setVariant(md::MdChipVariant::Filter);
     created->hide();
+    connect(created, &QAbstractButton::toggled, this,
+            [this](bool) { applyPlaylistFilter(); });
     m_chips.insert(id, created);
     return created;
 }
@@ -253,6 +260,7 @@ md::MdListItem *ShowcaseMusicPage::trackItem(const QString &id)
         return found.value();
     }
     auto *created = new md::MdListItem(this);
+    created->setObjectName(id);
     created->setInteractive(true);
     created->setLeadingKind(md::MdListItem::LeadingKind::Avatar);
     m_items.insert(id, created);
@@ -439,6 +447,7 @@ void ShowcaseMusicPage::build(GalleryContext &context)
         item->setTrailingSupporting(L(track.timeZh, track.timeEn));
         item->setVariant(md::MdListVariant::Expressive);
     }
+    applyPlaylistFilter();
     const qreal listHeight = list->sizeHint().height();
     const QRectF listPanel(left + 20.0, y, width - 40.0, listHeight + 8.0);
     if (painter != nullptr) {
@@ -448,6 +457,30 @@ void ShowcaseMusicPage::build(GalleryContext &context)
     m_slots.append(Slot{list, QRectF(left + 28.0, y + 4.0, width - 56.0, listHeight)});
 
     context.space(8.0);
+}
+
+void ShowcaseMusicPage::applyPlaylistFilter()
+{
+    // At least one checked chip shows only its tagged tracks; all unchecked
+    // falls back to the full queue so the page never goes empty by accident.
+    QStringList active;
+    for (auto it = m_chips.constBegin(); it != m_chips.constEnd(); ++it) {
+        if (it.value() != nullptr && it.value()->isChecked()) {
+            active.append(it.key());
+        }
+    }
+    for (const Track &track : kUpNext) {
+        md::MdListItem *item = m_items.value(QString::fromUtf8(track.id));
+        if (item == nullptr) {
+            continue;
+        }
+        const QString tag = QString::fromUtf8(track.tag);
+        item->setVisible(active.isEmpty() || active.contains(tag));
+    }
+    if (m_list != nullptr) {
+        m_list->updateGeometry();
+    }
+    update();
 }
 
 void ShowcaseMusicPage::placeChildren()

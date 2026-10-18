@@ -1,6 +1,6 @@
 #include "MdQrEncoder.h"
 
-// ISO/IEC 18004:2015 (QR Code) byte-mode encoder, versions 1-10, EC L/M.
+// ISO/IEC 18004:2015 (QR Code) byte-mode encoder, versions 1-10, EC L/M/Q/H.
 //
 // Table citations in this file refer to ISO/IEC 18004:2015:
 //   * Table 1 / 7.4.1  — mode indicators (byte = 0b0100).
@@ -49,12 +49,15 @@ int totalCodewords(int version)
 // structure: sum of data codewords across every block.
 int dataCodewords(int version, MdQrEcLevel ec)
 {
-    // version 1..10 × {L, M}
-    static const int kData[2][11] = {
+    // version 1..10 × {L, M, Q, H}. ISO/IEC 18004 Annex E, summed across blocks.
+    static const int kData[4][11] = {
         { 0, 19, 34, 55, 80, 108, 136, 156, 194, 232, 274 }, // L
-        { 0, 16, 28, 44, 64, 86, 108, 124, 154, 182, 216 }  // M
+        { 0, 16, 28, 44, 64, 86, 108, 124, 154, 182, 216 }, // M
+        { 0, 13, 22, 34, 48, 62, 76, 88, 110, 132, 154 },   // Q
+        { 0, 9, 16, 26, 36, 46, 60, 66, 86, 100, 122 }      // H
     };
-    if (version < kMinVersion || version > kMaxVersion) {
+    if (version < kMinVersion || version > kMaxVersion
+        || int(ec) < 0 || int(ec) >= 4) {
         return 0;
     }
     return kData[int(ec)][version];
@@ -63,11 +66,15 @@ int dataCodewords(int version, MdQrEcLevel ec)
 // EC codewords per block. ISO/IEC 18004 Annex E.
 int ecCodewordsPerBlock(int version, MdQrEcLevel ec)
 {
-    static const int kEc[2][11] = {
+    // version 1..10 × {L, M, Q, H}. ISO/IEC 18004 Annex E.
+    static const int kEc[4][11] = {
         { 0, 7, 10, 15, 20, 26, 18, 20, 24, 30, 18 },  // L
-        { 0, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26 }  // M
+        { 0, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26 }, // M
+        { 0, 13, 22, 18, 26, 18, 24, 18, 22, 20, 24 }, // Q
+        { 0, 17, 28, 22, 16, 22, 28, 26, 26, 24, 28 }  // H
     };
-    if (version < kMinVersion || version > kMaxVersion) {
+    if (version < kMinVersion || version > kMaxVersion
+        || int(ec) < 0 || int(ec) >= 4) {
         return 0;
     }
     return kEc[int(ec)][version];
@@ -86,7 +93,7 @@ BlockPlan blockPlan(int version, MdQrEcLevel ec)
 {
     BlockPlan plan;
     plan.ecPerBlock = ecCodewordsPerBlock(version, ec);
-    // ISO/IEC 18004 Annex E, EC codewords and block counts for 1-10 L/M.
+    // ISO/IEC 18004 Annex E, EC codewords and block counts for 1-10 L/M/Q/H.
     struct Row {
         int version;
         MdQrEcLevel ec;
@@ -113,6 +120,26 @@ BlockPlan blockPlan(int version, MdQrEcLevel ec)
         { 9, MdQrEcLevel::M, 3, 36, 2, 37 },
         { 10, MdQrEcLevel::L, 2, 68, 2, 69 },
         { 10, MdQrEcLevel::M, 4, 43, 1, 44 },
+        { 1, MdQrEcLevel::Q, 1, 13, 0, 0 },
+        { 2, MdQrEcLevel::Q, 1, 22, 0, 0 },
+        { 3, MdQrEcLevel::Q, 2, 17, 0, 0 },
+        { 4, MdQrEcLevel::Q, 2, 24, 0, 0 },
+        { 5, MdQrEcLevel::Q, 2, 15, 2, 16 },
+        { 6, MdQrEcLevel::Q, 4, 19, 0, 0 },
+        { 7, MdQrEcLevel::Q, 2, 14, 4, 15 },
+        { 8, MdQrEcLevel::Q, 4, 18, 2, 19 },
+        { 9, MdQrEcLevel::Q, 4, 16, 4, 17 },
+        { 10, MdQrEcLevel::Q, 6, 19, 2, 20 },
+        { 1, MdQrEcLevel::H, 1, 9, 0, 0 },
+        { 2, MdQrEcLevel::H, 1, 16, 0, 0 },
+        { 3, MdQrEcLevel::H, 2, 13, 0, 0 },
+        { 4, MdQrEcLevel::H, 4, 9, 0, 0 },
+        { 5, MdQrEcLevel::H, 2, 11, 2, 12 },
+        { 6, MdQrEcLevel::H, 4, 15, 0, 0 },
+        { 7, MdQrEcLevel::H, 4, 13, 1, 14 },
+        { 8, MdQrEcLevel::H, 4, 14, 2, 15 },
+        { 9, MdQrEcLevel::H, 4, 12, 4, 13 },
+        { 10, MdQrEcLevel::H, 6, 15, 2, 16 },
     };
     for (const Row &row : kRows) {
         if (row.version == version && row.ec == ec) {
@@ -514,8 +541,15 @@ void placeData(Matrix &m, const QVector<quint8> &bits, int mask)
 // BCH(15,5) format information. ISO/IEC 18004 8.9 / Annex A.
 quint16 formatBits(MdQrEcLevel ec, int mask)
 {
-    // EC level indicator bits: L = 0b01, M = 0b00. Table 12.
-    const int ecBits = (ec == MdQrEcLevel::L) ? 0x1 : 0x0;
+    // EC level indicator bits: L = 0b01, M = 0b00, Q = 0b11, H = 0b10. Table 12.
+    int ecBits = 0x0;
+    switch (ec) {
+    case MdQrEcLevel::L: ecBits = 0x1; break;
+    case MdQrEcLevel::M: ecBits = 0x0; break;
+    case MdQrEcLevel::Q: ecBits = 0x3; break;
+    case MdQrEcLevel::H: ecBits = 0x2; break;
+    case MdQrEcLevel::Count: break;
+    }
     quint32 data = quint32((ecBits << 3) | (mask & 0x7));
     quint32 rem = data;
     for (int i = 0; i < 10; ++i) {
@@ -825,8 +859,8 @@ MdQrEncodeResult MdQrEncoder::encode(const QByteArray &data,
                                      int maxVersion)
 {
     MdQrEncodeResult result;
-    if (ec != MdQrEcLevel::L && ec != MdQrEcLevel::M) {
-        result.error = QStringLiteral("error-correction level out of scope (L/M only)");
+    if (int(ec) < 0 || int(ec) >= int(MdQrEcLevel::Count)) {
+        result.error = QStringLiteral("error-correction level out of scope (L/M/Q/H only)");
         return result;
     }
     minVersion = qMax(minVersion, kMinVersion);
@@ -847,8 +881,10 @@ MdQrEncodeResult MdQrEncoder::encode(const QByteArray &data,
         result.error = QStringLiteral("payload does not fit versions %1-%2 at EC %3")
                            .arg(minVersion)
                            .arg(maxVersion)
-                           .arg(ec == MdQrEcLevel::L ? QStringLiteral("L")
-                                                     : QStringLiteral("M"));
+                           .arg(ec == MdQrEcLevel::L   ? QStringLiteral("L")
+                                : ec == MdQrEcLevel::M ? QStringLiteral("M")
+                                : ec == MdQrEcLevel::Q ? QStringLiteral("Q")
+                                                       : QStringLiteral("H"));
         return result;
     }
 

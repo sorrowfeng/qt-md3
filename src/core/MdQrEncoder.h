@@ -6,7 +6,7 @@
 // Scope (deliberate subset, recorded in docs/porting-todo.md):
 //   * Byte mode only (UTF-8 payload, mode indicator 0b0100).
 //   * Versions 1-10 (21×21 … 57×57 modules).
-//   * Error correction levels L (~7%) and M (~15%).
+//   * Error correction levels L (~7%), M (~15%), Q (~25%) and H (~30%).
 //
 // Everything the matrix needs is produced here: data codeword packing,
 // Reed-Solomon error correction over GF(256) with the 0x11D primitive
@@ -26,16 +26,19 @@
 #include "QtMd3Export.h"
 
 #include <QtCore/QByteArray>
+#include <QtCore/QMetaType>
 #include <QtCore/QList>
 #include <QtCore/QString>
 #include <QtCore/QtGlobal>
 
 namespace md {
 
-/// QR error-correction level. Q and H are out of scope for this subset.
+/// QR error-correction level (ISO/IEC 18004 Table 12 indicator bits).
 enum class MdQrEcLevel {
     L = 0, ///< ~7% recovery
     M = 1, ///< ~15% recovery
+    Q = 2, ///< ~25% recovery
+    H = 3, ///< ~30% recovery
     Count
 };
 
@@ -75,5 +78,7 @@ public:
 };
 
 } // namespace md
+
+Q_DECLARE_METATYPE(md::MdQrEcLevel)
 
 #endif // MD_QR_ENCODER_H

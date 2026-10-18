@@ -20,6 +20,8 @@
 #include <QtGui/QPainter>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QScrollBar>
 
 using namespace md;
 
@@ -94,6 +96,8 @@ private slots:
     void theListDrivesSelectionModes();
     void keyboardNavigationWalksActivatableItems();
     void renderSmoke();
+    void virtualizedListRealisesOnlyTheViewportRows();
+    void virtualizedListScrollsAndClicksTheVisibleRow();
 
 private:
     MdListItem *m_item = nullptr;
@@ -685,6 +689,157 @@ void TestMd3List::renderSmoke()
     QCOMPARE(listLayout.radii.size(), 4);
     QCOMPARE(listLayout.radii.first(),
              MdShape::resolvedRadius(ShapeCorner::Large, listLayout.container.size()));
+}
+
+// ---------------------------------------------------------------------------
+// Virtualisation
+// ---------------------------------------------------------------------------
+
+void TestMd3List::virtualizedListRealisesOnlyTheViewportRows()
+{
+    // A1000-row list whose viewport shows a dozen rows must not have 1000
+    // realised widgets. `heightForWidth` still reports the whole stack so a
+    // host scroll area keeps an honest scrollbar, but only the rows the
+    // viewport touches are shown and positioned.
+    MdList list;
+    list.setSelectionMode(MdList::SelectionMode::Single);
+    list.setVirtualized(true);
+    QVERIFY(list.isVirtualized());
+
+    const int kCount = 1000;
+    QList<MdListItem *> rows;
+    for (int i = 0; i < kCount; ++i) {
+        auto *row = new MdListItem(QStringLiteral("Row %1").arg(i));
+        row->setInteractive(true);
+        list.addItem(row);
+        rows.append(row);
+    }
+    QCOMPARE(list.itemCount(), kCount);
+
+    // A small viewport: only a handful of the 56px rows fit.
+    list.resize(360, 240);
+    list.show();
+    QApplication::processEvents();
+
+    // The full stack height is still advertised.
+    const int fullHeight = list.heightForWidth(360);
+    QVERIFY2(fullHeight > kCount * 40,
+             qPrintable(QStringLiteral("heightForWidth must span the whole stack, got %1")
+                            .arg(fullHeight)));
+
+    int first = -1;
+    int last = -1;
+    list.realisedRange(&first, &last);
+    QVERIFY2(first >= 0, "some rows must be realised");
+    QVERIFY2(last < kCount, "the realised window must not cover every row");
+    const int realised = last - first + 1;
+    QVERIFY2(realised < kCount / 2,
+             qPrintable(QStringLiteral("realised %1 of %2 rows — virtualisation is not "
+                                       "clipping to the viewport")
+                            .arg(realised)
+                            .arg(kCount)));
+
+    // Realised rows are shown and positioned; the rest are hidden so Qt skips
+    // their layout and paint.
+    int shown = 0;
+    for (int i = 0; i < kCount; ++i) {
+        if (!rows.at(i)->isHidden()) {
+            ++shown;
+            QVERIFY2(i >= first && i <= last,
+                     qPrintable(QStringLiteral("row %1 is shown but outside the realised "
+                                               "range [%2, %3]")
+                                    .arg(i)
+                                    .arg(first)
+                                    .arg(last)));
+        }
+    }
+    QCOMPARE(shown, realised);
+
+    // Switching back restores the classic layout: every row realised.
+    list.setVirtualized(false);
+    QVERIFY(!list.isVirtualized());
+    list.realisedRange(&first, &last);
+    QCOMPARE(first, 0);
+    QCOMPARE(last, kCount - 1);
+}
+
+void TestMd3List::virtualizedListScrollsAndClicksTheVisibleRow()
+{
+    // The end-to-end contract: a 1000-item list still scrolls, and a click on
+    // a row the viewport actually shows activates *that* row.
+    auto *area = new QScrollArea;
+    area->setWidgetResizable(false);
+
+    auto *list = new MdList;
+    list->setSelectionMode(MdList::SelectionMode::Single);
+    list->setVirtualized(true);
+
+    QList<MdListItem *> rows;
+    for (int i = 0; i < 1000; ++i) {
+        auto *row = new MdListItem(QStringLiteral("Row %1").arg(i));
+        row->setInteractive(true);
+        list->addItem(row);
+        rows.append(row);
+    }
+
+    area->setWidget(list);
+    area->resize(360, 240);
+    area->show();
+    QApplication::processEvents();
+
+    // The scroll range reflects the full stack height.
+    QScrollBar *bar = area->verticalScrollBar();
+    QVERIFY(bar != nullptr);
+    QVERIFY2(bar->maximum() > 0, "a 1000-row list must be scrollable");
+
+    // Scroll down far enough that the first screenful is off the top.
+    const int target = bar->maximum() / 2;
+    bar->setValue(target);
+    QApplication::processEvents();
+
+    // The realised window moved with the scroll.
+    int first = -1;
+    int last = -1;
+    list->realisedRange(&first, &last);
+    QVERIFY2(first > 0,
+             qPrintable(QStringLiteral("after scrolling, the realised window should have "
+                                       "moved down; it starts at %1")
+                            .arg(first)));
+
+    // Click a row that is actually visible in the viewport. `first` is padded
+    // one row above the band, so pick the first row whose centre lands inside
+    // the viewport rather than assuming the range's lower bound is on screen.
+    MdListItem *visible = nullptr;
+    for (int i = first; i <= last; ++i) {
+        MdListItem *row = rows.at(i);
+        if (row->isHidden()) {
+            continue;
+        }
+        const QPoint centre =
+            row->mapTo(area->viewport(), QPoint(row->width() / 2, row->height() / 2));
+        if (area->viewport()->rect().contains(centre)) {
+            visible = row;
+            break;
+        }
+    }
+    QVERIFY2(visible != nullptr, "no realised row's centre falls inside the viewport");
+
+    QSignalSpy activated(list, &MdList::itemActivated);
+    // Synthesise the click against the row widget itself: QTest delivers to
+    // the widget named, it does not hit-test down from the viewport.
+    QTest::mouseClick(visible, Qt::LeftButton, Qt::NoModifier,
+                      QPoint(visible->width() / 2, visible->height() / 2));
+    QApplication::processEvents();
+
+    QCOMPARE(activated.count(), 1);
+    QCOMPARE(qvariant_cast<MdListItem *>(activated.at(0).at(0)), visible);
+    QVERIFY(visible->isSelected());
+
+    // And a row far above the viewport is *not* what got activated.
+    QVERIFY(!rows.at(0)->isSelected());
+
+    area->deleteLater();
+    QApplication::processEvents();
 }
 
 QTEST_MAIN(TestMd3List)

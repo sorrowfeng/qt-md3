@@ -407,7 +407,6 @@ int MdTable::heightForWidth(int width) const
 
 void MdTable::paintEvent(QPaintEvent *event)
 {
-    Q_UNUSED(event);
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
 
@@ -442,7 +441,22 @@ void MdTable::paintEvent(QPaintEvent *event)
     QFont bodyFont = MdTypeScale::font(TypeStyle::BodyMedium);
     painter.setFont(bodyFont);
 
-    for (int row = 0; row < m_rows; ++row) {
+    // Only paint the rows the exposed region touches. A tall table scrolls
+    // over a clip rect far smaller than its body; walking every row would
+    // make each repaint cost the full model regardless of what is on screen.
+    const QRectF exposed = event != nullptr ? QRectF(event->rect()) : QRectF(rect());
+    int firstRow = 0;
+    int lastRow = m_rows - 1;
+    if (m_rows > 0) {
+        const qreal h = rowHeight();
+        const qreal bodyTop = bodyRect().top();
+        if (h > 0.0) {
+            firstRow = qBound(0, int((exposed.top() - bodyTop) / h), m_rows - 1);
+            lastRow = qBound(0, int((exposed.bottom() - bodyTop) / h), m_rows - 1);
+        }
+    }
+
+    for (int row = firstRow; row <= lastRow; ++row) {
         const QRectF rowBox = rowRect(row);
         // Optional tonal alternation from the surface-container ladder.
         if (m_alternating) {

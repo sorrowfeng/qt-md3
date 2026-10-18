@@ -155,6 +155,10 @@ md::MdRadioButton *ShowcaseSettingsPage::radio(const QString &id, const QString 
         connect(created, &QAbstractButton::clicked, this, [] {
             md::MdTheme::instance().setThemeMode(md::ThemeMode::Dark);
         });
+    } else if (id == QLatin1String("theme-system")) {
+        connect(created, &QAbstractButton::clicked, this, [] {
+            md::MdTheme::instance().setThemeMode(md::ThemeMode::System);
+        });
     }
     m_radios.insert(id, created);
     return created;
@@ -362,7 +366,10 @@ void ShowcaseSettingsPage::build(GalleryContext &context)
             md::MdRadioButton *system = radio(QStringLiteral("theme-system"),
                                               L("跟随系统", "System"));
             if (!m_stateSeeded.contains(QStringLiteral("theme-system"))) {
-                system->setChecked(true);
+                const md::ThemeMode pref = md::MdTheme::instance().themeModePreference();
+                light->setChecked(pref == md::ThemeMode::Light);
+                dark->setChecked(pref == md::ThemeMode::Dark);
+                system->setChecked(pref == md::ThemeMode::System);
                 m_stateSeeded.insert(QStringLiteral("theme-system"));
             }
             const qreal radioW = 96.0;

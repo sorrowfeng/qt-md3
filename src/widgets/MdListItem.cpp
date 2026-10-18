@@ -2,6 +2,7 @@
 
 #include "styles/MdListItemStyle.h"
 
+#include "core/MdAccessible.h"
 #include "core/MdFocusRing.h"
 #include "core/MdShape.h"
 #include "core/MdTheme.h"
@@ -41,8 +42,10 @@ void MdListItem::init()
 {
     // The paint hub owns painting — registering the shared style as soon as
     // the first item exists means an item is never momentarily painted by the
-    // platform style.
+    // platform style. Same reason for the accessible factory: the ListItem
+    // role and the selected state must be in place before a reader asks.
     MdListItemStyle::shared();
+    installAccessibleInterfaces();
 
     m_ripple = new MdRippleController(this);
     connect(m_ripple, &MdRippleController::repaintRequested, this, qOverload<>(&QWidget::update));

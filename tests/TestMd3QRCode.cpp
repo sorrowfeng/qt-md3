@@ -206,6 +206,77 @@ QVector<quint8> recoverBits(const MdQrEncodeResult &r, int mask, int version)
     return bits;
 }
 
+// ISO/IEC 18004 8.2 de-interleave: the placement stream is the block
+// codewords woven together (data first, then EC). Rebuild the concatenated
+// data codewords so decodeBytePayload sees the original byte-mode stream.
+QVector<quint8> deinterleaveData(const QVector<quint8> &bits, int version, MdQrEcLevel ec)
+{
+    // Pack the bit stream back into codewords.
+    QVector<quint8> cw;
+    for (int i = 0; i + 7 < bits.size(); i += 8) {
+        quint8 v = 0;
+        for (int k = 0; k < 8; ++k) {
+            v = quint8((v << 1) | bits.at(i + k));
+        }
+        cw.append(v);
+    }
+
+    // Block plan mirror of the encoder's Annex E table (1-10 x L/M/Q/H).
+    struct Row { int version; MdQrEcLevel ec; int g1b, g1d, g2b, g2d, ecpb; };
+    static const Row kRows[] = {
+        {1, MdQrEcLevel::L, 1, 19, 0, 0, 7}, {1, MdQrEcLevel::M, 1, 16, 0, 0, 10},
+        {1, MdQrEcLevel::Q, 1, 13, 0, 0, 13}, {1, MdQrEcLevel::H, 1, 9, 0, 0, 17},
+        {2, MdQrEcLevel::L, 1, 34, 0, 0, 10}, {2, MdQrEcLevel::M, 1, 28, 0, 0, 16},
+        {2, MdQrEcLevel::Q, 1, 22, 0, 0, 22}, {2, MdQrEcLevel::H, 1, 16, 0, 0, 28},
+        {3, MdQrEcLevel::L, 1, 55, 0, 0, 15}, {3, MdQrEcLevel::M, 1, 44, 0, 0, 26},
+        {3, MdQrEcLevel::Q, 2, 17, 0, 0, 18}, {3, MdQrEcLevel::H, 2, 13, 0, 0, 22},
+        {4, MdQrEcLevel::L, 1, 80, 0, 0, 20}, {4, MdQrEcLevel::M, 2, 32, 0, 0, 18},
+        {4, MdQrEcLevel::Q, 2, 24, 0, 0, 26}, {4, MdQrEcLevel::H, 4, 9, 0, 0, 16},
+        {5, MdQrEcLevel::L, 1, 108, 0, 0, 26}, {5, MdQrEcLevel::M, 2, 43, 0, 0, 24},
+        {5, MdQrEcLevel::Q, 2, 15, 2, 16, 18}, {5, MdQrEcLevel::H, 2, 11, 2, 12, 22},
+        {6, MdQrEcLevel::L, 2, 68, 0, 0, 18}, {6, MdQrEcLevel::M, 4, 27, 0, 0, 16},
+        {6, MdQrEcLevel::Q, 4, 19, 0, 0, 24}, {6, MdQrEcLevel::H, 4, 15, 0, 0, 28},
+        {7, MdQrEcLevel::L, 2, 78, 0, 0, 20}, {7, MdQrEcLevel::M, 4, 31, 0, 0, 18},
+        {7, MdQrEcLevel::Q, 2, 14, 4, 15, 18}, {7, MdQrEcLevel::H, 4, 13, 1, 14, 26},
+        {8, MdQrEcLevel::L, 2, 97, 0, 0, 24}, {8, MdQrEcLevel::M, 2, 38, 2, 39, 22},
+        {8, MdQrEcLevel::Q, 4, 18, 2, 19, 22}, {8, MdQrEcLevel::H, 4, 14, 2, 15, 26},
+        {9, MdQrEcLevel::L, 2, 116, 0, 0, 30}, {9, MdQrEcLevel::M, 3, 36, 2, 37, 22},
+        {9, MdQrEcLevel::Q, 4, 16, 4, 17, 20}, {9, MdQrEcLevel::H, 4, 12, 4, 13, 24},
+        {10, MdQrEcLevel::L, 2, 68, 2, 69, 18}, {10, MdQrEcLevel::M, 4, 43, 1, 44, 26},
+        {10, MdQrEcLevel::Q, 6, 19, 2, 20, 24}, {10, MdQrEcLevel::H, 6, 15, 2, 16, 28},
+    };
+    const Row *row = nullptr;
+    for (const Row &r : kRows) {
+        if (r.version == version && r.ec == ec) {
+            row = &r;
+            break;
+        }
+    }
+    if (row == nullptr) {
+        return {};
+    }
+    const int totalBlocks = row->g1b + row->g2b;
+    QVector<QVector<quint8>> blocks(totalBlocks);
+    for (int b = 0; b < totalBlocks; ++b) {
+        blocks[b].resize(b < row->g1b ? row->g1d : row->g2d);
+    }
+    // Scatter the woven data codewords back into their blocks (8.2 order).
+    int pos = 0;
+    const int maxData = qMax(row->g1d, row->g2d);
+    for (int i = 0; i < maxData; ++i) {
+        for (int b = 0; b < totalBlocks; ++b) {
+            if (i < blocks[b].size()) {
+                blocks[b][i] = cw.value(pos++);
+            }
+        }
+    }
+    QVector<quint8> data;
+    for (int b = 0; b < totalBlocks; ++b) {
+        data += blocks[b];
+    }
+    return data;
+}
+
 // Extract the byte-mode payload from a recovered bit stream.
 QByteArray decodeBytePayload(const QVector<quint8> &bits, int version, bool *ok)
 {
@@ -235,12 +306,21 @@ QByteArray decodeBytePayload(const QVector<quint8> &bits, int version, bool *ok)
 
 // Find the mask by trying all eight and keeping the one whose bit stream
 // decodes back to `expected`.
-bool roundTrip(const MdQrEncodeResult &r, const QByteArray &expected)
+bool roundTrip(const MdQrEncodeResult &r, const QByteArray &expected, MdQrEcLevel ec)
 {
     for (int mask = 0; mask < 8; ++mask) {
         const QVector<quint8> bits = recoverBits(r, mask, r.version);
+        // The placement stream is block-interleaved; rebuild the original
+        // data codewords before parsing the byte-mode header.
+        const QVector<quint8> data = deinterleaveData(bits, r.version, ec);
+        QVector<quint8> dataBits;
+        for (quint8 v : data) {
+            for (int k = 7; k >= 0; --k) {
+                dataBits.append((v >> k) & 1u);
+            }
+        }
         bool ok = false;
-        const QByteArray payload = decodeBytePayload(bits, r.version, &ok);
+        const QByteArray payload = decodeBytePayload(dataBits, r.version, &ok);
         if (ok && payload == expected) {
             return true;
         }
@@ -269,7 +349,15 @@ private slots:
         QCOMPARE(MdQrEncoder::byteCapacity(7, MdQrEcLevel::L), 154);
         QCOMPARE(MdQrEncoder::byteCapacity(10, MdQrEcLevel::L), 271);
         QCOMPARE(MdQrEncoder::byteCapacity(10, MdQrEcLevel::M), 213);
+        // Q (~25%) and H (~30%). ISO/IEC 18004 Table 7.
+        QCOMPARE(MdQrEncoder::byteCapacity(1, MdQrEcLevel::Q), 11);
+        QCOMPARE(MdQrEncoder::byteCapacity(1, MdQrEcLevel::H), 7);
+        QCOMPARE(MdQrEncoder::byteCapacity(5, MdQrEcLevel::Q), 60);
+        QCOMPARE(MdQrEncoder::byteCapacity(5, MdQrEcLevel::H), 44);
+        QCOMPARE(MdQrEncoder::byteCapacity(10, MdQrEcLevel::Q), 151);
+        QCOMPARE(MdQrEncoder::byteCapacity(10, MdQrEcLevel::H), 119);
         QVERIFY(MdQrEncoder::byteCapacity(11, MdQrEcLevel::M) < 0);
+        QVERIFY(MdQrEncoder::byteCapacity(11, MdQrEcLevel::Q) < 0);
     }
 
     // --- version selection -------------------------------------------------
@@ -399,14 +487,49 @@ private slots:
             QByteArray(40, 'y'),
         };
         for (const QByteArray &payload : payloads) {
-            for (MdQrEcLevel ec : { MdQrEcLevel::L, MdQrEcLevel::M }) {
+            for (MdQrEcLevel ec : { MdQrEcLevel::L, MdQrEcLevel::M,
+                                    MdQrEcLevel::Q, MdQrEcLevel::H }) {
                 const MdQrEncodeResult r = MdQrEncoder::encode(payload, ec);
                 QVERIFY2(r.ok, qPrintable(QStringLiteral("encode failed: %1")
                                               .arg(QString::fromUtf8(payload))));
-                QVERIFY2(roundTrip(r, payload),
+                QVERIFY2(roundTrip(r, payload, ec),
                          qPrintable(QStringLiteral("round-trip failed: %1")
                                         .arg(QString::fromUtf8(payload))));
             }
+        }
+    }
+
+    void formatInfoCarriesEcBits()
+    {
+        // Table 12 indicator bits: L=01, M=00, Q=11, H=10.
+        struct Case { MdQrEcLevel ec; int expectBits; };
+        const Case cases[] = {
+            { MdQrEcLevel::L, 0x1 },
+            { MdQrEcLevel::M, 0x0 },
+            { MdQrEcLevel::Q, 0x3 },
+            { MdQrEcLevel::H, 0x2 },
+        };
+        for (const Case &c : cases) {
+            const MdQrEncodeResult r =
+                MdQrEncoder::encodeText(QStringLiteral("QR"), c.ec);
+            QVERIFY(r.ok);
+            quint16 fmt = 0;
+            for (int i = 0; i <= 5; ++i) {
+                if (moduleAt(r, 8, i)) {
+                    fmt |= quint16(1u << i);
+                }
+            }
+            if (moduleAt(r, 8, 7)) fmt |= quint16(1u << 6);
+            if (moduleAt(r, 8, 8)) fmt |= quint16(1u << 7);
+            if (moduleAt(r, 7, 8)) fmt |= quint16(1u << 8);
+            for (int i = 9; i <= 14; ++i) {
+                if (moduleAt(r, 14 - i, 8)) {
+                    fmt |= quint16(1u << i);
+                }
+            }
+            const quint16 raw = quint16(fmt ^ 0x5412u);
+            const int data = (raw >> 10) & 0x1F;
+            QCOMPARE((data >> 3) & 0x3, c.expectBits);
         }
     }
 
@@ -481,7 +604,33 @@ private slots:
             }
         }
         QVERIFY2(any, "version information block missing");
-        QVERIFY(roundTrip(r, payload));
+        QVERIFY(roundTrip(r, payload, MdQrEcLevel::L));
+    }
+    void widgetEcLevelProperty()
+    {
+        MdQRCode qr;
+        QCOMPARE(qr.ecLevel(), MdQrEcLevel::M);
+
+        QSignalSpy spy(&qr, &MdQRCode::ecLevelChanged);
+        qr.setEcLevel(MdQrEcLevel::H);
+        QCOMPARE(qr.ecLevel(), MdQrEcLevel::H);
+        QCOMPARE(spy.count(), 1);
+
+        // Same level is a no-op; Count is rejected.
+        qr.setEcLevel(MdQrEcLevel::H);
+        QCOMPARE(spy.count(), 1);
+        qr.setEcLevel(MdQrEcLevel::Count);
+        QCOMPARE(qr.ecLevel(), MdQrEcLevel::H);
+
+        // H tightens capacity, so the same payload picks a larger version.
+        const QString payload = QString(20, QLatin1Char('a'));
+        qr.setText(payload);
+        const int hDim = qr.matrixDimension();
+        qr.setEcLevel(MdQrEcLevel::L);
+        qr.setText(payload);
+        const int lDim = qr.matrixDimension();
+        QVERIFY(hDim >= lDim);
+        QVERIFY(lDim >= 21);
     }
 };
 

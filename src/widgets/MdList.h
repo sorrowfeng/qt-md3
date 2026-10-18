@@ -54,6 +54,10 @@ class QT_MD3_EXPORT MdList : public QWidget
     Q_PROPERTY(bool wrapNavigation READ wrapsNavigation WRITE setWrapNavigation NOTIFY
                    wrapNavigationChanged)
     Q_PROPERTY(bool segmented READ isSegmented WRITE setSegmented NOTIFY segmentedChanged)
+    /// Realise only the rows the viewport can see. Off by default so the
+    /// classic widget-per-item layout is untouched; turn it on for lists with
+    /// hundreds of rows where laying out and painting every item dominates.
+    Q_PROPERTY(bool virtualized READ isVirtualized WRITE setVirtualized NOTIFY virtualizedChanged)
 
 public:
     /// Compose's three selection shapes, minus "required": a list may hold
@@ -113,6 +117,26 @@ public:
     bool isSegmented() const { return m_segmented; }
     void setSegmented(bool segmented);
 
+    // --- virtualisation ----------------------------------------------------------
+    /// True when only the rows near the viewport are shown and laid out.
+    ///
+    /// The API is unchanged either way: items are still added as widgets and
+    /// `heightForWidth()` still reports the full stack height, so a host scroll
+    /// area keeps a correct scrollbar. What changes is that rows outside the
+    /// realised window are `hide()`n, so Qt skips their layout and paint, and
+    /// each row's height is cached rather than re-measured on every pass.
+    bool isVirtualized() const { return m_virtualized; }
+    void setVirtualized(bool virtualized);
+
+    /// The window of rows currently realised when `virtualized` is on —
+    /// [first, last], inclusive, or (-1, -1) when nothing is realised. With
+    /// virtualisation off every row is realised and this reports the full span.
+    void realisedRange(int *first, int *last) const;
+
+    /// Scroll the nearest ancestor `QAbstractScrollArea` (if any) so `item`
+    /// is inside the viewport. No-op when the item is null or not ours.
+    void scrollToItem(MdListItem *item);
+
     // --- tokens ------------------------------------------------------------------
     const MdListContainerTokens &tokens() const;
 
@@ -136,16 +160,20 @@ signals:
     void selectionModeChanged(md::MdList::SelectionMode mode);
     void wrapNavigationChanged(bool wrap);
     void segmentedChanged(bool segmented);
+    void virtualizedChanged(bool virtualized);
     /// An item was activated by click or Space/Enter.
     void itemActivated(md::MdListItem *item);
     /// An item's selection changed because of activation.
     void selectionChanged(md::MdListItem *item, bool selected);
 
 protected:
+    bool event(QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private slots:
     void onThemeChanged();
+    void onScrollChanged();
 
 private:
     void init();
@@ -156,6 +184,19 @@ private:
     void syncActiveItem();
     /// One item's activation, wired from the item's `activated()` signal.
     void handleItemActivated(MdListItem *item);
+    /// Re-measure and re-show the virtualised rows around the viewport.
+    void syncVirtualWindow();
+    /// The viewport band (in list coordinates) a virtualised list realises
+    /// rows for: the ancestor scroll area's visible rect, or the whole widget
+    /// when there is none.
+    QRect virtualViewportRect() const;
+    /// The cached measured height of the row at `index`, recomputed when the
+    /// cache is stale.
+    int virtualItemHeight(int index, int width) const;
+    /// Drop the per-row height cache (items changed, width changed, theme).
+    void invalidateVirtualHeights() const;
+    /// Connect the ancestor scroll area's scrollbars to `onScrollChanged`.
+    void installScrollHook();
 
     mutable MdListContainerTokens m_tokens;
     mutable bool m_tokensDirty = true;
@@ -165,7 +206,19 @@ private:
     SelectionMode m_selectionMode = SelectionMode::None;
     bool m_wrapNavigation = true;
     bool m_segmented = false;
+    bool m_virtualized = false;
     MdListItem *m_activeItem = nullptr;
+
+    /// Virtualisation: items kept in layout order independent of the layout,
+    /// with a per-row height cache so a1000-row pass does not re-measure
+    /// every row on every scroll tick.
+    QList<MdListItem *> m_items;
+    mutable QList<int> m_virtualHeights;
+    mutable int m_virtualWidth = -1;
+    mutable bool m_virtualHeightsDirty = true;
+    int m_realisedFirst = -1;
+    int m_realisedLast = -1;
+    bool m_scrollFilterInstalled = false;
 };
 
 } // namespace md

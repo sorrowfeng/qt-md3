@@ -15,12 +15,13 @@
 //
 // MD3 has no QR family; the control is the surface reading of any 2-D code.
 // `setText()` encodes the payload with `MdQrEncoder` — byte mode, versions
-// 1-10, error correction L/M (see `core/MdQrEncoder.h` for the subset and the
+// 1-10, error correction L/M/Q/H (see `core/MdQrEncoder.h` for the subset and the
 // ISO/IEC 18004 citations). A payload that does not fit leaves the previous
 // matrix in place; `setMatrix()` still accepts a pre-encoded grid verbatim.
 //
 // There is no QSS.
 
+#include "core/MdQrEncoder.h"
 #include "core/MdQtCompat.h"
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
@@ -44,6 +45,8 @@ class QT_MD3_EXPORT MdQRCode : public QWidget
     Q_PROPERTY(int moduleSize READ moduleSize WRITE setModuleSize NOTIFY moduleSizeChanged)
     /// When true a quiet zone of 4 modules is kept around the matrix.
     Q_PROPERTY(bool quietZone READ hasQuietZone WRITE setQuietZone NOTIFY quietZoneChanged)
+    /// Error-correction level used by setText (default M).
+    Q_PROPERTY(md::MdQrEcLevel ecLevel READ ecLevel WRITE setEcLevel NOTIFY ecLevelChanged)
 
 public:
     explicit MdQRCode(QWidget *parent = nullptr);
@@ -58,6 +61,9 @@ public:
 
     bool hasQuietZone() const { return m_quietZone; }
     void setQuietZone(bool on);
+
+    MdQrEcLevel ecLevel() const { return m_ecLevel; }
+    void setEcLevel(MdQrEcLevel level);
 
     /// Side length of the module matrix (modules per edge). 0 when empty.
     int matrixDimension() const { return m_dimension; }
@@ -86,6 +92,7 @@ signals:
     void textChanged(const QString &text);
     void moduleSizeChanged(int size);
     void quietZoneChanged(bool on);
+    void ecLevelChanged(md::MdQrEcLevel level);
     void matrixChanged(int dimension);
 
 protected:
@@ -102,6 +109,7 @@ private:
     QString m_text;
     int m_moduleSize = 4;
     bool m_quietZone = true;
+    MdQrEcLevel m_ecLevel = MdQrEcLevel::M;
     int m_dimension = 0;
     QList<bool> m_modules;
 };

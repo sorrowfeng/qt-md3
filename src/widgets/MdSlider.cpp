@@ -2,6 +2,7 @@
 
 #include "styles/MdSliderStyle.h"
 
+#include "core/MdAccessible.h"
 #include "core/MdMotion.h"
 
 #include <QtCore/QTimer>
@@ -29,6 +30,7 @@ constexpr int kTickMs = 8;
 MdSlider::MdSlider(QWidget *parent)
     : QWidget(parent)
 {
+    installAccessibleInterfaces();
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_Hover, true);
     setMouseTracking(true);
