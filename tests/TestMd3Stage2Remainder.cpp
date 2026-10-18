@@ -29,6 +29,7 @@
 #include <QtGui/QPainter>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QGraphicsOpacityEffect>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QScrollArea>
 
@@ -118,6 +119,53 @@ private slots:
         QCOMPARE(indexSpy.count(), 1);
         QCOMPARE(stack.currentIndex(), 1);
         QCOMPARE(stack.indexOf(b), 1);
+    }
+
+    void stackedWidgetFadeApplied()
+    {
+        // The effects-fast spring must land on the pages, not just m_progress.
+        // Both pages stay visible for the flight and carry a
+        // QGraphicsOpacityEffect driven by transitionProgress().
+        MdStackedWidget stack;
+        stack.resize(200, 160);
+        auto *a = new QLabel(QStringLiteral("A"));
+        auto *b = new QLabel(QStringLiteral("B"));
+        QCOMPARE(stack.addWidget(a), 0);
+        QCOMPARE(stack.addWidget(b), 1);
+        stack.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&stack));
+
+        stack.setCurrentIndex(1);
+        QCOMPARE(stack.transitionProgress(), 0.0);
+        auto *outFx = qobject_cast<QGraphicsOpacityEffect *>(a->graphicsEffect());
+        auto *inFx = qobject_cast<QGraphicsOpacityEffect *>(b->graphicsEffect());
+        QVERIFY(outFx != nullptr);
+        QVERIFY(inFx != nullptr);
+        QCOMPARE(outFx->opacity(), 1.0);
+        QCOMPARE(inFx->opacity(), 0.0);
+        QVERIFY(a->isVisible());
+        QVERIFY(b->isVisible());
+
+        // Mid-flight: both opacities move with the spring, never a hard cut.
+        QTest::qWait(40);
+        const qreal p = stack.transitionProgress();
+        QVERIFY(p > 0.0);
+        QVERIFY(p < 1.0);
+        outFx = qobject_cast<QGraphicsOpacityEffect *>(a->graphicsEffect());
+        inFx = qobject_cast<QGraphicsOpacityEffect *>(b->graphicsEffect());
+        QVERIFY(outFx != nullptr);
+        QVERIFY(inFx != nullptr);
+        QVERIFY(outFx->opacity() < 1.0);
+        QVERIFY(inFx->opacity() > 0.0);
+        QVERIFY(inFx->opacity() <= p + 0.05);
+        QVERIFY(outFx->opacity() <= 1.0 - p + 0.05);
+
+        QTRY_COMPARE(stack.transitionProgress(), 1.0);
+        QVERIFY(!a->isVisible());
+        QVERIFY(b->isVisible());
+        // Effects are dropped once the spring settles — no permanent cache.
+        QVERIFY(a->graphicsEffect() == nullptr);
+        QVERIFY(b->graphicsEffect() == nullptr);
     }
 
     // --- MdResult -----------------------------------------------------------

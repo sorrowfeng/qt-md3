@@ -210,6 +210,9 @@ void MdFabMenu::setExpanded(bool expanded)
     }
 
     m_revealAnimation.stop();
+    // Interruptible: retarget from the on-screen reveal, never jump. Velocity
+    // is not carried across the retarget (MdSpring::valueAt is released-from-
+    // rest) — see the note in MdMotion.h.
     m_revealAnimation.setStartValue(m_reveal);
     m_revealAnimation.setEndValue(expanded ? 1.0 : 0.0);
     m_revealAnimation.start();

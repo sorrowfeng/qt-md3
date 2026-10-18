@@ -13,12 +13,15 @@
 #include "core/MdRipple.h"
 #include "core/MdTypes.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QVector>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QWidget>
 
+class QGraphicsOpacityEffect;
 class QScrollArea;
 class QStackedWidget;
+class QTimer;
 
 namespace gallery {
 
@@ -139,11 +142,25 @@ public:
 
 private slots:
     void onThemeChanged();
+    void onPageChanged(int index);
 
 private:
+    void startPageFade(int fromIndex, int toIndex);
+
     GalleryNav *m_nav = nullptr;
     GalleryHeader *m_header = nullptr;
     QStackedWidget *m_stack = nullptr;
+    /// Cross-fade state for the page stack: the outgoing scroll area keeps a
+    /// QGraphicsOpacityEffect for the duration of the spring, then drops it.
+    QGraphicsOpacityEffect *m_fadeOut = nullptr;
+    QGraphicsOpacityEffect *m_fadeIn = nullptr;
+    QWidget *m_fadeOutPage = nullptr;
+    QWidget *m_fadeInPage = nullptr;
+    QTimer *m_fadeTimer = nullptr;
+    QElapsedTimer *m_fadeClock = nullptr;
+    bool m_fadeRunning = false;
+    int m_fadeToIndex = -1;
+    qreal m_fadeStartOut = 1.0;
     QVector<GalleryPage *> m_pages;
     /// Scroll areas that host the nav rail and each page. Kept so the MD3
     /// scrollbar chrome can be installed once and refreshed with the theme.

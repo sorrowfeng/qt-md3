@@ -9,6 +9,7 @@
 #include <QtGui/QPaintEvent>
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
+#include <QtWidgets/QGraphicsOpacityEffect>
 
 namespace md {
 
@@ -16,6 +17,19 @@ namespace {
 
 /// How long the effects-fast spring is allowed to run before snapping shut.
 constexpr int kTransitionBudgetMs = 400;
+
+QGraphicsOpacityEffect *ensureFadeEffect(QWidget *page)
+{
+    if (page == nullptr) {
+        return nullptr;
+    }
+    if (auto *fx = qobject_cast<QGraphicsOpacityEffect *>(page->graphicsEffect())) {
+        return fx;
+    }
+    auto *fx = new QGraphicsOpacityEffect(page);
+    page->setGraphicsEffect(fx);
+    return fx;
+}
 
 } // namespace
 
@@ -102,11 +116,13 @@ void MdStackedWidget::removeWidget(QWidget *page)
         return;
     }
     m_pages.removeAt(index);
+    clearPageEffect(page);
     if (page->parent() == this) {
         page->setParent(nullptr);
     }
     if (m_outgoing == page) {
         m_outgoing = nullptr;
+        m_outgoingFrom = 1.0;
     }
     if (m_currentIndex == index) {
         m_currentIndex = qMin(index, int(m_pages.size()) - 1);
@@ -143,12 +159,14 @@ void MdStackedWidget::clear()
     const QList<QWidget *> pages = m_pages;
     m_pages.clear();
     m_outgoing = nullptr;
+    m_outgoingFrom = 1.0;
     m_running = false;
     if (m_timer) {
         m_timer->stop();
     }
     m_currentIndex = -1;
     for (QWidget *page : pages) {
+        clearPageEffect(page);
         if (page->parent() == this) {
             page->setParent(nullptr);
         }
@@ -172,23 +190,46 @@ void MdStackedWidget::setCurrentIndex(int index)
     }
 
     QWidget *previous = currentWidget();
+
+    // A page that was already fading out and is not the one we are leaving
+    // is finished immediately so only one outgoing is live.
+    if (m_running && m_outgoing != nullptr && m_outgoing != previous) {
+        finishOutgoing();
+    }
+
     m_currentIndex = clamped;
 
     if (m_animated && previous && previous->isVisible()) {
+        // Retarget: the page we are leaving keeps whatever opacity it had on
+        // screen so a mid-flight switch never jumps.
+        m_outgoingFrom = pageOpacity(previous);
         m_outgoing = previous;
         startTransition();
     } else {
         for (int i = 0; i < m_pages.size(); ++i) {
             m_pages.at(i)->setVisible(i == m_currentIndex);
         }
+        if (previous) {
+            clearPageEffect(previous);
+        }
         m_progress = 1.0;
+        m_outgoingFrom = 1.0;
         m_running = false;
+        if (m_timer) {
+            m_timer->stop();
+        }
+        m_outgoing = nullptr;
     }
 
     QWidget *current = currentWidget();
     if (current) {
         current->setVisible(true);
         current->raise();
+    }
+    if (m_running && m_outgoing != nullptr && current != nullptr) {
+        m_outgoing->setVisible(true);
+        m_outgoing->lower();
+        applyFadeOpacities();
     }
     relayout();
     update();
@@ -214,12 +255,13 @@ void MdStackedWidget::setAnimated(bool on)
     if (!m_animated && m_running) {
         m_running = false;
         m_progress = 1.0;
+        m_outgoingFrom = 1.0;
         if (m_timer) {
             m_timer->stop();
         }
-        if (m_outgoing) {
-            m_outgoing->setVisible(false);
-            m_outgoing = nullptr;
+        finishOutgoing();
+        if (QWidget *current = currentWidget()) {
+            clearPageEffect(current);
         }
         update();
     }
@@ -262,6 +304,48 @@ void MdStackedWidget::startTransition()
     }
 }
 
+void MdStackedWidget::applyFadeOpacities()
+{
+    if (m_outgoing != nullptr) {
+        if (QGraphicsOpacityEffect *fx = ensureFadeEffect(m_outgoing)) {
+            fx->setOpacity(m_outgoingFrom * (1.0 - m_progress));
+        }
+    }
+    if (QWidget *current = currentWidget()) {
+        if (QGraphicsOpacityEffect *fx = ensureFadeEffect(current)) {
+            fx->setOpacity(m_progress);
+        }
+    }
+}
+
+void MdStackedWidget::finishOutgoing()
+{
+    if (m_outgoing != nullptr) {
+        clearPageEffect(m_outgoing);
+        m_outgoing->setVisible(false);
+        m_outgoing = nullptr;
+    }
+    m_outgoingFrom = 1.0;
+}
+
+qreal MdStackedWidget::pageOpacity(const QWidget *page)
+{
+    if (page == nullptr) {
+        return 1.0;
+    }
+    if (const auto *fx = qobject_cast<const QGraphicsOpacityEffect *>(page->graphicsEffect())) {
+        return fx->opacity();
+    }
+    return 1.0;
+}
+
+void MdStackedWidget::clearPageEffect(QWidget *page)
+{
+    if (page != nullptr && page->graphicsEffect() != nullptr) {
+        page->setGraphicsEffect(nullptr);
+    }
+}
+
 void MdStackedWidget::updateTransitionState()
 {
     const qreal seconds = m_clock.elapsed() / 1000.0;
@@ -275,10 +359,12 @@ void MdStackedWidget::updateTransitionState()
         if (m_timer) {
             m_timer->stop();
         }
-        if (m_outgoing) {
-            m_outgoing->setVisible(false);
-            m_outgoing = nullptr;
+        finishOutgoing();
+        if (QWidget *current = currentWidget()) {
+            clearPageEffect(current);
         }
+    } else {
+        applyFadeOpacities();
     }
 
     if (currentWidget()) {

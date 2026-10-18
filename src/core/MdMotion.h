@@ -23,6 +23,14 @@ namespace md {
 ///
 /// `valueAt` returns a normalised 0..1 displacement released from rest, which
 /// is what a shape/position animation needs.
+///
+/// Retargeting (interruptibility): callers sample the on-screen value, set it
+/// as the new `from`, and restart the clock — so a mid-flight target change
+/// never jumps. **Velocity is not carried across a retarget** (known
+/// limitation): `valueAt` always assumes release from rest, so a fling's
+/// momentum is dropped when the target flips. Carrying velocity would need a
+/// stateful integrator; the stateless curve is what every widget in this
+/// library drives.
 class QT_MD3_EXPORT MdSpring
 {
 public:

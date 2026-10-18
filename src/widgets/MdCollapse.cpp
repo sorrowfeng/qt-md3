@@ -109,6 +109,8 @@ void MdCollapse::setExpanded(bool expanded)
     m_expanded = expanded;
     m_from = bodyProgress();
     m_target = m_expanded ? 1.0 : 0.0;
+    // Interruptible: the spring retargets from the on-screen height fraction.
+    // Velocity is not carried (MdSpring::valueAt is released-from-rest).
     m_clock.restart();
     updateAnimationState();
     updateGeometry();

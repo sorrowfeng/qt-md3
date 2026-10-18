@@ -8,6 +8,7 @@
 
 #include "GalleryPages.h"
 
+#include "core/MdMotion.h"
 #include "widgets/MdChip.h"
 #include "widgets/MdFab.h"
 #include "widgets/MdIconButton.h"
@@ -17,8 +18,10 @@
 
 #include "I18n.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QHash>
 #include <QtCore/QSet>
+#include <QtCore/QTimer>
 #include <QtCore/QVector>
 
 #include <cmath>
@@ -76,6 +79,7 @@ protected:
 private:
     void layoutChildren();
     void placeChildren();
+    void animatePlayScaleTo(qreal target);
 
     md::MdIconButton *iconButton(const QString &id, const QString &icon);
     md::MdFab *transportFab();
@@ -94,11 +98,37 @@ private:
     /// Ids whose interaction state has already been seeded from the scene.
     /// build() re-runs on every measure/paint and must not clobber a click.
     QSet<QString> m_stateSeeded;
+    /// Interruptible press scale on the play FAB (0.96 pressed -> 1.0 rest),
+    /// driven by the SpatialFast spring. Retargets from the on-screen scale.
+    qreal m_playScale = 1.0;
+    qreal m_playScaleFrom = 1.0;
+    qreal m_playScaleTo = 1.0;
+    QElapsedTimer m_playScaleClock;
+    QTimer m_playScaleTimer;
 };
 
 ShowcaseMusicPage::ShowcaseMusicPage(QWidget *parent)
     : GalleryPage(parent)
 {
+    // Shared-element feel: the play control scales 0.96 -> 1.0 on the
+    // SpatialFast spring. Interrupting a press/release retargets from the
+    // on-screen scale (m_playScale), never jumps. Velocity is not carried —
+    // MdSpring::valueAt is released-from-rest (see MdMotion.h).
+    m_playScaleTimer.setInterval(16);
+    m_playScaleTimer.setTimerType(Qt::PreciseTimer);
+    connect(&m_playScaleTimer, &QTimer::timeout, this, [this] {
+        const md::MdSpring spring = md::MdMotion::spring(md::MotionSpring::SpatialFast);
+        const qreal seconds = qreal(m_playScaleClock.elapsed()) / 1000.0;
+        const qreal t = qBound<qreal>(0.0, spring.valueAt(seconds), 1.0);
+        m_playScale = m_playScaleFrom + (m_playScaleTo - m_playScaleFrom) * t;
+        placeChildren();
+        if (t >= 0.999 || m_playScaleClock.elapsed()
+            >= int(spring.settlingDurationMs())) {
+            m_playScale = m_playScaleTo;
+            m_playScaleTimer.stop();
+            placeChildren();
+        }
+    });
 }
 
 ShowcaseMusicPage::~ShowcaseMusicPage() = default;
@@ -144,8 +174,40 @@ md::MdFab *ShowcaseMusicPage::transportFab()
     m_playFab->setObjectName(QStringLiteral("play"));
     m_playFab->setVariant(md::FabVariant::Primary);
     m_playFab->setFabSize(md::FabSize::Large);
+    // The control is live: click toggles play/pause so the demo is not dead.
+    // MdFab's own press response is the ripple; the icon swap is the shared-
+    // element feel the music screen is supposed to show.
+    connect(m_playFab, &QAbstractButton::clicked, this, [this] {
+        const bool playing = m_playFab->iconName() == QStringLiteral("pause");
+        m_playFab->setIconName(playing ? QStringLiteral("play_arrow")
+                                       : QStringLiteral("pause"));
+    });
+    // Interruptible SpatialFast press scale (0.96 -> 1.0), shared-element feel.
+    connect(m_playFab, &QAbstractButton::pressed, this, [this] {
+        animatePlayScaleTo(0.96);
+    });
+    connect(m_playFab, &QAbstractButton::released, this, [this] {
+        animatePlayScaleTo(1.0);
+    });
     m_playFab->hide();
     return m_playFab;
+}
+
+void ShowcaseMusicPage::animatePlayScaleTo(qreal target)
+{
+    if (m_playScaleTimer.isActive() && qFuzzyCompare(m_playScaleTo, target)) {
+        return;
+    }
+    m_playScaleFrom = m_playScale;
+    m_playScaleTo = target;
+    if (qFuzzyCompare(m_playScaleFrom, m_playScaleTo)) {
+        m_playScale = target;
+        m_playScaleTimer.stop();
+        placeChildren();
+        return;
+    }
+    m_playScaleClock.restart();
+    m_playScaleTimer.start();
 }
 
 md::MdSlider *ShowcaseMusicPage::progressSlider()
@@ -395,8 +457,16 @@ void ShowcaseMusicPage::placeChildren()
         if (slot.widget == nullptr) {
             continue;
         }
-        const QRect target(content.topLeft().toPoint() + slot.rect.topLeft().toPoint(),
-                           slot.rect.size().toSize());
+        QRect target(content.topLeft().toPoint() + slot.rect.topLeft().toPoint(),
+                     slot.rect.size().toSize());
+        // Shared-element press scale: the play FAB shrinks toward its centre
+        // on the SpatialFast spring while the user holds it.
+        if (slot.widget == m_playFab && !qFuzzyCompare(m_playScale, 1.0)) {
+            const QPointF centre = QRectF(target).center();
+            const QSizeF scaled(QSizeF(target.size()) * m_playScale);
+            target = QRectF(centre - QPointF(scaled.width(), scaled.height()) / 2.0, scaled)
+                         .toAlignedRect();
+        }
         if (slot.widget->geometry() != target) {
             slot.widget->setGeometry(target);
         }

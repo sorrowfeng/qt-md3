@@ -91,6 +91,10 @@ private:
     void relayout();
     void startTransition();
     void updateTransitionState();
+    void applyFadeOpacities();
+    void finishOutgoing();
+    static qreal pageOpacity(const QWidget *page);
+    static void clearPageEffect(QWidget *page);
 
     QList<QWidget *> m_pages;
     int m_currentIndex = -1;
@@ -103,6 +107,9 @@ private:
     bool m_running = false;
     QWidget *m_outgoing = nullptr;
     qreal m_progress = 1.0;
+    /// Opacity the outgoing page had on screen when the fade started, so a
+    /// mid-flight retarget never snaps (gallery startPageFade parity).
+    qreal m_outgoingFrom = 1.0;
 };
 
 } // namespace md

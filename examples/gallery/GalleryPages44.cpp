@@ -54,27 +54,29 @@ struct MailEntry
     const char *timeEn;
     const char *avatar;
     bool unread;
+    bool starred;
+    bool work;
 };
 
 const MailEntry kMails[] = {
     {"m0", "林小满", "Avery Chen", "周会纪要", "Standup notes",
      "后端接口的边界情况是……", "Edge cases on the API surface are…",
-     "10:24", "10:24", "林", true},
+     "10:24", "10:24", "林", true, true, true},
     {"m1", "设计组", "Design Guild", "新色板已发布", "New palette shipped",
      "动态提取的次级色已合入主干。", "The derived secondary is merged to main.",
-     "09:12", "09:12", "设", true},
+     "09:12", "09:12", "设", true, false, true},
     {"m2", "Jordan Lee", "Jordan Lee", "Friday offsite", "Friday offsite",
      "Meeting point is the lobby at 09:30.", "Meeting point is the lobby at 09:30.",
-     "昨天", "Yesterday", "J", false},
+     "昨天", "Yesterday", "J", false, true, false},
     {"m3", "成员通知", "Membership", "年费已扣费", "Annual fee charged",
      "发票号码已附在本邮件。", "The invoice number is attached to this mail.",
-     "周三", "Wed", "会", false},
+     "周三", "Wed", "会", false, false, false},
     {"m4", "Build Bot", "Build Bot", "Pipeline green", "Pipeline green",
      "qt-md3-example 通过全部 54 项测试。", "qt-md3-example passed all 54 tests.",
-     "周二", "Tue", "B", false},
+     "周二", "Tue", "B", false, false, true},
     {"m5", "M3 Spec", "M3 Spec", "Token export 34.0.21", "Token export 34.0.21",
      "flexible navigation bar 替代基线家族。", "The flexible navigation bar replaces the baseline family.",
-     "周一", "Mon", "M", false},
+     "周一", "Mon", "M", false, false, true},
 };
 
 /// Colour rotation for the avatar discs, all tonal families.
@@ -112,6 +114,8 @@ protected:
 private:
     void layoutChildren();
     void placeChildren();
+    void applyMailFilter();
+    static bool mailMatchesFilter(const MailEntry &entry, const QString &filterId);
 
     md::MdIconButton *iconButton(const QString &id, const QString &icon);
     md::MdBadgedBox *avatarBox();
@@ -137,6 +141,8 @@ private:
     /// Ids whose interaction state has already been seeded from the scene.
     /// build() re-runs on every measure/paint and must not clobber a click.
     QSet<QString> m_stateSeeded;
+    /// Active filter-chip id ("all" / "unread" / "starred" / "work").
+    QString m_mailFilter = QStringLiteral("all");
     /// Unread markers painted beside list rows (content-local).
     QVector<QPointF> m_unreadDots;
 };
@@ -213,8 +219,52 @@ md::MdChip *ShowcaseMailPage::chip(const QString &id, const QString &label)
     created->setObjectName(id);
     created->setVariant(md::MdChipVariant::Filter);
     created->hide();
+    // Filter chips are exclusive: picking one re-filters the inbox list, so
+    // the demo is not a dead toggle.
+    connect(created, &QAbstractButton::toggled, this, [this, id](bool checked) {
+        if (!checked) {
+            return;
+        }
+        for (md::MdChip *other : m_chips) {
+            if (other != nullptr && other != m_chips.value(id)) {
+                other->setChecked(false);
+            }
+        }
+        m_mailFilter = id;
+        applyMailFilter();
+    });
     m_chips.insert(id, created);
     return created;
+}
+
+bool ShowcaseMailPage::mailMatchesFilter(const MailEntry &entry, const QString &filterId)
+{
+    if (filterId == QLatin1String("unread")) {
+        return entry.unread;
+    }
+    if (filterId == QLatin1String("starred")) {
+        return entry.starred;
+    }
+    if (filterId == QLatin1String("work")) {
+        return entry.work;
+    }
+    return true;
+}
+
+void ShowcaseMailPage::applyMailFilter()
+{
+    if (m_list == nullptr) {
+        return;
+    }
+    for (const MailEntry &entry : kMails) {
+        md::MdListItem *item = m_items.value(QString::fromUtf8(entry.id));
+        if (item == nullptr) {
+            continue;
+        }
+        item->setVisible(mailMatchesFilter(entry, m_mailFilter));
+    }
+    m_list->updateGeometry();
+    update();
 }
 
 md::MdList *ShowcaseMailPage::mailList()
@@ -405,6 +455,7 @@ void ShowcaseMailPage::build(GalleryContext &context)
             m_stateSeeded.insert(id);
         }
     }
+    applyMailFilter();
 
     const qreal listWidth = width - 2.0 * sidePad - 16.0;
     const qreal listHeight = list->heightForWidth(int(listWidth));
@@ -507,7 +558,7 @@ void ShowcaseMailPage::paintEvent(QPaintEvent *event)
                 continue;
             }
             md::MdListItem *item = m_items.value(QString::fromUtf8(entry.id));
-            if (item == nullptr) {
+            if (item == nullptr || !item->isVisible()) {
                 continue;
             }
             const QRectF rowInList(item->geometry());

@@ -2,14 +2,19 @@
 
 #include "GalleryPage.h"
 #include "GalleryPages.h"
+#include "core/MdMotion.h"
 #include "styles/MdScrollBarStyle.h"
 #include "styles/MdStyleBase.h"
 
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QTimer>
 #include <QtGui/QFontMetricsF>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
+#include <QtGui/QShortcut>
 #include <QtWidgets/QFrame>
+#include <QtWidgets/QGraphicsOpacityEffect>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QScrollArea>
 #include <QtWidgets/QScrollBar>
@@ -221,12 +226,22 @@ void GalleryNav::leaveEvent(QEvent *event)
 
 void GalleryNav::keyPressEvent(QKeyEvent *event)
 {
+    // Full list-navigation contract: Up/Down step, PageUp/PageDown jump a
+    // screenful, Home/End land on the ends. Selection follows focus so the
+    // page stack stays in lockstep with the rail.
+    constexpr int kPageStep = 8;
     switch (event->key()) {
     case Qt::Key_Up:
         setCurrentIndex(m_current - 1);
         return;
     case Qt::Key_Down:
         setCurrentIndex(m_current + 1);
+        return;
+    case Qt::Key_PageUp:
+        setCurrentIndex(m_current - kPageStep);
+        return;
+    case Qt::Key_PageDown:
+        setCurrentIndex(m_current + kPageStep);
         return;
     case Qt::Key_Home:
         setCurrentIndex(0);
@@ -578,14 +593,21 @@ GalleryWindow::GalleryWindow(QWidget *parent)
         navBar->setStyle(scrollStyle);
     }
 
-    connect(m_nav, &GalleryNav::currentChanged, this, [this](int index) {
-        m_stack->setCurrentIndex(index);
-        if (index >= 0 && index < m_pages.size()) {
-            m_header->setTitle(m_pages.at(index)->title());
-        }
-    });
+    connect(m_nav, &GalleryNav::currentChanged, this, &GalleryWindow::onPageChanged);
     m_stack->setCurrentIndex(0);
     m_header->setTitle(m_pages.first()->title());
+
+    // Global page jump: Ctrl+1..9 lands on the first nine pages. Digits alone
+    // stay with the focused control so a text field can still type numbers.
+    for (int i = 0; i < 9 && i < m_pages.size(); ++i) {
+        auto *shortcut =
+            new QShortcut(QKeySequence(Qt::CTRL | (Qt::Key_1 + i)), this);
+        shortcut->setContext(Qt::WindowShortcut);
+        connect(shortcut, &QShortcut::activated, this, [this, i] {
+            setCurrentPage(i);
+            m_nav->setFocus(Qt::ShortcutFocusReason);
+        });
+    }
 
     connect(m_header, &GalleryHeader::themeModeToggled, this, [] {
         md::MdTheme::instance().toggleThemeMode();
@@ -693,6 +715,133 @@ void GalleryWindow::setCurrentPage(int index)
 int GalleryWindow::currentPage() const
 {
     return m_nav->currentIndex();
+}
+
+void GalleryWindow::onPageChanged(int index)
+{
+    if (index < 0 || index >= m_pages.size()) {
+        return;
+    }
+    const int outgoing = m_stack->currentIndex();
+    if (outgoing != index && outgoing >= 0 && outgoing < m_stack->count()) {
+        startPageFade(outgoing, index);
+    } else {
+        m_stack->setCurrentIndex(index);
+    }
+    m_header->setTitle(m_pages.at(index)->title());
+}
+
+void GalleryWindow::startPageFade(int fromIndex, int toIndex)
+{
+    // Cross-fade on the effects-fast spring (the same slot MdStackedWidget
+    // uses). Both scroll areas stay visible for the flight: the outgoing one
+    // carries a QGraphicsOpacityEffect down to 0, the incoming one up to 1.
+    // Interrupting a page change drops the page that was fading out and
+    // retargets from the on-screen opacity, so a fast nav walk never jumps.
+    auto *fromPage = qobject_cast<QWidget *>(m_stack->widget(fromIndex));
+    auto *toPage = qobject_cast<QWidget *>(m_stack->widget(toIndex));
+    if (fromPage == nullptr || toPage == nullptr || fromPage == toPage) {
+        m_stack->setCurrentIndex(toIndex);
+        return;
+    }
+
+    // The page that was fading in becomes the new outgoing one: keep its
+    // effect so the retarget continues from the on-screen opacity. The page
+    // that was fading out is done - snap it clear.
+    QGraphicsOpacityEffect *carried = m_fadeIn;
+    QWidget *carriedPage = m_fadeInPage;
+    if (m_fadeOut != nullptr) {
+        if (m_fadeOutPage != nullptr) {
+            m_fadeOutPage->setGraphicsEffect(nullptr);
+            m_fadeOutPage->setVisible(false);
+        }
+        m_fadeOut = nullptr;
+        m_fadeOutPage = nullptr;
+    }
+    m_fadeIn = nullptr;
+    m_fadeInPage = nullptr;
+    m_fadeToIndex = toIndex;
+
+    const qreal startOpacity = carried != nullptr ? carried->opacity() : 1.0;
+    m_fadeStartOut = startOpacity;
+
+    if (m_fadeTimer == nullptr) {
+        m_fadeTimer = new QTimer(this);
+        m_fadeTimer->setInterval(16);
+        m_fadeTimer->setTimerType(Qt::PreciseTimer);
+        m_fadeClock = new QElapsedTimer;
+        connect(m_fadeTimer, &QTimer::timeout, this, [this] {
+            if (!m_fadeRunning) {
+                return;
+            }
+            const qreal seconds = qreal(m_fadeClock->elapsed()) / 1000.0;
+            const md::MdSpring spring = md::MdMotion::spring(md::MotionSpring::EffectsFast);
+            const qreal t = qBound<qreal>(0.0, spring.valueAt(seconds), 1.0);
+            // Outgoing continues from whatever opacity it had on screen; the
+            // incoming always rises from 0 so a retarget never snaps.
+            if (m_fadeOut != nullptr) {
+                m_fadeOut->setOpacity(m_fadeStartOut * (1.0 - t));
+            }
+            if (m_fadeIn != nullptr) {
+                m_fadeIn->setOpacity(t);
+            }
+            if (t >= 0.999 || m_fadeClock->elapsed() >= 400) {
+                m_fadeRunning = false;
+                m_fadeTimer->stop();
+                if (m_fadeOut != nullptr) {
+                    if (m_fadeOutPage != nullptr) {
+                        m_fadeOutPage->setGraphicsEffect(nullptr);
+                        m_fadeOutPage->setVisible(false);
+                    }
+                    m_fadeOut = nullptr;
+                    m_fadeOutPage = nullptr;
+                }
+                if (m_fadeIn != nullptr) {
+                    if (m_fadeInPage != nullptr) {
+                        m_fadeInPage->setGraphicsEffect(nullptr);
+                    }
+                    m_fadeIn = nullptr;
+                    m_fadeInPage = nullptr;
+                }
+                for (int i = 0; i < m_stack->count(); ++i) {
+                    if (QWidget *page = m_stack->widget(i)) {
+                        page->setVisible(i == m_fadeToIndex);
+                    }
+                }
+            }
+        });
+    }
+
+    if (carried != nullptr) {
+        m_fadeOut = carried;
+        m_fadeOutPage = carriedPage != nullptr ? carriedPage : fromPage;
+    } else {
+        m_fadeOut = new QGraphicsOpacityEffect(fromPage);
+        m_fadeOut->setOpacity(startOpacity);
+        fromPage->setGraphicsEffect(m_fadeOut);
+        m_fadeOutPage = fromPage;
+    }
+
+    m_fadeIn = new QGraphicsOpacityEffect(toPage);
+    m_fadeIn->setOpacity(0.0);
+    toPage->setGraphicsEffect(m_fadeIn);
+    m_fadeInPage = toPage;
+
+    // QStackedWidget hides the previous page on setCurrentIndex; re-show both
+    // so the cross-fade has something to paint.
+    m_stack->blockSignals(true);
+    m_stack->setCurrentIndex(toIndex);
+    m_stack->blockSignals(false);
+    fromPage->setVisible(true);
+    fromPage->lower();
+    toPage->setVisible(true);
+    toPage->raise();
+
+    m_fadeClock->restart();
+    m_fadeRunning = true;
+    if (!m_fadeTimer->isActive()) {
+        m_fadeTimer->start();
+    }
 }
 
 void GalleryWindow::onThemeChanged()
