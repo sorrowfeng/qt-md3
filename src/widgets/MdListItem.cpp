@@ -278,6 +278,13 @@ void MdListItem::setDragged(bool dragged)
     emit draggedChanged(m_dragged);
 }
 
+void MdListItem::activate()
+{
+    if (m_interactive && isEnabled()) {
+        emit activated();
+    }
+}
+
 void MdListItem::setSegmentedPosition(int index, int count)
 {
     if (m_segmentIndex == index && m_segmentCount == count) {
@@ -366,9 +373,8 @@ void MdListItem::mouseReleaseEvent(QMouseEvent *event)
     if (m_ripple) {
         m_ripple->release();
     }
-    if (wasPressed && m_interactive && isEnabled()
-        && rect().contains(mousePosition(event).toPoint())) {
-        emit activated();
+    if (wasPressed && rect().contains(mousePosition(event).toPoint())) {
+        activate();
     }
     update();
     QWidget::mouseReleaseEvent(event);
@@ -432,7 +438,7 @@ void MdListItem::keyPressEvent(QKeyEvent *event)
             m_ripple->pressCentered();
             m_ripple->release();
         }
-        emit activated();
+        activate();
         event->accept();
         return;
     }

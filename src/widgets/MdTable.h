@@ -92,9 +92,16 @@ public:
     QString cellText(int row, int column) const;
 
     /// Widget shown in a cell. The table takes ownership through the Qt
-    /// parent relationship and positions it inside the cell rect.
+    /// parent relationship and positions it inside the cell rect. Only rows
+    /// inside the realised window are shown; the rest are hidden until they
+    /// scroll into view.
     void setCellWidget(int row, int column, QWidget *widget);
     QWidget *cellWidget(int row, int column) const;
+
+    /// The window of rows whose cell widgets are currently realised (shown
+    /// and positioned). Rows outside are hidden so a tall table does not
+    /// keep a live child widget per row. Empty range is (-1, -1).
+    void realisedRange(int *first, int *last) const;
 
     // --- selection ------------------------------------------------------------
     int currentRow() const { return m_currentRow; }
@@ -150,6 +157,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void changeEvent(QEvent *event) override;
+    bool event(QEvent *event) override;
 
 private slots:
     void onThemeChanged();
@@ -158,6 +166,14 @@ private:
     void init();
     void recomputeColumnWidths() const;
     void layoutCellWidgets();
+    /// Compute the realised cell-widget window and show / hide accordingly.
+    void syncCellWidgetWindow();
+    /// The visible band in table coordinates — the ancestor scroll area's
+    /// viewport when there is one, else the widget's own rect.
+    QRect virtualViewportRect() const;
+    /// Connect the ancestor scroll area's scrollbars to `onScrollChanged`.
+    void installScrollHook();
+    void onScrollChanged();
     int rowAtPosition(const QPointF &position) const;
     int columnAtPosition(const QPointF &position) const;
 
@@ -174,6 +190,9 @@ private:
     qreal m_rowHeight = 0.0;
     qreal m_headerHeight = 0.0;
     mutable QList<qreal> m_columnWidths;
+    int m_realisedFirst = -1;
+    int m_realisedLast = -1;
+    bool m_scrollFilterInstalled = false;
 };
 
 } // namespace md

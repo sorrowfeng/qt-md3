@@ -165,6 +165,11 @@ public:
     bool isDragged() const { return m_dragged; }
     void setDragged(bool dragged);
 
+    /// Activate the item the same way a click or Space / Enter does. This is
+    /// the shared path for mouse, keyboard and the accessible "activate"
+    /// action. Interactive, enabled items only.
+    void activate();
+
     /// Where the item sits in a segmented list [compose] `segmentedShapes`.
     /// `index < 0` or `count <= 0` means "not segmented"; a count of 1 is a
     /// one-item segment, whose four corners all take the list's shape.

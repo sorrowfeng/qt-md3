@@ -7,10 +7,13 @@
 #include "core/MdTypeScale.h"
 #include "styles/MdStyleBase.h"
 
+#include <QtCore/QEvent>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
+#include <QtWidgets/QAbstractScrollArea>
+#include <QtWidgets/QScrollBar>
 
 namespace md {
 
@@ -198,7 +201,8 @@ void MdTable::setCellWidget(int row, int column, QWidget *widget)
     rowWidgets[column] = widget;
     if (widget != nullptr) {
         widget->setParent(this);
-        widget->show();
+        // Shown only when the row is inside the realised window; see
+        // syncCellWidgetWindow.
     }
     layoutCellWidgets();
 }
@@ -357,16 +361,124 @@ void MdTable::recomputeColumnWidths() const
 
 void MdTable::layoutCellWidgets()
 {
+    syncCellWidgetWindow();
+}
+
+void MdTable::syncCellWidgetWindow()
+{
+    // Only realise the rows the visible band touches (plus one row of pad on
+    // each side, so a flick-scroll never shows a gap). A 1000-row table with
+    // a cell widget per row keeps a handful of live children, not a thousand.
+    int first = -1;
+    int last = -1;
+    if (m_rows > 0) {
+        const qreal h = rowHeight();
+        const qreal bodyTop = bodyRect().top();
+        if (h > 0.0) {
+            const QRect visible = virtualViewportRect();
+            first = qBound(0, int((visible.top() - bodyTop) / h), m_rows - 1);
+            last = qBound(0, int((visible.bottom() - bodyTop) / h), m_rows - 1);
+            first = qMax(0, first - 1);
+            last = qMin(m_rows - 1, last + 1);
+        }
+    }
+    m_realisedFirst = first;
+    m_realisedLast = last;
+
     for (int row = 0; row < m_cellWidgets.size(); ++row) {
         const QList<QWidget *> &rowWidgets = m_cellWidgets.at(row);
+        const bool realised = (first >= 0 && row >= first && row <= last);
         for (int column = 0; column < rowWidgets.size(); ++column) {
             QWidget *widget = rowWidgets.at(column);
             if (widget == nullptr) {
                 continue;
             }
-            widget->setGeometry(cellRect(row, column).toRect());
+            if (realised) {
+                widget->setGeometry(cellRect(row, column).toRect());
+                widget->show();
+            } else if (!widget->isHidden()) {
+                widget->hide();
+            }
         }
     }
+}
+
+QRect MdTable::virtualViewportRect() const
+{
+    // Prefer the ancestor scroll area: the visible band is exactly the
+    // scrollbar's window into the content, so reading the scrollbar value
+    // directly is more reliable than mapping coordinates across a chain that
+    // may be mid-reparent.
+    QWidget *p = parentWidget();
+    while (p != nullptr) {
+        if (auto *area = qobject_cast<QAbstractScrollArea *>(p)) {
+            const int xoff = area->horizontalScrollBar() != nullptr
+                ? area->horizontalScrollBar()->value()
+                : 0;
+            const int yoff = area->verticalScrollBar() != nullptr
+                ? area->verticalScrollBar()->value()
+                : 0;
+            return QRect(xoff, yoff, area->viewport()->width(), area->viewport()->height());
+        }
+        p = p->parentWidget();
+    }
+    return rect();
+}
+
+void MdTable::installScrollHook()
+{
+    QWidget *p = parentWidget();
+    while (p != nullptr) {
+        if (auto *area = qobject_cast<QAbstractScrollArea *>(p)) {
+            if (!m_scrollFilterInstalled) {
+                connect(area->verticalScrollBar(), &QScrollBar::valueChanged, this,
+                        &MdTable::onScrollChanged);
+                connect(area->horizontalScrollBar(), &QScrollBar::valueChanged, this,
+                        &MdTable::onScrollChanged);
+                m_scrollFilterInstalled = true;
+            }
+            break;
+        }
+        p = p->parentWidget();
+    }
+}
+
+void MdTable::onScrollChanged()
+{
+    syncCellWidgetWindow();
+}
+
+void MdTable::realisedRange(int *first, int *last) const
+{
+    if (first != nullptr) {
+        *first = m_realisedFirst;
+    }
+    if (last != nullptr) {
+        *last = m_realisedLast;
+    }
+}
+
+bool MdTable::event(QEvent *event)
+{
+    // Re-realise whenever the ancestor scroll area moves the viewport, and
+    // hook the scrollbars the first time we are parented.
+    if (event != nullptr) {
+        switch (event->type()) {
+        case QEvent::ParentChange:
+        case QEvent::Show:
+            installScrollHook();
+            syncCellWidgetWindow();
+            break;
+        case QEvent::Move:
+        case QEvent::Resize:
+        case QEvent::PolishRequest:
+            syncCellWidgetWindow();
+            break;
+        default:
+            break;
+        }
+    }
+    return QWidget::event(event);
 }
 
 int MdTable::rowAtPosition(const QPointF &position) const

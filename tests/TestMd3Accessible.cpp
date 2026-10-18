@@ -76,6 +76,8 @@ private slots:
     void buttonsExposeNameRoleAndState();
     void textFieldsExposeEditableTextAndName();
     void selectionControlsExposeCheckedState();
+    void switchRoleDistinguishesItFromCheckBox();
+    void listItemsExposeActivateAction();
     void sliderExposesRoleAndValue();
     void listAndItemsExposeListSemantics();
     void tabsExposePageTabAndSelection();
@@ -197,6 +199,88 @@ void TestMd3Accessible::selectionControlsExposeCheckedState()
         QVERIFY(accessibleStateOf(&sw).checkable);
         QVERIFY(!accessibleNameOf(&sw).isEmpty());
     }
+}
+
+void TestMd3Accessible::switchRoleDistinguishesItFromCheckBox()
+{
+    // Qt has no QAccessible::Switch before 6.11 (and never on Qt 5). The
+    // port uses Switch when it exists and falls back to CheckBox with a
+    // description that says "switch" so the two never collide.
+    {
+        MdSwitch sw(QStringLiteral("Wi-Fi"));
+        sw.setChecked(true);
+        QAccessibleInterface *iface = ifaceFor(&sw);
+        QVERIFY(iface != nullptr);
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 11, 0)
+        QCOMPARE(int(iface->role()), int(QAccessible::Switch));
+#else
+        QCOMPARE(int(iface->role()), int(QAccessible::CheckBox));
+#endif
+        QVERIFY2(accessibleStateOf(&sw).checked, "a checked switch must report checked");
+        QVERIFY(accessibleStateOf(&sw).checkable);
+        QCOMPARE(accessibleNameOf(&sw), QStringLiteral("Wi-Fi"));
+
+        // The description is what tells a screen reader "switch" rather than
+        // "checkbox" when the role itself cannot.
+        const QString description = iface->text(QAccessible::Description);
+        QVERIFY2(description.contains(QStringLiteral("switch")),
+                 qPrintable(QStringLiteral("switch description must say 'switch', got '%1'")
+                                .arg(description)));
+    }
+    {
+        // MdCheckBox must NOT carry the switch marker.
+        MdCheckBox box(QStringLiteral("Accept"));
+        box.setChecked(true);
+        QAccessibleInterface *iface = ifaceFor(&box);
+        QVERIFY(iface != nullptr);
+        QCOMPARE(int(iface->role()), int(QAccessible::CheckBox));
+        const QString description = iface->text(QAccessible::Description);
+        QVERIFY2(!description.contains(QStringLiteral("switch")),
+                 qPrintable(QStringLiteral("checkbox description must not say 'switch', got '%1'")
+                                .arg(description)));
+    }
+}
+
+void TestMd3Accessible::listItemsExposeActivateAction()
+{
+    // Screen readers invoke actions; Space/Enter is not the only path. The
+    // item must expose QAccessibleActionInterface with an "activate" action
+    // that fires the same signal a click does.
+    MdListItem item(QStringLiteral("Inbox"));
+    item.setInteractive(true);
+    item.show();
+    QApplication::processEvents();
+
+    QAccessibleInterface *iface = ifaceFor(&item);
+    QVERIFY(iface != nullptr);
+    QCOMPARE(int(iface->role()), int(QAccessible::ListItem));
+
+    QAccessibleActionInterface *actions = iface->actionInterface();
+    QVERIFY2(actions != nullptr,
+             "a list item must expose QAccessibleActionInterface");
+
+    const QStringList names = actions->actionNames();
+    QVERIFY2(names.contains(QStringLiteral("activate")),
+             qPrintable(QStringLiteral("action names must include 'activate', got %1")
+                            .arg(names.join(QLatin1String(", ")))));
+    QVERIFY2(names.size() >= 1, "at least one action is required");
+
+    // doAction triggers the same path as click.
+    QSignalSpy activated(&item, &MdListItem::activated);
+    actions->doAction(QStringLiteral("activate"));
+    QCOMPARE(activated.count(), 1);
+
+    // Non-interactive items do not activate.
+    item.setInteractive(false);
+    actions->doAction(QStringLiteral("activate"));
+    QCOMPARE(activated.count(), 1);
+
+    // And the key bindings advertise Space / Return.
+    const QStringList keys = actions->keyBindingsForAction(QStringLiteral("activate"));
+    QVERIFY2(keys.contains(QStringLiteral("Space")) || keys.contains(QStringLiteral("Return")),
+             qPrintable(QStringLiteral("key bindings must include Space or Return, got %1")
+                            .arg(keys.join(QLatin1String(", ")))));
 }
 
 void TestMd3Accessible::sliderExposesRoleAndValue()

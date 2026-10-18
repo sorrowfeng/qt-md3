@@ -175,6 +175,52 @@ private slots:
         QCOMPARE(label->parent(), &table);
     }
 
+    void cellWidgetsRealiseOnlyTheVisibleWindow()
+    {
+        // A 1000-row table with a cell widget per row must not keep 1000
+        // live children. Only the rows the viewport touches are shown and
+        // positioned; the rest are hidden so Qt skips their layout and paint.
+        MdTable table;
+        table.setColumnCount(2);
+        table.setRowCount(1000);
+        table.resize(400, 240);
+
+        QList<QWidget *> widgets;
+        for (int i = 0; i < 1000; ++i) {
+            auto *label = new QLabel(QStringLiteral("c%1").arg(i));
+            table.setCellWidget(i, 0, label);
+            widgets.append(label);
+        }
+        table.show();
+        QApplication::processEvents();
+
+        int first = -1;
+        int last = -1;
+        table.realisedRange(&first, &last);
+        QVERIFY2(first >= 0, "some rows must be realised");
+        QVERIFY2(last < 1000, "the realised window must not cover every row");
+        const int realised = last - first + 1;
+        QVERIFY2(realised < 500,
+                 qPrintable(QStringLiteral("realised %1 of 1000 rows — virtualisation is not "
+                                           "clipping to the viewport")
+                                .arg(realised)));
+
+        // Realised rows are shown; the rest are hidden.
+        int shown = 0;
+        for (int i = 0; i < 1000; ++i) {
+            if (!widgets.at(i)->isHidden()) {
+                ++shown;
+                QVERIFY2(i >= first && i <= last,
+                         qPrintable(QStringLiteral("row %1 is shown but outside the realised "
+                                                   "range [%2, %3]")
+                                        .arg(i)
+                                        .arg(first)
+                                        .arg(last)));
+            }
+        }
+        QCOMPARE(shown, realised);
+    }
+
     void geometry()
     {
         MdTable table;

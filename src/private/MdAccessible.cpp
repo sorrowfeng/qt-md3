@@ -38,6 +38,76 @@ QString nameOrFallback(const QWidget *widget, const QString &fallback)
 }
 
 // ---------------------------------------------------------------------------
+// MdSwitch — role Switch when Qt has it, CheckBox + "switch" description otherwise
+// ---------------------------------------------------------------------------
+
+/// Qt has no `QAccessible::Switch` before 6.11 (and never on Qt 5). ARIA's
+/// `switch` is a checkbox-like toggle, so the portable fallback is
+/// `QAccessible::CheckBox` — which keeps the checked / checkable state Qt
+/// already reports for QAbstractButton — plus a description that says
+/// "switch" so a screen reader can still tell the control apart from
+/// MdCheckBox. When the role exists (Qt >= 6.11) it is used directly and the
+/// description stays the caller's.
+class MdSwitchAccessible : public QAccessibleWidget
+{
+public:
+    explicit MdSwitchAccessible(MdSwitch *sw)
+        : QAccessibleWidget(sw, switchRole())
+    {
+    }
+
+    static QAccessible::Role switchRole()
+    {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 11, 0)
+        return QAccessible::Switch;
+#else
+        return QAccessible::CheckBox;
+#endif
+    }
+
+    QString text(QAccessible::Text t) const override
+    {
+        auto *sw = static_cast<MdSwitch *>(widget());
+        if (sw == nullptr) {
+            return QString();
+        }
+        switch (t) {
+        case QAccessible::Name:
+            return nameOrFallback(sw, sw->text());
+        case QAccessible::Description: {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 11, 0)
+            // The Switch role already distinguishes the control.
+            return QAccessibleWidget::text(t);
+#else
+            // Role is CheckBox; the description is what distinguishes it
+            // from MdCheckBox. Always say "switch" so the two never collide,
+            // even when the caller wrote their own description.
+            const QString explicitDescription = sw->accessibleDescription();
+            return explicitDescription.isEmpty() ? QStringLiteral("switch")
+                                                 : QStringLiteral("switch, ") + explicitDescription;
+#endif
+        }
+        default:
+            break;
+        }
+        return QAccessibleWidget::text(t);
+    }
+
+    QAccessible::State state() const override
+    {
+        QAccessible::State s = QAccessibleWidget::state();
+        auto *sw = static_cast<MdSwitch *>(widget());
+        if (sw != nullptr) {
+            s.checkable = true;
+            s.checked = sw->isChecked();
+            s.focusable = sw->focusPolicy() != Qt::NoFocus;
+            s.disabled = !sw->isEnabled();
+        }
+        return s;
+    }
+};
+
+// ---------------------------------------------------------------------------
 // MdList / MdListItem
 // ---------------------------------------------------------------------------
 
@@ -47,6 +117,56 @@ public:
     explicit MdListItemAccessible(MdListItem *item)
         : QAccessibleWidget(item, QAccessible::ListItem)
     {
+    }
+
+    void *interface_cast(QAccessible::InterfaceType t) override
+    {
+        // QAccessibleWidget already inherits QAccessibleActionInterface, so
+        // the default cast works; just confirm the interface is offered.
+        return QAccessibleWidget::interface_cast(t);
+    }
+
+    // QAccessibleActionInterface -------------------------------------------
+
+    QStringList actionNames() const override
+    {
+        return {QStringLiteral("activate")};
+    }
+
+    QString localizedActionName(const QString &name) const override
+    {
+        if (name == QLatin1String("activate")) {
+            return QAccessibleActionInterface::tr("Activate");
+        }
+        return name;
+    }
+
+    QString localizedActionDescription(const QString &name) const override
+    {
+        if (name == QLatin1String("activate")) {
+            return QAccessibleActionInterface::tr("Activates the list item");
+        }
+        return name;
+    }
+
+    void doAction(const QString &actionName) override
+    {
+        if (actionName != QLatin1String("activate")) {
+            return;
+        }
+        auto *item = static_cast<MdListItem *>(widget());
+        if (item != nullptr) {
+            // Same path as a click / Space / Enter.
+            item->activate();
+        }
+    }
+
+    QStringList keyBindingsForAction(const QString &actionName) const override
+    {
+        if (actionName == QLatin1String("activate")) {
+            return {QStringLiteral("Space"), QStringLiteral("Return")};
+        }
+        return {};
     }
 
     QString text(QAccessible::Text t) const override
@@ -268,12 +388,15 @@ QAccessibleInterface *mdAccessibleFactory(const QString &classname, QObject *obj
     if (auto *slider = qobject_cast<MdSlider *>(object)) {
         return new MdSliderAccessible(slider);
     }
+    if (auto *sw = qobject_cast<MdSwitch *>(object)) {
+        return new MdSwitchAccessible(sw);
+    }
     if (auto *tab = qobject_cast<MdTab *>(object)) {
         return new MdTabAccessible(tab);
     }
     // Everything else (MdButton / MdIconButton / MdFab as QPushButton,
-    // MdSwitch / MdCheckBox as QCheckBox, MdTextField as QLineEdit) already
-    // has a correct default interface — return nullptr so it is used.
+    // MdCheckBox as QCheckBox, MdTextField as QLineEdit) already has a
+    // correct default interface — return nullptr so it is used.
     return nullptr;
 }
 
