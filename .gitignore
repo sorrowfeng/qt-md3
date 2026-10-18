@@ -83,3 +83,10 @@ desktop.ini
 
 # Playwright CLI session cache
 .playwright-cli/
+
+# Material Symbols variable fonts (3.5-15 MB each). Not committed by policy;
+# see docs/resources-manifest.md. Drop them into resources/fonts/ locally, or
+# run tools/update-icons.sh --fonts. CMake picks them up automatically.
+resources/fonts/MaterialSymbols*.ttf
+resources/fonts/MaterialSymbols*.otf
+resources/fonts/MaterialSymbols*.woff2

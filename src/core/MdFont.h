@@ -23,8 +23,15 @@ public:
     static QString bundledResourceDir();
 
     /// Register every .ttf/.otf under the bundled resource directory.
-    /// Returns the number of faces added.
+    /// Also probes well-known filesystem locations so a Material Symbols
+    /// variable font dropped into `resources/fonts/` (or next to the
+    /// application) is picked up without rebuilding. Returns the number of
+    /// faces added.
     static int registerBundledFonts();
+
+    /// Register every .ttf/.otf in `dirPath` (filesystem or `:/` resource).
+    /// Returns the number of faces added.
+    static int registerFontsFromDirectory(const QString &dirPath);
 
     /// Register a font file from disk or from a resource path.
     /// Returns the family names added, empty on failure.

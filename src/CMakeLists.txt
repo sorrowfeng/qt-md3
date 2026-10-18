@@ -457,6 +457,34 @@ set(QT_MD3_RESOURCES
     ../resources/qt-md3.qrc
 )
 
+# Optional Material Symbols variable fonts. The three multi-megabyte TTFs are
+# not committed (see docs/resources-manifest.md); when they are present under
+# resources/fonts/ at configure time they are compiled into the bundle so
+# MdFont::registerBundledFonts() finds them at :/qt-md3/fonts/. When absent the
+# classic SVG baseline remains the fallback. The qrc is always generated so
+# Q_INIT_RESOURCE(qt_md3_symbols) in MdResources.cpp always resolves.
+file(GLOB _qt_md3_symbols_fonts CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/../resources/fonts/MaterialSymbols*.ttf"
+)
+set(_qt_md3_symbols_qrc "${CMAKE_CURRENT_BINARY_DIR}/qt-md3-symbols.qrc")
+set(_qrc_body "    <qresource prefix=\"/qt-md3\">\n")
+foreach(_font IN LISTS _qt_md3_symbols_fonts)
+    get_filename_component(_font_name "${_font}" NAME)
+    # Alias keeps the resource path free of the upstream [FILL,...] tags.
+    string(REGEX REPLACE "\\[.*\\]" "" _font_alias "${_font_name}")
+    string(APPEND _qrc_body
+        "        <file alias=\"fonts/${_font_alias}\">${_font}</file>\n")
+endforeach()
+string(APPEND _qrc_body "    </qresource>\n")
+file(WRITE "${_qt_md3_symbols_qrc}"
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<RCC>\n${_qrc_body}</RCC>\n")
+list(APPEND QT_MD3_RESOURCES "${_qt_md3_symbols_qrc}")
+if(_qt_md3_symbols_fonts)
+    message(STATUS "qt-md3: bundling Material Symbols fonts from resources/fonts/")
+else()
+    message(STATUS "qt-md3: no Material Symbols fonts in resources/fonts/ (SVG fallback)")
+endif()
+
 add_library(qt-md3
     ${QT_MD3_SOURCES}
     ${QT_MD3_CORE_HEADERS}

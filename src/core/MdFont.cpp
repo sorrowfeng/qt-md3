@@ -2,6 +2,7 @@
 
 #include "MdResources.h"
 
+#include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtGui/QFontDatabase>
@@ -38,14 +39,19 @@ QStringList MdFont::registerFontFile(const QString &filePath)
     return families;
 }
 
-int MdFont::registerBundledFonts()
+int MdFont::registerFontsFromDirectory(const QString &dirPath)
 {
-    int count = 0;
-    MdResources::ensure();
-    QDir dir(bundledResourceDir());
-    if (!dir.exists()) {
-        return count;
+    if (dirPath.isEmpty()) {
+        return 0;
     }
+    // A `:/` path is a resource lookup, so the archive has to be linked in
+    // before QDir can see it. Harmless for a real filesystem path.
+    MdResources::ensure();
+    QDir dir(dirPath);
+    if (!dir.exists()) {
+        return 0;
+    }
+    int count = 0;
     const QStringList filters = {QStringLiteral("*.ttf"), QStringLiteral("*.otf")};
     const QFileInfoList entries = dir.entryInfoList(filters, QDir::Files);
     for (const QFileInfo &entry : entries) {
@@ -53,6 +59,29 @@ int MdFont::registerBundledFonts()
         if (id >= 0) {
             ++count;
         }
+    }
+    return count;
+}
+
+int MdFont::registerBundledFonts()
+{
+    int count = registerFontsFromDirectory(bundledResourceDir());
+
+    // Filesystem probes so a variable font dropped into resources/fonts/
+    // (or next to the running application) is picked up without a rebuild.
+    // The resource bundle is tried first so a vendored copy always wins.
+    QStringList probes;
+    if (qEnvironmentVariableIsSet("QT_MD3_FONT_DIR")) {
+        probes << qEnvironmentVariable("QT_MD3_FONT_DIR");
+    }
+    if (QCoreApplication::instance()) {
+        probes << QCoreApplication::applicationDirPath() + QStringLiteral("/fonts");
+    }
+    for (const QString &probe : probes) {
+        if (probe == bundledResourceDir()) {
+            continue;
+        }
+        count += registerFontsFromDirectory(probe);
     }
     return count;
 }
