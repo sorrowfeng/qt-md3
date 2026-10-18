@@ -25,21 +25,22 @@ system:
 
 ## Status
 
-> **This repository is in the bootstrap phase.** Version `0.1.0`. The build
-> system, the token layer, the interaction primitives, an example gallery and the
-> policy gates exist, and the first two components have landed.
+**Version `0.1.0`** — first public release. Stage 1 (all 36 official MD3
+families) and Stage 2 (55 Qt extension headers) are landed.
 
 | Metric | Value |
 | --- | --- |
-| Stage 1 MD3 families complete | `10 / 36` — **all of §1.2 Actions**, plus Badges and Progress indicators (§1.3 Communication) |
+| Stage 1 MD3 families | `36 / 36` ported |
+| Stage 2 Qt extensions | `55` public headers (appendix D closed) |
+| Public headers | `106` under `src/widgets/` |
 | Foundation modules | `21` |
-| Public components | `12` (`MdButton`, `MdButtonGroup`, `MdIconButton`, `MdFab`, `MdExtendedFab`, `MdFabMenu`, `MdFabMenuItem`, `MdSplitButton`, `MdSegmentedButton`, `MdBadge`, `MdBadgedBox`, `MdProgressIndicator`) |
-| CTest entries | `23` (all green) |
-| Stage 2 (Qt extensions) | In progress — 27 landed (ScrollBar, Select, MessageBox, ScrollArea, Table, Avatar, Window, FileDialog, InputNumber, Scaffold, MenuBar, StatusBar, Splitter, Pagination, EmptyState, Skeleton, Steps/Stepper, Upload, Rate, Flex, Grid, Space, Collapse, Notification, Tree/TreeSelect); remaining appendix D rows in docs/porting-todo.md |
+| CTest entries | `94` (all green) |
+| Gallery pages | `55` + three product showcases |
+| Supported Qt | 5.15.2+ and 6.5.0+ |
 
-Progress is tracked in [docs/md3-coverage.md](docs/md3-coverage.md), the single
-source of truth for the Stage 1 → Stage 2 switch. Current state:
-[docs/project-status.md](docs/project-status.md).
+Progress is tracked in [docs/md3-coverage.md](docs/md3-coverage.md). Current
+state: [docs/project-status.md](docs/project-status.md). Screenshot gallery:
+[docs/screenshots/](docs/screenshots/).
 
 ## Two stages, strictly serial
 
@@ -65,6 +66,110 @@ Radio button · Sliders · Switch · Time pickers · Text fields · Search
 
 </details>
 
+<details>
+<summary>Stage 2 Qt extensions (55 headers)</summary>
+
+`MdScrollBar` · `MdSelect` · `MdMessageBox` · `MdScrollArea` · `MdTable` ·
+`MdAvatar` · `MdWindow` · `MdFileDialog` · `MdInputNumber` · `MdScaffold` ·
+`MdMenuBar` · `MdStatusBar` · `MdSplitter` · `MdPagination` · `MdEmptyState` ·
+`MdSkeleton` · `MdSteps` / `MdStepper` · `MdUpload` · `MdRate` · `MdFlex` ·
+`MdGrid` · `MdSpace` · `MdCollapse` · `MdNotification` · `MdTree` /
+`MdTreeSelect` · `MdStatistic` · `MdPopover` / `MdPopconfirm` ·
+`MdAutoComplete` · `MdColorPicker` · `MdDockWidget` / `MdDockManager` ·
+`MdDescriptions` · `MdTimeline` · `MdImage` · `MdWatermark` · `MdTransfer` ·
+`MdMentions` · `MdBackTop` · `MdInputDialog` · `MdStackedWidget` · `MdResult` ·
+`MdBreadcrumb` · `MdQRCode` · `MdLog` · `MdCascader` · `MdPlainTextEdit` ·
+`MdMasonry` · `MdDrawer` · `MdTour` / `MdCoachMark` · `MdRibbon` ·
+`MdNav` / `MdNavItem` · `MdAffix` / `MdAnchor`
+
+</details>
+
+## API overview
+
+Everything lives in the `md` namespace, class prefix `Md`. Include the widget
+header and link `qt-md3::qt-md3`.
+
+```cpp
+#include <MdDesign.h>
+#include <MdTheme.h>
+#include <MdButton.h>
+#include <MdFab.h>
+
+int main(int argc, char *argv[])
+{
+    md::MdDesign::configureHighDpi();   // before QApplication
+    QApplication app(argc, argv);
+    md::MdDesign::initialize(&app);     // fonts, language, base font, RTL
+
+    auto *button = new md::MdButton;
+    button->setLabelText(QStringLiteral("Filled"));
+    button->setColorStyle(md::ButtonColorStyle::Filled);
+    button->setSize(md::ButtonSize::Medium);   // Expressive xsmall…xlarge
+
+    // Theme is a singleton; every widget re-paints on themeChanged.
+    md::MdTheme::instance().setThemeMode(md::ThemeMode::Dark);
+    md::MdTheme::instance().setSeedColor(QColor(0x6750A4));
+    md::MdTheme::instance().setDynamicColor(true);
+    md::MdTheme::instance().setContrastLevel(md::ContrastLevel::High);
+    ...
+}
+```
+
+### Naming and properties
+
+| Convention | Rule |
+| --- | --- |
+| Namespace / prefix | `md` / `Md` (`MdButton`, `MdTheme`, `MdColorRole`) |
+| Enums | named 1:1 with the official semantics; every enum ends with a `Count` sentinel |
+| Configurable items | every one is a `Q_PROPERTY` with a `NOTIFY` signal |
+| States | enabled / hovered / focused / pressed / disabled / selected / dragged / loading, as applicable |
+| Themes | light / dark, seed change, contrast level, density, RTL, font switch |
+| Painting | `QPainter` / `QProxyStyle` only — QSS is forbidden and gated |
+
+### Key types
+
+| Header | Role |
+| --- | --- |
+| `MdDesign` | `configureHighDpi()` + `initialize(&app)` startup entry point |
+| `MdTheme` | singleton: mode, seed, dynamic colour, contrast, density, RTL, `themeChanged` |
+| `MdTokens` | `md.ref.*` / `md.sys.*` / `md.comp.*` token layers |
+| `MdColorScheme` | 49 colour roles, light and dark, including the `*-fixed` families |
+| `MdDynamicColor` | nine scheme variants resolved through the `ColorSpec2021` solver |
+| `MdTypeScale` | 15 baseline + 15 emphasized styles, script-category line height |
+| `MdShape` | corner scale, radius interpolation, path morph |
+| `MdMotion` | 10 easings, 16 durations, six Expressive spring slots |
+| `MdIcon` | Material Symbols (variable font, four axes) + classic SVG fallback |
+| `MdStyleBase` | `QProxyStyle` hub: paint filters, theme subscriptions |
+
+A component is only “done” when its Definition of Done holds — see
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Screenshot gallery
+
+Selected light/dark captures live in [`docs/screenshots/`](docs/screenshots/):
+the three product showcases (Mail, Music, Settings), the dynamic-colour page,
+and a couple of component pages. Full-page PNGs of every gallery page can be
+regenerated at any time:
+
+```bash
+cmake --build build
+build/examples/qt-md3-example --language en --theme light --screenshot build/shots-light
+build/examples/qt-md3-example --language en --theme dark  --screenshot build/shots-dark
+```
+
+Each page produces two images: `<nn>-<slug>.png` (the window) and
+`<nn>-<slug>-full.png` (the page grown to its `heightForWidth()`). Prefer the
+`-full` one — the window shot only ever shows the first screenful. Capture
+from the native platform when text matters; `QT_QPA_PLATFORM=offscreen`
+renders tofu boxes on Windows.
+
+Interactive gallery:
+
+```bash
+tools/run-gallery.sh                 # open the gallery
+tools/run-gallery.sh --theme dark --dynamic
+```
+
 ## Design principles
 
 - **Tokens over literals.** Every color, radius, size, spacing, and duration comes
@@ -81,11 +186,23 @@ Radio button · Sliders · Switch · Time pickers · Text fields · Search
 - **Expressive motion.** Spring physics coexists with classic easing curves.
 - **No QSS.** Painting is `QPainter` only, enforced by a gate.
 
-## Requirements
+## Requirements and support matrix
 
-- Qt **6.5.0+** or Qt **5.15.2+** (`Core`, `Widgets`, `Svg`; `Test` for tests).
-- CMake **3.16+**.
-- A C++17 compiler.
+| | Qt 5.15.2+ | Qt 6.5.0+ |
+| --- | --- | --- |
+| Compilers | MinGW 8.1+, MSVC 2019+, Clang 10+ | MinGW 11+, MSVC 2019+, Clang 12+, AppleClang 14+ |
+| Modules | `Core`, `Widgets`, `Svg` (`Test` for tests) | same |
+| CMake | 3.16+ | 3.16+ |
+| C++ | C++17 | C++17 |
+| OS (CI) | Linux, Windows | Linux, Windows, macOS |
+| Dynamic colour | Yes | Yes |
+| Expressive springs | Yes | Yes |
+| Material Symbols fonts | Yes (Qt 5 renders the default instance; static weights preferred) | Yes |
+| RTL | Yes | Yes |
+
+CI matrix: Linux Qt 5.15.2 Debug ASan+UBSan, Linux Qt 5.15.2 shared Release,
+Windows Qt 5.15.2, Windows Qt 6.7.3, Windows Qt 6.7.3 shared Release, macOS Qt 6
+shared Release.
 
 ## Build
 
@@ -102,6 +219,20 @@ cmake -S . -B build -DQT_MD3_BUILD_EXAMPLES=ON -DQT_MD3_BUILD_TESTS=ON
 cmake --build build --config Debug --parallel
 ctest --test-dir build -C Debug --output-on-failure
 ```
+
+With the Qt 6 MinGW kit:
+
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_CXX_COMPILER=C:/Qt/Tools/mingw1310_64/bin/g++.exe \
+  -DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64 \
+  -DQT_MD3_BUILD_EXAMPLES=ON -DQT_MD3_BUILD_TESTS=ON
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+With the Qt 5.15 kit, point `QT5_CMAKE_PREFIX_PATH` (or `CMAKE_PREFIX_PATH`)
+at the Qt 5 `lib/cmake` directory so CMake does not pick up Qt 6.
 
 The library is static by default; pass `-DBUILD_SHARED_LIBS=ON` for a shared
 build. On Windows every executable gets the Qt runtime, the C++ runtime and the
@@ -132,7 +263,7 @@ src/private/    internal helpers (not exported)
 examples/       the component gallery app
 tests/          QTest + CTest, including the policy gates
 resources/      icons, fonts, .qrc
-docs/           status, audit, specs, TODOs
+docs/           status, audit, specs, TODOs, screenshots
 ```
 
 ## Policy gates
@@ -141,14 +272,15 @@ docs/           status, audit, specs, TODOs
 | --- | --- |
 | `TestMd3NoQss` | No QSS anywhere in `src/`, `examples/`, `tests/`, `resources/` |
 | `TestMd3CoveragePolicy` | All 36 families tracked; no Stage 2 components before Stage 1 is green |
-| TestMd3SourceEncoding | Every source file is valid UTF-8; no UTF-8 literal is decoded as Latin-1 |
+| `TestMd3SourceEncoding` | Every source file is valid UTF-8; no UTF-8 literal is decoded as Latin-1 |
 | `TestMd3Deployment*` | Every executable starts with no Qt on `PATH` — the double-click case |
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the development flow, the component
-Definition of Done, and the build/test commands. Please also read
-[AGENTS.md](AGENTS.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+Definition of Done, the Qt 5 portability checklist, and the build/test
+commands. Please also read [AGENTS.md](AGENTS.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

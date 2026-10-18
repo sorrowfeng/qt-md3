@@ -57,6 +57,62 @@ ctest --preset qt5-debug
 Minimum supported versions: **Qt 6.5.0** or **Qt 5.15.2**. CMake enforces this
 at configure time and in the installed package's consumer check.
 
+## Qt 5 portability rules (checklist)
+
+CI runs Qt 5.15.2 on Linux and Windows. Before every commit that touches
+`src/`, `examples/`, or `tests/`, walk this checklist. Each rule exists because
+a prior commit failed without it.
+
+- [ ] **1. Event coordinates go through `MdQtCompat`.** Qt 6 spells them
+      `QEnterEvent` / `QMouseEvent::position()`; Qt 5 spells them `QEvent` /
+      `pos()` / `localPos()`. Use `md::MdEnterEvent`, `md::mousePosition()`,
+      `md::enterPosition()` from `src/core/MdQtCompat.h` — never call
+      `position()` or take `QEnterEvent*` directly.
+- [ ] **2. No Qt 6-only statics.** `QFontDatabase::families()` is static in
+      Qt 6 and an instance method in Qt 5. Prefer the instance form (or a
+      `QT_VERSION_CHECK` block). Likewise avoid `QFontDatabase` statics that
+      only exist in Qt 6.
+- [ ] **3. Explicit `qHash` for enum keys.** Qt 5 does not generate
+      `qHash` for scoped enums used as `QHash` keys. Provide
+      `inline uint qHash(MyEnum, uint seed)` (see `MdColorScheme.h`) or use
+      `std::vector<std::pair<…>>` instead of `QHash<Enum, …>`.
+- [ ] **4. Stay on the QList/QVector intersection.** Qt 5 keeps `QVector`
+      separate and lacks several Qt 6 list helpers (`emplaceBack` on some
+      overloads, `assign`, `QList(n, value)`). Use `append`, `reserve`,
+      `operator<<`, or `std::vector`.
+- [ ] **5. Include `<cmath>` yourself.** MinGW 8.1 (the Qt 5.15 kit) does not
+      pull `std::lround` / `std::ceil` / `std::abs` in transitively. Any
+      `<cmath>` use needs its own include.
+- [ ] **6. Geometry APIs that differ.** Qt 5 has no `QRect::contains(QPointF)`
+      (call `.toPoint()` first) and `mapToGlobal` takes only `QPoint` (not
+      `QPointF`). `QWidget` has no `xChanged` / `yChanged` on Qt 5.
+- [ ] **7. Signal spellings.** `QCheckBox::checkStateChanged` is Qt 6.7+; on
+      Qt 5 use `stateChanged(int)`. When both are needed, connect the Qt 5
+      signal under `#if QT_VERSION < QT_VERSION_CHECK(6, 7, 0)` and de-dup
+      with a `m_lastState` guard.
+- [ ] **8. Tests: synthesise Enter yourself.** `QTest::mouseMove` does not
+      produce an Enter event on Qt 5 offscreen. Build a `QEnterEvent` (or
+      `QEvent` under Qt 5) and `QApplication::sendEvent` it — see
+      `TestMd3Card` / `TestMd3SplitButton`. Pixel text assertions must probe
+      for real ink first: the Qt 5 offscreen plugin has no font database and
+      `drawText` paints nothing.
+- [ ] **9. No `M_PI` / no `fromLatin1` for UI text.** Define your own
+      constant or use `std::numbers` alternatives; `M_PI` is not portable on
+      MinGW. Decode source text with `QString::fromUtf8` /
+      `QStringLiteral` — `fromLatin1` is gated by `TestMd3SourceEncoding`.
+
+Local Qt 5 verification (reproduces every Qt 5 CI failure early):
+
+```powershell
+# C:/Qt/5.15.2/mingw81_64 + C:/Qt/Tools/mingw810_64 + Ninja
+cmake -S . -B build-qt5 -G Ninja -DCMAKE_BUILD_TYPE=Debug `
+  -DCMAKE_CXX_COMPILER=C:/Qt/Tools/mingw810_64/bin/g++.exe `
+  -DCMAKE_PREFIX_PATH=C:/Qt/5.15.2/mingw81_64 `
+  -DQT_MD3_BUILD_EXAMPLES=ON -DQT_MD3_BUILD_TESTS=ON
+cmake --build build-qt5
+ctest --test-dir build-qt5 --output-on-failure
+```
+
 ## Tests
 
 Run only the targeted tests for what you changed; do not default to a full run.

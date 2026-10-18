@@ -1,6 +1,6 @@
-﻿# Project Status
+# Project Status
 
-Last updated: 2026-10-12
+Last updated: 2026-10-18 (release prep for `0.1.0`)
 
 ## Snapshot
 
@@ -10,13 +10,15 @@ Last updated: 2026-10-12
 | Stage | Stage 1 closed (36/36 families). Stage 2 (Qt extensions) complete — 55 headers landed; appendix D closed in [porting-todo.md](porting-todo.md) |
 | Stage 1 families complete | `36 / 36` (§1.2 Actions × 8, Badges, Progress indicators, Loading indicator, Snackbar, Tooltips, Cards, Dialogs, Bottom sheets, Side sheets, Carousel, Divider, Lists, App bars, Toolbars, Navigation bar, Navigation rail, Navigation drawer, Tabs, Checkbox, Chips, Radio button, Switch, Menus, Sliders, Time pickers, Date pickers, Text fields, Search) |
 | Base modules | `21 / 21` |
+| Public headers | `106` under `src/widgets/` (Stage 1 families + hosts + 55 Stage 2 extensions) |
 | Public components | `92` (Stage 1 families plus every appendix D Qt extension: `MdScrollBar`, `MdSelect`, `MdMessageBox`, `MdScrollArea`, `MdTable`, `MdAvatar`, `MdWindow`, `MdFileDialog`, `MdInputNumber`, `MdScaffold`, `MdMenuBar`, `MdStatusBar`, `MdSplitter`, `MdPagination`, `MdEmptyState`, `MdSkeleton`, `MdSteps` / `MdStepper`, `MdUpload`, `MdRate`, `MdFlex`, `MdGrid`, `MdSpace`, `MdCollapse`, `MdNotification`, `MdTree`, `MdTreeSelect`, `MdStatistic`, `MdPopover`, `MdPopconfirm`, `MdAutoComplete`, `MdColorPicker`, `MdDockWidget`, `MdDockManager`, `MdDescriptions`, `MdTimeline`, `MdImage`, `MdWatermark`, `MdTransfer`, `MdMentions`, `MdBackTop`, `MdInputDialog`, `MdStackedWidget`, `MdResult`, `MdBreadcrumb`, `MdQRCode`, `MdLog`, `MdCascader`, `MdPlainTextEdit`, `MdMasonry`, `MdDrawer`, `MdTour`, `MdCoachMark`, `MdRibbon`, `MdNav`, `MdNavItem`, `MdAffix`, `MdAnchor`) |
 | Style classes | `45` (`MdStyleBase` plus one `Md*Style` per painted Stage 1 family; Stage 2 containers paint themselves in `paintEvent` and have no style class) |
 | Example pages | `55` (foundation + one per Stage 1 family + Stage 2 pages 48–55 + dynamic colour + three showcase screens) |
 | Bundled icons | `49` classic SVGs + `4299` Material Symbols codepoints |
-| Bundled fonts | `0` (opt-in; see [resources-manifest.md](resources-manifest.md)) |
-| CTest entries | `80` (all green) |
+| Bundled fonts | Roboto static weights committed; Material Symbols TTFs opt-in, out of git (see [resources-manifest.md](resources-manifest.md)) |
+| CTest entries | `94` (all green) |
 | Supported Qt | Qt 6.5.0+ and Qt 5.15.2+ |
+| Screenshot gallery | [`docs/screenshots/`](screenshots/) — showcases + dynamic colour + sample component pages, light and dark |
 
 ## What exists today
 
