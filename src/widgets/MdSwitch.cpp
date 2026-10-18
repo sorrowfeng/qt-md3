@@ -56,6 +56,17 @@ void MdSwitch::init()
 
     MdSwitchStyle::shared();
 
+    // Qt 5 caches an accessible interface the first time anything touches
+    // accessibility. QCheckBox's constructor calls setText() →
+    // updateAccessibility() while the vtable is still QCheckBox, so the
+    // cache holds the default QCheckBox interface and our factory never
+    // sees the MdSwitch type. That interface reports
+    // QWidget::accessibleDescription(), so plant the marker there too —
+    // MdSwitchAccessible emits the same string when it is the one in use.
+    if (accessibleDescription().isEmpty()) {
+        setAccessibleDescription(QStringLiteral("switch"));
+    }
+
     // First layout lands directly (Compose records `initialSize` /
     // `initialOffset` on the first measure, no animation from nothing).
     retargetThumb();

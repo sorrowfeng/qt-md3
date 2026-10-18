@@ -81,8 +81,14 @@ public:
 #else
             // Role is CheckBox; the description is what distinguishes it
             // from MdCheckBox. Always say "switch" so the two never collide,
-            // even when the caller wrote their own description.
+            // even when the caller wrote their own description. MdSwitch::
+            // init() plants the same marker on the widget so the default
+            // QCheckBox interface (cached during base construction on Qt 5)
+            // reports it too — do not double it here.
             const QString explicitDescription = sw->accessibleDescription();
+            if (explicitDescription.contains(QStringLiteral("switch"))) {
+                return explicitDescription;
+            }
             return explicitDescription.isEmpty() ? QStringLiteral("switch")
                                                  : QStringLiteral("switch, ") + explicitDescription;
 #endif
