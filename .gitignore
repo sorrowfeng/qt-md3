@@ -11,6 +11,7 @@ cmake-build-*/
 install/
 install*/
 out/
+build-out.txt
 
 # CMake
 CMakeCache.txt
