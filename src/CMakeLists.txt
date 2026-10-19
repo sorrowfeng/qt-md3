@@ -234,6 +234,11 @@ set(QT_MD3_WIDGET_HEADERS
     widgets/MdRibbon.h
     widgets/MdNav.h
     widgets/MdAnchor.h
+    widgets/MdMarquee.h
+    widgets/MdSeekSlider.h
+    widgets/MdVolumeSlider.h
+    widgets/MdMiniPlayer.h
+    widgets/MdReorderList.h
 )
 
 set(QT_MD3_SOURCES
@@ -453,6 +458,11 @@ set(QT_MD3_SOURCES
     widgets/MdRibbon.cpp
     widgets/MdNav.cpp
     widgets/MdAnchor.cpp
+    widgets/MdMarquee.cpp
+    widgets/MdSeekSlider.cpp
+    widgets/MdVolumeSlider.cpp
+    widgets/MdMiniPlayer.cpp
+    widgets/MdReorderList.cpp
 )
 
 set(QT_MD3_RESOURCES

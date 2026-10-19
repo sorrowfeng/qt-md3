@@ -90,3 +90,36 @@ endif()
 # modules, the C++ runtime and the platform plugin sit beside it. See
 # cmake/QtMd3Deploy.cmake for why this does not just call windeployqt.
 qt_md3_deploy_runtime(qt-md3-example)
+
+# ---------------------------------------------------------------------------
+# qt-md3 music player: a real application target that exercises the library
+# end to end (scaffold, navigation, lists, sliders, chips, dialogs, menus,
+# snackbars, theme). Example code, not library code.
+# ---------------------------------------------------------------------------
+add_executable(qt-md3-music-player
+    music-player/main.cpp
+    music-player/MusicData.cpp
+    music-player/MusicPages.cpp
+    music-player/MusicPlayerWindow.cpp
+)
+
+target_include_directories(qt-md3-music-player
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/music-player
+)
+
+target_link_libraries(qt-md3-music-player
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+)
+
+set_target_properties(qt-md3-music-player PROPERTIES
+    WIN32_EXECUTABLE ON
+    MACOSX_BUNDLE ON
+)
+
+qt_md3_deploy_runtime(qt-md3-music-player)

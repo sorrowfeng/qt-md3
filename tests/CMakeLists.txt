@@ -2123,3 +2123,28 @@ set_tests_properties(TestMd3GalleryClick PROPERTIES
 )
 
 qt_md3_deploy_runtime(TestMd3GalleryClick)
+
+# --- Media / marquee Stage 2 additions --------------------------------------
+foreach(media_test IN ITEMS
+    TestMd3Marquee
+    TestMd3SeekSlider
+    TestMd3VolumeSlider
+    TestMd3MiniPlayer
+    TestMd3ReorderList
+)
+    add_executable(${media_test} ${media_test}.cpp)
+    target_link_libraries(${media_test}
+        PRIVATE
+            qt-md3
+            Qt${QT_VERSION_MAJOR}::Core
+            Qt${QT_VERSION_MAJOR}::Gui
+            Qt${QT_VERSION_MAJOR}::Widgets
+            Qt${QT_VERSION_MAJOR}::Svg
+            Qt${QT_VERSION_MAJOR}::Test
+    )
+    add_test(NAME ${media_test} COMMAND ${media_test})
+    set_tests_properties(${media_test} PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+    )
+    qt_md3_deploy_runtime(${media_test})
+endforeach()
