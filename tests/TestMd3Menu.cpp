@@ -491,6 +491,9 @@ void TestMd3Menu::escapeClosesTheMenu()
 
     QSignalSpy closedSpy(&menu, &MdMenu::closed);
     QTest::keyClick(&menu, Qt::Key_Escape);
+    // The close reverses the open springs rather than popping out in one
+    // frame; the surface hides and closed() fires when they settle.
+    settleAnimations(menu);
     QVERIFY(!menu.isVisible());
     QCOMPARE(closedSpy.count(), 1);
 }

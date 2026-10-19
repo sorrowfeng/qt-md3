@@ -332,6 +332,20 @@ void MdTooltipHost::showTooltip(bool fromHover)
     globalShowingHost() = this;
 
     placePopup();
+    // Closed values before the first paint: showing at the default
+    // paintOpacity of 1.0 and only then fading is the flash this host
+    // must not have.
+    m_opacity = 0.0;
+    m_scale = kEnterScaleStart;
+    m_tooltip->setPaintOpacity(0.0);
+    {
+        const QPointF centre = m_restingGeometry.center();
+        QRect scaled = m_restingGeometry;
+        scaled.setSize(QSize(int(std::round(qreal(m_restingGeometry.width()) * m_scale)),
+                             int(std::round(qreal(m_restingGeometry.height()) * m_scale))));
+        scaled.moveCenter(centre.toPoint());
+        m_tooltip->setGeometry(scaled);
+    }
     m_tooltip->show();
     m_showing = true;
 

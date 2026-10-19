@@ -1,5 +1,7 @@
 #include "gallery/GalleryWindow.h"
 
+#include "widgets/MdDialogHost.h"
+
 #include "core/MdCore.h"
 #include "core/MdDesign.h"
 #include "core/MdIcon.h"
@@ -119,6 +121,58 @@ int writeScreenshots(gallery::GalleryWindow &window, const QString &directory)
     return written;
 }
 
+/// Motion self-test: open a dialog mid-flight and grab frames that prove the
+/// enter animation is a spring scale+opacity ramp rather than a pop-in.
+int runMotionSelfTest(gallery::GalleryWindow &window, const QString &directory)
+{
+    QDir dir(directory);
+    if (!dir.exists() && !dir.mkpath(QStringLiteral("."))) {
+        qWarning("qt-md3: cannot create self-test directory %s", qPrintable(directory));
+        return 1;
+    }
+
+    const int count = window.pageCount();
+    int pageIndex = -1;
+    for (int i = 0; i < count; ++i) {
+        if (window.pageWidget(i)
+            && window.pageWidget(i)->findChildren<md::MdDialogHost *>().size() > 0) {
+            pageIndex = i;
+            break;
+        }
+    }
+    if (pageIndex < 0) {
+        qWarning("qt-md3: self-test found no page with an MdDialogHost");
+        return 1;
+    }
+    window.setCurrentPage(pageIndex);
+    settleAnimations();
+
+    md::MdDialogHost *host = window.pageWidget(pageIndex)->findChildren<md::MdDialogHost *>().first();
+    host->show();
+
+    QCoreApplication::processEvents();
+    const QPixmap t0 = window.grab();
+    t0.save(dir.filePath(QStringLiteral("dialog-t0.png")));
+
+    QThread::msleep(40);
+    QCoreApplication::processEvents();
+    window.grab().save(dir.filePath(QStringLiteral("dialog-t40.png")));
+    QThread::msleep(80);
+    QCoreApplication::processEvents();
+    window.grab().save(dir.filePath(QStringLiteral("dialog-t120.png")));
+
+    settleAnimations(600);
+    const QPixmap settled = window.grab();
+    settled.save(dir.filePath(QStringLiteral("dialog-settled.png")));
+
+    const bool animated = t0.toImage() != settled.toImage();
+    qInfo("qt-md3: self-test t0 != settled: %s (host opacity %.3f scale %.3f)",
+          animated ? "yes" : "NO", host->currentOpacity(), host->currentScale());
+    host->dismiss();
+    settleAnimations(400);
+    return animated ? 0 : 1;
+}
+
 } // namespace
 
 // qt-md3 example application: the component gallery.
@@ -174,6 +228,11 @@ int main(int argc, char *argv[])
         QStringLiteral("Render every page to PNG in <dir>, then quit."),
         QStringLiteral("dir"));
     parser.addOption(screenshotOption);
+    QCommandLineOption selfTestOption(
+        QStringLiteral("self-test"),
+        QStringLiteral("Open the dialog host and grab mid-flight frames into <dir>, then quit."),
+        QStringLiteral("dir"));
+    parser.addOption(selfTestOption);
     QCommandLineOption sizeOption(
         QStringLiteral("size"),
         QStringLiteral("Window size as WxH, e.g. 800x600. Applies before screenshot capture."),
@@ -252,6 +311,11 @@ int main(int argc, char *argv[])
             return 1;
         }
         return 0;
+    }
+
+    if (parser.isSet(selfTestOption)) {
+        QCoreApplication::processEvents();
+        return runMotionSelfTest(window, parser.value(selfTestOption));
     }
 
     const int smokeMs = parser.value(smokeOption).toInt();

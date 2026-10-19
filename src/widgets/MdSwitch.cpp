@@ -44,7 +44,7 @@ void MdSwitch::init()
             qOverload<>(&QWidget::update));
 
     m_thumbTimer = new QTimer(this);
-    m_thumbTimer->setInterval(8);
+    m_thumbTimer->setInterval(16);
     m_thumbTimer->setTimerType(Qt::PreciseTimer);
     connect(m_thumbTimer, &QTimer::timeout, this, &MdSwitch::onThumbTick);
 

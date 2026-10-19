@@ -1021,7 +1021,7 @@ void TestMd3Navigation::railWidthAnimates()
     // states (the first tick cannot have landed yet, and the spring is
     // damped — it has not passed 220 either).
     rail.setExpanded(true);
-    QTest::qWait(30);
+    QTest::qWait(50); // one 16 ms tick must have landed
     QVERIFY(rail.currentWidth() > 96.0);
     QVERIFY(rail.currentWidth() < 220.0);
     QVERIFY(settleWidth(rail, 220.0));

@@ -53,6 +53,10 @@ public:
 private:
     qreal m_stiffness = 380.0;
     qreal m_dampingRatio = 0.8;
+    // settlingDurationMs is sampled from every animation tick; the 1 ms
+    // scan is memoised so a tick never re-walks 5000 evaluations.
+    mutable qreal m_cachedTolerance = -1.0;
+    mutable qreal m_cachedSettlingMs = -1.0;
 };
 
 class QT_MD3_EXPORT MdMotion

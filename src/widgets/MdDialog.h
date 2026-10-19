@@ -117,6 +117,16 @@ public:
     qreal paintOpacity() const { return m_paintOpacity; }
     void setPaintOpacity(qreal opacity);
 
+    /// The host enter/exit scale, applied as a paint transform around the
+    /// container centre (spec s7: Expressive spring enter = scale + opacity).
+    qreal paintScale() const { return m_paintScale; }
+    void setPaintScale(qreal scale);
+
+    /// While true the icon and action buttons are hidden and the style
+    /// renders them through the enter/exit transform (the MdMenu idiom).
+    void setChildrenPaintedByDialog(bool painted);
+    bool childrenPaintedByDialog() const { return m_childrenPainted; }
+
 signals:
     void titleChanged(const QString &title);
     void textChanged(const QString &text);
@@ -147,6 +157,8 @@ private:
     MdComponentTokens m_componentTokens;
 
     qreal m_paintOpacity = 1.0;
+    qreal m_paintScale = 1.0;
+    bool m_childrenPainted = false;
 
     friend class MdDialogStyle;
 };

@@ -44,12 +44,12 @@ void MdRadioButton::init()
             qOverload<>(&QWidget::update));
 
     m_dotTimer = new QTimer(this);
-    m_dotTimer->setInterval(8);
+    m_dotTimer->setInterval(16);
     m_dotTimer->setTimerType(Qt::PreciseTimer);
     connect(m_dotTimer, &QTimer::timeout, this, &MdRadioButton::onDotTick);
 
     m_colourTimer = new QTimer(this);
-    m_colourTimer->setInterval(8);
+    m_colourTimer->setInterval(16);
     m_colourTimer->setTimerType(Qt::PreciseTimer);
     connect(m_colourTimer, &QTimer::timeout, this, &MdRadioButton::onColourTick);
 

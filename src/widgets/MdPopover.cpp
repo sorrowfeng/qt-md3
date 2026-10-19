@@ -31,7 +31,7 @@ constexpr qreal kHorizontalPadding = 12.0;
 /// Header gap above the content.
 constexpr qreal kHeaderGap = 8.0;
 /// Open-animation tick (the menu uses the same 8 ms cadence).
-constexpr int kTickMs = 8;
+constexpr int kTickMs = 16;
 
 } // namespace
 
@@ -110,7 +110,8 @@ void MdPopover::setOpen(bool open)
     }
     m_open = open;
     if (m_open) {
-        m_openProgress = 0.0;
+        m_openFrom = m_openProgress;
+        m_openClock.restart();
         m_openTimer->start();
         show();
         raise();
@@ -128,6 +129,8 @@ void MdPopover::hide()
     }
     m_open = false;
     // Reverse the scale/alpha pair, then close.
+    m_openFrom = m_openProgress;
+    m_openClock.restart();
     m_openTimer->start();
     emit openChanged(m_open);
 }
@@ -155,7 +158,9 @@ void MdPopover::popup(const QRect &anchorRect)
     move(at);
 
     m_open = true;
+    m_openFrom = 0.0;
     m_openProgress = 0.0;
+    m_openClock.restart();
     m_openTimer->start();
     show();
     raise();
@@ -166,6 +171,8 @@ void MdPopover::popup(const QRect &anchorRect)
 void MdPopover::closeAndEmit()
 {
     m_open = false;
+    m_openFrom = m_openProgress;
+    m_openClock.restart();
     m_openTimer->start();
     emit openChanged(m_open);
     emit closed();
@@ -228,24 +235,27 @@ void MdPopover::applyContentGeometry()
 
 void MdPopover::onOpenTick()
 {
-    // Fast spatial scale 0.8→1.0 and fast effects alpha 0→1 — the menu's pair.
-    // The progress drives MdMenuStyle's transform; the tick steps it at the
-    // menu's 8 ms cadence.
-    constexpr qreal kStep = 0.12;
-    if (m_open) {
-        m_openProgress = qMin(1.0, m_openProgress + kStep);
-    } else {
-        m_openProgress = qMax(0.0, m_openProgress - kStep);
-    }
+    // Fast spatial scale + fast effects alpha, the menu pair. Sampled
+    // from MdSpring::valueAt on an elapsed clock - never per-tick steps.
+    const MdSpring scaleSpring = MdMotion::spring(MotionSpring::SpatialFast);
+    const MdSpring alphaSpring = MdMotion::spring(MotionSpring::EffectsFast);
+    const qreal seconds = qreal(m_openClock.elapsed()) / 1000.0;
+    const qreal target = m_open ? 1.0 : 0.0;
+    const qreal scaleTravel = scaleSpring.valueAt(seconds);
+    const qreal alphaTravel = alphaSpring.valueAt(seconds);
+    const qreal scaleProgress = m_openFrom + (target - m_openFrom) * scaleTravel;
+    const qreal alphaProgress = m_openFrom + (target - m_openFrom) * alphaTravel;
+    const bool settled = seconds * 1000.0 >= qMax(scaleSpring.settlingDurationMs(),
+                                                  alphaSpring.settlingDurationMs());
 
+    m_openProgress = qBound(0.0, qMin(scaleProgress, alphaProgress), 1.0);
     update();
-    if (m_open && m_openProgress >= 1.0) {
+    if (settled) {
         m_openTimer->stop();
-        m_openProgress = 1.0;
-    } else if (!m_open && m_openProgress <= 0.0) {
-        m_openTimer->stop();
-        m_openProgress = 0.0;
-        hide();
+        m_openProgress = target;
+        if (!m_open) {
+            hide();
+        }
     }
 }
 

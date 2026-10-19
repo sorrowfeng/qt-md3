@@ -38,7 +38,7 @@ void MdFloatingToolbar::init()
     // `FloatingToolbarDefaults.animationSpec()`, which is the same effects
     // spring the app bars animate their container colour with.
     m_expandTimer = new QTimer(this);
-    m_expandTimer->setInterval(8);
+    m_expandTimer->setInterval(16);
     connect(m_expandTimer, &QTimer::timeout, this, [this] {
         const MdSpring spring = MdMotion::spring(MotionSpring::EffectsDefault);
         m_expandElapsedMs += m_expandTimer->interval();

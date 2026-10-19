@@ -74,6 +74,9 @@ void MdBottomSheetHost::show()
     if (parentWidget()) {
         setGeometry(parentWidget()->rect());
     }
+    // Scrim starts at 0 before the host maps, so the first paint is never
+    // a full-strength scrim that then fades in.
+    m_scrimAlpha = 0.0;
     QWidget::show();
     layoutSheet();
     m_sheet->showSheet();
@@ -81,7 +84,6 @@ void MdBottomSheetHost::show()
         m_previousFocus = QApplication::focusWidget() == this ? nullptr : QApplication::focusWidget();
     }
     setFocus();
-    m_scrimAlpha = 0.0;
     startTransition(Phase::Entering);
 }
 

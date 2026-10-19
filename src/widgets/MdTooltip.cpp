@@ -119,7 +119,8 @@ void MdTooltip::setPaintOpacity(qreal opacity)
         return;
     }
     m_paintOpacity = clamped;
-    setVisible(m_paintOpacity > 0.0);
+    // Visibility is owned by the host (showTooltip / finishLeaving).
+    // Toggling it here made every enter hide-then-show at opacity 0.
     update();
 }
 

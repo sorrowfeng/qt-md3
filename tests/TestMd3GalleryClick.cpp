@@ -1478,7 +1478,10 @@ void TestMd3GalleryClick::settingsFullJourney()
     QSignalSpy pickSpy(pick, &QAbstractButton::clicked);
     clickCentre(pick);
     QCOMPARE(pickSpy.count(), 1);
+    pump(400); // close animation
     QVERIFY2(!langMenu->isVisible(), "settings journey: menu stayed open after pick");
+    // The item click handler sets the button text; the animated close
+    // must not lose that update.
     QCOMPARE(langButton->text(), pick->text());
 
     // 5. Re-open and dismiss with Esc.
@@ -1487,6 +1490,7 @@ void TestMd3GalleryClick::settingsFullJourney()
     pump(400);
     QSignalSpy closedSpy(langMenu, &MdMenu::closed);
     QTest::keyClick(langMenu, Qt::Key_Escape);
+    pump(400); // close animation
     QVERIFY2(!langMenu->isVisible(), "settings journey: Esc did not close the menu");
     QVERIFY(closedSpy.count() >= 1);
 }
@@ -1579,6 +1583,7 @@ void TestMd3GalleryClick::keyboardJourney()
     QVERIFY(langMenu->isVisible());
     pump(400);
     QTest::keyClick(langMenu, Qt::Key_Escape);
+    pump(400); // close animation
     QVERIFY2(!langMenu->isVisible(), "keyboard: Esc did not close the language menu");
 
     // Dynamic-colour: the seed / variant / mode chips are keyboard-reachable.

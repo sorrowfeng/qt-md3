@@ -63,12 +63,12 @@ void MdCheckBox::init()
             qOverload<>(&QWidget::update));
 
     m_checkTimer = new QTimer(this);
-    m_checkTimer->setInterval(8);
+    m_checkTimer->setInterval(16);
     m_checkTimer->setTimerType(Qt::PreciseTimer);
     connect(m_checkTimer, &QTimer::timeout, this, &MdCheckBox::onCheckTick);
 
     m_colourTimer = new QTimer(this);
-    m_colourTimer->setInterval(8);
+    m_colourTimer->setInterval(16);
     m_colourTimer->setTimerType(Qt::PreciseTimer);
     connect(m_colourTimer, &QTimer::timeout, this, &MdCheckBox::onColourTick);
 

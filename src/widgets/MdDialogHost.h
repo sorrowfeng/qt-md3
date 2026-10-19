@@ -61,6 +61,8 @@ public:
     bool isShowing() const { return m_phase != Phase::Idle || m_dialog->isVisible(); }
     /// The current enter/exit fade value — 1 fully shown.
     qreal currentOpacity() const { return m_opacity; }
+    /// The current enter/exit scale - 1 fully shown, 0.8 closed.
+    qreal currentScale() const { return m_scale; }
     /// The enter/exit transition is running while true.
     bool isTransitioning() const { return m_phase != Phase::Idle; }
 
@@ -91,6 +93,7 @@ private:
     QElapsedTimer m_transitionClock;
     Phase m_phase = Phase::Idle;
     qreal m_opacity = 0.0;
+    qreal m_scale = 1.0;
 };
 
 } // namespace md

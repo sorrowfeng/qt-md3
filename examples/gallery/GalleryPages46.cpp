@@ -183,6 +183,7 @@ md::MdButton *ShowcaseSettingsPage::menuButton()
         m_menuButton->setObjectName(QStringLiteral("language-button"));
         m_menuButton->setVariant(md::ButtonVariant::Outlined);
         m_menuButton->setTrailingIcon(QStringLiteral("expand_more"));
+        m_menuButton->setText(L("Simplified Chinese", "Simplified Chinese"));
         m_menuButton->hide();
         connect(m_menuButton, &QAbstractButton::clicked, this, [this] {
             md::MdMenu *popup = menu();
@@ -451,7 +452,7 @@ void ShowcaseSettingsPage::build(GalleryContext &context)
                  L("重新生效后打开导航重新进入生效", "Re-enter the app after switching"));
         {
             md::MdButton *button = menuButton();
-            button->setText(L("简体中文", "Simplified Chinese"));
+            // Text is set once in menuButton(); build() must not reset it.
             const QSize hint = button->sizeHint();
             m_slots.append(Slot{button,
                                 QRectF(panel.right() - qreal(hint.width()) - 16.0,

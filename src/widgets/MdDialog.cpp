@@ -177,6 +177,33 @@ void MdDialog::setPaintOpacity(qreal opacity)
     update();
 }
 
+void MdDialog::setPaintScale(qreal scale)
+{
+    const qreal clamped = qBound(0.0, scale, 2.0);
+    if (qFuzzyCompare(m_paintScale, clamped)) {
+        return;
+    }
+    m_paintScale = clamped;
+    update();
+}
+
+void MdDialog::setChildrenPaintedByDialog(bool painted)
+{
+    if (m_childrenPainted == painted) {
+        return;
+    }
+    m_childrenPainted = painted;
+    if (m_icon) {
+        m_icon->setVisible(!painted);
+    }
+    if (m_confirmButton) {
+        m_confirmButton->setVisible(!painted);
+    }
+    if (m_dismissButton) {
+        m_dismissButton->setVisible(!painted);
+    }
+}
+
 void MdDialog::keyPressEvent(QKeyEvent *event)
 {
     // Compose: back press requests dismissal (onDismissRequest).

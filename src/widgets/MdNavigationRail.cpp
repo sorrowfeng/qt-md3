@@ -37,7 +37,7 @@ void MdNavigationRail::init()
     m_currentWidth = tokens().forVariant(m_variant).containerWidth;
 
     m_widthTimer = new QTimer(this);
-    m_widthTimer->setInterval(8);
+    m_widthTimer->setInterval(16);
     m_widthTimer->setTimerType(Qt::PreciseTimer);
     connect(m_widthTimer, &QTimer::timeout, this, &MdNavigationRail::onWidthTick);
 

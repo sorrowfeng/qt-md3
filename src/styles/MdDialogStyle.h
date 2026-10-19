@@ -89,7 +89,7 @@ public:
     /// The pieces of drawWidget, exposed for the test suite the same way the
     /// other families' are. `opacity` carries the host's enter/exit fade (a
     /// child widget has no window opacity — the snackbar idiom).
-    static void paintDialog(QPainter &painter, const MdDialog &dialog,
+    static void paintDialog(QPainter &painter, MdDialog &dialog,
                             const MdDialogTokens &tokens, const Layout &layout,
                             qreal opacity);
 };

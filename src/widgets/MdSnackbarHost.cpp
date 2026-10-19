@@ -101,6 +101,19 @@ void MdSnackbarHost::showNext()
         startTransition(Phase::Leaving);
     });
     layoutCurrent();
+    // Closed values before the first paint - same flash guard as the
+    // tooltip host.
+    m_opacity = 0.0;
+    m_scale = kEnterScaleStart;
+    m_current->setPaintOpacity(0.0);
+    {
+        const QPointF centre = m_restingGeometry.center();
+        QRect scaled = m_restingGeometry;
+        scaled.setSize(QSize(int(std::round(m_restingGeometry.width() * m_scale)),
+                             int(std::round(m_restingGeometry.height() * m_scale))));
+        scaled.moveCenter(centre.toPoint());
+        m_current->setGeometry(scaled);
+    }
     m_current->show();
     raise();
 
@@ -110,8 +123,6 @@ void MdSnackbarHost::showNext()
         m_durationTimer->start(int(ms));
     }
 
-    m_opacity = 0.0;
-    m_scale = kEnterScaleStart;
     startTransition(Phase::Entering);
 }
 

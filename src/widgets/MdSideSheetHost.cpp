@@ -74,6 +74,9 @@ void MdSideSheetHost::show()
     if (parentWidget()) {
         setGeometry(parentWidget()->rect());
     }
+    // Scrim starts at 0 before the host maps - same flash guard as the
+    // bottom-sheet host.
+    m_scrimAlpha = 0.0;
     QWidget::show();
     layoutSheet();
     // `SideSheetDialog.getStateOnStart()` — the modal side sheet starts
@@ -83,7 +86,6 @@ void MdSideSheetHost::show()
         m_previousFocus = QApplication::focusWidget() == this ? nullptr : QApplication::focusWidget();
     }
     setFocus();
-    m_scrimAlpha = 0.0;
     startTransition(Phase::Entering);
 }
 

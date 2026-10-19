@@ -37,7 +37,7 @@ void MdTabs::init()
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     m_indicatorTimer = new QTimer(this);
-    m_indicatorTimer->setInterval(8);
+    m_indicatorTimer->setInterval(16);
     m_indicatorTimer->setTimerType(Qt::PreciseTimer);
     connect(m_indicatorTimer, &QTimer::timeout, this, &MdTabs::onIndicatorTick);
 

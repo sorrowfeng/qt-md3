@@ -175,6 +175,9 @@ public:
     void popup(const QRect &anchorRect);
     /// Opens and runs a modal loop; returns when the menu closes.
     void exec(const QRect &anchorRect);
+    /// Reverse the open springs from wherever they stand, then hide and
+    /// emit closed(). The animated counterpart of QWidget::close().
+    void requestClose();
 
     // --- animation readouts -----------------------------------------------------------------
     /// 0 fully closed (scale 0.8, alpha 0) to 1 fully open — the scale curve.

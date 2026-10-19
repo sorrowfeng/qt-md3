@@ -283,7 +283,7 @@ void MdMenu::init()
     setFocusPolicy(Qt::StrongFocus);
 
     m_openTimer = new QTimer(this);
-    m_openTimer->setInterval(8);
+    m_openTimer->setInterval(16);
     m_openTimer->setTimerType(Qt::PreciseTimer);
     connect(m_openTimer, &QTimer::timeout, this, &MdMenu::onOpenTick);
 
@@ -417,10 +417,19 @@ void MdMenu::exec(const QRect &anchorRect)
     loop.exec();
 }
 
+void MdMenu::requestClose()
+{
+    // Reverse the open pair from wherever it stands, then hide. A bare
+    // close() pops the surface out in one frame - the hide+show flash.
+    m_openFrom = m_openProgress;
+    m_opening = false;
+    m_openClock.restart();
+    m_openTimer->start();
+}
+
 void MdMenu::closeAndAccept()
 {
-    close();
-    emit closed();
+    requestClose();
 }
 
 void MdMenu::paintEvent(QPaintEvent *event)

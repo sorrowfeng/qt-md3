@@ -161,7 +161,7 @@ qreal MdDialogStyle::heightForWidth(qreal width, const ContentSpec &content,
         + MdDialogTokens::kShadowMargin * 2.0;
 }
 
-void MdDialogStyle::paintDialog(QPainter &painter, const MdDialog &dialog,
+void MdDialogStyle::paintDialog(QPainter &painter, MdDialog &dialog,
                                 const MdDialogTokens &tokens, const Layout &layout,
                                 qreal opacity)
 {
@@ -171,6 +171,16 @@ void MdDialogStyle::paintDialog(QPainter &painter, const MdDialog &dialog,
     painter.setRenderHint(QPainter::Antialiasing, true);
     if (opacity < 1.0) {
         painter.setOpacity(painter.opacity() * qBound(0.0, opacity, 1.0));
+    }
+    // Spec s7 Expressive enter: scale around the container centre alongside
+    // the fade. The child buttons are hidden for the flight and rendered
+    // through this transform, so the whole dialog scales as one surface.
+    const qreal scale = dialog.paintScale();
+    if (!qFuzzyCompare(scale, 1.0)) {
+        const QPointF centre = layout.container.center();
+        painter.translate(centre);
+        painter.scale(scale, scale);
+        painter.translate(-centre);
     }
 
     const QPainterPath path = MdShape::roundedRect(layout.container, layout.radii);
@@ -203,6 +213,20 @@ void MdDialogStyle::paintDialog(QPainter &painter, const MdDialog &dialog,
         painter.setPen(theme.color(tokens.supportingTextColor));
         painter.setFont(MdTypeScale::font(tokens.supportingTextStyle));
         painter.drawText(layout.textRect, Qt::TextWordWrap, dialog.text());
+    }
+    // While the enter/exit flight runs the real children are hidden (they
+    // composite above this painter) and are rendered through the transform
+    // instead - the MdMenu idiom. render() paints hidden widgets too.
+    if (dialog.childrenPaintedByDialog()) {
+        const QList<QObject *> children = dialog.children();
+        for (QObject *childObject : children) {
+            auto *child = qobject_cast<QWidget *>(childObject);
+            if (child == nullptr) {
+                continue;
+            }
+            child->render(&painter, child->pos(), QRegion(),
+                          QWidget::DrawChildren | QWidget::IgnoreMask);
+        }
     }
     painter.restore();
 }

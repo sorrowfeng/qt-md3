@@ -28,7 +28,7 @@ MdAppBarScrollBehavior::MdAppBarScrollBehavior(QObject *parent)
     : QObject(parent)
 {
     m_settleTimer = new QTimer(this);
-    m_settleTimer->setInterval(8);
+    m_settleTimer->setInterval(16);
     connect(m_settleTimer, &QTimer::timeout, this, &MdAppBarScrollBehavior::onSettleTick);
 }
 

@@ -268,7 +268,9 @@ void MdSelect::hidePopup()
     if (!m_popupOpen) {
         return;
     }
-    m_menu->hide();
+    // Reverse the menu open springs; a bare hide() pops the surface out
+    // in one frame.
+    m_menu->requestClose();
     m_popupOpen = false;
 }
 

@@ -46,7 +46,7 @@ void MdTopAppBar::init()
     // in `animateColorAsState(..., DefaultEffects)`, which is why a pinned bar
     // fades to `surface-container` instead of snapping.
     m_scrollTimer = new QTimer(this);
-    m_scrollTimer->setInterval(8);
+    m_scrollTimer->setInterval(16);
     connect(m_scrollTimer, &QTimer::timeout, this, [this] {
         const MdSpring spring = MdMotion::spring(MotionSpring::EffectsDefault);
         m_scrollElapsedMs += m_scrollTimer->interval();

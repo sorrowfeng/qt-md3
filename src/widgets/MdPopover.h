@@ -30,6 +30,8 @@ class QKeyEvent;
 class QPaintEvent;
 class QTimer;
 
+#include <QtCore/QElapsedTimer>
+
 namespace md {
 
 class QT_MD3_EXPORT MdPopover : public QWidget
@@ -103,6 +105,8 @@ private:
     ShapeCorner m_shape = ShapeCorner::ExtraSmall;
     QWidget *m_content = nullptr;
     qreal m_openProgress = 1.0;
+    qreal m_openFrom = 0.0;
+    QElapsedTimer m_openClock;
     QTimer *m_openTimer = nullptr;
     QSize m_fitSize;
 };

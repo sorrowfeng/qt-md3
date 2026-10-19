@@ -750,7 +750,9 @@ void TestMd3InteractionSmoke::dialogActionButtonsReceiveClicks()
     parent.show();
     QVERIFY(QTest::qWaitForWindowExposed(&parent));
     host.show();
-    QTest::qWait(40);
+    // The enter is a spring scale+opacity flight; the action buttons are
+    // hidden for the flight and reappear when it settles.
+    QTest::qWait(400);
 
     // Hit-test first: a covered button is a stacking fault, not a spy fault.
     const QPoint global = confirm->mapToGlobal(confirm->rect().center());

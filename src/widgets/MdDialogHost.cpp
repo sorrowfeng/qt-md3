@@ -21,6 +21,9 @@ namespace {
 /// animation cycles use).
 constexpr int kTransitionTickMs = 16;
 
+/// Expressive enter scale start (Compose dialog scale-in floor).
+constexpr qreal kEnterScaleStart = 0.8;
+
 } // namespace
 
 MdDialogHost::MdDialogHost(QWidget *parent)
@@ -58,14 +61,27 @@ void MdDialogHost::show()
     }
     // The scrim is live: take pointer events so outside clicks can dismiss.
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
+    // Map the overlay first so the scrim first paint and the dialog first
+    // paint land in the same frame.
+    if (!isVisible()) {
+        QWidget::show();
+    }
     raise();
+    // Geometry before visibility: the dialog must never be seen at a
+    // placeholder rect and then jump to its resting centred rect.
     layoutDialog();
+    // Opacity/scale start at their closed values before the first paint.
+    m_opacity = 0.0;
+    m_scale = kEnterScaleStart;
+    m_dialog->setPaintOpacity(0.0);
+    m_dialog->setPaintScale(kEnterScaleStart);
+    m_dialog->setChildrenPaintedByDialog(true);
     m_dialog->show();
-    // The dialog (and its action children) must sit above the scrim.
+    // The dialog (and its action children) must sit above the scrim. One
+    // raise is enough; a second one is a redundant restack.
     m_dialog->raise();
     setFocus();
     m_dialog->setFocus();
-    m_opacity = 0.0;
     startTransition(Phase::Entering);
 }
 
@@ -115,20 +131,38 @@ void MdDialogHost::onTransitionTick()
         m_transitionTimer->stop();
         return;
     }
+    // Spec s7: the enter/exit is a spring scale + opacity pair. Opacity
+    // rides the effects-fast spring, scale the spatial-fast spring.
     const MdSpring opacitySpring = MdMotion::spring(MotionSpring::EffectsFast);
+    const MdSpring scaleSpring = MdMotion::spring(MotionSpring::SpatialFast);
     const qreal seconds = qreal(m_transitionClock.elapsed()) / 1000.0;
-    m_opacity = m_phase == Phase::Entering ? opacitySpring.valueAt(seconds)
-                                           : 1.0 - opacitySpring.valueAt(seconds);
-    m_opacity = qBound(0.0, m_opacity, 1.0);
+    const qreal settledMs = qMax(opacitySpring.settlingDurationMs(),
+                                 scaleSpring.settlingDurationMs());
+    qreal opacity;
+    qreal scale;
+    if (m_phase == Phase::Entering) {
+        opacity = opacitySpring.valueAt(seconds);
+        scale = kEnterScaleStart + (1.0 - kEnterScaleStart) * scaleSpring.valueAt(seconds);
+    } else {
+        opacity = 1.0 - opacitySpring.valueAt(seconds);
+        scale = 1.0 - (1.0 - kEnterScaleStart) * scaleSpring.valueAt(seconds);
+    }
+    m_opacity = qBound(0.0, opacity, 1.0);
+    m_scale = qBound<qreal>(kEnterScaleStart, scale, 1.0);
 
-    const bool settled = seconds * 1000.0 >= opacitySpring.settlingDurationMs();
+    const bool settled = seconds * 1000.0 >= settledMs;
     if (settled) {
         m_transitionTimer->stop();
         m_opacity = m_phase == Phase::Entering ? 1.0 : 0.0;
+        m_scale = m_phase == Phase::Entering ? 1.0 : kEnterScaleStart;
         m_phase = Phase::Idle;
     }
 
     m_dialog->setPaintOpacity(m_opacity);
+    m_dialog->setPaintScale(m_scale);
+    if (settled) {
+        m_dialog->setChildrenPaintedByDialog(false);
+    }
     update();
     if (settled && m_opacity <= 0.0) {
         m_dialog->hide();

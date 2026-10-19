@@ -103,6 +103,13 @@ qreal MdSpring::settlingDurationMs(qreal tolerance) const
     if (!isValid()) {
         return 0.0;
     }
+    // Memoised: widgets re-query this on every animation tick, and the
+    // scan below is O(5000) transcendental evaluations. One (spring,
+    // tolerance) pair settles at a fixed time, so the first call computes
+    // and every later tick reads the cache.
+    if (m_cachedSettlingMs >= 0.0 && qFuzzyCompare(m_cachedTolerance + 1.0, tolerance + 1.0)) {
+        return m_cachedSettlingMs;
+    }
     // Springs here settle well inside 5 s; 1 ms resolution is plenty.
     constexpr int kMaxMs = 5000;
     int lastUnsettled = 0;
@@ -112,7 +119,9 @@ qreal MdSpring::settlingDurationMs(qreal tolerance) const
             lastUnsettled = ms;
         }
     }
-    return qreal(lastUnsettled + 1);
+    m_cachedTolerance = tolerance;
+    m_cachedSettlingMs = qreal(lastUnsettled + 1);
+    return m_cachedSettlingMs;
 }
 
 // ---------------------------------------------------------------------------
