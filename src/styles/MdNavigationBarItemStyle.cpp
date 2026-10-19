@@ -12,6 +12,7 @@
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
 #include <QtGui/QFontMetricsF>
+#include <QtGui/QFontMetrics>
 #include <QtGui/QPainter>
 
 namespace md {
@@ -231,7 +232,12 @@ void MdNavigationBarItemStyle::paintNavigationBarItem(QPainter &painter,
             painter.setPen(textColour);
             painter.setBrush(Qt::NoBrush);
             painter.setFont(item.labelFont());
-            painter.drawText(boxes.label, int(Qt::AlignCenter), item.label());
+            {
+                const QFontMetrics labelFm(item.labelFont());
+                painter.drawText(boxes.label, int(Qt::AlignCenter),
+                                 labelFm.elidedText(item.label(), Qt::ElideRight,
+                                                    int(boxes.label.width())));
+            }
         }
     }
 

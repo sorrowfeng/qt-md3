@@ -523,21 +523,28 @@ void MdListItemStyle::paintListItem(QPainter &painter, const MdListItem &item,
         }
     }
 
-    // 5. The text column.
+    // 5. The text column. Headline / overline / trailing supporting occupy a
+    //    single-line rect (see measuredHeight), so they elide rather than wrap
+    //    into the row below; supporting text is the only wrapping line.
     const QFont headlineFont = fontFor(tokens.labelTextType);
     painter.setFont(headlineFont);
     painter.setPen(QPen(disabled ? contentColour(disabledRow.labelText, disabledRow.labelTextOpacity)
                                  : theme.color(row.labelText),
                         0.0));
-    const int headlineFlags = int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter | Qt::TextWordWrap);
-    painter.drawText(layout.headline, headlineFlags, item.headline());
+    const QFontMetrics headlineFm(headlineFont);
+    painter.drawText(layout.headline, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter),
+                     headlineFm.elidedText(item.headline(), Qt::ElideRight,
+                                           int(layout.headline.width())));
 
     if (layout.overline.isValid()) {
         painter.setFont(fontFor(tokens.overlineType));
         painter.setPen(QPen(disabled ? contentColour(disabledRow.overline, disabledRow.overlineOpacity)
                                      : theme.color(row.overline),
                             0.0));
-        painter.drawText(layout.overline, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter), item.overline());
+        const QFontMetrics overlineFm(fontFor(tokens.overlineType));
+        painter.drawText(layout.overline, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter),
+                         overlineFm.elidedText(item.overline(), Qt::ElideRight,
+                                               int(layout.overline.width())));
     }
 
     if (layout.supporting.isValid()) {
@@ -557,8 +564,10 @@ void MdListItemStyle::paintListItem(QPainter &painter, const MdListItem &item,
                                      disabledRow.trailingSupportingTextOpacity)
                      : theme.color(row.trailingSupportingText),
             0.0));
+        const QFontMetrics trailingFm(fontFor(tokens.trailingSupportingTextType));
         painter.drawText(layout.trailingSupporting, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter),
-                         item.trailingSupporting());
+                         trailingFm.elidedText(item.trailingSupporting(), Qt::ElideRight,
+                                               int(layout.trailingSupporting.width())));
     }
 
     // 6. The trailing slot.

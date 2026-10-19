@@ -231,6 +231,11 @@ int main(int argc, char *argv[])
         QStringLiteral("Render every page to PNG in <dir>, then quit."),
         QStringLiteral("dir"));
     parser.addOption(screenshotOption);
+    QCommandLineOption sizeOption(
+        QStringLiteral("size"),
+        QStringLiteral("Window size as WxH, e.g. 420x780. Applies before screenshot capture."),
+        QStringLiteral("size"));
+    parser.addOption(sizeOption);
     QCommandLineOption selfTestOption(
         QStringLiteral("self-test"),
         QStringLiteral("Drive every interaction and quit non-zero on failure."));
@@ -246,6 +251,23 @@ int main(int argc, char *argv[])
     }
 
     MusicPlayerWindow window;
+    auto applySize = [&parser, &window]() {
+        if (!parser.isSet(QStringLiteral("size"))) {
+            return;
+        }
+        const QStringList parts = parser.value(QStringLiteral("size")).split(QLatin1Char('x'));
+        if (parts.size() != 2) {
+            return;
+        }
+        bool wOk = false;
+        bool hOk = false;
+        const int w = parts.at(0).toInt(&wOk);
+        const int h = parts.at(1).toInt(&hOk);
+        if (wOk && hOk && w >= 200 && h >= 200) {
+            window.resize(w, h);
+        }
+    };
+    applySize();
     window.show();
 
     if (parser.isSet(selfTestOption)) {
@@ -255,6 +277,7 @@ int main(int argc, char *argv[])
     }
 
     if (parser.isSet(screenshotOption)) {
+        applySize();
         QCoreApplication::processEvents();
         const int written = writeScreenshots(window, parser.value(screenshotOption));
         if (written != window.pageCount()) {

@@ -834,6 +834,9 @@ void DynamicColourPage::paintEvent(QPaintEvent *event)
                      foreground, md::colorRoleName(roleValue), Qt::AlignCenter);
     }
     painter.restore();
+    // Pair with beginOverlay()'s save(); QPainter::end() warns if a stack
+    // frame is left on the painter.
+    painter.restore();
 }
 
 // ---------------------------------------------------------------------------

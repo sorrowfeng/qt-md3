@@ -174,6 +174,11 @@ int main(int argc, char *argv[])
         QStringLiteral("Render every page to PNG in <dir>, then quit."),
         QStringLiteral("dir"));
     parser.addOption(screenshotOption);
+    QCommandLineOption sizeOption(
+        QStringLiteral("size"),
+        QStringLiteral("Window size as WxH, e.g. 800x600. Applies before screenshot capture."),
+        QStringLiteral("size"));
+    parser.addOption(sizeOption);
     parser.process(app);
 
     // Registers bundled fonts, sets the language and the base font, applies
@@ -210,12 +215,36 @@ int main(int argc, char *argv[])
     }
 
     gallery::GalleryWindow window;
+    if (parser.isSet(sizeOption)) {
+        const QStringList parts = parser.value(sizeOption).split(QLatin1Char('x'));
+        if (parts.size() == 2) {
+            bool wOk = false;
+            bool hOk = false;
+            const int w = parts.at(0).toInt(&wOk);
+            const int h = parts.at(1).toInt(&hOk);
+            if (wOk && hOk && w >= 200 && h >= 200) {
+                window.resize(w, h);
+            }
+        }
+    }
     window.show();
 
     if (parser.isSet(screenshotOption)) {
         // Deliberately after show(): the pages size themselves from the real
         // viewport, so grabbing before the window is mapped would capture a
         // layout that never existed.
+        if (parser.isSet(sizeOption)) {
+            const QStringList parts = parser.value(sizeOption).split(QLatin1Char('x'));
+            if (parts.size() == 2) {
+                bool wOk = false;
+                bool hOk = false;
+                const int w = parts.at(0).toInt(&wOk);
+                const int h = parts.at(1).toInt(&hOk);
+                if (wOk && hOk && w >= 200 && h >= 200) {
+                    window.resize(w, h);
+                }
+            }
+        }
         QCoreApplication::processEvents();
         const int written = writeScreenshots(window, parser.value(screenshotOption));
         if (written != window.pageCount()) {

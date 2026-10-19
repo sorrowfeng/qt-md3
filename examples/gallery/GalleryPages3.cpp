@@ -262,6 +262,8 @@ void InteractionPage::paintEvent(QPaintEvent *event)
                 m_focusRing->isAnimating() ? m_focusRing->elapsedMs() : -1);
         }
     }
+    // Pair with beginOverlay()'s save() so QPainter::end() sees a balanced stack.
+    painter.restore();
     painter.end();
 }
 

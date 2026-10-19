@@ -12,6 +12,7 @@
 
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
+#include <QtGui/QFontMetrics>
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 
@@ -194,11 +195,17 @@ void MdMenuStyle::paintMenuItem(QPainter &painter, const MdMenuItem &item,
         item.trailingIconName().isEmpty() ? 0.0 : tokens.iconSize + tokens.itemIconTextSpacing;
     if (labelColour.isValid() && !item.text().isEmpty()) {
         painter.setPen(labelColour);
-        painter.setFont(MdTypeScale::font(tokens.labelTextType, TypeEmphasis::Baseline,
-                                          MdTheme::instance().scriptCategory()));
-        painter.drawText(mirror(QRectF(x, 0, item.width() - pad - trailingWidth - x,
-                                      item.height())),
-                         int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(&item)), item.text());
+        const QFont labelFont = MdTypeScale::font(tokens.labelTextType, TypeEmphasis::Baseline,
+                                                  MdTheme::instance().scriptCategory());
+        painter.setFont(labelFont);
+        // sizeHint caps the row at itemMaxWidth; a longer label must elide
+        // rather than run past the trailing slot or the row edge.
+        const QRectF labelBox = mirror(QRectF(x, 0, item.width() - pad - trailingWidth - x,
+                                              item.height()));
+        const QFontMetrics labelFm(labelFont);
+        painter.drawText(labelBox,
+                         int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(&item)),
+                         labelFm.elidedText(item.text(), Qt::ElideRight, int(labelBox.width())));
     }
     if (!item.trailingIconName().isEmpty()) {
         const QColor trailingColour = resolveSlot(

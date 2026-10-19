@@ -12,6 +12,7 @@
 
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
+#include <QtGui/QFontMetrics>
 #include <QtGui/QPainter>
 
 namespace md {
@@ -203,7 +204,12 @@ void MdTabStyle::paintTab(QPainter &painter, const MdTab &tab, const MdTabsVaria
             painter.setPen(labelColour);
             painter.setBrush(Qt::NoBrush);
             painter.setFont(tab.labelFont());
-            painter.drawText(boxes.label, int(Qt::AlignCenter), tab.label());
+            {
+                const QFontMetrics labelFm(tab.labelFont());
+                painter.drawText(boxes.label, int(Qt::AlignCenter),
+                                 labelFm.elidedText(tab.label(), Qt::ElideRight,
+                                                    int(boxes.label.width())));
+            }
         }
     }
 

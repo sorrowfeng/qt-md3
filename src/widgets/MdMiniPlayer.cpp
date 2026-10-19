@@ -172,8 +172,10 @@ void MdMiniPlayer::paintEvent(QPaintEvent *)
     const QPainterPath path = MdShape::roundedRect(bounds, ShapeCorner::Medium);
     painter.fillPath(path, container);
 
-    // Thumbnail disc.
-    const QRectF thumbRect(kPad, (height() - kThumbSize) / 2.0, kThumbSize, kThumbSize);
+    // Thumbnail disc. Keep it inside the body band above the seek slider so
+    // the track never runs under the art.
+    const int bodyHeight = m_progressVisible ? height() - kProgressHeight : height();
+    const QRectF thumbRect(kPad, (bodyHeight - kThumbSize) / 2.0, kThumbSize, kThumbSize);
     if (!m_thumbnail.isNull()) {
         QPainterPath clip = MdShape::roundedRect(thumbRect, ShapeCorner::Small);
         painter.save();
@@ -184,7 +186,9 @@ void MdMiniPlayer::paintEvent(QPaintEvent *)
         painter.fillPath(MdShape::roundedRect(thumbRect, ShapeCorner::Small), onContainer);
     }
 
-    // Title / artist stack.
+    // Title / artist stack. When the seek slider is visible it owns the bottom
+    // kProgressHeight of the widget; centre the text in the band above it so
+    // the artist line can never slide under the track.
     const int textLeft = kPad + kThumbSize + kGap;
     const int textRight = width() - kPad - 2 * kButtonSize - 2 * kGap;
     if (textRight > textLeft) {
@@ -198,10 +202,11 @@ void MdMiniPlayer::paintEvent(QPaintEvent *)
         QFontMetrics titleFm(titleFont);
         QFontMetrics artistFm(artistFont);
 
-        const QRectF textRect(textLeft, 0, textRight - textLeft, height());
+        const int textHeight = m_progressVisible ? height() - kProgressHeight : height();
+        const QRectF textRect(textLeft, 0, textRight - textLeft, textHeight);
         const int lines = artist.isEmpty() ? 1 : 2;
         const int totalH = titleFm.height() + (lines > 1 ? artistFm.height() : 0);
-        int y = (height() - totalH) / 2 + titleFm.ascent();
+        int y = (qMax(0, textHeight - totalH)) / 2 + titleFm.ascent();
 
         painter.setFont(titleFont);
         painter.setPen(onSurface);
@@ -232,7 +237,10 @@ void MdMiniPlayer::layoutParts()
     if (!m_playButton || !m_nextButton || !m_progress) {
         return;
     }
-    const int y = (height() - kButtonSize) / 2;
+    // Buttons and the painted thumb/text share the body band above the seek
+    // slider; the slider owns the bottom kProgressHeight when visible.
+    const int bodyHeight = m_progressVisible ? height() - kProgressHeight : height();
+    const int y = (qMax(kButtonSize, bodyHeight) - kButtonSize) / 2;
     int x = width() - kPad - kButtonSize;
     m_nextButton->setGeometry(x, y, kButtonSize, kButtonSize);
     x -= kButtonSize + 4;

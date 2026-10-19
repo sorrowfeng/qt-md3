@@ -12,6 +12,7 @@
 
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
+#include <QtGui/QFontMetrics>
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 
@@ -243,9 +244,16 @@ void MdChipStyle::paintChip(QPainter &painter,
         if (labelColour.isValid()) {
             painter.setPen(labelColour);
             painter.setBrush(Qt::NoBrush);
-            painter.setFont(MdTypeScale::font(tokens.labelTextType, TypeEmphasis::Baseline,
-                                              MdTheme::instance().scriptCategory()));
-            painter.drawText(boxes.label, int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(&chip)), chip.text());
+            const QFont labelFont = MdTypeScale::font(tokens.labelTextType, TypeEmphasis::Baseline,
+                                                      MdTheme::instance().scriptCategory());
+            painter.setFont(labelFont);
+            // A caller-stretched or squeezed chip gives the label a rect
+            // narrower than the text; elide instead of painting past the
+            // trailing slot.
+            const QFontMetrics labelFm(labelFont);
+            painter.drawText(boxes.label, int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(&chip)),
+                             labelFm.elidedText(chip.text(), Qt::ElideRight,
+                                                int(boxes.label.width())));
         }
     }
 
