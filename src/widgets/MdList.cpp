@@ -84,7 +84,12 @@ void MdList::removeItem(MdListItem *item)
     }
     m_items.removeAll(item);
     m_layout->removeWidget(item);
-    item->setParent(nullptr);
+    // Hide and leave it parented. `setParent(nullptr)` used to turn every
+    // removed row into a top-level widget — a stray native window per row
+    // until the caller's `deleteLater` ran (search/filter rebuilds piled up
+    // a window per item). Staying parented means `deleteLater` destroys it
+    // in place.
+    item->hide();
     invalidateVirtualHeights();
     syncLayout();
     syncActiveItem();

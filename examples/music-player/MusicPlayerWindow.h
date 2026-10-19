@@ -12,6 +12,7 @@
 namespace md {
 class MdIconButton;
 class MdMenu;
+class MdMenuItem;
 class MdMiniPlayer;
 class MdNavigationBar;
 class MdScaffold;
@@ -76,6 +77,13 @@ private:
     md::MdIconButton *m_searchButton = nullptr;
     md::MdIconButton *m_avatarButton = nullptr;
     md::MdMenu *m_avatarMenu = nullptr;
+    /// One reused track context menu — a stack temporary destroyed itself
+    /// while still shown and leaked native popup windows per right-click.
+    md::MdMenu *m_trackMenu = nullptr;
+    md::MdMenuItem *m_trackAddToQueue = nullptr;
+    md::MdMenuItem *m_trackAddToPlaylist = nullptr;
+    md::MdMenuItem *m_trackGoToArtist = nullptr;
+    QString m_pendingTrackId;
 
     NowPlayingPage *m_nowPlaying = nullptr;
     LibraryPage *m_library = nullptr;

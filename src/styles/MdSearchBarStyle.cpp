@@ -29,13 +29,22 @@ QColor resolveSlot(const MdNavigationColourSlot &slot)
     return colour;
 }
 
-/// The pill path, inset by half a pixel so the antialiased edge (and any
-/// outline stroke) is not clipped by the widget rect — `drawRoundedRect` on
-/// the raw rect left the top corners of the 56 px pill open.
+/// The filled pill. The path covers the full widget rect so the stadium's
+/// corners are fully painted — a half-pixel inset fill left the rounded caps
+/// open against the page. Any *stroke* uses `outlinePath` instead.
 QPainterPath containerPath(const QRectF &rect, qreal radius)
 {
-    return MdShape::roundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5),
-                                {radius, radius, radius, radius});
+    const qreal r = qMin(radius, qMin(rect.width(), rect.height()) / 2.0);
+    return MdShape::roundedRect(rect, {r, r, r, r});
+}
+
+/// Half-pixel inset path for a 1 px stroke, so the outline is not clipped by
+/// the widget edge.
+QPainterPath outlinePath(const QRectF &rect, qreal radius)
+{
+    const QRectF inset = rect.adjusted(0.5, 0.5, -0.5, -0.5);
+    const qreal r = qMin(radius, qMin(inset.width(), inset.height()) / 2.0);
+    return MdShape::roundedRect(inset, {r, r, r, r});
 }
 
 } // namespace
@@ -76,11 +85,13 @@ void MdSearchBarStyle::paintSearchBar(QPainter &painter, const MdSearchBar &bar,
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     // 1 — the container: a full pill (corner-full) via MdShape so the
-    //     stadium outline is complete, not clipped at the widget rect.
+    //     stadium is complete — fill the full rect so the rounded caps are
+    //     painted, then one crisp outline stroke on the half-pixel inset path
+    //     (a rectangular QFrame border used to cut the corners and leave two
+    //     horizontal lines).
     {
         const QRectF container = bar.containerRect();
         const qreal radius = tokens.containerRadius;
-        const QPainterPath path = containerPath(container, radius);
         if (bar.surface() == MdSearchSurface::Bar) {
             MdElevation::drawShadowDp(&painter, container, radius,
                                       int(tokens.containerElevation),
@@ -88,7 +99,16 @@ void MdSearchBarStyle::paintSearchBar(QPainter &painter, const MdSearchBar &bar,
         }
         painter.setPen(Qt::NoPen);
         painter.setBrush(MdTheme::instance().color(tokens.containerColor));
-        painter.drawPath(path);
+        painter.drawPath(containerPath(container, radius));
+        const QColor outline = MdTheme::instance().color(ColorRole::OutlineVariant);
+        if (outline.isValid() && outline.alpha() > 0) {
+            QPen pen(outline);
+            pen.setWidthF(1.0);
+            pen.setJoinStyle(Qt::RoundJoin);
+            painter.setPen(pen);
+            painter.setBrush(Qt::NoBrush);
+            painter.drawPath(outlinePath(container, radius));
+        }
     }
 
     // 2 — the state layer.
@@ -126,7 +146,7 @@ void MdSearchBarStyle::paintSearchBar(QPainter &painter, const MdSearchBar &bar,
         painter.setPen(QPen(MdTheme::instance().color(tokens.focusIndicatorColor),
                             tokens.focusIndicatorThickness));
         painter.setBrush(Qt::NoBrush);
-        painter.drawPath(containerPath(ring, tokens.containerRadius
+        painter.drawPath(outlinePath(ring, tokens.containerRadius
                                               + tokens.focusIndicatorOuterOffset));
     }
 

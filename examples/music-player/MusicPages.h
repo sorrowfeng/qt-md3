@@ -69,6 +69,9 @@ class LibraryPage : public QWidget
 public:
     explicit LibraryPage(MusicPlayerWindow *window, QWidget *parent = nullptr);
 
+    /// The single library search field — reused by the app-bar search action.
+    md::MdSearchBar *searchBar() const { return m_search; }
+
 public slots:
     void refresh();
     void applyFilter(const QString &text);

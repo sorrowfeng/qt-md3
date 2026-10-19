@@ -3,6 +3,7 @@
 #include "core/MdDesign.h"
 #include "core/MdFont.h"
 #include "core/MdTheme.h"
+#include "widgets/MdMenu.h"
 
 #include <QtCore/QCommandLineOption>
 #include <QtCore/QCommandLineParser>
@@ -11,6 +12,7 @@
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
 #include <QtGui/QPixmap>
+#include <QtWidgets/QAbstractButton>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLineEdit>
 
@@ -156,6 +158,76 @@ int runSelfTest(MusicPlayerWindow &window)
             settleAnimations(80);
             edits.first()->setText(QString());
             settleAnimations(80);
+        }
+    }
+
+    // --- top-right search must not spawn windows ---
+    {
+        // Count *visible* non-main top-levels: Qt::Popup menus are always in
+        // topLevelWidgets() (they are windows), so a raw count is noisy.
+        auto visibleExtras = [&window]() {
+            int n = 0;
+            for (QWidget *w : QApplication::topLevelWidgets()) {
+                if (w != &window && w->isVisible()) {
+                    ++n;
+                }
+            }
+            return n;
+        };
+        const int before = visibleExtras();
+        // Click the app-bar search action several times: it navigates to the
+        // Library page and focuses the one shared search bar. A control that
+        // allocated a fresh overlay per click would grow the top-level count.
+        for (int i = 0; i < 5; ++i) {
+            // The search action is the MdIconButton with accessibleName "Search".
+            const QList<QAbstractButton *> buttons =
+                window.findChildren<QAbstractButton *>();
+            for (QAbstractButton *button : buttons) {
+                if (button->accessibleName() == QLatin1String("Search")) {
+                    button->click();
+                    break;
+                }
+            }
+            settleAnimations(40);
+        }
+        const int after = visibleExtras();
+        check(after <= before + 1, "search click does not stack top-level windows");
+        check(window.currentPage() == 1, "search action lands on the library");
+    }
+
+    // --- avatar menu: one reusable popup, animated open/close ---
+    {
+        QAbstractButton *avatar = nullptr;
+        const QList<QAbstractButton *> buttons = window.findChildren<QAbstractButton *>();
+        for (QAbstractButton *button : buttons) {
+            if (button->accessibleName() == QLatin1String("Account")) {
+                avatar = button;
+                break;
+            }
+        }
+        check(avatar != nullptr, "avatar action exists");
+        if (avatar) {
+            avatar->click();
+            settleAnimations(250);
+            bool menuVisible = false;
+            for (QWidget *w : QApplication::topLevelWidgets()) {
+                if (w->isVisible() && qobject_cast<md::MdMenu *>(w) != nullptr) {
+                    menuVisible = true;
+                    break;
+                }
+            }
+            check(menuVisible, "avatar menu opens");
+            avatar->click();
+            // Close is a reverse spring — give it the full settle window.
+            settleAnimations(600);
+            bool stillOpen = false;
+            for (QWidget *w : QApplication::topLevelWidgets()) {
+                if (w->isVisible() && qobject_cast<md::MdMenu *>(w) != nullptr) {
+                    stillOpen = true;
+                    break;
+                }
+            }
+            check(!stillOpen, "avatar menu close does not leave windows");
         }
     }
 

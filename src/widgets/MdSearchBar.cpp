@@ -5,8 +5,38 @@
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
+#include <QtWidgets/QProxyStyle>
 
 namespace md {
+
+namespace {
+
+/// Qt 6's QLineEdit is a plain QWidget — its rectangular "frame" comes from
+/// the style's PE_FrameLineEdit / PE_PanelLineEdit. Those two primitives paint
+/// a sunken slab over the pill (two horizontal lines, corners cut off), so
+/// they are no-ops here: MdSearchBarStyle owns the chrome.
+class SearchLineEditStyle : public QProxyStyle
+{
+public:
+    void drawPrimitive(PrimitiveElement element, const QStyleOption *option,
+                       QPainter *painter, const QWidget *widget) const override
+    {
+        if (element == PE_FrameLineEdit || element == PE_PanelLineEdit) {
+            return;
+        }
+        QProxyStyle::drawPrimitive(element, option, painter, widget);
+    }
+};
+
+SearchLineEditStyle *searchLineEditStyle()
+{
+    // Never destroyed: setStyle() does not take ownership, and every bar
+    // shares one filter.
+    static SearchLineEditStyle *style = new SearchLineEditStyle;
+    return style;
+}
+
+} // namespace
 
 MdSearchBar::MdSearchBar(QWidget *parent)
     : QLineEdit(parent)
@@ -19,6 +49,8 @@ MdSearchBar::MdSearchBar(QWidget *parent)
     pal.setColor(QPalette::Base, Qt::transparent);
     pal.setColor(QPalette::Window, Qt::transparent);
     setPalette(pal);
+    // Kill the style-drawn rectangular slab; the pill is the only chrome.
+    setStyle(searchLineEditStyle());
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     // The leading search icon owns the first 16+24 px; the input line starts
     // after it (and after the trailing slot on the other side).

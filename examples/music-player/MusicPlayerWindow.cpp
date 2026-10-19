@@ -13,6 +13,7 @@
 #include "widgets/MdNavigationBar.h"
 #include "widgets/MdNavigationBarItem.h"
 #include "widgets/MdScaffold.h"
+#include "widgets/MdSearchBar.h"
 #include "widgets/MdSnackbarHost.h"
 #include "widgets/MdStackedWidget.h"
 #include "widgets/MdTopAppBar.h"
@@ -71,6 +72,12 @@ void MusicPlayerWindow::buildChrome()
     m_avatarMenu->addItem(aboutItem);
 
     connect(m_avatarButton, &QAbstractButton::clicked, this, [this](bool) {
+        // One reused menu: re-clicking the avatar while it is open reverses
+        // the springs instead of stacking a second popup.
+        if (m_avatarMenu->isVisible()) {
+            m_avatarMenu->requestClose();
+            return;
+        }
         m_avatarMenu->popup(QRect(m_avatarButton->mapToGlobal(QPoint(0, m_avatarButton->height())),
                                   QSize(m_avatarButton->width(), 0)));
     });
@@ -84,7 +91,12 @@ void MusicPlayerWindow::buildChrome()
                                                   "Material Design 3 widget library."));
     });
     connect(m_searchButton, &QAbstractButton::clicked, this, [this](bool) {
+        // Navigate to the Library page and focus its single search bar.
+        // No overlay is created per click — the bar lives on the page.
         setCurrentPage(1);
+        if (m_library && m_library->searchBar()) {
+            m_library->searchBar()->setFocus(Qt::ShortcutFocusReason);
+        }
     });
 
     m_navBar = new MdNavigationBar(m_scaffold);
@@ -120,6 +132,8 @@ void MusicPlayerWindow::buildChrome()
 void MusicPlayerWindow::buildPages()
 {
     m_stack = new MdStackedWidget(m_scaffold);
+    // Cross-fade every nav destination on the effects-fast spring.
+    m_stack->setAnimated(true);
     m_nowPlaying = new NowPlayingPage(this, m_stack);
     m_library = new LibraryPage(this, m_stack);
     m_queuePage = new QueuePage(this, m_stack);
@@ -271,30 +285,35 @@ void MusicPlayerWindow::onQueueChanged()
 
 void MusicPlayerWindow::showTrackMenu(const QString &trackId, const QPoint &globalPos)
 {
-    const music::Track track = m_player.track(trackId);
-    MdMenu menu(this);
-    MdMenuItem *addToQueue = new MdMenuItem(QStringLiteral("Add to queue"), &menu);
-    addToQueue->setLeadingIconName(QStringLiteral("playlist_add"));
-    MdMenuItem *addToPlaylist = new MdMenuItem(QStringLiteral("Add to playlist"), &menu);
-    addToPlaylist->setLeadingIconName(QStringLiteral("library_add"));
-    MdMenuItem *goToArtist = new MdMenuItem(QStringLiteral("Go to artist"), &menu);
-    goToArtist->setLeadingIconName(QStringLiteral("person"));
-    menu.addItem(addToQueue);
-    menu.addItem(addToPlaylist);
-    menu.addItem(goToArtist);
+    // One reused Qt::Popup. A stack temporary destroyed itself while shown
+    // and left a fresh native window behind on every right-click.
+    if (!m_trackMenu) {
+        m_trackMenu = new MdMenu(this);
+        m_trackAddToQueue = new MdMenuItem(QStringLiteral("Add to queue"), m_trackMenu);
+        m_trackAddToQueue->setLeadingIconName(QStringLiteral("playlist_add"));
+        m_trackAddToPlaylist = new MdMenuItem(QStringLiteral("Add to playlist"), m_trackMenu);
+        m_trackAddToPlaylist->setLeadingIconName(QStringLiteral("library_add"));
+        m_trackGoToArtist = new MdMenuItem(QStringLiteral("Go to artist"), m_trackMenu);
+        m_trackGoToArtist->setLeadingIconName(QStringLiteral("person"));
+        m_trackMenu->addItem(m_trackAddToQueue);
+        m_trackMenu->addItem(m_trackAddToPlaylist);
+        m_trackMenu->addItem(m_trackGoToArtist);
 
-    connect(addToQueue, &QAbstractButton::clicked, this, [this, trackId](bool) {
-        m_player.addToQueue(trackId);
-        showSnackbar(QStringLiteral("Added to queue"));
-    });
-    connect(addToPlaylist, &QAbstractButton::clicked, this, [this](bool) {
-        showSnackbar(QStringLiteral("Added to playlist"));
-    });
-    connect(goToArtist, &QAbstractButton::clicked, this, [this](bool) {
-        setCurrentPage(1);
-    });
-
-    menu.popup(QRect(globalPos, QSize(180, 0)));
+        connect(m_trackAddToQueue, &QAbstractButton::clicked, this, [this](bool) {
+            if (!m_pendingTrackId.isEmpty()) {
+                m_player.addToQueue(m_pendingTrackId);
+                showSnackbar(QStringLiteral("Added to queue"));
+            }
+        });
+        connect(m_trackAddToPlaylist, &QAbstractButton::clicked, this, [this](bool) {
+            showSnackbar(QStringLiteral("Added to playlist"));
+        });
+        connect(m_trackGoToArtist, &QAbstractButton::clicked, this, [this](bool) {
+            setCurrentPage(1);
+        });
+    }
+    m_pendingTrackId = trackId;
+    m_trackMenu->popup(QRect(globalPos, QSize(180, 0)));
 }
 
 void MusicPlayerWindow::confirmRemoveFromQueue(int index)

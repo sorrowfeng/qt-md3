@@ -466,16 +466,18 @@ void TestMd3Navigation::equalWeightDividesTheBand()
     QCOMPARE(layout.container, QRectF(0, 0, 360, 80));
 
     // `Box(Modifier.weight(1f))` per item, with the baseline's hard-coded
-    // `spacedBy(8.dp)` between them: four slots out of 360 - 3 * 8 = 336.
+    // `spacedBy(8.dp)` between them, inside an 8 px outer pad so the first
+    // and last pills are not flush with the bar edge:
+    // four slots out of 360 - 2*8 - 3*8 = 320 → 80 each.
     QCOMPARE(layout.itemBoxes.size(), 4);
-    QCOMPARE(layout.itemBoxes.at(0), QRectF(0, 0, 84, 80));
-    QCOMPARE(layout.itemBoxes.at(1), QRectF(92, 0, 84, 80));
-    QCOMPARE(layout.itemBoxes.at(2), QRectF(184, 0, 84, 80));
-    QCOMPARE(layout.itemBoxes.at(3), QRectF(276, 0, 84, 80));
+    QCOMPARE(layout.itemBoxes.at(0), QRectF(8, 8, 80, 64));
+    QCOMPARE(layout.itemBoxes.at(1), QRectF(96, 8, 80, 64));
+    QCOMPARE(layout.itemBoxes.at(2), QRectF(184, 8, 80, 64));
+    QCOMPARE(layout.itemBoxes.at(3), QRectF(272, 8, 80, 64));
 
-    // Every box is the full container height: the bar decides the row, and the
-    // item centres its own content inside whatever it is given.
-    QCOMPARE(layout.itemBoxes.at(2).height(), 80.0);
+    // The slot band is inset vertically as well; the item centres its own
+    // content inside whatever it is given.
+    QCOMPARE(layout.itemBoxes.at(2).height(), 64.0);
 }
 
 void TestMd3Navigation::centeredShrinksTheBand()
@@ -486,13 +488,14 @@ void TestMd3Navigation::centeredShrinksTheBand()
     bar.setArrangement(MdNavigationBarArrangement::Centered);
 
     // Compose's `((100 - 10 * (itemsCount + 3)) / 2) / 100`: 20 % a side at
-    // three items. The run takes 216 of the 360, and the items still share it
-    // equally — (216 - 2 * 8) / 3 = 66.67 — so the two arrangements differ only
-    // in the band they divide, not in how they divide it.
+    // three items. The centred run takes 216 of the 360; with the 8 px outer
+    // pad the band is 216 - 16 = 200 and the items still share it equally —
+    // (200 - 2 * 8) / 3 = 61.33 — so the two arrangements differ only in the
+    // band they divide, not in how they divide it.
     MdNavigationBarStyle::Layout layout = MdNavigationBarStyle::layoutFor(bar, bar.tokens());
-    QVERIFY(qAbs(layout.itemBoxes.first().left() - 72.0) <= 0.01);
-    QVERIFY(qAbs(layout.itemBoxes.last().right() - 288.0) <= 0.01);
-    QVERIFY(qAbs(layout.itemBoxes.at(1).width() - (216.0 - 16.0) / 3.0) <= 0.01);
+    QVERIFY(qAbs(layout.itemBoxes.first().left() - 80.0) <= 0.01);
+    QVERIFY(qAbs(layout.itemBoxes.last().right() - 280.0) <= 0.01);
+    QVERIFY(qAbs(layout.itemBoxes.at(1).width() - (200.0 - 16.0) / 3.0) <= 0.01);
 
     // Five items: 10 % a side, 288 of 360.
     MdNavigationBar five;
@@ -500,17 +503,18 @@ void TestMd3Navigation::centeredShrinksTheBand()
     five.resize(360, 80);
     five.setArrangement(MdNavigationBarArrangement::Centered);
     layout = MdNavigationBarStyle::layoutFor(five, five.tokens());
-    QVERIFY(qAbs(layout.itemBoxes.first().left() - 36.0) <= 0.01);
-    QVERIFY(qAbs(layout.itemBoxes.last().right() - 324.0) <= 0.01);
+    QVERIFY(qAbs(layout.itemBoxes.first().left() - 44.0) <= 0.01);
+    QVERIFY(qAbs(layout.itemBoxes.last().right() - 316.0) <= 0.01);
 
-    // From seven items on there is no inset left — clamped, not negative.
+    // From seven items on there is no centred inset left — clamped, not
+    // negative. The 8 px outer pad remains.
     MdNavigationBar seven;
     addItems(seven, 7);
     seven.resize(360, 80);
     seven.setArrangement(MdNavigationBarArrangement::Centered);
     layout = MdNavigationBarStyle::layoutFor(seven, seven.tokens());
-    QCOMPARE(layout.itemBoxes.first().left(), 0.0);
-    QCOMPARE(layout.itemBoxes.last().right(), 360.0);
+    QCOMPARE(layout.itemBoxes.first().left(), 8.0);
+    QCOMPARE(layout.itemBoxes.last().right(), 352.0);
 }
 
 void TestMd3Navigation::betweenSpaceIsTheBehaviourRow()
@@ -526,8 +530,8 @@ void TestMd3Navigation::betweenSpaceIsTheBehaviourRow()
     QCOMPARE(bar.tokens().itemBetweenSpace, 8.0);
 
     const MdNavigationBarStyle::Layout layout = MdNavigationBarStyle::layoutFor(bar, bar.tokens());
-    QCOMPARE(layout.itemBoxes.at(0), QRectF(0, 0, 176, 80));
-    QCOMPARE(layout.itemBoxes.at(1), QRectF(184, 0, 176, 80));
+    QCOMPARE(layout.itemBoxes.at(0), QRectF(8, 8, 168, 64));
+    QCOMPARE(layout.itemBoxes.at(1), QRectF(184, 8, 168, 64));
 }
 
 void TestMd3Navigation::selectionIsExclusiveAndMirrored()
@@ -596,17 +600,18 @@ void TestMd3Navigation::itemsFillTheirSlot()
 
     // The item is its own container *and* fills the slot it is given, so the
     // placement is `resizedGeometryOn` — the top-left rule the buttons follow
-    // would park a 64 x 52 item in the corner of its 84 x 80 box.
-    QCOMPARE(bar.itemAt(0)->geometry(), QRect(0, 0, 84, 80));
-    QCOMPARE(bar.itemAt(3)->geometry(), QRect(276, 0, 84, 80));
+    // would park a 64 x 52 item in the corner of its box. The 8 px outer pad
+    // means the first slot starts at (8, 8).
+    QCOMPARE(bar.itemAt(0)->geometry(), QRect(8, 8, 80, 64));
+    QCOMPARE(bar.itemAt(3)->geometry(), QRect(272, 8, 80, 64));
 
-    // The centring is then the item's own arithmetic: the pill is centred
-    // horizontally, and the content band (pill top to label bottom) is
-    // centred vertically — a sum that holds whatever the label's height
-    // turns out to be on this platform.
+    // The centring is then the item's own arithmetic (in item-local
+    // coordinates): the pill is centred horizontally, and the content band
+    // (pill top to label bottom) is centred vertically — a sum that holds
+    // whatever the label's height turns out to be on this platform.
     const auto boxes = bar.itemAt(0)->boxes();
-    QCOMPARE(boxes.indicatorRipple.center().x(), 42.0);
-    QCOMPARE(boxes.indicatorRipple.top() + boxes.label.bottom(), 80.0);
+    QCOMPARE(boxes.indicatorRipple.center().x(), 40.0);
+    QCOMPARE(boxes.indicatorRipple.top() + boxes.label.bottom(), 64.0);
 }
 
 void TestMd3Navigation::resizeReflowsTheItems()
@@ -615,16 +620,16 @@ void TestMd3Navigation::resizeReflowsTheItems()
     addItems(bar, 4);
     bar.show();
     bar.resize(360, 80);
-    QCOMPARE(bar.itemAt(0)->geometry(), QRect(0, 0, 84, 80));
+    QCOMPARE(bar.itemAt(0)->geometry(), QRect(8, 8, 80, 64));
 
     // The bar is `Expanding` horizontally, so a parent resize is its most
     // common event; without the relayout the items would keep the old pitch.
     bar.resize(200, 80);
     const MdNavigationBarStyle::Layout layout = MdNavigationBarStyle::layoutFor(bar, bar.tokens());
-    QCOMPARE(layout.itemBoxes.at(0), QRectF(0, 0, 44, 80));
-    QCOMPARE(layout.itemBoxes.at(3), QRectF(156, 0, 44, 80));
-    QCOMPARE(bar.itemAt(0)->geometry(), QRect(0, 0, 44, 80));
-    QCOMPARE(bar.itemAt(3)->geometry(), QRect(156, 0, 44, 80));
+    QCOMPARE(layout.itemBoxes.at(0), QRectF(8, 8, 40, 64));
+    QCOMPARE(layout.itemBoxes.at(3), QRectF(152, 8, 40, 64));
+    QCOMPARE(bar.itemAt(0)->geometry(), QRect(8, 8, 40, 64));
+    QCOMPARE(bar.itemAt(3)->geometry(), QRect(152, 8, 40, 64));
 }
 
 void TestMd3Navigation::barSizeHintFollowsTheVariant()

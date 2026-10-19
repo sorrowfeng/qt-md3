@@ -388,25 +388,25 @@ void MdMenu::popup(const QRect &anchorRect)
     // edge (clamped into the screen by the window system).
     QPoint pos(anchorRect.left(), anchorRect.bottom() + 1);
     move(pos);
-    // Restart the open animation from closed.
+    // Interruptible: a re-popup mid-flight retargets from where the springs
+    // stand instead of snapping back to closed (that snap was the flicker).
+    const bool retarget = isVisible() && (m_openTimer->isActive() || m_opening);
     m_opening = true;
-    m_openFrom = 0.0;
-    m_openProgress = 0.0;
-    m_openAlpha = 0.0;
+    m_openFrom = retarget ? m_openProgress : 0.0;
+    if (!retarget) {
+        m_openProgress = 0.0;
+        m_openAlpha = 0.0;
+    }
     m_openClock.restart();
     m_openTimer->start();
+    // Real children composite outside the parent's painter transform, so they
+    // hide for the flight and the surface paints them through the scale+alpha.
     setChildrenPaintedByMenu(true);
     show();
     raise();
-    setFocus();
-
-    // Keyboard focus lands on the first enabled item (arrow keys walk on).
-    for (MdMenuItem *item : m_items) {
-        if (item->isEnabled()) {
-            item->setFocus(Qt::PopupFocusReason);
-            break;
-        }
-    }
+    setFocus(Qt::PopupFocusReason);
+    // Keyboard focus lands on the first enabled item once the flight ends —
+    // focusing a hidden child here just fought the hide and flashed.
 }
 
 void MdMenu::exec(const QRect &anchorRect)
@@ -419,8 +419,15 @@ void MdMenu::exec(const QRect &anchorRect)
 
 void MdMenu::requestClose()
 {
+    if (!isVisible() && !m_openTimer->isActive()) {
+        emit closed();
+        return;
+    }
     // Reverse the open pair from wherever it stands, then hide. A bare
     // close() pops the surface out in one frame - the hide+show flash.
+    // Hide the children too so they ride the close transform instead of
+    // compositing at full opacity over the fading surface.
+    setChildrenPaintedByMenu(true);
     m_openFrom = m_openProgress;
     m_opening = false;
     m_openClock.restart();
@@ -524,9 +531,9 @@ void MdMenu::onOpenTick()
 
     // One progress value drives the paint's scale; alpha rides alongside. The
     // scale is the slower spring, so it wins.
-    m_openProgress = qMin(scaleProgress, alphaProgress);
+    m_openProgress = qBound(0.0, qMin(scaleProgress, alphaProgress), 1.0);
     // The paint separates the two curves; store the alpha's own progress.
-    m_openAlpha = alphaProgress;
+    m_openAlpha = qBound(0.0, alphaProgress, 1.0);
 
     if (scaleDone && alphaDone) {
         m_openProgress = scaleTarget;
@@ -534,6 +541,13 @@ void MdMenu::onOpenTick()
         m_openTimer->stop();
         if (m_opening) {
             setChildrenPaintedByMenu(false);
+            // Focus lands now that the item is actually visible.
+            for (MdMenuItem *item : m_items) {
+                if (item->isEnabled()) {
+                    item->setFocus(Qt::PopupFocusReason);
+                    break;
+                }
+            }
             update();
         } else {
             hide();

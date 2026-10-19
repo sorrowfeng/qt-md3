@@ -54,28 +54,35 @@ MdNavigationBarStyle::Layout MdNavigationBarStyle::layoutFor(const MdNavigationB
     const qreal gap = count > 1 ? tokens.itemBetweenSpace : 0.0;
     const qreal totalGap = gap * qreal(count - 1);
 
+    // Outer padding so the first/last item (and its selected pill) is not
+    // flush against the bar edge — Compose's row sits inside the container.
+    constexpr qreal kSidePadding = 8.0;
+    constexpr qreal kVerticalPadding = 8.0;
+
     // `Centered`: the run takes a fixed *fraction* of the bar and is centred in
     // it. Compose's `((100 - 10 * (itemsCount + 3)) / 2) / 100` is 20 % a side
     // at three items, 15 % at four, 10 % at five, and 0 from seven on — it is
     // clamped rather than allowed to go negative and invert the row.
-    qreal bandX = rect.left();
-    qreal bandWidth = rect.width();
+    qreal bandX = rect.left() + kSidePadding;
+    qreal bandWidth = qMax<qreal>(0.0, rect.width() - 2.0 * kSidePadding);
     if (bar.arrangement() == MdNavigationBarArrangement::Centered) {
         const qreal sideFraction = qMax<qreal>(0.0, (70.0 - 10.0 * qreal(count)) / 200.0);
         const qreal side = sideFraction * rect.width();
         bandX += side;
-        bandWidth = qMax<qreal>(0.0, rect.width() - 2.0 * side);
+        bandWidth = qMax<qreal>(0.0, rect.width() - 2.0 * (side + kSidePadding));
     }
 
     // Items share the band equally in **both** arrangements; what changes is the
     // band. The gaps come out of the band before it is divided, so the run ends
     // exactly on the band's trailing edge instead of overshooting it.
     const qreal each = qMax<qreal>(0.0, (bandWidth - totalGap) / qreal(count));
+    const qreal bandY = rect.top() + kVerticalPadding;
+    const qreal bandH = qMax<qreal>(0.0, rect.height() - 2.0 * kVerticalPadding);
 
     layout.itemBoxes.reserve(count);
     qreal x = bandX;
     for (int i = 0; i < count; ++i) {
-        layout.itemBoxes.append(QRectF(x, rect.top(), each, rect.height()));
+        layout.itemBoxes.append(QRectF(x, bandY, each, bandH));
         x += each + gap;
     }
 

@@ -249,8 +249,8 @@ void MdMenuStyle::paintMenu(QPainter &painter, MdMenu &menu, const MdMenuTokens 
     const qreal scale = tokens.closedScale + (1.0 - tokens.closedScale) * progress;
     const qreal alpha = tokens.closedAlpha + (1.0 - tokens.closedAlpha) * menu.openAlpha();
     const bool animating = menu.openAnimationRunning();
-    if (animating && progress < 1.0) {
-        painter.setOpacity(alpha);
+    if (animating || alpha < 0.999) {
+        painter.setOpacity(painter.opacity() * qBound(0.0, alpha, 1.0));
     }
 
     // 1. The level-2 shadow, the surface fill and the container outline.
