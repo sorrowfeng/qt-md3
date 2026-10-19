@@ -1,5 +1,6 @@
 #include "MdExpressiveMenu.h"
 
+#include "private/MdPopup.h"
 #include "styles/MdExpressiveMenuStyle.h"
 
 #include "core/MdFocusRing.h"
@@ -371,6 +372,7 @@ MdExpressiveMenu::~MdExpressiveMenu() = default;
 void MdExpressiveMenu::init()
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
+    setAttribute(Qt::WA_NoSystemBackground, true);
     setFocusPolicy(Qt::StrongFocus);
 
     MdStyleBase::connectThemeUpdate(this, &MdExpressiveMenu::onThemeChanged);
@@ -533,8 +535,7 @@ void MdExpressiveMenu::popup(const QRect &anchorRect)
     // Below the anchor's bottom edge, left-aligned with its left edge —
     // `MenuAnchorPosition.Below`, the classic menu's placement.
     move(anchorRect.left(), anchorRect.bottom() + 1);
-    show();
-    raise();
+    showPopupWithoutFlash(this);
     setFocus();
 
     for (MdExpressiveMenuItem *item : m_items) {

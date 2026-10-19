@@ -4,6 +4,7 @@
 #include "core/MdShape.h"
 #include "core/MdTheme.h"
 #include "core/MdTypeScale.h"
+#include "private/MdPopup.h"
 #include "styles/MdStyleBase.h"
 
 #include <QtGui/QKeyEvent>
@@ -50,6 +51,10 @@ MdPopover::~MdPopover()
 
 void MdPopover::init()
 {
+    // Same two attributes as MdMenu: no system background on the first
+    // composite, translucent so the rounded surface shows through.
+    setAttribute(Qt::WA_TranslucentBackground, true);
+    setAttribute(Qt::WA_NoSystemBackground, true);
     setAttribute(Qt::WA_Hover, true);
     setFocusPolicy(Qt::StrongFocus);
     setMinimumSize(QSize(120, 48));
@@ -111,10 +116,10 @@ void MdPopover::setOpen(bool open)
     m_open = open;
     if (m_open) {
         m_openFrom = m_openProgress;
+        m_openElapsedOffsetMs = 0.0;
         m_openClock.restart();
         m_openTimer->start();
-        show();
-        raise();
+        showPopupWithoutFlash(this);
         setFocus(Qt::PopupFocusReason);
     } else {
         closeAndEmit();
@@ -130,6 +135,7 @@ void MdPopover::hide()
     m_open = false;
     // Reverse the scale/alpha pair, then close.
     m_openFrom = m_openProgress;
+    m_openElapsedOffsetMs = 0.0;
     m_openClock.restart();
     m_openTimer->start();
     emit openChanged(m_open);
@@ -159,11 +165,24 @@ void MdPopover::popup(const QRect &anchorRect)
 
     m_open = true;
     m_openFrom = 0.0;
-    m_openProgress = 0.0;
+    // First painted frame is one vsync into the flight (never a blank map).
+    m_openElapsedOffsetMs = 16.0;
+    {
+        const MdSpring scaleSpring = MdMotion::spring(MotionSpring::SpatialFast);
+        const MdSpring alphaSpring = MdMotion::spring(MotionSpring::EffectsFast);
+        const qreal firstFrameSeconds = 0.016;
+        m_openProgress = qBound(0.0, scaleSpring.valueAt(firstFrameSeconds), 1.0);
+        // Alpha shares the scale curve here; the popover exposes one progress.
+        Q_UNUSED(alphaSpring);
+    }
     m_openClock.restart();
     m_openTimer->start();
-    show();
-    raise();
+    if (m_content) {
+        // The real child composites outside the painter transform; the
+        // surface paints it through the scale pair for the flight.
+        m_content->setVisible(false);
+    }
+    showPopupWithoutFlash(this);
     setFocus(Qt::PopupFocusReason);
     emit openChanged(m_open);
 }
@@ -172,8 +191,12 @@ void MdPopover::closeAndEmit()
 {
     m_open = false;
     m_openFrom = m_openProgress;
+    m_openElapsedOffsetMs = 0.0;
     m_openClock.restart();
     m_openTimer->start();
+    if (m_content) {
+        m_content->setVisible(false);
+    }
     emit openChanged(m_open);
     emit closed();
 }
@@ -239,14 +262,15 @@ void MdPopover::onOpenTick()
     // from MdSpring::valueAt on an elapsed clock - never per-tick steps.
     const MdSpring scaleSpring = MdMotion::spring(MotionSpring::SpatialFast);
     const MdSpring alphaSpring = MdMotion::spring(MotionSpring::EffectsFast);
-    const qreal seconds = qreal(m_openClock.elapsed()) / 1000.0;
+    const qreal elapsedMs = qreal(m_openClock.elapsed()) + m_openElapsedOffsetMs;
+    const qreal seconds = elapsedMs / 1000.0;
     const qreal target = m_open ? 1.0 : 0.0;
     const qreal scaleTravel = scaleSpring.valueAt(seconds);
     const qreal alphaTravel = alphaSpring.valueAt(seconds);
     const qreal scaleProgress = m_openFrom + (target - m_openFrom) * scaleTravel;
     const qreal alphaProgress = m_openFrom + (target - m_openFrom) * alphaTravel;
-    const bool settled = seconds * 1000.0 >= qMax(scaleSpring.settlingDurationMs(),
-                                                  alphaSpring.settlingDurationMs());
+    const bool settled = elapsedMs >= qMax(scaleSpring.settlingDurationMs(),
+                                           alphaSpring.settlingDurationMs());
 
     m_openProgress = qBound(0.0, qMin(scaleProgress, alphaProgress), 1.0);
     update();
@@ -255,6 +279,9 @@ void MdPopover::onOpenTick()
         m_openProgress = target;
         if (!m_open) {
             hide();
+        } else if (m_content) {
+            // Flight over: the real child can composite on its own again.
+            m_content->setVisible(true);
         }
     }
 }
@@ -270,6 +297,18 @@ void MdPopover::paintEvent(QPaintEvent *event)
     const QList<qreal> radii = MdShape::resolvedRadii(m_shape, bounds.size());
     const QPainterPath path = MdShape::roundedRect(bounds, radii);
 
+    // The open/close pair: scale around the top-start anchor and alpha,
+    // matching MdMenu's Compose graphicsLayer. Starting this at full opacity
+    // was the popover's pop-in flash.
+    const qreal progress = qBound(0.0, m_openProgress, 1.0);
+    const qreal kClosedScale = 0.8; // md.comp.menu.closedScale
+    const qreal scale = kClosedScale + (1.0 - kClosedScale) * progress;
+    const qreal alpha = progress;
+    const bool animating = m_openTimer != nullptr && m_openTimer->isActive();
+    if (animating || alpha < 0.999) {
+        painter.setOpacity(painter.opacity() * qBound(0.0, alpha, 1.0));
+    }
+
     painter.fillPath(path, resolvedSurfaceColor());
 
     if (!m_title.isEmpty()) {
@@ -279,6 +318,18 @@ void MdPopover::paintEvent(QPaintEvent *event)
         painter.drawText(QRectF(kHorizontalPadding, kVerticalPadding,
                                 bounds.width() - kHorizontalPadding * 2.0, h),
                          Qt::AlignLeft | Qt::AlignVCenter, m_title);
+    }
+
+    // Content rides the same transform for the flight; the real child is
+    // hidden while animating so it cannot composite at full opacity over
+    // the fading surface.
+    if (animating && m_content && (scale < 0.999 || alpha < 0.999)) {
+        painter.save();
+        painter.scale(scale, scale);
+        painter.setClipPath(path);
+        m_content->render(&painter, m_content->pos(), QRegion(),
+                          QWidget::DrawChildren | QWidget::IgnoreMask);
+        painter.restore();
     }
 }
 

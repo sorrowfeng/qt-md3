@@ -106,6 +106,8 @@ private:
     QWidget *m_content = nullptr;
     qreal m_openProgress = 1.0;
     qreal m_openFrom = 0.0;
+    /// First open paints one vsync into the flight so the window never maps blank.
+    qreal m_openElapsedOffsetMs = 0.0;
     QElapsedTimer m_openClock;
     QTimer *m_openTimer = nullptr;
     QSize m_fitSize;

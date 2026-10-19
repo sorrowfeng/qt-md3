@@ -1,27 +1,26 @@
-// TestMd3Menu — the `md.comp.menu.*` port.
+// TestMd3Menu �?the `md.comp.menu.*` port.
 //
-// Numbers transcribed from material-web tokens/versions/latest/sass —
-// _md-comp-menu.scss — behaviour cross-checked against androidx Compose
+// Numbers transcribed from material-web tokens/versions/latest/sass �?// _md-comp-menu.scss �?behaviour cross-checked against androidx Compose
 // Material3 Menu.kt / MenuDefaults.kt.
 //
 // The assertions worth keeping are the ones a token table cannot express:
 //
-//   * **the classic item geometry** — 48 px tall, min-width 112 / max-width
+//   * **the classic item geometry** �?48 px tall, min-width 112 / max-width
 //     280 around a 12 px-padded content row, and the menu's own 8 px vertical
 //     padding with the divider's 12/2 insets stacked in insertion order;
-//   * **the popup opens on the scale+alpha pair** — scale 0.8 → 1.0 and alpha
-//     0 → 1 while the real children hide for the flight (the surface paints
+//   * **the popup opens on the scale+alpha pair** �?scale 0.8 �?1.0 and alpha
+//     0 �?1 while the real children hide for the flight (the surface paints
 //     them through Compose's graphicsLayer transform), then reappear when the
 //     springs settle;
-//   * **the focus ring is inward and `:focus-visible`** — mouse/pop focus
+//   * **the focus ring is inward and `:focus-visible`** �?mouse/pop focus
 //     reasons draw nothing; a keyboard reason draws the secondary ring inside
 //     the row;
-//   * **the state layer reads the unselected side for both selections** — the
+//   * **the state layer reads the unselected side for both selections** �?the
 //     export publishes one state-layer family and Compose applies the same
 //     indication to selected items;
-//   * **disabled + selected falls back to the unselected disabled rows** — the
+//   * **disabled + selected falls back to the unselected disabled rows** �?the
 //     export publishes selected rows for the enabled interactions only;
-//   * **the popup's keyboard walk** — arrows move between enabled items,
+//   * **the popup's keyboard walk** �?arrows move between enabled items,
 //     Esc closes and reports through `closed()`.
 
 #include "core/MdMenuTokens.h"
@@ -32,6 +31,7 @@
 #include "styles/MdMenuStyle.h"
 #include "widgets/MdMenu.h"
 
+#include <QtCore/QDir>
 #include <QtGui/QFontMetrics>
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
@@ -103,6 +103,7 @@ private slots:
 
     // --- the popup behaviour -----------------------------------------------------------
     void popupOpensOnScaleAndAlpha();
+    void popupFirstFrameHasContent();
     void escapeClosesTheMenu();
     void arrowKeysWalkTheItems();
 
@@ -251,7 +252,7 @@ void TestMd3Menu::selectedTable()
     QCOMPARE(t.iconFor(MdMenuSelection::Selected, disabled).role, ColorRole::OnSurface);
     QCOMPARE(t.iconFor(MdMenuSelection::Selected, disabled).opacity, 0.38);
 
-    // The state layer reads the unselected side for both selections — the
+    // The state layer reads the unselected side for both selections �?the
     // export publishes one state-layer family and Compose applies the same
     // indication to selected items.
     QCOMPARE(t.stateLayerFor(MdMenuSelection::Selected, hovered).role, ColorRole::OnSurface);
@@ -274,7 +275,7 @@ void TestMd3Menu::itemGeometryClampsToExportBounds()
     MdMenuItem shortItem(QStringLiteral("Ok"));
     QCOMPARE(shortItem.sizeHint(), QSize(int(t.itemMinWidth), int(t.itemHeight)));
 
-    // Icons widen the row by their slot plus the 8 px spacing — measured with
+    // Icons widen the row by their slot plus the 8 px spacing �?measured with
     // a label long enough to clear the 112 px minimum.
     MdMenuItem iconItem(QStringLiteral("Open something wonderful today"));
     iconItem.setLeadingIconName(QStringLiteral("delete"));
@@ -362,7 +363,7 @@ void TestMd3Menu::selectedPaintsSecondaryContainer()
     MdMenuItem unselected(QStringLiteral("Item"));
     unselected.resize(unselected.sizeHint());
 
-    // The unselected item has no container row — the row is transparent over
+    // The unselected item has no container row �?the row is transparent over
     // the menu surface. Sampled past the label's ink (the label starts at the
     // 12 px padding).
     const QColor unselectedPixel = pixelColorAt(unselected, QPointF(95.0, 24.0));
@@ -425,8 +426,7 @@ void TestMd3Menu::focusRingIsInwardAndKeyboardOnly()
     QVERIFY(item.hasFocus());
     QVERIFY(!item.hasKeyboardFocus());
 
-    // The popup focus reason — what `popup()` uses to land on the first item —
-    // also stays ring-free.
+    // The popup focus reason �?what `popup()` uses to land on the first item �?    // also stays ring-free.
     item.clearFocus();
     item.setFocus(Qt::PopupFocusReason);
     QVERIFY(!item.hasKeyboardFocus());
@@ -464,9 +464,11 @@ void TestMd3Menu::popupOpensOnScaleAndAlpha()
 
     // The flight starts fully closed: scale 0.8, alpha 0, and the real
     // children hidden (the surface paints them through the transform). Assert
-    // before the event loop pumps — waiting for exposure ticks the springs.
-    QCOMPARE(menu.openProgress(), 0.0);
-    QCOMPARE(menu.openAlpha(), 0.0);
+    // before the event loop pumps �?waiting for exposure ticks the springs.
+    QVERIFY(menu.openProgress() > 0.0);
+    QVERIFY(menu.openProgress() < 1.0);
+    QVERIFY(menu.openAlpha() > 0.0);
+    QVERIFY(menu.openAlpha() < 1.0);
     QVERIFY(menu.openAnimationRunning());
     QVERIFY(!item->isVisible());
 
@@ -478,6 +480,88 @@ void TestMd3Menu::popupOpensOnScaleAndAlpha()
 
     // The children reappear once the springs settle.
     QVERIFY(item->isVisible());
+    menu.close();
+}
+
+void TestMd3Menu::popupFirstFrameHasContent()
+{
+    // t0 / t16 / t32 frames of the open flight. t0 must already carry the
+    // menu surface (not a blank/default window frame): the native Qt::Popup
+    // used to map before any paint and flash the class background, and the
+    // flight used to start at alpha 0 so the first Qt frame was empty too.
+    MdMenu menu;
+    menu.addItem(QStringLiteral("Alpha"));
+    menu.addItem(QStringLiteral("Beta"));
+    menu.addItem(QStringLiteral("Gamma"));
+
+    menu.popup(QRect(40, 40, 80, 32));
+
+    // t0: popup() has already run the synchronous first paint. Grab the
+    // widget itself so the sample is the painted frame, not the compositor.
+    const QImage t0 = menu.grab().toImage();
+    QVERIFY(!t0.isNull());
+
+    // Count visible pixels and reject a blank or system-default rectangle.
+    int visible = 0;
+    int nearWhite = 0;
+    int nearBlack = 0;
+    for (int y = 0; y < t0.height(); ++y) {
+        for (int x = 0; x < t0.width(); ++x) {
+            const QRgb px = t0.pixel(x, y);
+            const int a = qAlpha(px);
+            if (a < 16) {
+                continue;
+            }
+            ++visible;
+            if (qRed(px) > 240 && qGreen(px) > 240 && qBlue(px) > 240) {
+                ++nearWhite;
+            }
+            if (qRed(px) < 16 && qGreen(px) < 16 && qBlue(px) < 16) {
+                ++nearBlack;
+            }
+        }
+    }
+    const int area = t0.width() * t0.height();
+    // Content: a real slice of the surface, not a hole and not a fill.
+    QVERIFY2(visible > area / 20,
+             qPrintable(QStringLiteral("t0 has too few painted pixels: %1/%2")
+                            .arg(visible)
+                            .arg(area)));
+    // A default/blank flash frame is a solid white or black rectangle.
+    QVERIFY2(visible - nearWhite > area / 40 || visible - nearBlack > area / 40,
+             "t0 must not be a solid white/black default frame");
+    QVERIFY2(nearWhite * 4 < visible, "t0 must not be a solid white default frame");
+    QVERIFY2(nearBlack * 4 < visible, "t0 must not be a solid black default frame");
+    qInfo("popup frame evidence: t0 %dx%d visible=%d/%d nearWhite=%d nearBlack=%d",
+          t0.width(), t0.height(), visible, area, nearWhite, nearBlack);
+
+    // Optional dumps for a visual audit (set QT_MD3_POPUP_FRAMES to a dir).
+    const QString frameDir = qEnvironmentVariable("QT_MD3_POPUP_FRAMES");
+    if (!frameDir.isEmpty()) {
+        QDir().mkpath(frameDir);
+        t0.save(QDir(frameDir).filePath(QStringLiteral("menu-t0.png")));
+    }
+
+    // t16 and t32: the spring advances, so the frames must differ from t0.
+    QTest::qWait(16);
+    QCoreApplication::processEvents();
+    const QImage t16 = menu.grab().toImage();
+    QTest::qWait(16);
+    QCoreApplication::processEvents();
+    const QImage t32 = menu.grab().toImage();
+    QVERIFY(t16 != t0);
+    QVERIFY(t32 != t16);
+    if (!frameDir.isEmpty()) {
+        t16.save(QDir(frameDir).filePath(QStringLiteral("menu-t16.png")));
+        t32.save(QDir(frameDir).filePath(QStringLiteral("menu-t32.png")));
+    }
+
+    // Progress marches toward settled across the three samples.
+    QVERIFY(menu.openProgress() > 0.0);
+    QVERIFY(menu.openAlpha() > 0.0);
+
+    settleAnimations(menu);
+    QCOMPARE(menu.openProgress(), 1.0);
     menu.close();
 }
 
@@ -509,7 +593,7 @@ void TestMd3Menu::arrowKeysWalkTheItems()
     QVERIFY(QTest::qWaitForWindowExposed(&menu));
     settleAnimations(menu);
 
-    // Keyboard focus lands on the first enabled item — with the popup reason,
+    // Keyboard focus lands on the first enabled item �?with the popup reason,
     // so no ring yet. The window system's activation may steal the initial
     // focus on the offscreen plugin, so re-establish the popup's documented
     // start state deterministically.

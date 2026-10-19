@@ -1,6 +1,7 @@
 #include "MdTreeSelect.h"
 
 #include "MdTree.h"
+#include "private/MdPopup.h"
 #include "widgets/MdTextField.h"
 
 #include <QtGui/QKeyEvent>
@@ -210,7 +211,7 @@ void MdTreeSelect::showPopup()
     // Anchored under the field, left-aligned — the exposed dropdown's only
     // published anchor position.
     m_popup->move(mapToGlobal(QPoint(0, height())));
-    m_popup->show();
+    showPopupWithoutFlash(m_popup);
     m_popupOpen = true;
     m_tree->setFocus(Qt::PopupFocusReason);
 }

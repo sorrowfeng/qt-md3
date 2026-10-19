@@ -6,6 +6,7 @@
 #include "core/MdStateLayer.h"
 #include "core/MdTheme.h"
 #include "core/MdTypeScale.h"
+#include "private/MdPopup.h"
 #include "styles/MdStyleBase.h"
 
 #include <QtGui/QFontMetrics>
@@ -237,7 +238,7 @@ void MdCascader::showPopup()
     relayout();
     const QPoint origin = mapToGlobal(QPoint(0, height() + 4));
     m_popup->move(origin);
-    m_popup->show();
+    showPopupWithoutFlash(m_popup);
     m_popupVisible = true;
     emit popupVisibleChanged(true);
 }

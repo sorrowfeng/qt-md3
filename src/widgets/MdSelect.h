@@ -152,6 +152,8 @@ private:
     QStringList m_items;
     int m_currentIndex = -1;
     bool m_popupOpen = false;
+    /// True when `m_items` changed and the menu rows need a rebuild.
+    bool m_menuDirty = true;
     bool m_rebuilding = false;
 };
 

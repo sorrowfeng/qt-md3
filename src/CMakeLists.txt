@@ -74,6 +74,7 @@ set(QT_MD3_CORE_HEADERS
     core/MdFont.h
     core/MdDesign.h
     core/MdAccessible.h
+    private/MdPopup.h
 )
 
 set(QT_MD3_STYLE_HEADERS

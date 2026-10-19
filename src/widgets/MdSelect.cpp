@@ -252,7 +252,12 @@ void MdSelect::showPopup()
         hidePopup();
         return;
     }
-    rebuildMenu();
+    // Rebuild only when the model changed since the last build. Rebuilding
+    // every open used to clear() the previous rows (orphan top-level windows)
+    // and re-add them just to show the same list.
+    if (m_menuDirty) {
+        rebuildMenu();
+    }
     // Highlight the current selection so the open menu lands on it.
     for (int i = 0; i < m_menuItems.size(); ++i) {
         m_menuItems.at(i)->setSelected(i == m_currentIndex);
@@ -423,6 +428,7 @@ void MdSelect::rebuildMenu()
         m_menuItems.append(item);
     }
     m_rebuilding = false;
+    m_menuDirty = false;
 }
 
 void MdSelect::applyCurrentText()

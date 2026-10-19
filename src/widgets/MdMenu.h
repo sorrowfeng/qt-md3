@@ -181,6 +181,8 @@ public:
 
     // --- animation readouts -----------------------------------------------------------------
     /// 0 fully closed (scale 0.8, alpha 0) to 1 fully open — the scale curve.
+    /// A fresh `popup()` paints the first frame one vsync into the flight, so
+    /// this is already past 0 when the window maps (t0 has content).
     qreal openProgress() const { return m_openProgress; }
     /// The alpha curve's own progress (it runs on the faster effects spring).
     qreal openAlpha() const { return m_openAlpha; }
@@ -226,6 +228,9 @@ private:
     qreal m_openProgress = 1.0;
     qreal m_openAlpha = 1.0;
     qreal m_openFrom = 0.0;
+    /// First open paints one vsync into the flight (16 ms) so the window
+    /// never maps blank; the clock offset keeps later ticks on that curve.
+    qreal m_openElapsedOffsetMs = 0.0;
     QElapsedTimer m_openClock;
     QTimer *m_openTimer = nullptr;
     bool m_opening = false;

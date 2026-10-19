@@ -1,5 +1,6 @@
 #include "MdMenu.h"
 
+#include "private/MdPopup.h"
 #include "styles/MdMenuStyle.h"
 
 #include "core/MdFocusRing.h"
@@ -279,7 +280,11 @@ MdMenu::~MdMenu() = default;
 
 void MdMenu::init()
 {
+    // Both attributes must land before the platform window exists; the
+    // no-system-background one stops Windows filling the first composite
+    // with the class brush (the popup's white/black flash).
     setAttribute(Qt::WA_TranslucentBackground, true);
+    setAttribute(Qt::WA_NoSystemBackground, true);
     setFocusPolicy(Qt::StrongFocus);
 
     m_openTimer = new QTimer(this);
@@ -327,8 +332,13 @@ void MdMenu::addDivider()
 
 void MdMenu::clear()
 {
+    // Hide and leave the rows parented. `setParent(nullptr)` used to turn
+    // every row into a top-level widget — a stray native window per row
+    // whenever clear() ran on a menu that had been shown (MdSelect and
+    // MdAutoComplete rebuild on every open). Staying parented means
+    // `deleteLater` destroys the row in place.
     for (QWidget *row : m_rows) {
-        row->setParent(nullptr);
+        row->hide();
         row->deleteLater();
     }
     m_items.clear();
@@ -387,23 +397,41 @@ void MdMenu::popup(const QRect &anchorRect)
     // below the anchor's bottom edge, left-aligned with the anchor's left
     // edge (clamped into the screen by the window system).
     QPoint pos(anchorRect.left(), anchorRect.bottom() + 1);
+    // Geometry is final before the window is ever mapped — moving a mapped
+    // popup is itself a flash (the compositor shows it at the old position
+    // for a frame).
     move(pos);
     // Interruptible: a re-popup mid-flight retargets from where the springs
     // stand instead of snapping back to closed (that snap was the flicker).
     const bool retarget = isVisible() && (m_openTimer->isActive() || m_opening);
     m_opening = true;
-    m_openFrom = retarget ? m_openProgress : 0.0;
-    if (!retarget) {
-        m_openProgress = 0.0;
-        m_openAlpha = 0.0;
+    if (retarget) {
+        m_openFrom = m_openProgress;
+        m_openElapsedOffsetMs = 0.0;
+    } else {
+        m_openFrom = 0.0;
+        // The first *painted* frame is one vsync into the flight, not the
+        // mathematical t=0 (which is scale 0.8 / alpha 0 — a blank
+        // rectangle that then pops). Seeding from the springs at 16 ms
+        // gives the window visible content the moment it maps, which is
+        // what a user sees on the first compositor frame anyway.
+        m_openElapsedOffsetMs = 16.0;
+        const MdSpring scaleSpring = MdMotion::spring(MotionSpring::SpatialFast);
+        const MdSpring alphaSpring = MdMotion::spring(MotionSpring::EffectsFast);
+        const qreal firstFrameSeconds = 0.016;
+        m_openProgress =
+            qBound(0.0, m_openFrom + (1.0 - m_openFrom) * scaleSpring.valueAt(firstFrameSeconds),
+                   1.0);
+        m_openAlpha =
+            qBound(0.0, m_openFrom + (1.0 - m_openFrom) * alphaSpring.valueAt(firstFrameSeconds),
+                   1.0);
     }
     m_openClock.restart();
     m_openTimer->start();
     // Real children composite outside the parent's painter transform, so they
     // hide for the flight and the surface paints them through the scale+alpha.
     setChildrenPaintedByMenu(true);
-    show();
-    raise();
+    showPopupWithoutFlash(this);
     setFocus(Qt::PopupFocusReason);
     // Keyboard focus lands on the first enabled item once the flight ends —
     // focusing a hidden child here just fought the hide and flashed.
@@ -430,6 +458,7 @@ void MdMenu::requestClose()
     setChildrenPaintedByMenu(true);
     m_openFrom = m_openProgress;
     m_opening = false;
+    m_openElapsedOffsetMs = 0.0;
     m_openClock.restart();
     m_openTimer->start();
 }
@@ -513,10 +542,12 @@ void MdMenu::showEvent(QShowEvent *event)
 void MdMenu::onOpenTick()
 {
     // Compose's pair: scale on the fast spatial spring, alpha on fast
-    // effects. Closing reverses both from wherever they stand.
+    // effects. Closing reverses both from wherever they stand. The first
+    // open frame is offset one vsync so the window never maps blank.
     const MdSpring scaleSpring = MdMotion::spring(MotionSpring::SpatialFast);
     const MdSpring alphaSpring = MdMotion::spring(MotionSpring::EffectsFast);
-    const qreal seconds = qreal(m_openClock.elapsed()) / 1000.0;
+    const qreal seconds =
+        (qreal(m_openClock.elapsed()) + m_openElapsedOffsetMs) / 1000.0;
     const qreal scaleTravel = scaleSpring.valueAt(seconds);
     const qreal alphaTravel = alphaSpring.valueAt(seconds);
     const qreal scaleTarget = m_opening ? 1.0 : 0.0;
@@ -524,10 +555,11 @@ void MdMenu::onOpenTick()
     const qreal scaleProgress = m_openFrom + (scaleTarget - m_openFrom) * scaleTravel;
     const qreal alphaProgress = m_openFrom + (alphaTarget - m_openFrom) * alphaTravel;
 
+    const qreal elapsedMs = qreal(m_openClock.elapsed()) + m_openElapsedOffsetMs;
     const bool scaleDone = qFuzzyCompare(scaleProgress + 1.0, scaleTarget + 1.0)
-                           || m_openClock.elapsed() >= scaleSpring.settlingDurationMs();
+                           || elapsedMs >= scaleSpring.settlingDurationMs();
     const bool alphaDone = qFuzzyCompare(alphaProgress + 1.0, alphaTarget + 1.0)
-                           || m_openClock.elapsed() >= alphaSpring.settlingDurationMs();
+                           || elapsedMs >= alphaSpring.settlingDurationMs();
 
     // One progress value drives the paint's scale; alpha rides alongside. The
     // scale is the slower spring, so it wins.
