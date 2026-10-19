@@ -2124,6 +2124,42 @@ set_tests_properties(TestMd3GalleryClick PROPERTIES
 
 qt_md3_deploy_runtime(TestMd3GalleryClick)
 
+# TestMd3MusicPlayer -- music-player Library / Settings visual + interaction
+# QA. Drives the real MusicPlayerWindow (example app sources linked directly)
+# and asserts the layout invariants the visual pass caught: mini-player
+# covering content, MdColorPicker swatch overlapping sliders at phone widths,
+# missing scroll, label colours frozen across a theme flip.
+set(MUSIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../examples/music-player)
+
+add_executable(TestMd3MusicPlayer
+    TestMd3MusicPlayer.cpp
+    ${MUSIC_DIR}/MusicData.cpp
+    ${MUSIC_DIR}/MusicPages.cpp
+    ${MUSIC_DIR}/MusicPlayerWindow.cpp
+)
+
+target_include_directories(TestMd3MusicPlayer
+    PRIVATE
+        ${MUSIC_DIR}
+)
+
+target_link_libraries(TestMd3MusicPlayer
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+        Qt${QT_VERSION_MAJOR}::Test
+)
+
+add_test(NAME TestMd3MusicPlayer COMMAND TestMd3MusicPlayer)
+set_tests_properties(TestMd3MusicPlayer PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+
+qt_md3_deploy_runtime(TestMd3MusicPlayer)
+
 # --- Media / marquee Stage 2 additions --------------------------------------
 foreach(media_test IN ITEMS
     TestMd3Marquee

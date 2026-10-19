@@ -8,6 +8,7 @@
 #include "core/MdTheme.h"
 #include "core/MdTypes.h"
 #include "widgets/MdColorPicker.h"
+#include "widgets/MdSlider.h"
 
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
@@ -110,6 +111,33 @@ private slots:
         }
         QVERIFY2(mdtest::paintedPixelCount(image, transparent) > 0,
                  "MdColorPicker painted nothing");
+    }
+
+    void narrowWidthKeepsSlidersInside()
+    {
+        // Phone widths used to hard-code a 240 px slider column, so the swatch
+        // disc painted over the tracks. The sliders must stay left of the
+        // trailing edge at every width we ship.
+        const int widths[] = {240, 280, 320, 360, 420};
+        for (int w : widths) {
+            MdColorPicker picker;
+            picker.resize(w, picker.minimumSizeHint().height());
+            picker.show();
+            QApplication::processEvents();
+
+            const QList<qreal> unused;
+            Q_UNUSED(unused);
+            const QRect hue = picker.hueSlider()->geometry();
+            const QRect sat = picker.saturationSlider()->geometry();
+            const QRect val = picker.valueSlider()->geometry();
+            QVERIFY(hue.isValid() && sat.isValid() && val.isValid());
+            QVERIFY2(hue.right() < w, qPrintable(QStringLiteral("hue clipped at %1").arg(w)));
+            QCOMPARE(hue.left(), val.left());
+            QCOMPARE(hue.width(), val.width());
+            // Sliders occupy a single column; they must not run under the
+            // swatch, which is painted on the trailing side.
+            QVERIFY2(hue.width() > 80, qPrintable(QStringLiteral("slider column too narrow at %1").arg(w)));
+        }
     }
 };
 

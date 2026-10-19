@@ -337,15 +337,24 @@ void MusicPlayerWindow::onSearchSubmitted(const QString &text)
 
 void MusicPlayerWindow::layoutMiniPlayer()
 {
-    if (!m_miniPlayer || !m_miniPlayer->isVisible()) {
+    if (!m_miniPlayer) {
         return;
     }
     // Sit just above the bottom navigation bar, inset 8 px.
     const int navHeight = m_navBar ? m_navBar->height() : 80;
     const int miniHeight = 72;
     const int y = height() - navHeight - miniHeight - 8;
-    m_miniPlayer->setGeometry(8, y, width() - 16, miniHeight);
-    m_miniPlayer->raise();
+    if (m_miniPlayer->isVisible()) {
+        m_miniPlayer->setGeometry(8, y, width() - 16, miniHeight);
+        m_miniPlayer->raise();
+        // Keep page content clear of the floating mini player: the stacked
+        // widget honours contentsMargins and re-places its pages.
+        if (m_stack) {
+            m_stack->setContentsMargins(0, 0, 0, miniHeight + 8);
+        }
+    } else if (m_stack) {
+        m_stack->setContentsMargins(0, 0, 0, 0);
+    }
 }
 
 void MusicPlayerWindow::refreshMiniPlayer()

@@ -22,8 +22,14 @@ namespace {
 constexpr qreal kSliderGap = 8.0;
 /// Swatch disc edge (`md.comp.icon-button` large container 96, optically 80).
 constexpr qreal kSwatch = 80.0;
+/// Smallest swatch the disc may shrink to before the sliders give way.
+constexpr qreal kSwatchMin = 40.0;
 /// Gap between the sliders column and the swatch.
 constexpr qreal kSwatchGap = 16.0;
+/// Smallest usable slider width. Below this the picker stacks.
+constexpr qreal kSliderMin = 120.0;
+/// Preferred slider width when the host is generous.
+constexpr qreal kSliderPreferred = 240.0;
 /// Hex field height (filled text field on the default track).
 constexpr qreal kHexHeight = 56.0;
 /// Gap under the sliders before the hex field.
@@ -96,6 +102,7 @@ void MdColorPicker::init()
     syncToHex();
 
     MdStyleBase::connectThemeUpdate(this, &MdColorPicker::onThemeChanged);
+    layoutChildren();
 }
 
 void MdColorPicker::setColor(const QColor &color)
@@ -198,7 +205,7 @@ QColor MdColorPicker::resolvedRingColor() const
 
 QSize MdColorPicker::sizeHint() const
 {
-    const qreal width = kPadding * 2.0 + 240.0 + kSwatchGap + kSwatch;
+    const qreal width = kPadding * 2.0 + kSliderPreferred + kSwatchGap + kSwatch;
     qreal height = kPadding * 2.0 + 48.0 * 3.0 + kSliderGap * 2.0;
     if (m_hexVisible) {
         height += kHexGap + kHexHeight;
@@ -208,7 +215,13 @@ QSize MdColorPicker::sizeHint() const
 
 QSize MdColorPicker::minimumSizeHint() const
 {
-    return sizeHint();
+    // Side-by-side at the tightest: min sliders + gap + min swatch.
+    const qreal width = kPadding * 2.0 + kSliderMin + kSwatchGap + kSwatchMin;
+    qreal height = kPadding * 2.0 + 48.0 * 3.0 + kSliderGap * 2.0;
+    if (m_hexVisible) {
+        height += kHexGap + kHexHeight;
+    }
+    return QSize(qCeil(width), qCeil(height));
 }
 
 void MdColorPicker::syncFromHsv()
@@ -290,8 +303,30 @@ void MdColorPicker::layoutChildren()
 {
     const qreal contentLeft = kPadding;
     const qreal contentTop = kPadding;
-    const qreal sliderWidth = 240.0;
     const qreal sliderHeight = 48.0;
+    const qreal available = qMax<qreal>(0.0, width() - 2.0 * kPadding);
+
+    // Preferred side-by-side: sliders column + gap + swatch disc. The sliders
+    // give way first; the swatch shrinks only once the sliders hit their floor.
+    qreal swatchSize = kSwatch;
+    qreal sliderWidth = available - kSwatchGap - swatchSize;
+    if (sliderWidth < kSliderMin) {
+        swatchSize = qMax(kSwatchMin, available - kSwatchGap - kSliderMin);
+        sliderWidth = available - kSwatchGap - swatchSize;
+    }
+    if (sliderWidth < kSliderMin) {
+        // Too narrow even for a shrunken swatch: full-width sliders, swatch
+        // pinned to the trailing edge of the top slider row.
+        swatchSize = kSwatchMin;
+        sliderWidth = qMax<qreal>(kSliderMin, available - kSwatchGap - swatchSize);
+    }
+
+    // Swatch disc on the trailing side (mirrored under RTL).
+    const qreal swatchX = width() - kPadding - swatchSize;
+    m_swatchRect = QRectF(swatchX, contentTop, swatchSize, swatchSize);
+    if (layoutDirection() == Qt::RightToLeft) {
+        m_swatchRect.moveLeft(kPadding);
+    }
 
     if (m_hueSlider) {
         m_hueSlider->setGeometry(QRect(qRound(contentLeft), qRound(contentTop),
@@ -327,10 +362,12 @@ void MdColorPicker::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
 
-    // Swatch disc on the trailing side.
-    const qreal swatchX = width() - kPadding - kSwatch;
-    const qreal swatchY = kPadding;
-    const QRectF disc(swatchX, swatchY, kSwatch, kSwatch);
+    // Swatch disc on the trailing side, sized by the last layout pass.
+    QRectF disc = m_swatchRect;
+    if (disc.isEmpty()) {
+        const qreal swatchX = width() - kPadding - kSwatch;
+        disc = QRectF(swatchX, kPadding, kSwatch, kSwatch);
+    }
     const QList<qreal> radii = MdShape::resolvedRadii(m_swatchShape, disc.size());
     const QPainterPath path = MdShape::roundedRect(disc, radii);
     painter.fillPath(path, m_color);

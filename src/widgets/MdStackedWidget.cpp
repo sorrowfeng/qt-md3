@@ -380,10 +380,23 @@ void MdStackedWidget::onAnimationFrame()
 
 void MdStackedWidget::relayout()
 {
-    const QRectF bounds(0, 0, width(), height());
+    // Honour contentsMargins so a host can reserve space for a floating
+    // overlay (a mini player, say) without the pages sliding under it.
+    const QMargins m = contentsMargins();
+    const QRectF bounds = QRectF(rect()).adjusted(m.left(), m.top(), -m.right(), -m.bottom());
     for (QWidget *page : m_pages) {
         page->setGeometry(bounds.toRect());
     }
+}
+
+bool MdStackedWidget::event(QEvent *event)
+{
+    // setContentsMargins() posts a LayoutRequest; without a layout manager
+    // nothing else would re-place the pages.
+    if (event->type() == QEvent::LayoutRequest) {
+        relayout();
+    }
+    return QWidget::event(event);
 }
 
 void MdStackedWidget::paintEvent(QPaintEvent *event)

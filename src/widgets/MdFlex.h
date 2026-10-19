@@ -121,6 +121,8 @@ public:
     // QWidget
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
+    bool hasHeightForWidth() const override;
+    int heightForWidth(int width) const override;
 
 signals:
     void directionChanged(md::MdFlexDirection direction);
@@ -140,6 +142,10 @@ private slots:
 private:
     void init();
     void relayout() const;
+    /// Sum of children on the main axis, unwrapped (plus gaps).
+    qreal unwrappedMainExtent() const;
+    /// Cross-axis extent of the wrapped run at `along` px on the main axis.
+    qreal wrappedExtentAt(qreal along) const;
 
     MdFlexDirection m_direction = MdFlexDirection::Row;
     MdFlexJustify m_justify = MdFlexJustify::Start;

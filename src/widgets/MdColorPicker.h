@@ -21,6 +21,7 @@
 #include "core/MdTypes.h"
 #include "core/QtMd3Export.h"
 
+#include <QtCore/QRectF>
 #include <QtGui/QColor>
 #include <QtWidgets/QWidget>
 
@@ -126,6 +127,8 @@ private:
     MdSlider *m_saturationSlider = nullptr;
     MdSlider *m_valueSlider = nullptr;
     MdTextField *m_hexField = nullptr;
+    /// Swatch disc rect from the last `layoutChildren()`, mirrored under RTL.
+    QRectF m_swatchRect;
     bool m_syncing = false;
 };
 

@@ -124,10 +124,55 @@ qreal MdFlex::spacingPx(MdFlexSpacing spacing)
 
 QSize MdFlex::sizeHint() const
 {
-    const qreal gap = gapPx();
-    qreal main = 0.0;
-    qreal cross = 0.0;
-    int visible = 0;
+    // Without wrap the run is a single line; with wrap the cross axis grows
+    // with the number of lines at the current width. Returning the unwrapped
+    // box left the extra rows outside the widget (the music-player filter
+    // chips at phone width).
+    if (!m_wrap) {
+        const qreal gap = gapPx();
+        qreal main = 0.0;
+        qreal cross = 0.0;
+        int visible = 0;
+        for (QObject *child : children()) {
+            auto *widget = qobject_cast<QWidget *>(child);
+            if (widget == nullptr || widget->isWindow() || widget->isHidden()) {
+                continue;
+            }
+            QSize hint = widget->sizeHint();
+            hint = hint.expandedTo(widget->minimumSizeHint());
+            hint = hint.expandedTo(widget->minimumSize());
+            if (hint.width() <= 0) {
+                hint.setWidth(widget->width());
+            }
+            if (hint.height() <= 0) {
+                hint.setHeight(widget->height());
+            }
+            hint = hint.boundedTo(widget->maximumSize());
+            if (m_direction == MdFlexDirection::Row) {
+                main += hint.width();
+                cross = qMax(cross, qreal(hint.height()));
+            } else {
+                main += hint.height();
+                cross = qMax(cross, qreal(hint.width()));
+            }
+            ++visible;
+        }
+        if (visible > 1) {
+            main += gap * (visible - 1);
+        }
+        if (m_direction == MdFlexDirection::Row) {
+            return QSize(qRound(main), qRound(cross));
+        }
+        return QSize(qRound(cross), qRound(main));
+    }
+
+    // Wrapped: preferred box is one column/row of the widest child — the
+    // host stretches us to the available main axis and heightForWidth then
+    // reports the wrapped cross extent. Returning the unwrapped run width
+    // made scroll areas expand us to the full single line (filter chips at
+    // phone width never wrapped).
+    qreal widest = 0.0;
+    qreal singleCross = 0.0;
     for (QObject *child : children()) {
         auto *widget = qobject_cast<QWidget *>(child);
         if (widget == nullptr || widget->isWindow() || widget->isHidden()) {
@@ -144,21 +189,121 @@ QSize MdFlex::sizeHint() const
         }
         hint = hint.boundedTo(widget->maximumSize());
         if (m_direction == MdFlexDirection::Row) {
-            main += hint.width();
-            cross = qMax(cross, qreal(hint.height()));
+            widest = qMax(widest, qreal(hint.width()));
+            singleCross = qMax(singleCross, qreal(hint.height()));
         } else {
-            main += hint.height();
-            cross = qMax(cross, qreal(hint.width()));
+            widest = qMax(widest, qreal(hint.height()));
+            singleCross = qMax(singleCross, qreal(hint.width()));
         }
+    }
+    const qreal along = width() > 0
+        ? (m_direction == MdFlexDirection::Row ? qreal(width()) : qreal(height()))
+        : widest;
+    const qreal across = wrappedExtentAt(along);
+    if (m_direction == MdFlexDirection::Row) {
+        return QSize(qRound(widest), qRound(across > 0 ? across : singleCross));
+    }
+    return QSize(qRound(across > 0 ? across : singleCross), qRound(widest));
+}
+
+bool MdFlex::hasHeightForWidth() const
+{
+    return m_wrap && m_direction == MdFlexDirection::Row;
+}
+
+int MdFlex::heightForWidth(int width) const
+{
+    if (!hasHeightForWidth() || width <= 0) {
+        return sizeHint().height();
+    }
+    return qRound(wrappedExtentAt(qreal(width)));
+}
+
+/// Sum of children on the main axis, unwrapped (plus gaps).
+qreal MdFlex::unwrappedMainExtent() const
+{
+    const qreal gap = gapPx();
+    qreal main = 0.0;
+    int visible = 0;
+    for (QObject *child : children()) {
+        auto *widget = qobject_cast<QWidget *>(child);
+        if (widget == nullptr || widget->isWindow() || widget->isHidden()) {
+            continue;
+        }
+        QSize hint = widget->sizeHint();
+        hint = hint.expandedTo(widget->minimumSizeHint());
+        hint = hint.expandedTo(widget->minimumSize());
+        if (hint.width() <= 0) {
+            hint.setWidth(widget->width());
+        }
+        if (hint.height() <= 0) {
+            hint.setHeight(widget->height());
+        }
+        hint = hint.boundedTo(widget->maximumSize());
+        main += m_direction == MdFlexDirection::Row ? hint.width() : hint.height();
         ++visible;
     }
     if (visible > 1) {
         main += gap * (visible - 1);
     }
-    if (m_direction == MdFlexDirection::Row) {
-        return QSize(qRound(main), qRound(cross));
+    return main;
+}
+
+/// Cross-axis extent of the wrapped run at `along` px on the main axis.
+qreal MdFlex::wrappedExtentAt(qreal along) const
+{
+    const qreal gap = gapPx();
+    const bool row = m_direction == MdFlexDirection::Row;
+
+    QVector<qreal> mainSizes;
+    QVector<qreal> crossSizes;
+    for (QObject *child : children()) {
+        auto *widget = qobject_cast<QWidget *>(child);
+        if (widget == nullptr || widget->isWindow() || widget->isHidden()) {
+            continue;
+        }
+        QSize hint = widget->sizeHint();
+        hint = hint.expandedTo(widget->minimumSizeHint());
+        hint = hint.expandedTo(widget->minimumSize());
+        if (hint.width() <= 0) {
+            hint.setWidth(widget->width());
+        }
+        if (hint.height() <= 0) {
+            hint.setHeight(widget->height());
+        }
+        hint = hint.boundedTo(widget->maximumSize());
+        mainSizes.append(row ? hint.width() : hint.height());
+        crossSizes.append(row ? hint.height() : hint.width());
     }
-    return QSize(qRound(cross), qRound(main));
+    if (mainSizes.isEmpty()) {
+        return 0.0;
+    }
+
+    const qreal limit = along > 0.0 ? along : unwrappedMainExtent();
+    qreal lineMain = 0.0;
+    qreal lineCross = 0.0;
+    qreal totalCross = 0.0;
+    int lines = 0;
+    for (int i = 0; i < mainSizes.size(); ++i) {
+        const qreal needed = (lineMain > 0.0 ? gap : 0.0) + mainSizes.at(i);
+        if (m_wrap && lineMain > 0.0 && lineMain + needed > limit) {
+            totalCross += lineCross;
+            if (lines > 0) {
+                totalCross += gap;
+            }
+            ++lines;
+            lineMain = mainSizes.at(i);
+            lineCross = crossSizes.at(i);
+            continue;
+        }
+        lineMain += needed;
+        lineCross = qMax(lineCross, crossSizes.at(i));
+    }
+    totalCross += lineCross;
+    if (lines > 0) {
+        totalCross += gap;
+    }
+    return totalCross;
 }
 
 QSize MdFlex::minimumSizeHint() const

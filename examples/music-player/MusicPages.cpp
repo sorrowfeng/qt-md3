@@ -12,11 +12,13 @@
 #include "widgets/MdCard.h"
 #include "widgets/MdChip.h"
 #include "widgets/MdColorPicker.h"
+#include "widgets/MdFlex.h"
 #include "widgets/MdIconButton.h"
 #include "widgets/MdList.h"
 #include "widgets/MdListItem.h"
 #include "widgets/MdMarquee.h"
 #include "widgets/MdReorderList.h"
+#include "widgets/MdScrollArea.h"
 #include "widgets/MdSearchBar.h"
 #include "widgets/MdSeekSlider.h"
 #include "widgets/MdSelect.h"
@@ -27,8 +29,10 @@
 #include <QtGui/QContextMenuEvent>
 #include <QtGui/QPainter>
 #include <QtGui/QPaintEvent>
+#include <QtWidgets/QFrame>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QScrollArea>
 #include <QtWidgets/QVBoxLayout>
 
 using namespace md;
@@ -291,35 +295,58 @@ LibraryPage::LibraryPage(MusicPlayerWindow *window, QWidget *parent)
     setAccessibleName(QStringLiteral("Library"));
 
     auto *root = new QVBoxLayout(this);
-    root->setContentsMargins(16, 12, 16, 12);
-    root->setSpacing(12);
+    root->setContentsMargins(0, 0, 0, 0);
+    root->setSpacing(0);
 
-    m_search = new MdSearchBar(this);
+    // Everything scrolls under the mini player: search, chips, hero and list
+    // are one column. Without the area the list clips and the last rows sit
+    // under the floating mini player.
+    auto *scroll = new MdScrollArea(this);
+    scroll->setObjectName(QStringLiteral("library-scroll"));
+    scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
+    root->addWidget(scroll);
+
+    auto *body = new QWidget(scroll);
+    body->setObjectName(QStringLiteral("library-body"));
+    // Take the viewport width, not the content's natural width — otherwise
+    // QScrollArea grows the body to the unwrapped chip/list width and the
+    // filter row never wraps on a phone.
+    body->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    scroll->setWidget(body);
+
+    auto *content = new QVBoxLayout(body);
+    content->setContentsMargins(16, 12, 16, 12);
+    content->setSpacing(12);
+
+    m_search = new MdSearchBar(body);
     m_search->setPlaceholderText(QStringLiteral("Search albums, artists, playlists"));
     m_search->setAccessibleName(QStringLiteral("Search library"));
-    root->addWidget(m_search);
+    content->addWidget(m_search);
 
-    m_filterRow = new QWidget(this);
-    auto *filters = new QHBoxLayout(m_filterRow);
-    filters->setContentsMargins(0, 0, 0, 0);
-    filters->setSpacing(8);
-    m_filterAll = new MdChip(QStringLiteral("All"), this);
+    auto *flex = new MdFlex(body);
+    flex->setObjectName(QStringLiteral("filter-row"));
+    flex->setWrap(true);
+    flex->setGap(MdFlexSpacing::Small);
+    m_filterRow = flex;
+    m_filterAll = new MdChip(QStringLiteral("All"), flex);
+    m_filterAll->setObjectName(QStringLiteral("filter-all"));
     m_filterAll->setVariant(MdChipVariant::Filter);
     m_filterAll->setChecked(true);
-    m_filterAlbums = new MdChip(QStringLiteral("Albums"), this);
+    m_filterAlbums = new MdChip(QStringLiteral("Albums"), flex);
+    m_filterAlbums->setObjectName(QStringLiteral("filter-albums"));
     m_filterAlbums->setVariant(MdChipVariant::Filter);
-    m_filterPlaylists = new MdChip(QStringLiteral("Playlists"), this);
+    m_filterPlaylists = new MdChip(QStringLiteral("Playlists"), flex);
+    m_filterPlaylists->setObjectName(QStringLiteral("filter-playlists"));
     m_filterPlaylists->setVariant(MdChipVariant::Filter);
-    m_filterLossless = new MdChip(QStringLiteral("Lossless"), this);
+    m_filterLossless = new MdChip(QStringLiteral("Lossless"), flex);
+    m_filterLossless->setObjectName(QStringLiteral("filter-lossless"));
     m_filterLossless->setVariant(MdChipVariant::Filter);
-    filters->addWidget(m_filterAll);
-    filters->addWidget(m_filterAlbums);
-    filters->addWidget(m_filterPlaylists);
-    filters->addWidget(m_filterLossless);
-    filters->addStretch(1);
-    root->addWidget(m_filterRow);
+    // Wrapping flex: every filter stays reachable at phone widths without a
+    // horizontal scroller that clipped the last chip.
+    content->addWidget(flex);
 
-    m_featured = new MdCard(this);
+    m_featured = new MdCard(body);
     m_featured->setVariant(MdCardVariant::Filled);
     m_featured->setClickable(true);
     m_featured->setMinimumHeight(96);
@@ -328,15 +355,17 @@ LibraryPage::LibraryPage(MusicPlayerWindow *window, QWidget *parent)
     featLayout->setContentsMargins(16, 12, 16, 12);
     auto *featTitle = makeLabel(QStringLiteral("Featured — Night Drive"), TypeStyle::TitleLarge,
                                 ColorRole::OnSurface);
+    featTitle->setObjectName(QStringLiteral("featured-title"));
     auto *featSub = makeLabel(QStringLiteral("5 tracks · synthwave and electronic"),
                               TypeStyle::BodyMedium, ColorRole::OnSurfaceVariant);
+    featSub->setObjectName(QStringLiteral("featured-sub"));
     featLayout->addWidget(featTitle);
     featLayout->addWidget(featSub);
-    root->addWidget(m_featured);
+    content->addWidget(m_featured);
 
-    m_list = new MdList(this);
+    m_list = new MdList(body);
     m_list->setSelectionMode(MdList::SelectionMode::Single);
-    root->addWidget(m_list, 1);
+    content->addWidget(m_list, 1);
 
     connect(m_search, &QLineEdit::textChanged, this, &LibraryPage::applyFilter);
     connect(m_filterAll, &QAbstractButton::toggled, this, &LibraryPage::onFilterChipToggled);
@@ -354,6 +383,16 @@ LibraryPage::LibraryPage(MusicPlayerWindow *window, QWidget *parent)
 
 void LibraryPage::refresh()
 {
+    // Section labels are palette-styled; a theme switch must restyle them.
+    const QList<QLabel *> labels = findChildren<QLabel *>();
+    for (QLabel *label : labels) {
+        const QString name = label->objectName();
+        if (name == QLatin1String("featured-title")) {
+            restyleLabel(label, TypeStyle::TitleLarge, ColorRole::OnSurface);
+        } else if (name == QLatin1String("featured-sub")) {
+            restyleLabel(label, TypeStyle::BodyMedium, ColorRole::OnSurfaceVariant);
+        }
+    }
     rebuildList(m_filter);
 }
 
@@ -617,39 +656,60 @@ SettingsPage::SettingsPage(MusicPlayerWindow *window, QWidget *parent)
     setAccessibleName(QStringLiteral("Settings"));
 
     auto *root = new QVBoxLayout(this);
-    root->setContentsMargins(16, 12, 16, 16);
-    root->setSpacing(16);
+    root->setContentsMargins(0, 0, 0, 0);
+    root->setSpacing(0);
+
+    // Long form page: without a scroll area the last switches fall under the
+    // mini player / off the bottom at phone heights.
+    auto *scroll = new MdScrollArea(this);
+    scroll->setObjectName(QStringLiteral("settings-scroll"));
+    scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
+    root->addWidget(scroll);
+
+    auto *body = new QWidget(scroll);
+    body->setObjectName(QStringLiteral("settings-body"));
+    body->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    scroll->setWidget(body);
+
+    auto *content = new QVBoxLayout(body);
+    content->setContentsMargins(16, 12, 16, 16);
+    content->setSpacing(16);
 
     auto *appearance = makeLabel(QStringLiteral("Appearance"), TypeStyle::TitleMedium,
                                  ColorRole::OnSurface);
-    root->addWidget(appearance);
+    appearance->setObjectName(QStringLiteral("section-appearance"));
+    content->addWidget(appearance);
 
-    m_themeSelect = new MdSelect(this);
+    m_themeSelect = new MdSelect(body);
     m_themeSelect->setLabelText(QStringLiteral("Theme"));
     m_themeSelect->setAccessibleName(QStringLiteral("Theme mode"));
     m_themeSelect->addItem(QStringLiteral("Light"));
     m_themeSelect->addItem(QStringLiteral("Dark"));
     m_themeSelect->addItem(QStringLiteral("System"));
-    root->addWidget(m_themeSelect);
+    content->addWidget(m_themeSelect);
 
-    m_seedRow = new QWidget(this);
+    m_seedRow = new QWidget(body);
     auto *seedLayout = new QVBoxLayout(m_seedRow);
     seedLayout->setContentsMargins(0, 0, 0, 0);
-    seedLayout->addWidget(makeLabel(QStringLiteral("Seed colour"), TypeStyle::LabelLarge,
-                                    ColorRole::OnSurfaceVariant));
-    m_seedPicker = new MdColorPicker(this);
+    auto *seedLabel = makeLabel(QStringLiteral("Seed colour"), TypeStyle::LabelLarge,
+                                 ColorRole::OnSurfaceVariant);
+    seedLabel->setObjectName(QStringLiteral("section-seed"));
+    seedLayout->addWidget(seedLabel);
+    m_seedPicker = new MdColorPicker(body);
     m_seedPicker->setAccessibleName(QStringLiteral("Seed colour"));
     seedLayout->addWidget(m_seedPicker);
-    root->addWidget(m_seedRow);
+    content->addWidget(m_seedRow);
 
-    m_highContrast = new MdSwitch(QStringLiteral("High contrast"), this);
+    m_highContrast = new MdSwitch(QStringLiteral("High contrast"), body);
     m_highContrast->setAccessibleName(QStringLiteral("High contrast"));
-    root->addWidget(m_highContrast);
+    content->addWidget(m_highContrast);
 
     auto *audio = makeLabel(QStringLiteral("Audio"), TypeStyle::TitleMedium, ColorRole::OnSurface);
-    root->addWidget(audio);
+    audio->setObjectName(QStringLiteral("section-audio"));
+    content->addWidget(audio);
 
-    m_qualitySelect = new MdSelect(this);
+    m_qualitySelect = new MdSelect(body);
     m_qualitySelect->setLabelText(QStringLiteral("Streaming quality"));
     m_qualitySelect->setAccessibleName(QStringLiteral("Audio quality"));
     m_qualitySelect->addItem(QStringLiteral("Low — 96 kbps"));
@@ -657,29 +717,30 @@ SettingsPage::SettingsPage(MusicPlayerWindow *window, QWidget *parent)
     m_qualitySelect->addItem(QStringLiteral("High — 320 kbps"));
     m_qualitySelect->addItem(QStringLiteral("Lossless"));
     m_qualitySelect->setCurrentIndex(2);
-    root->addWidget(m_qualitySelect);
+    content->addWidget(m_qualitySelect);
 
     auto *crossLabel = makeLabel(QStringLiteral("Crossfade"), TypeStyle::LabelLarge,
                                  ColorRole::OnSurfaceVariant);
-    root->addWidget(crossLabel);
-    m_crossfade = new MdSlider(this);
+    crossLabel->setObjectName(QStringLiteral("section-crossfade"));
+    content->addWidget(crossLabel);
+    m_crossfade = new MdSlider(body);
     m_crossfade->setMin(0.0);
     m_crossfade->setMax(12.0);
     m_crossfade->setValue(3.0);
     m_crossfade->setStep(1.0);
     m_crossfade->setLabeled(true);
     m_crossfade->setAccessibleName(QStringLiteral("Crossfade seconds"));
-    root->addWidget(m_crossfade);
+    content->addWidget(m_crossfade);
 
-    m_normalize = new MdSwitch(QStringLiteral("Volume normalisation"), this);
+    m_normalize = new MdSwitch(QStringLiteral("Volume normalisation"), body);
     m_normalize->setChecked(true);
     m_normalize->setAccessibleName(QStringLiteral("Volume normalisation"));
-    root->addWidget(m_normalize);
+    content->addWidget(m_normalize);
 
-    m_gapless = new MdSwitch(QStringLiteral("Gapless playback"), this);
+    m_gapless = new MdSwitch(QStringLiteral("Gapless playback"), body);
     m_gapless->setChecked(true);
     m_gapless->setAccessibleName(QStringLiteral("Gapless playback"));
-    root->addWidget(m_gapless);
+    content->addWidget(m_gapless);
 
     root->addStretch(1);
 
@@ -697,6 +758,19 @@ SettingsPage::SettingsPage(MusicPlayerWindow *window, QWidget *parent)
 
 void SettingsPage::refresh()
 {
+    // Section labels are palette-styled; a theme switch must restyle them.
+    const QList<QLabel *> labels = findChildren<QLabel *>();
+    for (QLabel *label : labels) {
+        const QString name = label->objectName();
+        if (name == QLatin1String("section-appearance")
+            || name == QLatin1String("section-audio")) {
+            restyleLabel(label, TypeStyle::TitleMedium, ColorRole::OnSurface);
+        } else if (name == QLatin1String("section-seed")
+                   || name == QLatin1String("section-crossfade")) {
+            restyleLabel(label, TypeStyle::LabelLarge, ColorRole::OnSurfaceVariant);
+        }
+    }
+
     const MdTheme &theme = MdTheme::instance();
     const int index = theme.themeMode() == ThemeMode::Dark
                           ? 1
