@@ -165,8 +165,19 @@ qreal MdListItemStyle::measuredHeight(const MdListItem &item, const MdListTokens
     const int lines = lineCount(item);
 
     const qreal padding = tokens.topSpace + tokens.bottomSpace;
-    const qreal textWidth =
-        qMax<qreal>(contentWidth - tokens.leadingSpace - tokens.trailingSpace, 40.0);
+    // Same width the text column gets in layoutFor: the widget width minus the
+    // leading / trailing slots (including trailing text or icon), so the
+    // supporting wrap here matches the wrap used at paint time.
+    qreal textWidth = contentWidth - tokens.leadingSpace - tokens.trailingSpace;
+    const QSizeF leading = leadingExtent(item, tokens);
+    if (!leading.isEmpty()) {
+        textWidth -= leading.width() + tokens.betweenSpace;
+    }
+    const QSizeF trailing = trailingExtent(item, tokens);
+    if (!trailing.isEmpty()) {
+        textWidth -= trailing.width() + tokens.betweenSpace;
+    }
+    textWidth = qMax<qreal>(textWidth, 40.0);
 
     qreal content = 0.0;
     if (!item.overline().isEmpty()) {
@@ -359,11 +370,19 @@ MdListItemStyle::Layout MdListItemStyle::layoutFor(const MdListItem &item,
     }
 
     if (!item.trailingSupporting().isEmpty()) {
-        layout.trailingSupporting =
-            QRectF(contentLeft, widgetRect.top() + (height - lineHeight(tokens.trailingSupportingTextType)) / 2.0,
-                   contentWidth, lineHeight(tokens.trailingSupportingTextType));
-        if (layout.topAligned) {
-            layout.trailingSupporting.moveTop(widgetRect.top() + tokens.topSpace);
+        // Trailing supporting text occupies the trailing slot that
+        // trailingExtent already reserved (layout.trailing) — never the text
+        // column. Painting it at contentLeft collided with the headline.
+        const qreal lineH = lineHeight(tokens.trailingSupportingTextType);
+        if (layout.trailing.isValid()) {
+            layout.trailingSupporting = layout.trailing;
+        } else {
+            layout.trailingSupporting =
+                QRectF(contentRight, widgetRect.top() + (height - lineH) / 2.0,
+                       qMax<qreal>(trailingExtent(item, tokens).width(), lineH), lineH);
+            if (layout.topAligned) {
+                layout.trailingSupporting.moveTop(widgetRect.top() + tokens.topSpace);
+            }
         }
     }
 
@@ -565,7 +584,8 @@ void MdListItemStyle::paintListItem(QPainter &painter, const MdListItem &item,
                      : theme.color(row.trailingSupportingText),
             0.0));
         const QFontMetrics trailingFm(fontFor(tokens.trailingSupportingTextType));
-        painter.drawText(layout.trailingSupporting, int(MdStyleBase::leadingAlignment(nullptr) | Qt::AlignVCenter),
+        painter.drawText(layout.trailingSupporting,
+                         int(MdStyleBase::trailingAlignment(&item) | Qt::AlignVCenter),
                          trailingFm.elidedText(item.trailingSupporting(), Qt::ElideRight,
                                                int(layout.trailingSupporting.width())));
     }

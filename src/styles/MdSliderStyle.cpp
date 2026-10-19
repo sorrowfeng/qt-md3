@@ -211,9 +211,19 @@ void MdSliderStyle::paintSlider(QPainter &painter, const MdSlider &slider,
         if (!colour.isValid()) {
             return;
         }
+        // Expressive thumb: a vertical pill of the published width (4 px at
+        // rest / hover, 2 px focused or pressed). The animated handle rect
+        // already carries that width; draw it as a true stadium so a thin
+        // rect can never collapse to a hairline column.
+        const qreal pillW = qMax<qreal>(rect.width(), 1.0);
+        QRectF pill = rect;
+        if (pill.width() < pillW) {
+            pill.setX(rect.center().x() - pillW / 2.0);
+            pill.setWidth(pillW);
+        }
         painter.setPen(Qt::NoPen);
         painter.setBrush(colour);
-        painter.drawRoundedRect(rect, rect.width() / 2.0, rect.width() / 2.0);
+        painter.drawRoundedRect(pill, pillW / 2.0, pillW / 2.0);
     };
     if (slider.isRange()) {
         paintHandle(handleStart, slider.hasKeyboardFocus(), true);

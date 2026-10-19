@@ -76,6 +76,7 @@ private slots:
     // --- widget contract ----------------------------------------------------
 
     void defaultGeometryMatchesTheTokens();
+    void largeShrinksToFitInsteadOfClippingToDShape();
     void propertiesAndSignalsFire();
     void iconNameIsTheAccessibleName();
     void pressRunsTheRippleAndReleaseFadesIt();
@@ -242,6 +243,27 @@ void TestMd3Fab::defaultGeometryMatchesTheTokens()
     // The large size resizes the hint with the container plus the same margin.
     fab.setFabSize(FabSize::Large);
     QCOMPARE(fab.sizeHint(), QSize(111, 111));
+}
+
+void TestMd3Fab::largeShrinksToFitInsteadOfClippingToDShape()
+{
+    // A squeezed widget used to pin the container origin to the left and clip
+    // the right (and bottom) edge to a D. The container must stay inside the
+    // widget at its full rounded extent.
+    MdFab fab(QStringLiteral("play_arrow"));
+    fab.setFabSize(FabSize::Large);
+    fab.resize(104, 137);
+
+    const QRectF container = fab.containerRect();
+    QVERIFY(container.isValid());
+    QVERIFY2(container.left() >= 0.0, qPrintable(QStringLiteral("left %1").arg(container.left())));
+    QVERIFY2(container.right() <= 104.0 + 0.5,
+             qPrintable(QStringLiteral("right %1").arg(container.right())));
+    QVERIFY2(container.top() >= 0.0, qPrintable(QStringLiteral("top %1").arg(container.top())));
+    QVERIFY2(container.bottom() <= 137.0 + 0.5,
+             qPrintable(QStringLiteral("bottom %1").arg(container.bottom())));
+    // Still square — a Full / ExtraLarge shape must not become a squashed oval.
+    QCOMPARE(container.width(), container.height());
 }
 
 void TestMd3Fab::propertiesAndSignalsFire()

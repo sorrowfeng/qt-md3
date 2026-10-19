@@ -126,12 +126,25 @@ MdIconButtonStyle::Layout MdIconButtonStyle::layoutFor(const MdIconButton &butto
                                      : tokens.defaultTrailingSpace;
     const QSizeF containerSize(leading + tokens.iconSize + trailing, tokens.containerHeight);
 
-    // The container is centred in the inner rect: horizontally a squeezed
-    // widget keeps a centred square rather than a squashed one, vertically the
-    // token height wins over whatever the widget ended up being.
-    const QPointF origin(inner.left() + qMax<qreal>((inner.width() - containerSize.width()) / 2.0, 0.0),
-                         inner.top() + qMax<qreal>((inner.height() - containerSize.height()) / 2.0, 0.0));
-    layout.container = QRectF(origin, containerSize);
+    // The container is centred in the inner rect. When the widget is smaller
+    // than the published container the old `qMax(..., 0.0)` clamp pinned the
+    // origin to the left and the right (and bottom) edge was clipped to a
+    // D-shape by the widget bounds — shrink to fit instead so the full
+    // rounded shape always paints.
+    QSizeF fitted = containerSize;
+    const qreal insetW = inner.width();
+    const qreal insetH = inner.height();
+    if (insetW > 0.0 && insetH > 0.0
+        && (insetW < fitted.width() || insetH < fitted.height())) {
+        const qreal scale = qMin(insetW / fitted.width(), insetH / fitted.height());
+        if (scale > 0.0 && scale < 1.0) {
+            fitted *= scale;
+        }
+    }
+
+    const QPointF origin(inner.left() + (inner.width() - fitted.width()) / 2.0,
+                         inner.top() + (inner.height() - fitted.height()) / 2.0);
+    layout.container = QRectF(origin, fitted);
     layout.preferredSize = QSizeF(containerSize.width() + 2.0 * inset,
                                   containerSize.height() + 2.0 * inset);
 

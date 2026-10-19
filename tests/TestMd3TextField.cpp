@@ -54,6 +54,7 @@ private slots:
     void colourTablesFollowTheExport();
     void geometryFollowsTheTokens();
     void labelFloats();
+    void floatedLabelDoesNotOverlapValue();
     void labelFloatSpringsAndIsInterruptible();
     void errorOverlayApplies();
     void disabledOpacities();
@@ -135,6 +136,32 @@ void TestMd3TextField::labelFloats()
     field.setText(QStringLiteral("hello"));
     QVERIFY(field.isPopulated());
     QTRY_COMPARE_WITH_TIMEOUT(field.labelFloat(), 1.0, 800);
+}
+
+void TestMd3TextField::floatedLabelDoesNotOverlapValue()
+{
+    MdTextField field;
+    field.setLabelText(QStringLiteral("Theme"));
+    field.resize(280, 56);
+    field.setText(QStringLiteral("Light"));
+    QTRY_COMPARE_WITH_TIMEOUT(field.labelFloat(), 1.0, 800);
+
+    // Floated label sits on the top edge; the value occupies the input line
+    // below it. The two bands must not overlap.
+    const QRectF label = field.labelRect();
+    const QRectF value = field.valueRect();
+    QVERIFY(label.isValid());
+    QVERIFY(value.isValid());
+    QVERIFY2(!label.intersects(value),
+             qPrintable(QStringLiteral("label %1,%2..%3 value %4,%5..%6")
+                            .arg(label.top())
+                            .arg(label.bottom())
+                            .arg(label.height())
+                            .arg(value.top())
+                            .arg(value.bottom())
+                            .arg(value.height())));
+    QVERIFY(label.top() < value.top());
+    QVERIFY(label.bottom() <= value.top() + 0.5);
 }
 
 void TestMd3TextField::labelFloatSpringsAndIsInterruptible()

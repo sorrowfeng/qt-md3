@@ -113,17 +113,30 @@ MdFabStyle::Layout MdFabStyle::layoutFor(const MdFab &fab, const MdFabTokens &to
 
     // md.comp.fab arithmetic: the container is the published square — height
     // and width are separate tokens and both are honoured.
-    const QSizeF containerSize(tokens.containerWidth, tokens.containerHeight);
+    QSizeF containerSize(tokens.containerWidth, tokens.containerHeight);
 
-    // The container is centred in the inner rect: horizontally a squeezed
-    // widget keeps a centred square rather than a squashed one, vertically the
-    // token height wins over whatever the widget ended up being.
+    // The container is centred in the inner rect. When the widget is smaller
+    // than the published container the old `qMax(..., 0.0)` clamp pinned the
+    // origin to the left and the right (and bottom) edge was clipped to a
+    // D-shape by the widget bounds — shrink to fit instead so the full
+    // rounded shape always paints.
+    const qreal insetW = inner.width();
+    const qreal insetH = inner.height();
+    if (insetW > 0.0 && insetH > 0.0
+        && (insetW < containerSize.width() || insetH < containerSize.height())) {
+        const qreal scale = qMin(insetW / containerSize.width(),
+                                 insetH / containerSize.height());
+        if (scale > 0.0 && scale < 1.0) {
+            containerSize *= scale;
+        }
+    }
+
     const QPointF origin(
-        inner.left() + qMax<qreal>((inner.width() - containerSize.width()) / 2.0, 0.0),
-        inner.top() + qMax<qreal>((inner.height() - containerSize.height()) / 2.0, 0.0));
+        inner.left() + (inner.width() - containerSize.width()) / 2.0,
+        inner.top() + (inner.height() - containerSize.height()) / 2.0);
     layout.container = QRectF(origin, containerSize);
-    layout.preferredSize = QSizeF(containerSize.width() + 2.0 * inset,
-                                  containerSize.height() + 2.0 * inset);
+    layout.preferredSize = QSizeF(tokens.containerWidth + 2.0 * inset,
+                                  tokens.containerHeight + 2.0 * inset);
 
     // Corner radii, static: this family publishes no pressed shape, so unlike
     // the button/icon-button layouts there is no morph here.

@@ -66,6 +66,7 @@ void MdTextField::setLabelText(const QString &label)
         setAccessibleName(label);
     }
     emit labelTextChanged(label);
+    updateTextMargins();
     update();
 }
 
@@ -140,7 +141,12 @@ void MdTextField::updateTextMargins()
     const MdTextFieldTokens &tokens = textFieldTokens();
     const qreal lead = m_leadingIconName.isEmpty() ? 0.0 : tokens.iconSize + 8.0;
     const qreal trail = m_trailingIconName.isEmpty() ? 0.0 : tokens.iconSize + 8.0;
-    setTextMargins(int(lead), 0, int(trail), 0);
+    // When a label is present it floats to the top edge (see labelRect); the
+    // value must then sit in the input line *below* that band, so the edit
+    // text reserves the floated label's height as top margin. Without this
+    // QLineEdit centres the value over the label.
+    const qreal top = m_label.isEmpty() ? 0.0 : floatedLabelBand();
+    setTextMargins(int(lead), int(top), int(trail), 0);
 }
 
 bool MdTextField::isPopulated() const
@@ -161,12 +167,30 @@ QRectF MdTextField::containerRect() const
 QRectF MdTextField::labelRect() const
 {
     const MdTextFieldTokens &tokens = textFieldTokens();
+    Q_UNUSED(tokens);
     // At rest the label sits in the input line; floated it rises to the top
     // edge on body-small.
     const qreal restY = (rect().height() - 24.0) / 2.0;
     const qreal floatedY = 8.0;
     const qreal y = restY + (floatedY - restY) * m_labelFloat;
     return QRectF(16.0, y, rect().width() - 32.0, 24.0);
+}
+
+qreal MdTextField::floatedLabelBand()
+{
+    // Matches labelRect()'s floated band: top offset 8 plus the 24 px label
+    // rect. The edit text starts below this so the two never overlap.
+    return 8.0 + 24.0;
+}
+
+QRectF MdTextField::valueRect() const
+{
+    // Where QLineEdit paints the value after text margins — the input line
+    // below the floated label band.
+    const QMargins margins = textMargins();
+    return QRectF(qreal(margins.left()), qreal(margins.top()),
+                  qMax<qreal>(0.0, rect().width() - margins.left() - margins.right()),
+                  qMax<qreal>(0.0, rect().height() - margins.top() - margins.bottom()));
 }
 
 QRectF MdTextField::leadingIconRect() const
@@ -237,6 +261,7 @@ void MdTextField::retargetAnimations()
         m_labelClock.restart();
     }
     m_labelFloatTarget = target;
+    updateTextMargins();
 }
 
 void MdTextField::tickAnimations()

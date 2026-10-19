@@ -90,6 +90,7 @@ private slots:
     void heightsFollowTheLineCount();
     void standardIsSquareAndExpressiveMorphs();
     void theSpecAlignmentRules();
+    void trailingSupportingDoesNotOverlapHeadline();
     void segmentedOuterCorners();
     void interactionStatesPaintLayers();
     void selectionDrivesTheColours();
@@ -417,6 +418,50 @@ void TestMd3List::theSpecAlignmentRules()
     }
     m_item->setLeadingKind(MdListItem::LeadingKind::None);
     m_item->resize(360, 56);
+}
+
+void TestMd3List::trailingSupportingDoesNotOverlapHeadline()
+{
+    // Trailing supporting text (duration, "4 tracks", quality …) lives in the
+    // trailing slot. It must never share the headline's band.
+    m_item->setSupporting(QStringLiteral("Artist"));
+    m_item->setTrailingSupporting(QStringLiteral("3:24"));
+    m_item->resize(360, 72);
+    {
+        const MdListItemStyle::Layout layout =
+            MdListItemStyle::layoutFor(*m_item, m_item->tokens());
+        QVERIFY(layout.trailingSupporting.isValid());
+        QVERIFY(layout.headline.isValid());
+        QVERIFY2(!layout.trailingSupporting.intersects(layout.headline),
+                 qPrintable(QStringLiteral("trailing %1..%2 x %3..%4 headline %5..%6 x %7..%8")
+                                .arg(layout.trailingSupporting.left())
+                                .arg(layout.trailingSupporting.right())
+                                .arg(layout.trailingSupporting.top())
+                                .arg(layout.trailingSupporting.bottom())
+                                .arg(layout.headline.left())
+                                .arg(layout.headline.right())
+                                .arg(layout.headline.top())
+                                .arg(layout.headline.bottom())));
+        // Trailing text is right-aligned in its reserved slot.
+        QVERIFY(layout.trailingSupporting.right() <= layout.container.right() - 16.0 + 0.5);
+        QVERIFY(layout.trailingSupporting.left() >= layout.headline.right() - 0.5);
+    }
+
+    // Three-line form: overline, headline and supporting each keep their own
+    // vertical band, and trailing text still stays out of the text column.
+    m_item->setOverline(QStringLiteral("OVERLINE"));
+    m_item->resize(360, 88);
+    {
+        const MdListItemStyle::Layout layout =
+            MdListItemStyle::layoutFor(*m_item, m_item->tokens());
+        QVERIFY(layout.overline.bottom() <= layout.headline.top() + 0.5);
+        QVERIFY(layout.headline.bottom() <= layout.supporting.top() + 0.5);
+        QVERIFY(!layout.trailingSupporting.intersects(layout.headline));
+        QVERIFY(!layout.trailingSupporting.intersects(layout.overline));
+    }
+    m_item->setOverline(QString());
+    m_item->setSupporting(QString());
+    m_item->setTrailingSupporting(QString());
 }
 
 void TestMd3List::segmentedOuterCorners()

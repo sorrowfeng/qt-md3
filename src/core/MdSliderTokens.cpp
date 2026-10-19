@@ -74,6 +74,14 @@ MdSliderTokens MdSliderTokens::resolve(MdSliderSize size)
     tokens.trackEndRadius = row.trackEndRadius;
     tokens.iconSize = row.iconSize;
     tokens.iconPadding = row.iconPadding;
+    // Base `md.comp.slider.handle.width` / focus / pressed rows (34.0.21).
+    // The Expressive thumb is a vertical pill, not a 20dp circle: 4 px at
+    // rest and hover, 2 px while focused or pressed.
+    tokens.handleWidth = 4.0;
+    tokens.hoverHandleWidth = 4.0;
+    tokens.focusHandleWidth = 2.0;
+    tokens.pressedHandleWidth = 2.0;
+    tokens.disabledHandleWidth = 4.0;
 
     fillColours(&tokens);
     return tokens;

@@ -430,12 +430,14 @@ void TestMd3IconButton::spaceTrackChangesTheContainerWidth()
     // md.comp.icon-button.<size>.narrow-leading/trailing-space: 4 px at small,
     // so the container narrows while the height stays the token height.
     button.setSpaceTrack(IconButtonSpaceTrack::Narrow);
+    button.resize(button.sizeHint());
     QVERIFY(button.containerRect().width() < defaultWidth);
     QVERIFY(near(button.containerRect().height(), 40.0));
     QVERIFY(near(button.containerRect().width(), 4.0 + 24.0 + 4.0));
 
     // md.comp.icon-button.<size>.wide-leading/trailing-space: 14 px at small.
     button.setSpaceTrack(IconButtonSpaceTrack::Wide);
+    button.resize(button.sizeHint());
     QVERIFY(near(button.containerRect().width(), 14.0 + 24.0 + 14.0));
 }
 

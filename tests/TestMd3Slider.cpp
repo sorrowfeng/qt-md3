@@ -55,6 +55,7 @@ private slots:
     void disabledRowsCarryTheirOpacities();
     void handleWidthNarrowsUnderFocusAndPress();
     void handleWidthSpringsOnRelease();
+    void thumbRectIsFourPixelPill();
     void geometryFollowsTheTokens();
     void valueClampsAndSnaps();
     void keyboardWalksTheValue();
@@ -194,6 +195,20 @@ void TestMd3Slider::handleWidthSpringsOnRelease()
     QCOMPARE(slider.animatedHandleWidth(), 4.0);
 }
 
+void TestMd3Slider::thumbRectIsFourPixelPill()
+{
+    MdSlider slider;
+    slider.resize(240, 48);
+    // Resting / hover: 4 px wide, 44 px tall.
+    QCOMPARE(slider.handleRect().width(), 4.0);
+    QCOMPARE(slider.handleRect().height(), 44.0);
+
+    // Pressed: the published pressed width is 2 px.
+    QTest::mousePress(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+    QCOMPARE(slider.handleRect().width(), 2.0);
+    QTest::mouseRelease(&slider, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(120, 24));
+}
+
 void TestMd3Slider::geometryFollowsTheTokens()
 {
     MdSlider slider;
@@ -210,6 +225,8 @@ void TestMd3Slider::geometryFollowsTheTokens()
 
     const QRectF handle = slider.handleRect();
     QCOMPARE(handle.height(), 44.0);
+    // Expressive thumb is a vertical pill 4 x 44 — never a hairline column.
+    QCOMPARE(handle.width(), 4.0);
 }
 
 void TestMd3Slider::valueClampsAndSnaps()

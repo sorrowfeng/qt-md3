@@ -83,6 +83,9 @@ public:
     QRectF containerRect() const;
     /// The floating label's rect (populated) or the input line's (at rest).
     QRectF labelRect() const;
+    /// The input line where QLineEdit paints the value — below the floated
+    /// label band when a label is present.
+    QRectF valueRect() const;
     /// The 24 px leading icon slot, or an empty rect when there is no icon.
     QRectF leadingIconRect() const;
     /// The 24 px trailing icon slot, or an empty rect when there is no icon.
@@ -131,6 +134,9 @@ private:
     void retargetAnimations();
     void tickAnimations();
     void updateTextMargins();
+    /// Height of the floated label band (top offset + label rect) — the top
+    /// text margin that keeps the value clear of the label.
+    static qreal floatedLabelBand();
 
     QString m_label;
     QString m_supporting;
