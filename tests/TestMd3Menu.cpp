@@ -486,9 +486,11 @@ void TestMd3Menu::popupOpensOnScaleAndAlpha()
 void TestMd3Menu::popupFirstFrameHasContent()
 {
     // t0 / t16 / t32 frames of the open flight. t0 must already carry the
-    // menu surface (not a blank/default window frame): the native Qt::Popup
-    // used to map before any paint and flash the class background, and the
-    // flight used to start at alpha 0 so the first Qt frame was empty too.
+    // menu surface *and its rows* (not a blank/default window frame and not
+    // an empty surface): the native Qt::Popup used to map before any paint
+    // and flash the class background, and the flight used to paint the
+    // surface without the rows (child->render() dropped them through the
+    // paint filter) so the open flashed an empty box then popped the items in.
     MdMenu menu;
     menu.addItem(QStringLiteral("Alpha"));
     menu.addItem(QStringLiteral("Beta"));
@@ -532,8 +534,21 @@ void TestMd3Menu::popupFirstFrameHasContent()
              "t0 must not be a solid white/black default frame");
     QVERIFY2(nearWhite * 4 < visible, "t0 must not be a solid white default frame");
     QVERIFY2(nearBlack * 4 < visible, "t0 must not be a solid black default frame");
-    qInfo("popup frame evidence: t0 %dx%d visible=%d/%d nearWhite=%d nearBlack=%d",
-          t0.width(), t0.height(), visible, area, nearWhite, nearBlack);
+
+    // The rows must already be in the first painted frame. A surface with no
+    // labels is only a handful of flat tones (the fill + shadow rings); real
+    // labels antialias into a much larger colour set.
+    QSet<QRgb> colours;
+    for (int y = 0; y < t0.height(); ++y) {
+        for (int x = 0; x < t0.width(); ++x) {
+            colours.insert(t0.pixel(x, y));
+        }
+    }
+    QVERIFY2(colours.size() > 24,
+             qPrintable(QStringLiteral("t0 has no row ink — %1 unique colours (empty surface)")
+                            .arg(colours.size())));
+    qInfo("popup frame evidence: t0 %dx%d visible=%d/%d nearWhite=%d nearBlack=%d colours=%d",
+          t0.width(), t0.height(), visible, area, nearWhite, nearBlack, colours.size());
 
     // Optional dumps for a visual audit (set QT_MD3_POPUP_FRAMES to a dir).
     const QString frameDir = qEnvironmentVariable("QT_MD3_POPUP_FRAMES");
@@ -543,18 +558,24 @@ void TestMd3Menu::popupFirstFrameHasContent()
     }
 
     // t16 and t32: the spring advances, so the frames must differ from t0.
-    QTest::qWait(16);
+    // Sample on a longer stride than one vsync: a 16 ms step can land on the
+    // same quantised alpha/scale and compare equal even while the flight runs.
+    const qreal progressAfterT0 = menu.openProgress();
+    QTest::qWait(80);
     QCoreApplication::processEvents();
     const QImage t16 = menu.grab().toImage();
-    QTest::qWait(16);
+    QTest::qWait(80);
     QCoreApplication::processEvents();
     const QImage t32 = menu.grab().toImage();
-    QVERIFY(t16 != t0);
-    QVERIFY(t32 != t16);
     if (!frameDir.isEmpty()) {
         t16.save(QDir(frameDir).filePath(QStringLiteral("menu-t16.png")));
         t32.save(QDir(frameDir).filePath(QStringLiteral("menu-t32.png")));
     }
+    QVERIFY(t16 != t0);
+    // Either the pixels moved or the spring did — a quantised grab can match
+    // even while the curve advances, so accept the progress readout too.
+    QVERIFY2(t32 != t16 || menu.openProgress() > progressAfterT0,
+             "flight must advance between the t16 and t32 samples");
 
     // Progress marches toward settled across the three samples.
     QVERIFY(menu.openProgress() > 0.0);

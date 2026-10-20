@@ -244,13 +244,37 @@ void MdMenuStyle::paintMenu(QPainter &painter, MdMenu &menu, const MdMenuTokens 
     const QPainterPath surfacePath = MdShape::roundedRect(surfaceRect, radii);
 
     // The open/close animation: scale around the anchor corner (top-start)
-    // and alpha, Compose's graphicsLayer pair.
+    // and alpha, Compose's graphicsLayer pair on the *whole* surface.
     const qreal progress = qBound(0.0, menu.openProgress(), 1.0);
     const qreal scale = tokens.closedScale + (1.0 - tokens.closedScale) * progress;
     const qreal alpha = tokens.closedAlpha + (1.0 - tokens.closedAlpha) * menu.openAlpha();
     const bool animating = menu.openAnimationRunning();
     if (animating || alpha < 0.999) {
         painter.setOpacity(painter.opacity() * qBound(0.0, alpha, 1.0));
+    }
+
+    // Compose scales the entire popup graphically; the window geometry never
+    // moves mid-flight. The rows ride the same transform — they cannot be
+    // real child widgets under a painter scale, so the surface paints them
+    // itself whenever the flight (or a still-hidden row) owns the frame.
+    // `child->render()` here was the flicker: the application paint filter
+    // opens a QPainter on the *child*, which lands on the child's own paint
+    // device instead of this transformed painter, so the open mapped a
+    // surface with no rows and then popped the rows in when the springs
+    // settled and the children became visible.
+    bool rowsHidden = false;
+    for (MdMenuItem *item : menu.items()) {
+        if (item != nullptr && !item->isVisible()) {
+            rowsHidden = true;
+            break;
+        }
+    }
+    const bool surfaceCarriesRows = animating || rowsHidden;
+    if (animating && scale < 0.999) {
+        const QPointF origin(0.0, 0.0); // MenuAnchorPosition.Below: top-start
+        painter.translate(origin);
+        painter.scale(scale, scale);
+        painter.translate(-origin);
     }
 
     // 1. The level-2 shadow, the surface fill and the container outline.
@@ -277,30 +301,36 @@ void MdMenuStyle::paintMenu(QPainter &painter, MdMenu &menu, const MdMenuTokens 
         }
     }
 
-    // 2. The children through the transform. Compose scales graphically —
-    //    the popup's geometry never changes mid-flight. Each child renders
-    //    itself into the transformed painter (rendering the menu *itself*
-    //    here would recurse into this very paintEvent); the children are
-    //    hidden during the flight and render() paints hidden widgets too.
-    if (animating && (scale < 0.999 || alpha < 0.999)) {
-        const QPointF origin(0.0, 0.0); // MenuAnchorPosition.Below: top-start
-        painter.save();
-        painter.translate(origin);
-        painter.scale(scale, scale);
-        painter.translate(-origin);
-        painter.setClipPath(surfacePath);
+    // 2. The rows. While the flight owns the frame the surface paints every
+    //    row through `paintMenuItem` (same paint the filter uses on the real
+    //    children). Dividers are a 1 px `surface-variant` rule — a plain
+    //    QWidget paints nothing of its own, so the surface draws them in
+    //    both states.
+    {
+        const QColor dividerColour = MdTheme::instance().color(tokens.dividerColor);
         const QList<QObject *> children = menu.children();
         for (QObject *childObject : children) {
             auto *child = qobject_cast<QWidget *>(childObject);
-            if (child == nullptr) {
+            if (child == nullptr || child->parent() != &menu) {
                 continue;
             }
-            child->render(&painter, child->pos(), QRegion(),
-                          QWidget::DrawChildren | QWidget::IgnoreMask);
+            if (auto *item = qobject_cast<MdMenuItem *>(child)) {
+                if (!surfaceCarriesRows && item->isVisible()) {
+                    continue; // the real child paints itself
+                }
+                painter.save();
+                painter.translate(item->pos());
+                paintMenuItem(painter, *item, tokens);
+                painter.restore();
+            } else if (child->width() > 0 && child->height() > 0
+                       && child->height() <= int(tokens.dividerHeight) + 1) {
+                if (dividerColour.isValid() && dividerColour.alpha() > 0) {
+                    painter.fillRect(QRectF(qreal(child->x()), qreal(child->y()),
+                                            qreal(child->width()), qreal(child->height())),
+                                     dividerColour);
+                }
+            }
         }
-        painter.restore();
-        painter.restore();
-        return;
     }
 
     painter.restore();

@@ -93,9 +93,20 @@ void MdSearchBarStyle::paintSearchBar(QPainter &painter, const MdSearchBar &bar,
         const QRectF container = bar.containerRect();
         const qreal radius = tokens.containerRadius;
         if (bar.surface() == MdSearchSurface::Bar) {
+            // The elevation halo must stay inside the stadium. The bar's
+            // container *is* the widget rect, so any ring that grows past the
+            // pill is clipped by the QPainter into a hard edge — two dark
+            // horizontal lines across the top and bottom that cut through the
+            // rounded caps. Clip to the pill; the fill below covers it, which
+            // is also the AGENTS rule (elevation is tonal surface, not an
+            // outer drop shadow). Also take the real level dp: passing
+            // int(ElevationLevel) used the enum ordinal, not elevationDp().
+            painter.save();
+            painter.setClipPath(containerPath(container, radius));
             MdElevation::drawShadowDp(&painter, container, radius,
-                                      int(tokens.containerElevation),
+                                      MdElevation::shadowDp(tokens.containerElevation),
                                       MdTheme::instance().color(ColorRole::Shadow));
+            painter.restore();
         }
         painter.setPen(Qt::NoPen);
         painter.setBrush(MdTheme::instance().color(tokens.containerColor));

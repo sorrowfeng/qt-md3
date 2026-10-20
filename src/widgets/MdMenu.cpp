@@ -431,6 +431,10 @@ void MdMenu::popup(const QRect &anchorRect)
     // Real children composite outside the parent's painter transform, so they
     // hide for the flight and the surface paints them through the scale+alpha.
     setChildrenPaintedByMenu(true);
+    // Optional frame dump (QT_MD3_POPUP_FRAMES=<dir>) for the open flight.
+    // Heap-allocated and parented: the dumper outlives popup() and deletes
+    // itself once the 100 ms window closes.
+    new PopupFrameDumper(this, QStringLiteral("menu"), this);
     showPopupWithoutFlash(this);
     setFocus(Qt::PopupFocusReason);
     // Keyboard focus lands on the first enabled item once the flight ends —

@@ -5,8 +5,11 @@
 //
 // The **surface** paints the `surface-container` corner-extra-small rounded
 // rect with its level-2 shadow and, while opening or closing, wraps the whole
-// content (itself and its children, through `render`) in Compose's
-// scale+alpha pair around the anchor corner.
+// content (itself and its rows) in Compose's scale+alpha pair around the
+// anchor corner. During the flight the surface paints the rows itself via
+// `paintMenuItem` — real child widgets cannot ride a painter transform, and
+// `child->render()` dropped them because the paint filter's QPainter lands on
+// the child rather than the transformed painter.
 //
 // The **item** paints, in order:
 //

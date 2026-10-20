@@ -12,19 +12,36 @@ namespace md {
 namespace {
 
 /// Qt 6's QLineEdit is a plain QWidget — its rectangular "frame" comes from
-/// the style's PE_FrameLineEdit / PE_PanelLineEdit. Those two primitives paint
-/// a sunken slab over the pill (two horizontal lines, corners cut off), so
-/// they are no-ops here: MdSearchBarStyle owns the chrome.
+/// the style's PE_FrameLineEdit / PE_PanelLineEdit (and, on some platform
+/// styles, a CC_EditBox / PE_Frame slab riding the same QStyleOptionFrame).
+/// Those primitives paint a sunken rectangle over the pill: two horizontal
+/// lines across the top and bottom, and the stadium caps cut off at the
+/// corners. They are no-ops here: MdSearchBarStyle owns the chrome.
 class SearchLineEditStyle : public QProxyStyle
 {
 public:
     void drawPrimitive(PrimitiveElement element, const QStyleOption *option,
                        QPainter *painter, const QWidget *widget) const override
     {
-        if (element == PE_FrameLineEdit || element == PE_PanelLineEdit) {
+        switch (element) {
+        case PE_FrameLineEdit:
+        case PE_PanelLineEdit:
+        case PE_Frame:
+        case PE_Widget:
             return;
+        default:
+            break;
         }
         QProxyStyle::drawPrimitive(element, option, painter, widget);
+    }
+
+    void drawControl(ControlElement element, const QStyleOption *option,
+                     QPainter *painter, const QWidget *widget) const override
+    {
+        if (element == CE_ShapedFrame) {
+            return;
+        }
+        QProxyStyle::drawControl(element, option, painter, widget);
     }
 };
 
@@ -50,6 +67,10 @@ MdSearchBar::MdSearchBar(QWidget *parent)
     pal.setColor(QPalette::Window, Qt::transparent);
     setPalette(pal);
     // Kill the style-drawn rectangular slab; the pill is the only chrome.
+    // setFrame(false) as well as the proxy: initStyleOption takes its
+    // lineWidth from hasFrame(), and a non-zero lineWidth is what asks the
+    // style for a frame in the first place.
+    setFrame(false);
     setStyle(searchLineEditStyle());
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     // The leading search icon owns the first 16+24 px; the input line starts

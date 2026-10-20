@@ -2,6 +2,7 @@
 
 #include "core/MdIcon.h"
 #include "core/MdTheme.h"
+#include "private/MdPopup.h"
 #include "widgets/MdMenu.h"
 #include "widgets/MdTextField.h"
 
@@ -264,6 +265,8 @@ void MdSelect::showPopup()
     }
     // Anchored under the field, left-aligned — the exposed dropdown's
     // only published anchor position.
+    // Optional frame dump (QT_MD3_POPUP_FRAMES=<dir>) for the open flight.
+    new PopupFrameDumper(m_menu, QStringLiteral("select"), m_menu);
     m_menu->popup(QRect(mapToGlobal(QPoint(0, 0)), size()));
     m_popupOpen = true;
 }
