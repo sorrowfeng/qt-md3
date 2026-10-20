@@ -10,6 +10,9 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QWidget>
 #include <cmath>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QtCore/QRecursiveMutex>
+#endif
 
 namespace md {
 
@@ -102,7 +105,13 @@ private:
         m_installed = true;
     }
 
-    mutable QMutex m_mutex;
+    // Recursive: drawWidget() may create a style (installPaintFilter → add)
+    // or query hasPaintFilter while a lookup is on the stack on this thread.
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    mutable QRecursiveMutex m_mutex;
+#else
+    mutable QMutex m_mutex{QMutex::Recursive};
+#endif
     QHash<const QMetaObject *, MdStyleBase *> m_styles;
     bool m_installed = false;
 };

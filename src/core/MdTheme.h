@@ -124,6 +124,9 @@ private:
     MdColorScheme m_scheme;
     MdComponentTokens m_componentTokens;
     bool m_schemeDirty = true;
+    /// True while applyChange is inside the themeChanged fan-out. Nested
+    /// setter calls from a handler mutate but do not re-emit.
+    bool m_inApplyChange = false;
 };
 
 inline bool MdTheme::isRightToLeft() const

@@ -39,10 +39,23 @@ MdTheme::MdTheme(QObject *parent)
 template <typename Fn>
 void MdTheme::applyChange(Fn &&mutate)
 {
+    // Re-entrancy guard. A themeChanged handler that calls back into a
+    // setter (setThemeMode / setSeedColor / …) used to re-enter applyChange
+    // and re-emit themeChanged from inside the fan-out. A handler that
+    // keeps flipping a value then never returns — the UI freezes. Apply the
+    // nested mutation so the final state is correct, but do not re-enter
+    // the signal cascade.
+    if (m_inApplyChange) {
+        mutate();
+        m_schemeDirty = true;
+        return;
+    }
+    m_inApplyChange = true;
     emit themeAboutToChange();
     mutate();
     m_schemeDirty = true;
     emit themeChanged();
+    m_inApplyChange = false;
 }
 
 void MdTheme::rebuildScheme()

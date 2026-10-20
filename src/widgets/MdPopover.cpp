@@ -1,6 +1,5 @@
 #include "MdPopover.h"
 
-#include "core/MdElevation.h"
 #include "core/MdMotion.h"
 #include "core/MdShape.h"
 #include "core/MdTheme.h"
@@ -117,9 +116,20 @@ void MdPopover::setOpen(bool open)
     m_open = open;
     if (m_open) {
         m_openFrom = m_openProgress;
-        m_openElapsedOffsetMs = 0.0;
+        // First painted frame is one vsync into the flight, same as popup().
+        m_openElapsedOffsetMs = 16.0;
+        {
+            const MdSpring scaleSpring = MdMotion::spring(MotionSpring::SpatialFast);
+            const qreal firstFrameSeconds = 0.016;
+            m_openProgress = qBound(0.0, scaleSpring.valueAt(firstFrameSeconds), 1.0);
+        }
         m_openClock.restart();
         m_openTimer->start();
+        if (m_content) {
+            // Real children composite outside the painter transform; the
+            // surface paints them through the scale pair for the flight.
+            m_content->setVisible(false);
+        }
         showPopupWithoutFlash(this);
         setFocus(Qt::PopupFocusReason);
     } else {
@@ -139,6 +149,9 @@ void MdPopover::hide()
     m_openElapsedOffsetMs = 0.0;
     m_openClock.restart();
     m_openTimer->start();
+    if (m_content) {
+        m_content->setVisible(false);
+    }
     emit openChanged(m_open);
 }
 
@@ -275,7 +288,11 @@ void MdPopover::onOpenTick()
 
     m_openProgress = qBound(0.0, qMin(scaleProgress, alphaProgress), 1.0);
     update();
-    if (settled) {
+    // Hide as soon as the close is visually done (alpha at zero) instead of
+    // waiting out the slower scale spring: an invisible Qt::Popup that stays
+    // mapped for another ~300 ms swallows clicks and reads as "hide not firing".
+    const bool closeVisuallyDone = !m_open && m_openProgress <= 0.01;
+    if (settled || closeVisuallyDone) {
         m_openTimer->stop();
         m_openProgress = target;
         if (!m_open) {
@@ -336,14 +353,16 @@ void MdPopover::paintEvent(QPaintEvent *event)
         painter.translate(-origin);
     }
 
-    // 1. Level-2 shadow, surface fill and a 1 px outline-variant stroke —
-    //    the same three layers MdMenu paints. The stroke is what keeps the
-    //    antialiased rounded edge from reading as a black fringe against the
-    //    compositor, and without it the popover sat on a visible black
-    //    rectangle at the corners. Fill first, outline second (Menu order).
-    MdElevation::drawShadowDp(&painter, bounds, radii.value(0, 4.0),
-                              MdElevation::shadowDp(ElevationLevel::Level2),
-                              MdTheme::instance().color(ColorRole::Shadow));
+    // 1. Surface fill and a 1 px outline-variant stroke — the two layers
+    //    that keep the antialiased rounded edge from reading as a black
+    //    fringe. No elevation shadow: the popover is a translucent popup
+    //    whose widget rect is exactly the surface, so MdElevation's near-black
+    //    (ColorRole::Shadow = neutral0) rings get clipped into the corners
+    //    and, while the open/close scale is under 1, paint a dark halo along
+    //    the whole edge (frame probe: dedge=687 on the first open frame,
+    //    dedge=716 mid-close). MD3 expresses level 2 with the surface-container
+    //    tone; the shadow is omitted on this surface rather than clipped into
+    //    a black edge.
     painter.setPen(Qt::NoPen);
     painter.setBrush(resolvedSurfaceColor());
     painter.drawPath(path);

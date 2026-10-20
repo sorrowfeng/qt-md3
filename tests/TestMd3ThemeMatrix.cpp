@@ -66,6 +66,7 @@
 #include "widgets/MdTopAppBar.h"
 
 #include <cmath>
+#include <QtCore/QElapsedTimer>
 #include <QtGui/QFont>
 #include <QtGui/QFontDatabase>
 #include <QtGui/QImage>
@@ -164,6 +165,7 @@ private slots:
     void fontSwitchChangesTextMetricsPerFamily();
     void allFamiliesRenderNonBlankInBothModes();
     void systemThemeModeResolvesToLightOrDark();
+    void themeSwitchLoopDoesNotHang();
 };
 
 void TestMd3ThemeMatrix::initTestCase()
@@ -750,6 +752,56 @@ void TestMd3ThemeMatrix::systemThemeModeResolvesToLightOrDark()
 
     theme.setThemeMode(originalPref == ThemeMode::System ? originalMode : originalPref);
 }
+
+void TestMd3ThemeMatrix::themeSwitchLoopDoesNotHang()
+{
+    // Regression: a themeChanged handler that called back into a setter used
+    // to re-enter MdTheme::applyChange and freeze the UI. Switch the theme 20
+    // times across mode / seed / contrast and require each fan-out to return
+    // inside a hard budget — a deadlock or infinite handler loop shows up as
+    // this test exceeding the ctest timeout, and a slow storm fails the assert.
+    MdTheme &theme = MdTheme::instance();
+    const ThemeMode originalPref = theme.themeModePreference();
+    const ThemeMode originalMode = theme.themeMode();
+    const QColor originalSeed = theme.seedColor();
+    const ContrastLevel originalContrast = theme.contrastLevel();
+    const bool originalDynamic = theme.isDynamicColor();
+
+    // A representative widget so connectThemeUpdate has real subscribers.
+    MdButton button(QStringLiteral("loop"));
+    button.resize(120, 40);
+    button.show();
+    static_cast<void>(QTest::qWaitForWindowExposed(&button));
+
+    constexpr int kSwitches = 20;
+    constexpr qint64 kBudgetMs = 500;
+    for (int i = 0; i < kSwitches; ++i) {
+        QElapsedTimer clock;
+        clock.start();
+        switch (i % 6) {
+        case 0: theme.setThemeMode(ThemeMode::Dark); break;
+        case 1: theme.setThemeMode(ThemeMode::Light); break;
+        case 2: theme.setSeedColor(QColor(QStringLiteral("#E8710A"))); break;
+        case 3: theme.setSeedColor(QColor(QStringLiteral("#6750A4"))); break;
+        case 4: theme.setContrastLevel(ContrastLevel::High); break;
+        case 5: theme.setContrastLevel(ContrastLevel::Standard); break;
+        }
+        const qint64 elapsed = clock.elapsed();
+        QVERIFY2(elapsed < kBudgetMs,
+                 qPrintable(QStringLiteral("theme switch %1 took %2 ms (budget %3 ms)")
+                                .arg(i)
+                                .arg(elapsed)
+                                .arg(kBudgetMs)));
+        // Let scheduled updates drain so the next switch starts from idle.
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 20);
+    }
+
+    theme.setDynamicColor(originalDynamic);
+    theme.setSeedColor(originalSeed);
+    theme.setContrastLevel(originalContrast);
+    theme.setThemeMode(originalPref == ThemeMode::System ? originalMode : originalPref);
+}
+
 QTEST_MAIN(TestMd3ThemeMatrix)
 
 #include "TestMd3ThemeMatrix.moc"

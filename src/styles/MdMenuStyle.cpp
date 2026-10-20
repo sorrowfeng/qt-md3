@@ -282,9 +282,17 @@ void MdMenuStyle::paintMenu(QPainter &painter, MdMenu &menu, const MdMenuTokens 
     // pixel so the stroke is not clipped by the widget edge) — previously the
     // surface filled the rounded path but never stroked it, so the menu had
     // no complete edge against a same-coloured page.
-    MdElevation::drawShadowDp(&painter, surfaceRect, radius,
-                              MdElevation::shadowDp(tokens.containerElevation),
-                              MdTheme::instance().color(tokens.containerShadowColor));
+    // The shadow is skipped while the scale pair is flying: the rings are
+    // near-black (ColorRole::Shadow = neutral0) and, under the painter scale,
+    // land inside the widget as a dark halo along the edge (frame probe:
+    // dedge=439 on the first open frame, dedge=673 mid-close). When settled
+    // the rings sit outside the surface and the clip leaves only the soft
+    // corner falloff, which is the intended elevation cue.
+    if (!animating || scale >= 0.999) {
+        MdElevation::drawShadowDp(&painter, surfaceRect, radius,
+                                  MdElevation::shadowDp(tokens.containerElevation),
+                                  MdTheme::instance().color(tokens.containerShadowColor));
+    }
     painter.setPen(Qt::NoPen);
     painter.setBrush(MdTheme::instance().color(tokens.containerColor));
     painter.drawPath(surfacePath);
