@@ -458,16 +458,21 @@ void MdMenu::requestClose()
         emit closed();
         return;
     }
-    // Reverse the open pair from wherever it stands, then hide. A bare
-    // close() pops the surface out in one frame - the hide+show flash.
-    // Hide the children too so they ride the close transform instead of
-    // compositing at full opacity over the fading surface.
-    setChildrenPaintedByMenu(true);
-    m_openFrom = m_openProgress;
+    // A mapped Qt::Popup holds the application-wide mouse grab. The reverse
+    // spring used to keep the window mapped for the whole exit flight, so
+    // every real click was delivered to the closing menu and swallowed —
+    // including the MdSelect pick that switches the theme, which left the
+    // app "unclickable" until the exit spring happened to settle. Dismiss
+    // immediately and release input; the next open still springs in.
+    m_openTimer->stop();
     m_opening = false;
+    m_openFrom = 0.0;
+    m_openProgress = 0.0;
+    m_openAlpha = 0.0;
     m_openElapsedOffsetMs = 0.0;
-    m_openClock.restart();
-    m_openTimer->start();
+    setChildrenPaintedByMenu(false);
+    hide();
+    emit closed();
 }
 
 void MdMenu::closeAndAccept()

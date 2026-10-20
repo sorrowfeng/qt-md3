@@ -13,6 +13,7 @@
 #include "widgets/MdColorPicker.h"
 #include "widgets/MdList.h"
 #include "widgets/MdListItem.h"
+#include "widgets/MdMenu.h"
 #include "widgets/MdSearchBar.h"
 #include "widgets/MdSelect.h"
 #include "widgets/MdSlider.h"
@@ -49,6 +50,34 @@ void clickCentre(QWidget *widget)
 {
     const QPoint centre = widget->rect().center();
     QTest::mouseClick(widget, Qt::LeftButton, Qt::NoModifier, centre);
+}
+
+void dumpTopLevels(const char *tag)
+{
+    const QList<QWidget *> tops = QApplication::topLevelWidgets();
+    qInfo("==== %s: %d top-level widgets ====", tag, tops.size());
+    for (QWidget *w : tops) {
+        if (!w->isVisible() && !w->isWindow()) {
+            continue;
+        }
+        qInfo("  %s name='%s' visible=%d win=%d flags=0x%llx geom=%d,%d %dx%d modality=%d",
+              w->metaObject()->className(), qPrintable(w->objectName()),
+              int(w->isVisible()), int(w->isWindow()),
+              (unsigned long long)w->windowFlags(),
+              w->geometry().x(), w->geometry().y(),
+              w->geometry().width(), w->geometry().height(),
+              int(w->windowModality()));
+    }
+    QWidget *popup = QApplication::activePopupWidget();
+    qInfo("  activePopupWidget=%s",
+          popup ? popup->metaObject()->className() : "(none)");
+    QWidget *modal = QApplication::activeModalWidget();
+    qInfo("  activeModalWidget=%s",
+          modal ? modal->metaObject()->className() : "(none)");
+    QWidget *grabber = QWidget::mouseGrabber();
+    qInfo("  mouseGrabber=%s",
+          grabber ? grabber->metaObject()->className() : "(none)");
+    qInfo("  overrideCursor=%d", int(QApplication::overrideCursor() != nullptr));
 }
 
 void dragSequence(QWidget &widget, const QPoint &from, const QPoint &to)
@@ -130,6 +159,7 @@ private slots:
     void settingsSelectShowsTextAfterThemeSwitch();
     void settingsRemainsClickableAfterThemeSwitch();
     void seedChangeDoesNotHang();
+    void reproUserThemePickThenEverythingClickable();
 
 private:
     MusicPlayerWindow *m_window = nullptr;
@@ -142,6 +172,7 @@ void TestMd3MusicPlayer::initTestCase()
     MdTheme::instance().setLanguageTag(QStringLiteral("en"));
     m_window = new MusicPlayerWindow;
     m_window->resize(420, 780);
+    m_window->move(80, 40);
     m_window->show();
     QVERIFY(QTest::qWaitForWindowExposed(m_window));
     pump(120);
@@ -876,6 +907,200 @@ void TestMd3MusicPlayer::seedChangeDoesNotHang()
     }
 
     picker->setColor(original);
+    pump(40);
+}
+
+// ---------------------------------------------------------------------------
+// Repro: the user opens the theme MdSelect popup and picks Light/Dark, then
+// every later click is swallowed. Hit-test like the window system does.
+// ---------------------------------------------------------------------------
+
+void TestMd3MusicPlayer::reproUserThemePickThenEverythingClickable()
+{
+    m_window->resize(420, 780);
+    m_window->move(80, 40);
+    m_window->setCurrentPage(3);
+    pump(80);
+    QWidget *settings = m_window->pageWidget(3);
+    QVERIFY(settings != nullptr);
+
+    const QList<MdSelect *> selects = settings->findChildren<MdSelect *>();
+    QVERIFY(!selects.isEmpty());
+    MdSelect *themeSelect = selects.first();
+    QVERIFY(themeSelect->count() >= 2);
+
+    dumpTopLevels("before-open");
+
+    // Control: can we hit-test the switch BEFORE any theme switch?
+    {
+        const QList<MdSwitch *> preSwitches = live<MdSwitch>(settings);
+        MdSwitch *preHc = nullptr;
+        for (MdSwitch *sw : preSwitches) {
+            if (sw->text().contains(QLatin1String("contrast"), Qt::CaseInsensitive)
+                || sw->accessibleName().contains(QLatin1String("contrast"), Qt::CaseInsensitive)) {
+                preHc = sw;
+                break;
+            }
+        }
+        if (preHc) {
+            // Scroll it into view so a phone-sized viewport is not the confounder.
+            if (QScrollArea *sa = settings->findChild<QScrollArea *>()) {
+                sa->ensureWidgetVisible(preHc);
+                pump(40);
+            }
+            const QPoint pg = preHc->mapToGlobal(preHc->rect().center());
+            QWidget *preHit = QApplication::widgetAt(pg);
+            qInfo("PRE-SWITCH widgetAt(hc.centre=%d,%d) = %s (want MdSwitch %p)",
+                  pg.x(), pg.y(),
+                  preHit ? preHit->metaObject()->className() : "(null)",
+                  (void *)preHc);
+            qInfo("PRE-SWITCH hc geom=%d,%d %dx%d visible=%d visibleRegionEmpty=%d",
+                  preHc->geometry().x(), preHc->geometry().y(),
+                  preHc->geometry().width(), preHc->geometry().height(),
+                  int(preHc->isVisible()), int(preHc->visibleRegion().isEmpty()));
+            if (preHit != preHc && preHit) {
+                qInfo("PRE-SWITCH hit is %p %s parent=%p",
+                      (void *)preHit, preHit->metaObject()->className(),
+                      (void *)preHit->parentWidget());
+            }
+        }
+    }
+
+    // 1. User clicks the Theme field → popup opens.
+    QLineEdit *field = themeSelect->findChild<QLineEdit *>();
+    QVERIFY(field != nullptr);
+    QTest::mouseClick(field, Qt::LeftButton, Qt::NoModifier, field->rect().center());
+    pump(80);
+
+    QVERIFY2(themeSelect->isPopupVisible(), "theme select popup did not open");
+    dumpTopLevels("popup-open");
+
+    QWidget *popup = QApplication::activePopupWidget();
+    qInfo("activePopup after open = %p %s", (void *)popup,
+          popup ? popup->metaObject()->className() : "(none)");
+
+    // Wait out the open spring so the rows are real children again
+    // (setChildrenPaintedByMenu hides them during the flight). A click on
+    // the surface mid-flight does not activate a row.
+    for (int i = 0; i < 40; ++i) {
+        pump(20);
+        bool anyVisible = false;
+        if (popup) {
+            for (MdMenuItem *it : popup->findChildren<MdMenuItem *>()) {
+                if (it->isVisible() && it->isEnabled()) {
+                    anyVisible = true;
+                    break;
+                }
+            }
+        }
+        if (anyVisible) {
+            break;
+        }
+    }
+
+    // 2. User picks Light (index 0) or Dark (index 1) from the menu.
+    const int want = (themeSelect->currentIndex() == 1) ? 0 : 1;
+    MdMenuItem *item = nullptr;
+    QList<MdMenuItem *> items = popup ? popup->findChildren<MdMenuItem *>()
+                                     : QList<MdMenuItem *>();
+    qInfo("popup has %d MdMenuItem children", int(items.size()));
+    for (MdMenuItem *it : items) {
+        qInfo("  item '%s' visible=%d enabled=%d geom=%d,%d %dx%d",
+              qPrintable(it->text()), int(it->isVisible()), int(it->isEnabled()),
+              it->geometry().x(), it->geometry().y(),
+              it->geometry().width(), it->geometry().height());
+    }
+    if (want < items.size()) {
+        item = items.at(want);
+    }
+    QVERIFY(item != nullptr);
+    QVERIFY2(item->isVisible(), "menu row still hidden after open flight — cannot click it");
+
+    // Pick with a direct click (works on offscreen too). The grab regression
+    // is asserted below via activePopupWidget, not via widgetAt.
+    QString hitWho;
+    QTest::mouseClick(item, Qt::LeftButton, Qt::NoModifier, item->rect().center());
+    QCoreApplication::processEvents();
+
+    dumpTopLevels("after-pick");
+    qInfo("themeMode now = %d popupVisible=%d", int(MdTheme::instance().themeMode()),
+          int(themeSelect->isPopupVisible()));
+
+    // Regression: a mapped Qt::Popup holds the application mouse grab, so the
+    // next real click is delivered to the closing menu and swallowed. After a
+    // selection the grab must be gone immediately — not after the exit spring.
+    QVERIFY2(QApplication::activePopupWidget() == nullptr,
+             "MdMenu still holds the Qt::Popup grab after the theme pick "
+             "— every real click is swallowed");
+    QVERIFY2(!popup->isVisible(),
+             "MdMenu is still mapped after the theme pick — it keeps the mouse grab");
+    QVERIFY2(!themeSelect->isPopupVisible(),
+             "MdSelect still reports its popup open after a pick");
+
+    // The high-contrast switch is the control the user clicks next.
+    const QList<MdSwitch *> switches = live<MdSwitch>(settings);
+    QVERIFY(!switches.isEmpty());
+    MdSwitch *hc = nullptr;
+    for (MdSwitch *sw : switches) {
+        if (sw->text().contains(QLatin1String("contrast"), Qt::CaseInsensitive)
+            || sw->accessibleName().contains(QLatin1String("contrast"), Qt::CaseInsensitive)) {
+            hc = sw;
+            break;
+        }
+    }
+    QVERIFY(hc != nullptr);
+    if (QScrollArea *sa = settings->findChild<QScrollArea *>()) {
+        sa->ensureWidgetVisible(hc);
+        pump(20);
+    }
+
+    // Direct click: the switch itself must still work after the theme pick.
+    const bool before = hc->isChecked();
+    QSignalSpy spy(hc, &QAbstractButton::toggled);
+    clickCentre(hc);
+    pump(40);
+    QVERIFY2(spy.count() >= 1,
+             "high-contrast switch ignored a click after the theme pick");
+    QCOMPARE(hc->isChecked(), !before);
+
+    // Rapid theme picks (user path) 20x: each pick must release the grab so
+    // the next click lands. This is the "switch theme, then everything is
+    // unclickable" regression.
+    for (int i = 0; i < 20; ++i) {
+        QTest::mouseClick(field, Qt::LeftButton, Qt::NoModifier, field->rect().center());
+        pump(40);
+        QVERIFY2(themeSelect->isPopupVisible(), "theme select popup did not open on re-pick");
+        QWidget *pop = QApplication::activePopupWidget();
+        QVERIFY(pop != nullptr);
+        QList<MdMenuItem *> rows = pop->findChildren<MdMenuItem *>();
+        QVERIFY(!rows.isEmpty());
+        // Wait for the open flight so the rows are clickable children.
+        for (int t = 0; t < 30 && !rows.first()->isVisible(); ++t) {
+            pump(20);
+        }
+        const int want = (themeSelect->currentIndex() == 1) ? 0 : 1;
+        MdMenuItem *row = rows.at(qBound(0, want, rows.size() - 1));
+        QTest::mouseClick(row, Qt::LeftButton, Qt::NoModifier, row->rect().center());
+        QCoreApplication::processEvents();
+        QVERIFY2(QApplication::activePopupWidget() == nullptr,
+                 qPrintable(QStringLiteral(
+                      "iteration %1: MdMenu kept the Qt::Popup grab after a pick")
+                      .arg(i)));
+        QVERIFY2(!pop->isVisible(),
+                 qPrintable(QStringLiteral(
+                      "iteration %1: MdMenu still mapped after a pick").arg(i)));
+
+        QSignalSpy step(hc, &QAbstractButton::toggled);
+        clickCentre(hc);
+        pump(20);
+        QVERIFY2(step.count() >= 1,
+                 qPrintable(QStringLiteral(
+                      "iteration %1: click after theme pick was swallowed").arg(i)));
+    }
+
+    QVERIFY2(QApplication::activePopupWidget() == nullptr,
+             "a leftover popup is still holding the grab after 20 theme picks");
+    MdTheme::instance().setThemeMode(ThemeMode::Light);
     pump(40);
 }
 
