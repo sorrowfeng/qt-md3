@@ -225,7 +225,7 @@ NowPlayingPage::NowPlayingPage(MusicPlayerWindow *window, QWidget *parent)
     m_shuffle->setToolTip(QStringLiteral("Shuffle"));
     m_repeat->setToolTip(QStringLiteral("Repeat"));
 
-    MdStyleBase::connectThemeUpdate(this, &NowPlayingPage::refresh);
+    MdStyleBase::connectThemeUpdate(this, &NowPlayingPage::onThemeChanged);
     refresh();
 }
 
@@ -271,6 +271,24 @@ void NowPlayingPage::refresh()
 void NowPlayingPage::onSeek(qreal seconds)
 {
     m_window->player()->seek(seconds);
+}
+
+void NowPlayingPage::onThemeChanged()
+{
+    // Theme-only: restyle the palette labels. refresh() rebuilds nothing but
+    // still drives the player, album art and transport — far too heavy for
+    // every themeChanged fan-out.
+    if (m_artist) {
+        restyleLabel(static_cast<QLabel *>(m_artist), TypeStyle::TitleMedium,
+                     ColorRole::OnSurfaceVariant);
+    }
+    if (m_timeRow) {
+        const QList<QLabel *> labels = m_timeRow->findChildren<QLabel *>();
+        for (QLabel *label : labels) {
+            restyleLabel(label, TypeStyle::LabelSmall, ColorRole::OnSurfaceVariant);
+        }
+    }
+    update();
 }
 
 void NowPlayingPage::onVolume(qreal value)
@@ -377,7 +395,7 @@ LibraryPage::LibraryPage(MusicPlayerWindow *window, QWidget *parent)
         m_window->player()->playPlaylist(QStringLiteral("p2"));
     });
 
-    MdStyleBase::connectThemeUpdate(this, &LibraryPage::refresh);
+    MdStyleBase::connectThemeUpdate(this, &LibraryPage::onThemeChanged);
     rebuildList(QString());
 }
 
@@ -394,6 +412,25 @@ void LibraryPage::refresh()
         }
     }
     rebuildList(m_filter);
+}
+
+void LibraryPage::onThemeChanged()
+{
+    // Theme-only: the MdListItems subscribe to MdTheme themselves and just
+    // repaint. rebuildList() used to run here, creating a fresh generation of
+    // rows (and themeChanged connections) on every switch while the previous
+    // generation waited for deleteLater — the switch cost climbed without
+    // bound and the UI froze.
+    const QList<QLabel *> labels = findChildren<QLabel *>();
+    for (QLabel *label : labels) {
+        const QString name = label->objectName();
+        if (name == QLatin1String("featured-title")) {
+            restyleLabel(label, TypeStyle::TitleLarge, ColorRole::OnSurface);
+        } else if (name == QLatin1String("featured-sub")) {
+            restyleLabel(label, TypeStyle::BodyMedium, ColorRole::OnSurfaceVariant);
+        }
+    }
+    update();
 }
 
 void LibraryPage::applyFilter(const QString &text)
@@ -578,13 +615,19 @@ QueuePage::QueuePage(MusicPlayerWindow *window, QWidget *parent)
     });
     connect(m_list, &MdReorderList::itemMoved, this, &QueuePage::onItemMoved);
 
-    MdStyleBase::connectThemeUpdate(this, &QueuePage::refresh);
+    MdStyleBase::connectThemeUpdate(this, &QueuePage::onThemeChanged);
     rebuildList();
 }
 
 void QueuePage::refresh()
 {
     rebuildList();
+}
+
+void QueuePage::onThemeChanged()
+{
+    // Theme-only. rebuildList() is for queue data changes (see onQueueChanged).
+    update();
 }
 
 void QueuePage::onItemMoved(int from, int to)

@@ -52,9 +52,12 @@ MdPopover::~MdPopover()
 void MdPopover::init()
 {
     // Same two attributes as MdMenu: no system background on the first
-    // composite, translucent so the rounded surface shows through.
+    // composite, translucent so the rounded surface shows through. The DWM
+    // drop shadow must stay off — it reads as a black edge on a frameless
+    // translucent popup (see MdPopup.h).
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
+    setWindowFlags(windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_Hover, true);
     setFocusPolicy(Qt::StrongFocus);
     setMinimumSize(QSize(120, 48));
@@ -103,6 +106,12 @@ void MdPopover::setContentWidget(QWidget *content)
     m_content = content;
     if (m_content) {
         m_content->setParent(this);
+        // The surface already paints the container. A default-styled child
+        // would fill itself with QPalette::Window and punch an opaque slab
+        // (near-black in dark theme) through the rounded surface.
+        m_content->setAttribute(Qt::WA_NoSystemBackground, true);
+        m_content->setAttribute(Qt::WA_TranslucentBackground, true);
+        m_content->setAutoFillBackground(false);
     }
     relayout();
     update();

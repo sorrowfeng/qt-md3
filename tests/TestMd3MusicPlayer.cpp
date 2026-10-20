@@ -41,6 +41,8 @@ void pump(int ms)
         QThread::msleep(4);
     }
     QCoreApplication::processEvents();
+    // processEvents() skips DeferredDelete; rebuilds use deleteLater().
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
 void clickCentre(QWidget *widget)
@@ -124,6 +126,8 @@ private slots:
     void colorPickerNoOverlapAtPhoneWidth();
     void resizeKeepsLayout();
     void themeToggleRestylesLabels();
+    void themeSwitchDoesNotHang();
+    void seedChangeDoesNotHang();
 
 private:
     MusicPlayerWindow *m_window = nullptr;
@@ -687,6 +691,101 @@ void TestMd3MusicPlayer::themeToggleRestylesLabels()
     MdTheme::instance().setThemeMode(ThemeMode::Light);
     pump(80);
     QCOMPARE(appearance->palette().color(QPalette::WindowText), lightText);
+}
+
+void TestMd3MusicPlayer::themeSwitchDoesNotHang()
+{
+    // The Settings theme select is the path the user drives. Every switch must
+    // return inside a hard budget — a re-entrant themeChanged cascade, an
+    // update() storm, or a modal dialog shows up as elapsed time.
+    m_window->resize(420, 780);
+    m_window->setCurrentPage(3);
+    pump(80);
+    QWidget *settings = m_window->pageWidget(3);
+    QVERIFY(settings != nullptr);
+
+    const QList<MdSelect *> selects = settings->findChildren<MdSelect *>();
+    QVERIFY(!selects.isEmpty());
+    MdSelect *themeSelect = selects.first();
+
+    constexpr int kSwitches = 20;
+    constexpr qint64 kBudgetMs = 400;
+    for (int i = 0; i < kSwitches; ++i) {
+        const int liveItems = m_window->findChildren<MdListItem *>().size();
+        QElapsedTimer clock;
+        clock.start();
+        // 0 = Light, 1 = Dark, 2 = System — the real user journey.
+        themeSelect->setCurrentIndex(i % 3);
+        const qint64 elapsed = clock.elapsed();
+        const int liveAfter = m_window->findChildren<MdListItem *>().size();
+        qInfo("theme switch %d via MdSelect took %lld ms (list items %d -> %d)", i, elapsed,
+              liveItems, liveAfter);
+        QVERIFY2(elapsed < kBudgetMs,
+                 qPrintable(QStringLiteral("theme switch %1 took %2 ms (budget %3 ms)")
+                                .arg(i)
+                                .arg(elapsed)
+                                .arg(kBudgetMs)));
+        pump(10);
+    }
+
+    // Avatar-menu toggle path (MusicPlayerWindow::onThemeAction).
+    for (int i = 0; i < 8; ++i) {
+        QElapsedTimer clock;
+        clock.start();
+        MdTheme::instance().toggleThemeMode();
+        const qint64 elapsed = clock.elapsed();
+        qInfo("toggleThemeMode %d took %lld ms", i, elapsed);
+        QVERIFY2(elapsed < kBudgetMs,
+                 qPrintable(QStringLiteral("toggleThemeMode %1 took %2 ms (budget %3 ms)")
+                                .arg(i)
+                                .arg(elapsed)
+                                .arg(kBudgetMs)));
+        pump(10);
+    }
+
+    MdTheme::instance().setThemeMode(ThemeMode::Light);
+    pump(40);
+}
+
+void TestMd3MusicPlayer::seedChangeDoesNotHang()
+{
+    m_window->setCurrentPage(3);
+    pump(80);
+    QWidget *settings = m_window->pageWidget(3);
+    QVERIFY(settings != nullptr);
+
+    MdColorPicker *picker = settings->findChild<MdColorPicker *>();
+    QVERIFY(picker != nullptr);
+
+    const QColor original = MdTheme::instance().seedColor();
+    const QColor seeds[] = {
+        QColor(QStringLiteral("#E8710A")),
+        QColor(QStringLiteral("#6750A4")),
+        QColor(QStringLiteral("#00A3A3")),
+        QColor(QStringLiteral("#2E7D32")),
+        QColor(QStringLiteral("#D81B60")),
+        QColor(QStringLiteral("#1B6EF3")),
+        QColor(QStringLiteral("#F9A825")),
+    };
+    constexpr qint64 kBudgetMs = 400;
+    for (int i = 0; i < 14; ++i) {
+        const QColor seed = seeds[i % int(sizeof(seeds) / sizeof(seeds[0]))];
+        QElapsedTimer clock;
+        clock.start();
+        picker->setColor(seed);
+        const qint64 elapsed = clock.elapsed();
+        qInfo("seed change %d took %lld ms", i, elapsed);
+        QVERIFY2(elapsed < kBudgetMs,
+                 qPrintable(QStringLiteral("seed change %1 took %2 ms (budget %3 ms)")
+                                .arg(i)
+                                .arg(elapsed)
+                                .arg(kBudgetMs)));
+        QCOMPARE(MdTheme::instance().seedColor(), seed);
+        pump(10);
+    }
+
+    picker->setColor(original);
+    pump(40);
 }
 
 QTEST_MAIN(TestMd3MusicPlayer)

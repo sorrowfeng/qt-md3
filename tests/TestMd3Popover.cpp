@@ -15,6 +15,7 @@
 #include <QtGui/QPainter>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QPushButton>
 #include <QtWidgets/QWidget>
 
 using namespace md;
@@ -116,6 +117,103 @@ private slots:
         }
         QVERIFY2(mdtest::paintedPixelCount(image, transparent) > 0,
                  "MdPopover painted nothing");
+    }
+
+    /// Black-edge / residue gate: the popover surface must never leave an
+    /// opaque near-black ring on a transparent backing store — not on the
+    /// first open frame (scale 0.8), not settled, not mid-close.
+    void noOpaqueBlackEdge()
+    {
+        auto analyse = [](const QImage &src, const char *label) {
+            const QImage image = src.convertToFormat(QImage::Format_ARGB32);
+            const int w = image.width();
+            const int h = image.height();
+            // Only the outer 6 px ring counts as "edge". Title glyphs sit
+            // inside that band and are legitimately near-black on a light
+            // surface — they must not trip the gate.
+            int edgeBlack = 0;
+            int transparent = 0;
+            int opaque = 0;
+            for (int y = 0; y < h; ++y) {
+                for (int x = 0; x < w; ++x) {
+                    const QRgb p = image.pixel(x, y);
+                    const int a = qAlpha(p);
+                    if (a < 8) {
+                        ++transparent;
+                        continue;
+                    }
+                    ++opaque;
+                    const bool edge = (x < 6 || y < 6 || x >= w - 6 || y >= h - 6);
+                    if (edge && a > 200 && qRed(p) < 40 && qGreen(p) < 40 && qBlue(p) < 40) {
+                        ++edgeBlack;
+                    }
+                }
+            }
+            qInfo("%s: %dx%d transparent=%d opaque=%d edgeBlack=%d",
+                  label, w, h, transparent, opaque, edgeBlack);
+            return edgeBlack;
+        };
+
+        MdTheme::instance().setThemeMode(ThemeMode::Light);
+        auto *host = new QWidget;
+        host->resize(360, 240);
+        auto *trigger = new QPushButton(QStringLiteral("Open"), host);
+        trigger->move(20, 20);
+        auto *body = new QWidget;
+        body->setMinimumSize(180, 64);
+        auto *pop = new MdPopover(host);
+        pop->setTitle(QStringLiteral("Details"));
+        pop->setContentWidget(body);
+        pop->setShape(ShapeCorner::Small);
+        host->show();
+        QVERIFY(QTest::qWaitForWindowExposed(host));
+
+        const QRect anchor(trigger->mapToGlobal(QPoint(0, 0)), trigger->size());
+        pop->popup(anchor);
+
+        // First painted frame is mid-flight (scale < 1). The area outside the
+        // scaled surface must be transparent, not opaque black.
+        QImage flight = pop->grab().toImage();
+        const int flightBlack = analyse(flight, "open-t0");
+        const QRgb corner = flight.pixel(1, 1);
+        qInfo("open-t0 corner(1,1)=A%dR%dG%dB%d", qAlpha(corner), qRed(corner),
+              qGreen(corner), qBlue(corner));
+        QVERIFY2(qAlpha(corner) < 8 || (qRed(corner) + qGreen(corner) + qBlue(corner)) > 80,
+                 qPrintable(QStringLiteral(
+                     "first open frame has an opaque black corner (A%1 R%2 G%3 B%4)")
+                                .arg(qAlpha(corner))
+                                .arg(qRed(corner))
+                                .arg(qGreen(corner))
+                                .arg(qBlue(corner))));
+
+        QTRY_VERIFY_WITH_TIMEOUT(!pop->grab().isNull(), 200);
+        QTest::qWait(200);
+        QImage settled = pop->grab().toImage();
+        const int settledBlack = analyse(settled, "open-settled");
+        QVERIFY2(settledBlack == 0,
+                 qPrintable(QStringLiteral("settled popover has %1 opaque black pixels")
+                                .arg(settledBlack)));
+
+        pop->hide();
+        QTest::qWait(250);
+        QVERIFY2(!pop->isVisible(), "popover still mapped after close");
+        QImage closed = pop->grab().toImage();
+        analyse(closed, "close-settled");
+
+        // Re-open once: residue often only appears on the second flight.
+        pop->popup(anchor);
+        QTest::qWait(200);
+        QImage reopen = pop->grab().toImage();
+        const int reopenBlack = analyse(reopen, "reopen-settled");
+        QVERIFY2(reopenBlack == 0,
+                 qPrintable(QStringLiteral("reopen popover has %1 opaque black pixels")
+                                .arg(reopenBlack)));
+        pop->hide();
+        QTest::qWait(250);
+        QVERIFY(!pop->isVisible());
+
+        delete host;
+        Q_UNUSED(flightBlack);
     }
 };
 

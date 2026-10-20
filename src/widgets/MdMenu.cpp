@@ -282,9 +282,12 @@ void MdMenu::init()
 {
     // Both attributes must land before the platform window exists; the
     // no-system-background one stops Windows filling the first composite
-    // with the class brush (the popup's white/black flash).
+    // with the class brush (the popup's white/black flash). The DWM drop
+    // shadow is disabled too — it reads as a black edge on a frameless
+    // translucent popup (see MdPopup.h).
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
+    setWindowFlags(windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
     setFocusPolicy(Qt::StrongFocus);
 
     m_openTimer = new QTimer(this);

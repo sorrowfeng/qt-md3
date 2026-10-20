@@ -38,6 +38,8 @@ public:
 
 public slots:
     void refresh();
+    /// Theme-only pass: restyle labels, never rebuild children.
+    void onThemeChanged();
 
 private slots:
     void onSeek(qreal seconds);
@@ -75,6 +77,10 @@ public:
 public slots:
     void refresh();
     void applyFilter(const QString &text);
+    /// Theme-only pass: restyle labels. The list rows subscribe to MdTheme
+    /// themselves; rebuilding them here piled deleteLater rows into every
+    /// theme switch and froze the UI.
+    void onThemeChanged();
 
 protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
@@ -108,6 +114,8 @@ public:
 
 public slots:
     void refresh();
+    /// Theme-only pass: restyle labels, never rebuild the queue rows.
+    void onThemeChanged();
 
 protected:
     void contextMenuEvent(QContextMenuEvent *event) override;

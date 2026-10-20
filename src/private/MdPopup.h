@@ -37,6 +37,13 @@ inline void showPopupWithoutFlash(QWidget *popup)
     // first composite.
     popup->setAttribute(Qt::WA_TranslucentBackground, true);
     popup->setAttribute(Qt::WA_NoSystemBackground, true);
+    // Windows 11 draws a DWM drop shadow around every WS_POPUP. On a
+    // frameless translucent surface that shadow reads as a black edge /
+    // residue around the rounded corners (especially while the open scale is
+    // under 1 and the window rect is larger than the surface). NoDropShadow
+    // turns the compositor shadow off; Frameless keeps the popup borderless.
+    popup->setWindowFlags(popup->windowFlags() | Qt::FramelessWindowHint
+                          | Qt::NoDropShadowWindowHint);
     // Create the platform window now so show() maps an already-configured
     // window rather than creating + mapping + painting in one step.
     popup->winId();
