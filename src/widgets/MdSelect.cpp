@@ -253,6 +253,11 @@ void MdSelect::showPopup()
         hidePopup();
         return;
     }
+    // Keep the field's focused chrome on while the menu is open: the menu
+    // steals the popup focus and the select itself may see FocusOut.
+    if (m_field) {
+        m_field->setForceFocusVisual(true);
+    }
     // Rebuild only when the model changed since the last build. Rebuilding
     // every open used to clear() the previous rows (orphan top-level windows)
     // and re-add them just to show the same list.
@@ -355,11 +360,21 @@ void MdSelect::keyPressEvent(QKeyEvent *event)
 
 void MdSelect::focusInEvent(QFocusEvent *event)
 {
-    // Forward focus to the field so its label float / focus indicator run.
+    // The field is a NoFocus child so Tab stays one stop on the select, which
+    // means the field cannot take focus and paint the focused chrome itself.
+    // Drive the focus visual explicitly instead of relying on setFocus().
     if (m_field && event->reason() != Qt::NoFocusReason) {
-        m_field->setFocus(event->reason());
+        m_field->setForceFocusVisual(true);
     }
     QWidget::focusInEvent(event);
+}
+
+void MdSelect::focusOutEvent(QFocusEvent *event)
+{
+    if (m_field && event->reason() != Qt::PopupFocusReason) {
+        m_field->setForceFocusVisual(false);
+    }
+    QWidget::focusOutEvent(event);
 }
 
 void MdSelect::changeEvent(QEvent *event)

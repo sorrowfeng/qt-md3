@@ -97,6 +97,11 @@ public:
     // --- interaction state -------------------------------------------------------
     bool isHovered() const { return m_hovered; }
     bool hasKeyboardFocus() const { return hasFocus() && m_focusIsKeyboard; }
+    /// True when the focused chrome (2 px indicator / primary outline) must
+    /// paint: the field itself holds focus, or its host (MdSelect) has focus
+    /// while the field is a NoFocus child and cannot take it directly.
+    bool hasVisualFocus() const { return hasFocus() || m_forceFocusVisual; }
+    void setForceFocusVisual(bool on);
     bool isEffectivelyDisabled() const { return !isEnabled(); }
 
     /// The label's 0..1 float factor (0 = in the input line, 1 = at the top).
@@ -148,6 +153,7 @@ private:
 
     bool m_hovered = false;
     bool m_focusIsKeyboard = false;
+    bool m_forceFocusVisual = false;
 
     qreal m_labelFloat = 0.0;
     qreal m_labelFloatTarget = 0.0;

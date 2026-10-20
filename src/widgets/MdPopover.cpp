@@ -1,5 +1,6 @@
 #include "MdPopover.h"
 
+#include "core/MdElevation.h"
 #include "core/MdMotion.h"
 #include "core/MdShape.h"
 #include "core/MdTheme.h"
@@ -281,7 +282,15 @@ void MdPopover::onOpenTick()
             // QWidget::hide(), not MdPopover::hide() — the slot starts the
             // close animation and returns immediately when m_open is already
             // false, leaving the widget mapped with a stale backing store.
+            // Drop the native window opacity to 0 before the map goes away so
+            // DWM cannot leave a dark rectangle behind a translucent popup.
+            if (QWindow *handle = windowHandle()) {
+                handle->setOpacity(0.0);
+            }
             QWidget::hide();
+            if (QWindow *handle = windowHandle()) {
+                handle->setOpacity(1.0);
+            }
         } else if (m_content) {
             // Flight over: the real child can composite on its own again.
             m_content->setVisible(true);
@@ -308,19 +317,48 @@ void MdPopover::paintEvent(QPaintEvent *event)
     const QList<qreal> radii = MdShape::resolvedRadii(m_shape, bounds.size());
     const QPainterPath path = MdShape::roundedRect(bounds, radii);
 
-    // The open/close pair: scale around the top-start anchor and alpha,
-    // matching MdMenu's Compose graphicsLayer. Starting this at full opacity
-    // was the popover's pop-in flash.
-    const qreal progress = qBound(0.0, m_openProgress, 1.0);
+    // Open/close pair, same split as MdMenuStyle::paintMenu: scale on the
+    // spatial spring, alpha on the effects spring, both around the top-start
+    // anchor. One shared progress used to drag alpha onto the scale curve.
     const qreal kClosedScale = 0.8; // md.comp.menu.closedScale
+    const qreal kClosedAlpha = 0.0;
+    const qreal progress = qBound(0.0, m_openProgress, 1.0);
     const qreal scale = kClosedScale + (1.0 - kClosedScale) * progress;
-    const qreal alpha = progress;
+    const qreal alpha = kClosedAlpha + (1.0 - kClosedAlpha) * progress;
     const bool animating = m_openTimer != nullptr && m_openTimer->isActive();
     if (animating || alpha < 0.999) {
         painter.setOpacity(painter.opacity() * qBound(0.0, alpha, 1.0));
     }
+    if (animating && scale < 0.999) {
+        const QPointF origin(0.0, 0.0);
+        painter.translate(origin);
+        painter.scale(scale, scale);
+        painter.translate(-origin);
+    }
 
-    painter.fillPath(path, resolvedSurfaceColor());
+    // 1. Level-2 shadow, surface fill and a 1 px outline-variant stroke —
+    //    the same three layers MdMenu paints. The stroke is what keeps the
+    //    antialiased rounded edge from reading as a black fringe against the
+    //    compositor, and without it the popover sat on a visible black
+    //    rectangle at the corners. Fill first, outline second (Menu order).
+    MdElevation::drawShadowDp(&painter, bounds, radii.value(0, 4.0),
+                              MdElevation::shadowDp(ElevationLevel::Level2),
+                              MdTheme::instance().color(ColorRole::Shadow));
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(resolvedSurfaceColor());
+    painter.drawPath(path);
+    {
+        const QColor outline = MdTheme::instance().color(ColorRole::OutlineVariant);
+        if (outline.isValid() && outline.alpha() > 0) {
+            QPen pen(outline);
+            pen.setWidthF(1.0);
+            pen.setJoinStyle(Qt::RoundJoin);
+            painter.setPen(pen);
+            painter.setBrush(Qt::NoBrush);
+            painter.drawPath(MdStyleBase::crispRoundedRectPath(
+                bounds.adjusted(0.5, 0.5, -0.5, -0.5), radii));
+        }
+    }
 
     if (!m_title.isEmpty()) {
         painter.setPen(resolvedTitleColor());
@@ -333,11 +371,11 @@ void MdPopover::paintEvent(QPaintEvent *event)
 
     // Content rides the same transform for the flight; the real child is
     // hidden while animating so it cannot composite at full opacity over
-    // the fading surface.
+    // the fading surface. Clip to the rounded path so a rectangular child
+    // cannot square off the corners mid-flight.
     if (animating && m_content && (scale < 0.999 || alpha < 0.999)) {
         painter.save();
-        painter.scale(scale, scale);
-        painter.setClipPath(path);
+        painter.setClipPath(MdShape::roundedRect(bounds, radii));
         m_content->render(&painter, m_content->pos(), QRegion(),
                           QWidget::DrawChildren | QWidget::IgnoreMask);
         painter.restore();

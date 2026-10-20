@@ -25,6 +25,11 @@ MdTextField::MdTextField(QWidget *parent)
     // came out a white slab). Keep the chrome transparent so only the style's
     // container shows. Same rule as MdTextArea's viewport.
     setAutoFillBackground(false);
+    // QLineEdit's QStyle paints a native frame around the edit. The MD3
+    // chrome draws its own container (filled slab or outlined stroke), so the
+    // native frame shows up as a second, differently coloured border. Same
+    // reason the palette below is transparent.
+    setFrame(false);
     QPalette pal = palette();
     pal.setColor(QPalette::Base, Qt::transparent);
     pal.setColor(QPalette::Window, Qt::transparent);
@@ -167,19 +172,20 @@ QRectF MdTextField::containerRect() const
 QRectF MdTextField::labelRect() const
 {
     const MdTextFieldTokens &tokens = textFieldTokens();
-    Q_UNUSED(tokens);
-    // At rest the label sits in the input line; floated it rises to the top
-    // edge on body-small.
+    // At rest the label sits in the input line. Floated it rises to the top
+    // edge on body-small — filled parks it just inside the slab's top, while
+    // outlined centres it on the top outline so the stroke can open a gap
+    // around the text (the exposed-dropdown / outlined MD3 contract).
     const qreal restY = (rect().height() - 24.0) / 2.0;
-    const qreal floatedY = 8.0;
+    const qreal floatedY = tokens.outlined ? -2.0 : 8.0;
     const qreal y = restY + (floatedY - restY) * m_labelFloat;
     return QRectF(16.0, y, rect().width() - 32.0, 24.0);
 }
 
 qreal MdTextField::floatedLabelBand()
 {
-    // Matches labelRect()'s floated band: top offset 8 plus the 24 px label
-    // rect. The edit text starts below this so the two never overlap.
+    // Matches labelRect()'s filled floated band: top offset 8 plus the 24 px
+    // label rect. The edit text starts below this so the two never overlap.
     return 8.0 + 24.0;
 }
 
@@ -308,6 +314,16 @@ void MdTextField::leaveEvent(QEvent *event)
 {
     QLineEdit::leaveEvent(event);
     m_hovered = false;
+    retargetAnimations();
+    update();
+}
+
+void MdTextField::setForceFocusVisual(bool on)
+{
+    if (m_forceFocusVisual == on) {
+        return;
+    }
+    m_forceFocusVisual = on;
     retargetAnimations();
     update();
 }

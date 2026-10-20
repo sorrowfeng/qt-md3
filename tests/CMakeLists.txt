@@ -2184,3 +2184,19 @@ foreach(media_test IN ITEMS
     )
     qt_md3_deploy_runtime(${media_test})
 endforeach()
+
+# Visual evidence probe (not a ctest gate): captures MdSelect field states and
+# MdPopover open/close frames to a directory. Built on demand for before/after
+# screenshot evidence.
+add_executable(VisualProbe
+    ../tools/visual-probe/main.cpp
+)
+target_link_libraries(VisualProbe
+    PRIVATE
+        qt-md3
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Svg
+)
+qt_md3_deploy_runtime(VisualProbe)
