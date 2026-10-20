@@ -278,7 +278,10 @@ void MdPopover::onOpenTick()
         m_openTimer->stop();
         m_openProgress = target;
         if (!m_open) {
-            hide();
+            // QWidget::hide(), not MdPopover::hide() — the slot starts the
+            // close animation and returns immediately when m_open is already
+            // false, leaving the widget mapped with a stale backing store.
+            QWidget::hide();
         } else if (m_content) {
             // Flight over: the real child can composite on its own again.
             m_content->setVisible(true);
@@ -292,6 +295,14 @@ void MdPopover::paintEvent(QPaintEvent *event)
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
+
+    // Clear to transparent first. WA_NoSystemBackground leaves the backing
+    // store uncleared; the rounded path's antialiased edges then blend with
+    // whatever was there (black on an uninitialized buffer) and show as a
+    // dark fringe. CompositionMode_Source replaces the pixels outright.
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(rect(), Qt::transparent);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     const QRectF bounds = QRectF(rect());
     const QList<qreal> radii = MdShape::resolvedRadii(m_shape, bounds.size());

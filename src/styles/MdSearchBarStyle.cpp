@@ -1,6 +1,7 @@
 #include "MdSearchBarStyle.h"
 
 #include "core/MdElevation.h"
+#include "core/MdFocusRing.h"
 #include "core/MdIcon.h"
 #include "core/MdShape.h"
 #include "core/MdTheme.h"
@@ -29,7 +30,7 @@ QColor resolveSlot(const MdNavigationColourSlot &slot)
     return colour;
 }
 
-/// The filled pill. The path covers the full widget rect so the stadium's
+/// The filled pill. The path covers the full container rect so the stadium's
 /// corners are fully painted — a half-pixel inset fill left the rounded caps
 /// open against the page. Any *stroke* uses `outlinePath` instead.
 QPainterPath containerPath(const QRectF &rect, qreal radius)
@@ -45,6 +46,15 @@ QPainterPath outlinePath(const QRectF &rect, qreal radius)
     const QRectF inset = rect.adjusted(0.5, 0.5, -0.5, -0.5);
     const qreal r = qMin(radius, qMin(inset.width(), inset.height()) / 2.0);
     return MdShape::roundedRect(inset, {r, r, r, r});
+}
+
+/// Stroke centre line sits `offset + activeWidth / 2 + width / 2` outside the
+/// component, and the stroke reaches half of whatever width it currently has.
+/// At the peak of the focus grow animation that width is `activeWidth`, so
+/// this is the furthest the indicator ever reaches.
+qreal ringInsetFor(const MdFocusRingSpec &spec)
+{
+    return spec.offset() + spec.activeWidth / 2.0 + spec.width / 2.0;
 }
 
 } // namespace
@@ -72,6 +82,23 @@ MdSearchBarStyle *MdSearchBarStyle::shared()
 bool MdSearchBarStyle::isInstalled()
 {
     return hasPaintFilter(&MdSearchBar::staticMetaObject);
+}
+
+MdFocusRingSpec MdSearchBarStyle::focusRingSpec(const MdSearchTokens &tokens)
+{
+    MdFocusRingSpec spec;
+    spec.width = tokens.focusIndicatorThickness;
+    spec.outwardOffset = tokens.focusIndicatorOuterOffset;
+    spec.inward = false;
+    // The search token set publishes `thickness` and `outer-offset` only.
+    // `active-width`, `duration` and the easing are md.comp.focus-ring's, and
+    // the module's defaults already carry them.
+    return spec;
+}
+
+qreal MdSearchBarStyle::focusRingInset(const MdSearchTokens &tokens)
+{
+    return ringInsetFor(focusRingSpec(tokens));
 }
 
 void MdSearchBarStyle::paintSearchBar(QPainter &painter, const MdSearchBar &bar,
@@ -148,17 +175,15 @@ void MdSearchBarStyle::paintSearchBar(QPainter &painter, const MdSearchBar &bar,
                          icon.bottomRight() + QPointF(-2.0, -2.0));
     }
 
-    // 4 — the focus indicator (the system focus-indicator rows).
+    // 4 — the focus indicator (the system focus-indicator rows). The ring
+    //     paints outward from the container; the widget carries a transparent
+    //     margin (see focusRingInset) so Qt never clips the stroke.
     if (bar.hasFocus()) {
-        const QRectF ring = bar.containerRect().adjusted(-tokens.focusIndicatorOuterOffset,
-                                                         -tokens.focusIndicatorOuterOffset,
-                                                         tokens.focusIndicatorOuterOffset,
-                                                         tokens.focusIndicatorOuterOffset);
-        painter.setPen(QPen(MdTheme::instance().color(tokens.focusIndicatorColor),
-                            tokens.focusIndicatorThickness));
-        painter.setBrush(Qt::NoBrush);
-        painter.drawPath(outlinePath(ring, tokens.containerRadius
-                                              + tokens.focusIndicatorOuterOffset));
+        const qreal radius = tokens.containerRadius;
+        MdFocusRing::paint(&painter, bar.containerRect(),
+                           {radius, radius, radius, radius},
+                           MdTheme::instance().color(tokens.focusIndicatorColor),
+                           focusRingSpec(tokens));
     }
 
     painter.restore();
@@ -188,9 +213,10 @@ void MdSearchBarStyle::drawWidget(QPainter *painter, QWidget *widget)
         colour.setAlphaF(colour.alphaF() * 0.38);
     }
     painter->setPen(colour);
-    painter->drawText(bar->rect().adjusted(int(bar->searchTokens().leadingSpace
+    const QRectF container = bar->containerRect();
+    painter->drawText(container.adjusted(int(bar->searchTokens().leadingSpace
                                                    + bar->searchTokens().iconSize + 8.0),
-                                           0, -int(bar->searchTokens().trailingSpace), 0),
+                                              0, -int(bar->searchTokens().trailingSpace), 0),
                       int(Qt::AlignVCenter | MdStyleBase::leadingAlignment(bar)), contents);
     painter->restore();
 }

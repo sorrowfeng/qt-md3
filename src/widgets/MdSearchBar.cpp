@@ -7,6 +7,8 @@
 #include <QtGui/QPainter>
 #include <QtWidgets/QProxyStyle>
 
+#include <cmath>
+
 namespace md {
 
 namespace {
@@ -74,10 +76,12 @@ MdSearchBar::MdSearchBar(QWidget *parent)
     setStyle(searchLineEditStyle());
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     // The leading search icon owns the first 16+24 px; the input line starts
-    // after it (and after the trailing slot on the other side).
+    // after it (and after the trailing slot on the other side). The focus-ring
+    // margin is included so text sits inside the pill, not the widget edge.
     const MdSearchTokens &tokens = searchTokens();
-    setTextMargins(int(tokens.leadingSpace + tokens.iconSize + 8.0), 0,
-                   int(tokens.trailingSpace), 0);
+    const qreal inset = MdSearchBarStyle::focusRingInset(tokens);
+    setTextMargins(int(inset + tokens.leadingSpace + tokens.iconSize + 8.0), 0,
+                   int(inset + tokens.trailingSpace), 0);
 }
 
 MdSearchBar::~MdSearchBar() = default;
@@ -108,23 +112,31 @@ void MdSearchBar::setSurface(MdSearchSurface surface)
 QRectF MdSearchBar::leadingIconRect() const
 {
     const MdSearchTokens &tokens = searchTokens();
-    const QRectF r(tokens.leadingSpace, (rect().height() - tokens.iconSize) / 2.0,
+    const QRectF container = containerRect();
+    const QRectF r(container.left() + tokens.leadingSpace,
+                   container.top() + (container.height() - tokens.iconSize) / 2.0,
                    tokens.iconSize, tokens.iconSize);
     // The leading icon rides the *leading* edge — the right side under RTL.
     return layoutDirection() == Qt::RightToLeft
-        ? QRectF(rect().width() - r.right(), r.y(), r.width(), r.height())
+        ? QRectF(container.right() - r.right() + container.left(), r.y(), r.width(), r.height())
         : r;
 }
 
 QRectF MdSearchBar::containerRect() const
 {
-    return QRectF(rect());
+    // The widget is the container plus a transparent margin the outward focus
+    // indicator paints into. Qt clips a child to its own rect, so without the
+    // margin the indicator is cut off — see MdSearchBarStyle::focusRingInset().
+    const qreal inset = MdSearchBarStyle::focusRingInset(searchTokens());
+    return QRectF(rect()).adjusted(inset, inset, -inset, -inset);
 }
 
 QSize MdSearchBar::sizeHint() const
 {
     const MdSearchTokens &tokens = searchTokens();
-    return QSize(360, int(tokens.containerHeight));
+    const qreal inset = MdSearchBarStyle::focusRingInset(tokens);
+    return QSize(int(std::ceil(360.0 + 2.0 * inset)),
+                 int(std::ceil(tokens.containerHeight + 2.0 * inset)));
 }
 
 QSize MdSearchBar::minimumSizeHint() const

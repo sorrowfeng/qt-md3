@@ -1010,7 +1010,7 @@ void TestMd3InteractionSmoke::searchBarTextIsVisible()
 void TestMd3InteractionSmoke::searchBarPaintsFullPill()
 {
     MdSearchBar bar;
-    bar.resize(360, 56);
+    bar.resize(bar.sizeHint());
     showAndExpose(bar);
 
     const QImage image = bar.grab().toImage();
@@ -1020,15 +1020,23 @@ void TestMd3InteractionSmoke::searchBarPaintsFullPill()
                && qAbs(a.green() - b.green()) < 28 && qAbs(a.blue() - b.blue()) < 28
                && a.alpha() > 200;
     };
-    // The pill's flat top / bottom spans the middle of the bar; the corners
-    // of the widget rect are outside the stadium and may be transparent.
-    QVERIFY2(near(image.pixelColor(image.width() / 2, 3), container),
+    // The pill sits inside the focus-ring margin; probe at the container
+    // edges, not the widget edges. The flat top / bottom spans the middle
+    // of the bar; the caps of the stadium curve away from the corners.
+    const QRectF c = bar.containerRect();
+    const int topY = int(c.top()) + 3;
+    const int botY = int(c.bottom()) - 3;
+    const int leftX = int(c.left()) + 3;
+    const int rightX = int(c.right()) - 3;
+    const int midX = int(c.center().x());
+    const int midY = int(c.center().y());
+    QVERIFY2(near(image.pixelColor(midX, topY), container),
              "search bar top edge not painted");
-    QVERIFY2(near(image.pixelColor(image.width() / 2, image.height() - 4), container),
+    QVERIFY2(near(image.pixelColor(midX, botY), container),
              "search bar bottom edge not painted");
-    QVERIFY2(near(image.pixelColor(2, image.height() / 2), container),
+    QVERIFY2(near(image.pixelColor(leftX, midY), container),
              "search bar left tip not painted");
-    QVERIFY2(near(image.pixelColor(image.width() - 3, image.height() / 2), container),
+    QVERIFY2(near(image.pixelColor(rightX, midY), container),
              "search bar right tip not painted");
 }
 

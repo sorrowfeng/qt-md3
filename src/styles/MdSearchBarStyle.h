@@ -12,6 +12,7 @@
 //   3. the **leading icon** — the 24 px search glyph, on-surface.
 
 #include "MdStyleBase.h"
+#include "core/MdFocusRing.h"
 #include "core/MdSearchTokens.h"
 #include "core/QtMd3Export.h"
 
@@ -32,6 +33,11 @@ public:
 
     static MdSearchBarStyle *shared();
     static bool isInstalled();
+
+    /// Focus-ring spec matching the search tokens' system rows.
+    static MdFocusRingSpec focusRingSpec(const MdSearchTokens &tokens);
+    /// Transparent margin the outward focus ring paints into.
+    static qreal focusRingInset(const MdSearchTokens &tokens);
 
     static void paintSearchBar(QPainter &painter, const MdSearchBar &bar,
                                const MdSearchTokens &tokens);

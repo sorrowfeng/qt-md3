@@ -22,6 +22,8 @@
 #include <QtWidgets/QProxyStyle>
 #include <QtTest/QtTest>
 
+#include <cmath>
+
 using namespace md;
 
 namespace {
@@ -211,12 +213,17 @@ void TestMd3SearchBar::stateLayersFollowTheExport()
 void TestMd3SearchBar::geometryFollowsTheTokens()
 {
     MdSearchBar bar;
-    QCOMPARE(bar.sizeHint().height(), 56);
+    const MdSearchTokens &tokens = bar.searchTokens();
+    const qreal inset = MdSearchBarStyle::focusRingInset(tokens);
+    // The widget is the container plus the transparent margin the outward
+    // focus ring paints into.
+    QCOMPARE(bar.sizeHint().height(), int(std::ceil(tokens.containerHeight + 2.0 * inset)));
 
-    bar.resize(360, 56);
+    bar.resize(int(std::ceil(360.0 + 2.0 * inset)),
+               int(std::ceil(tokens.containerHeight + 2.0 * inset)));
     const QRectF icon = bar.leadingIconRect();
     QCOMPARE(icon.width(), 24.0);
-    QCOMPARE(icon.left(), 16.0);
+    QCOMPARE(icon.left(), inset + 16.0);
 }
 
 void TestMd3SearchBar::activationAndSearchSignals()
