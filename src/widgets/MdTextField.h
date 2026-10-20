@@ -139,6 +139,10 @@ private:
     void retargetAnimations();
     void tickAnimations();
     void updateTextMargins();
+    void onThemeChanged();
+    /// Map QLineEdit's palette roles (text / placeholder / selection) onto
+    /// the theme so the value stays visible in both schemes.
+    void applyThemePalette();
     /// Height of the floated label band (top offset + label rect) — the top
     /// text margin that keeps the value clear of the label.
     static qreal floatedLabelBand();

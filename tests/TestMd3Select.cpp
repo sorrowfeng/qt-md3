@@ -22,9 +22,11 @@
 #include "widgets/MdTextField.h"
 
 #include <QtGui/QImage>
+#include <QtGui/QPalette>
 #include <QtGui/QPainter>
 #include <QtTest/QtTest>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QLineEdit>
 
 using namespace md;
 
@@ -225,6 +227,52 @@ private slots:
         select.addItem(QStringLiteral("fresh"));
         QCOMPARE(select.count(), 1);
         QCOMPARE(select.currentText(), QStringLiteral("fresh"));
+    }
+
+    void fieldShowsCurrentText()
+    {
+        // The read-only MdTextField must mirror currentText — the ComboBox
+        // contract. It is private, so look it up as a child QLineEdit.
+        MdSelect select;
+        select.setLabelText(QStringLiteral("Theme"));
+        select.addItems({QStringLiteral("Light"), QStringLiteral("Dark"), QStringLiteral("System")});
+        select.setCurrentIndex(1);
+        auto *field = select.findChild<QLineEdit *>();
+        QVERIFY(field != nullptr);
+        QCOMPARE(field->text(), QStringLiteral("Dark"));
+        QCOMPARE(field->text(), select.currentText());
+    }
+
+    void fieldShowsCurrentTextAfterThemeSwitch()
+    {
+        MdSelect select;
+        select.setLabelText(QStringLiteral("Theme"));
+        select.addItems({QStringLiteral("Light"), QStringLiteral("Dark"), QStringLiteral("System")});
+        select.setCurrentIndex(1);
+        select.resize(280, 56);
+        select.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&select));
+
+        auto *field = select.findChild<QLineEdit *>();
+        QVERIFY(field != nullptr);
+
+        for (int i = 0; i < 6; ++i) {
+            MdTheme::instance().setThemeMode(i % 2 == 0 ? ThemeMode::Dark : ThemeMode::Light);
+            QCOMPARE(select.currentIndex(), 1);
+            QCOMPARE(select.currentText(), QStringLiteral("Dark"));
+            QCOMPARE(field->text(), QStringLiteral("Dark"));
+            const QColor textColour = field->palette().color(QPalette::Text);
+            const QColor surface = MdTheme::instance().color(ColorRole::Surface);
+            const int distance = qAbs(textColour.red() - surface.red())
+                + qAbs(textColour.green() - surface.green())
+                + qAbs(textColour.blue() - surface.blue());
+            QVERIFY2(distance > 40,
+                     qPrintable(QStringLiteral("select field text colour %1 too close to surface %2")
+                                    .arg(textColour.name())
+                                    .arg(surface.name())));
+        }
+        MdTheme::instance().setThemeMode(ThemeMode::Light);
+        QCOMPARE(field->text(), QStringLiteral("Dark"));
     }
 };
 

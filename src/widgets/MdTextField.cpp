@@ -3,6 +3,8 @@
 #include "styles/MdTextFieldStyle.h"
 
 #include "core/MdMotion.h"
+#include "core/MdTheme.h"
+#include "styles/MdStyleBase.h"
 
 #include <QtCore/QTimer>
 #include <QtGui/QFocusEvent>
@@ -30,11 +32,9 @@ MdTextField::MdTextField(QWidget *parent)
     // native frame shows up as a second, differently coloured border. Same
     // reason the palette below is transparent.
     setFrame(false);
-    QPalette pal = palette();
-    pal.setColor(QPalette::Base, Qt::transparent);
-    pal.setColor(QPalette::Window, Qt::transparent);
-    setPalette(pal);
+    applyThemePalette();
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    MdStyleBase::connectThemeUpdate(this, &MdTextField::onThemeChanged);
     connect(this, &QLineEdit::textChanged, this, [this](const QString &) {
         emit populatedChanged(isPopulated());
         retargetAnimations();
@@ -291,9 +291,15 @@ void MdTextField::tickAnimations()
 
 void MdTextField::paintEvent(QPaintEvent *event)
 {
+    // Chrome first, then QLineEdit's text / cursor / selection on top.
+    // Painting the container *after* QLineEdit laid an opaque slab over the
+    // input — typing worked but the glyphs were invisible (same bug
+    // MdSearchBar already fixed).
+    {
+        QPainter painter(this);
+        MdTextFieldStyle::paintTextField(painter, *this, textFieldTokens());
+    }
     QLineEdit::paintEvent(event);
-    QPainter painter(this);
-    MdTextFieldStyle::paintTextField(painter, *this, textFieldTokens());
 }
 
 void MdTextField::resizeEvent(QResizeEvent *event)
@@ -343,6 +349,34 @@ void MdTextField::focusOutEvent(QFocusEvent *event)
     m_focusIsKeyboard = false;
     retargetAnimations();
     update();
+}
+
+void MdTextField::onThemeChanged()
+{
+    // QLineEdit paints the value with QPalette::Text; without a theme
+    // mapping it keeps the platform default and disappears against the
+    // opposite scheme (black glyphs on a dark slab after switching to Dark).
+    applyThemePalette();
+    update();
+}
+
+void MdTextField::applyThemePalette()
+{
+    const MdTheme &theme = MdTheme::instance();
+    QPalette pal = palette();
+    pal.setColor(QPalette::Base, Qt::transparent);
+    pal.setColor(QPalette::Window, Qt::transparent);
+    // `input-text-color: on-surface`, placeholder `on-surface-variant`.
+    pal.setColor(QPalette::Text, theme.color(ColorRole::OnSurface));
+    pal.setColor(QPalette::PlaceholderText, theme.color(ColorRole::OnSurfaceVariant));
+    pal.setColor(QPalette::HighlightedText, theme.color(ColorRole::OnSurface));
+    pal.setColor(QPalette::Highlight, theme.color(ColorRole::SecondaryContainer));
+    const QColor disabledText = theme.color(ColorRole::OnSurface);
+    pal.setColor(QPalette::Disabled, QPalette::Text, QColor(disabledText.red(),
+                                                            disabledText.green(),
+                                                            disabledText.blue(),
+                                                            int(disabledText.alpha() * 0.38)));
+    setPalette(pal);
 }
 
 } // namespace md

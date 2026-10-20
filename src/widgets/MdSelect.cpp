@@ -3,6 +3,7 @@
 #include "core/MdIcon.h"
 #include "core/MdTheme.h"
 #include "private/MdPopup.h"
+#include "styles/MdStyleBase.h"
 #include "widgets/MdMenu.h"
 #include "widgets/MdTextField.h"
 
@@ -55,6 +56,10 @@ void MdSelect::init()
     // The menu is a Qt::Popup top-level; it is not parented into the layout.
     m_menu = new MdMenu(this->window());
     connect(m_menu, &MdMenu::closed, this, &MdSelect::onMenuClosed);
+
+    // Theme switches must re-sync the field: a rebuild or palette change can
+    // leave the value blank / invisible even though currentIndex is intact.
+    MdStyleBase::connectThemeUpdate(this, &MdSelect::onThemeChanged);
 }
 
 // --- field appearance ---------------------------------------------------------
@@ -452,6 +457,14 @@ void MdSelect::rebuildMenu()
 void MdSelect::applyCurrentText()
 {
     m_field->setText(currentText());
+}
+
+void MdSelect::onThemeChanged()
+{
+    // Re-push the current item text so the field never comes back blank after
+    // a theme switch, and let the field repaint with the new palette.
+    applyCurrentText();
+    update();
 }
 
 } // namespace md

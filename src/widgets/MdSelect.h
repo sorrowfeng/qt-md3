@@ -140,6 +140,7 @@ protected:
 private slots:
     void onMenuClosed();
     void onMenuItemClicked();
+    void onThemeChanged();
 
 private:
     void init();

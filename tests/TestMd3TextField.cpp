@@ -7,10 +7,12 @@
 
 #include "core/MdTextFieldTokens.h"
 #include "core/MdTheme.h"
+#include "core/MdTypes.h"
 #include "styles/MdTextFieldStyle.h"
 #include "widgets/MdTextField.h"
 
 #include <QtGui/QImage>
+#include <QtGui/QPalette>
 #include <QtGui/QPainter>
 #include <QtTest/QtTest>
 
@@ -60,6 +62,8 @@ private slots:
     void disabledOpacities();
     void renderSmoke();
     void metaProperties();
+    void valueVisibleAboveFilledChrome();
+    void valueSurvivesThemeSwitch();
 };
 
 void TestMd3TextField::initTestCase()
@@ -230,6 +234,75 @@ void TestMd3TextField::metaProperties()
     QSignalSpy spy(&field, &MdTextField::labelTextChanged);
     field.setProperty("labelText", QStringLiteral("Name"));
     QCOMPARE(spy.count(), 1);
+}
+
+void TestMd3TextField::valueVisibleAboveFilledChrome()
+{
+    // The filled slab is opaque. If chrome paints after QLineEdit the value
+    // is covered and the field reads as blank (MdSelect's "no current item").
+    MdTheme::instance().setThemeMode(ThemeMode::Light);
+    MdTextField field;
+    field.setLabelText(QStringLiteral("Theme"));
+    field.resize(280, 56);
+    field.setText(QStringLiteral("Light"));
+    field.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&field));
+    QTRY_COMPARE_WITH_TIMEOUT(field.labelFloat(), 1.0, 800);
+
+    const QImage image = render(field);
+    // Sample only the middle of the value line — not the bottom indicator
+    // band and not the container edges, so chrome cannot count as "ink".
+    const QRectF value = field.valueRect().adjusted(8, 4, -8, -6);
+    const QColor fill = MdTheme::instance().color(ColorRole::SurfaceContainerHighest);
+    const QColor ink = MdTheme::instance().color(ColorRole::OnSurface);
+    int fillPixels = 0;
+    int inkPixels = 0;
+    for (int y = int(value.top()); y < int(value.bottom()) && y < image.height(); ++y) {
+        for (int x = int(value.left()); x < int(value.right()) && x < image.width(); ++x) {
+            const QColor pixel = image.pixelColor(x, y);
+            if (pixel.alpha() < 8) {
+                continue;
+            }
+            const int dFill = qAbs(pixel.red() - fill.red()) + qAbs(pixel.green() - fill.green())
+                + qAbs(pixel.blue() - fill.blue());
+            const int dInk = qAbs(pixel.red() - ink.red()) + qAbs(pixel.green() - ink.green())
+                + qAbs(pixel.blue() - ink.blue());
+            if (dInk < dFill) {
+                ++inkPixels;
+            } else {
+                ++fillPixels;
+            }
+        }
+    }
+    QVERIFY2(inkPixels > 4,
+             qPrintable(QStringLiteral("value rect has %1 ink px / %2 fill px — text hidden under the slab")
+                            .arg(inkPixels)
+                            .arg(fillPixels)));
+}
+
+void TestMd3TextField::valueSurvivesThemeSwitch()
+{
+    MdTextField field;
+    field.setLabelText(QStringLiteral("Theme"));
+    field.resize(280, 56);
+    field.setText(QStringLiteral("Light"));
+    field.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&field));
+
+    for (int i = 0; i < 6; ++i) {
+        MdTheme::instance().setThemeMode(i % 2 == 0 ? ThemeMode::Dark : ThemeMode::Light);
+        QVERIFY(!field.text().isEmpty());
+        const QColor textColour = field.palette().color(QPalette::Text);
+        const QColor surface = MdTheme::instance().color(ColorRole::Surface);
+        const int distance = qAbs(textColour.red() - surface.red())
+            + qAbs(textColour.green() - surface.green()) + qAbs(textColour.blue() - surface.blue());
+        QVERIFY2(distance > 40,
+                 qPrintable(QStringLiteral("text colour %1 is too close to surface %2 after switch %3")
+                                .arg(textColour.name())
+                                .arg(surface.name())
+                                .arg(i)));
+    }
+    MdTheme::instance().setThemeMode(ThemeMode::Light);
 }
 
 QTEST_MAIN(TestMd3TextField)

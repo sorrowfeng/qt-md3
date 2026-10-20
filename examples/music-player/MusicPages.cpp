@@ -787,7 +787,8 @@ SettingsPage::SettingsPage(MusicPlayerWindow *window, QWidget *parent)
 
     root->addStretch(1);
 
-    connect(m_themeSelect, &MdSelect::currentIndexChanged, this, &SettingsPage::onThemeChanged);
+    connect(m_themeSelect, &MdSelect::currentIndexChanged, this,
+            &SettingsPage::onThemeSelectChanged);
     connect(m_seedPicker, &MdColorPicker::colorChanged, this, &SettingsPage::onSeedChanged);
     connect(m_highContrast, &QAbstractButton::toggled, this, &SettingsPage::onHighContrast);
     connect(m_qualitySelect, &MdSelect::currentIndexChanged, this, &SettingsPage::onQualityChanged);
@@ -795,13 +796,16 @@ SettingsPage::SettingsPage(MusicPlayerWindow *window, QWidget *parent)
     connect(m_normalize, &QAbstractButton::toggled, this, &SettingsPage::onNormalize);
     connect(m_gapless, &QAbstractButton::toggled, this, &SettingsPage::onGapless);
 
-    MdStyleBase::connectThemeUpdate(this, &SettingsPage::refresh);
+    // Theme switch: restyle only. refresh() also re-syncs the selects /
+    // picker / switch; running that on every themeChanged fought an open
+    // MdSelect popup (the pick that caused the switch) and left the page
+    // unclickable. LibraryPage / QueuePage use the same split.
+    MdStyleBase::connectThemeUpdate(this, &SettingsPage::onThemeChanged);
     refresh();
 }
 
-void SettingsPage::refresh()
+void SettingsPage::restyleSectionLabels()
 {
-    // Section labels are palette-styled; a theme switch must restyle them.
     const QList<QLabel *> labels = findChildren<QLabel *>();
     for (QLabel *label : labels) {
         const QString name = label->objectName();
@@ -813,6 +817,12 @@ void SettingsPage::refresh()
             restyleLabel(label, TypeStyle::LabelLarge, ColorRole::OnSurfaceVariant);
         }
     }
+}
+
+void SettingsPage::refresh()
+{
+    // Full pass for page activation / explicit resync: labels + widget values.
+    restyleSectionLabels();
 
     const MdTheme &theme = MdTheme::instance();
     const int index = theme.themeMode() == ThemeMode::Dark
@@ -830,7 +840,16 @@ void SettingsPage::refresh()
     m_highContrast->setChecked(theme.isHighContrast());
 }
 
-void SettingsPage::onThemeChanged(int index)
+void SettingsPage::onThemeChanged()
+{
+    // Theme-only: restyle the palette labels and repaint. Do not touch the
+    // selects / picker / switches — refresh() owns that, and syncing them
+    // during a theme switch fought the open select popup.
+    restyleSectionLabels();
+    update();
+}
+
+void SettingsPage::onThemeSelectChanged(int index)
 {
     MdTheme &theme = MdTheme::instance();
     if (index == 0) {

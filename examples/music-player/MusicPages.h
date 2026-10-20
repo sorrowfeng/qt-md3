@@ -146,9 +146,13 @@ public:
 
 public slots:
     void refresh();
+    /// Theme-only pass: restyle labels, never rebuild or re-sync the selects.
+    /// Full refresh() is for page activation; running it on every theme switch
+    /// fought an open select popup and froze input.
+    void onThemeChanged();
 
 private slots:
-    void onThemeChanged(int index);
+    void onThemeSelectChanged(int index);
     void onSeedChanged(const QColor &color);
     void onHighContrast(bool on);
     void onQualityChanged(int index);
@@ -157,6 +161,8 @@ private slots:
     void onGapless(bool on);
 
 private:
+    void restyleSectionLabels();
+
     MusicPlayerWindow *m_window = nullptr;
     md::MdSelect *m_themeSelect = nullptr;
     md::MdColorPicker *m_seedPicker = nullptr;

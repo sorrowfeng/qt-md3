@@ -44,10 +44,14 @@ MdTextFieldStyle *MdTextFieldStyle::shared()
 
     QMutexLocker locker(&mutex);
     if (!instance) {
-        // Intentionally never destroyed: a paint filter must outlive every
-        // widget it paints.
+        // Intentionally never destroyed: a style outlives the widgets it paints.
+        //
+        // Unlike MdTextArea (text lives on a child viewport), MdTextField is a
+        // QLineEdit whose value paints on the same widget. A paint filter that
+        // only ran drawWidget() would swallow QLineEdit::paintEvent and leave
+        // the chrome without the value — so the filter is NOT installed here.
+        // MdTextField::paintEvent paints chrome first, then the line edit.
         instance = new MdTextFieldStyle;
-        installPaintFilter<MdTextField>(instance);
     }
     return instance;
 }
@@ -247,6 +251,9 @@ void MdTextFieldStyle::drawWidget(QPainter *painter, QWidget *widget)
     if (!field || !painter) {
         return;
     }
+    // Chrome only. The value is QLineEdit's job and lands above the slab via
+    // MdTextField::paintEvent; the filter path is no longer installed (see
+    // shared()), so this is a fallback for a host that registers one itself.
     paintTextField(*painter, *field, field->textFieldTokens());
 }
 

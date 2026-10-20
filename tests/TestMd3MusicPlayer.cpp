@@ -127,6 +127,8 @@ private slots:
     void resizeKeepsLayout();
     void themeToggleRestylesLabels();
     void themeSwitchDoesNotHang();
+    void settingsSelectShowsTextAfterThemeSwitch();
+    void settingsRemainsClickableAfterThemeSwitch();
     void seedChangeDoesNotHang();
 
 private:
@@ -742,6 +744,95 @@ void TestMd3MusicPlayer::themeSwitchDoesNotHang()
                                 .arg(kBudgetMs)));
         pump(10);
     }
+
+    MdTheme::instance().setThemeMode(ThemeMode::Light);
+    pump(40);
+}
+
+void TestMd3MusicPlayer::settingsSelectShowsTextAfterThemeSwitch()
+{
+    m_window->resize(420, 780);
+    m_window->setCurrentPage(3);
+    pump(80);
+    QWidget *settings = m_window->pageWidget(3);
+    QVERIFY(settings != nullptr);
+
+    const QList<MdSelect *> selects = settings->findChildren<MdSelect *>();
+    QVERIFY(selects.size() >= 2);
+    MdSelect *themeSelect = selects.first();
+    MdSelect *quality = selects.at(1);
+    QVERIFY(quality->count() >= 3);
+    quality->setCurrentIndex(2);
+    const QString qualityText = quality->currentText();
+    QVERIFY(!qualityText.isEmpty());
+
+    auto *themeField = themeSelect->findChild<QLineEdit *>();
+    auto *qualityField = quality->findChild<QLineEdit *>();
+    QVERIFY(themeField != nullptr);
+    QVERIFY(qualityField != nullptr);
+
+    for (int i = 0; i < 6; ++i) {
+        themeSelect->setCurrentIndex(i % 3);
+        pump(20);
+        QCOMPARE(quality->currentText(), qualityText);
+        QCOMPARE(qualityField->text(), qualityText);
+        QCOMPARE(themeField->text(), themeSelect->currentText());
+        QVERIFY2(!themeField->text().isEmpty(),
+                 qPrintable(QStringLiteral("theme select field blank after switch %1").arg(i)));
+    }
+
+    MdTheme::instance().setThemeMode(ThemeMode::Light);
+    pump(40);
+}
+
+void TestMd3MusicPlayer::settingsRemainsClickableAfterThemeSwitch()
+{
+    // After a burst of theme switches the page must still take input: a
+    // leftover popup / mouse grab / rebuild storm shows up as a dead switch.
+    m_window->resize(420, 780);
+    m_window->setCurrentPage(3);
+    pump(80);
+    QWidget *settings = m_window->pageWidget(3);
+    QVERIFY(settings != nullptr);
+
+    const QList<MdSelect *> selects = settings->findChildren<MdSelect *>();
+    QVERIFY(!selects.isEmpty());
+    MdSelect *themeSelect = selects.first();
+
+    for (int i = 0; i < 20; ++i) {
+        themeSelect->setCurrentIndex(i % 3);
+        pump(10);
+    }
+
+    // No select popup may be left open — it would swallow every click.
+    for (MdSelect *select : selects) {
+        QVERIFY2(!select->isPopupVisible(),
+                 "a select popup stayed open after theme switches");
+    }
+
+    const QList<MdSwitch *> switches = live<MdSwitch>(settings);
+    QVERIFY(!switches.isEmpty());
+    MdSwitch *hc = nullptr;
+    for (MdSwitch *sw : switches) {
+        if (sw->text().contains(QLatin1String("contrast"), Qt::CaseInsensitive)
+            || sw->accessibleName().contains(QLatin1String("contrast"), Qt::CaseInsensitive)) {
+            hc = sw;
+            break;
+        }
+    }
+    QVERIFY(hc != nullptr);
+
+    const bool before = hc->isChecked();
+    QSignalSpy spy(hc, &QAbstractButton::toggled);
+    clickCentre(hc);
+    pump(80);
+    QVERIFY2(spy.count() >= 1,
+             "high-contrast switch ignored the click after theme switches — page is unclickable");
+    QCOMPARE(hc->isChecked(), !before);
+
+    // Restore.
+    clickCentre(hc);
+    pump(40);
 
     MdTheme::instance().setThemeMode(ThemeMode::Light);
     pump(40);
