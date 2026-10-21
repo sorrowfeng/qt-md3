@@ -254,7 +254,7 @@ void MdSelect::showPopup()
     if (m_items.isEmpty()) {
         return;
     }
-    if (m_popupOpen) {
+    if (m_popupOpen || (m_menu && m_menu->isVisible())) {
         hidePopup();
         return;
     }
@@ -276,25 +276,29 @@ void MdSelect::showPopup()
     // Anchored under the field, left-aligned — the exposed dropdown's
     // only published anchor position.
     // Optional frame dump (QT_MD3_POPUP_FRAMES=<dir>) for the open flight.
-    new PopupFrameDumper(m_menu, QStringLiteral("select"), m_menu);
+    if (!qEnvironmentVariableIsEmpty("QT_MD3_POPUP_FRAMES")) {
+        new PopupFrameDumper(m_menu, QStringLiteral("select"), m_menu);
+    }
     m_menu->popup(QRect(mapToGlobal(QPoint(0, 0)), size()));
     m_popupOpen = true;
 }
 
 void MdSelect::hidePopup()
 {
-    if (!m_popupOpen) {
+    if (!m_popupOpen && !(m_menu && m_menu->isVisible())) {
         return;
     }
     // Reverse the menu open springs; a bare hide() pops the surface out
     // in one frame.
-    m_menu->requestClose();
+    if (m_menu) {
+        m_menu->requestClose();
+    }
     m_popupOpen = false;
 }
 
 bool MdSelect::isPopupVisible() const
 {
-    return m_popupOpen;
+    return m_popupOpen || (m_menu && m_menu->isVisible());
 }
 
 // --- geometry ----------------------------------------------------------------
@@ -413,7 +417,10 @@ void MdSelect::onMenuClosed()
 {
     m_popupOpen = false;
     // Return focus to the select so the user can re-open with the keyboard.
-    setFocus(Qt::PopupFocusReason);
+    // Skip when the select is already gone (menu outlives a page teardown).
+    if (isVisible()) {
+        setFocus(Qt::PopupFocusReason);
+    }
 }
 
 void MdSelect::onMenuItemClicked()
@@ -426,8 +433,13 @@ void MdSelect::onMenuItemClicked()
     if (index < 0) {
         return;
     }
-    setIndexFromUser(index);
+    // Dismiss first, then apply. A mapped Qt::Popup holds the application
+    // mouse grab, and the theme fan-out from currentIndexChanged must not run
+    // while that grab is live (the avatar menu closes via closeAndAccept before
+    // onThemeAction for the same reason). hidePopup() is idempotent when the
+    // MdMenu close slot already ran.
     hidePopup();
+    setIndexFromUser(index);
 }
 
 void MdSelect::setIndexFromUser(int index)

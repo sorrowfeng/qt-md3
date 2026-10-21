@@ -36,6 +36,8 @@ MdSnackbarHost::MdSnackbarHost(QWidget *parent)
     // synthetic sendEvent still works. An idle host is simply hidden, so it
     // has no HWND and cannot steal input at all.
     setAttribute(Qt::WA_TransparentForMouseEvents);
+    // Keep the host from dragging its parent chain into native widgets.
+    setAttribute(Qt::WA_DontCreateNativeAncestors, true);
     if (parent) {
         parent->installEventFilter(this);
     }
@@ -80,7 +82,6 @@ void MdSnackbarHost::dismissCurrent()
 bool MdSnackbarHost::eventFilter(QObject *watched, QEvent *event)
 {
     if (watched == parentWidget() && event->type() == QEvent::Resize) {
-        setGeometry(parentWidget()->rect());
         layoutCurrent();
     }
     return QWidget::eventFilter(watched, event);
@@ -97,6 +98,7 @@ void MdSnackbarHost::showNext()
     if (m_queue.isEmpty()) {
         m_current = nullptr;
         // Idle: unmap the overlay so it cannot intercept Win32 mouse hits.
+        setAttribute(Qt::WA_TransparentForMouseEvents, true);
         hide();
         emit allCleared();
         return;
@@ -124,11 +126,15 @@ void MdSnackbarHost::showNext()
         scaled.setSize(QSize(int(std::round(m_restingGeometry.width() * m_scale)),
                              int(std::round(m_restingGeometry.height() * m_scale))));
         scaled.moveCenter(centre.toPoint());
-        m_current->setGeometry(scaled);
+        // Host is parked on the resting strip; the scaled rect is expressed
+        // in host-local coordinates.
+        m_current->setGeometry(scaled.translated(-m_restingGeometry.topLeft()));
     }
-    // Map the host only while a snackbar exists. Size it to the snackbar
-    // strip rather than the whole parent so page controls stay hittable even
-    // with the overlay raised.
+    // Map the host only while a snackbar exists, sized to the snackbar strip
+    // (see layoutCurrent). Take pointer events so the action / dismiss
+    // buttons work; the strip is small enough that the page around it stays
+    // hittable.
+    setAttribute(Qt::WA_TransparentForMouseEvents, false);
     show();
     m_current->show();
     raise();
@@ -149,16 +155,24 @@ void MdSnackbarHost::layoutCurrent()
     }
     // The widget rect carries the shadow margin around the container, so the
     // 600 px cap applies to the container: widget = container + 2 margins.
-    const qreal available = width() - MdSnackbarTokens::kHostMargin * 2.0;
+    const QWidget *parent = parentWidget();
+    const int parentW = parent ? parent->width() : width();
+    const int parentH = parent ? parent->height() : height();
+    const qreal available = parentW - MdSnackbarTokens::kHostMargin * 2.0;
     const qreal maxWidgetWidth = MdSnackbarTokens::kContainerMaxWidth
         + MdSnackbarTokens::kShadowMargin * 2.0;
     const qreal widgetWidth = qMin(available, maxWidgetWidth);
     const int widgetHeight = m_current->heightForWidth(int(widgetWidth));
-    const qreal x = (width() - widgetWidth) / 2.0;
-    const qreal y = height() - widgetHeight - MdSnackbarTokens::kHostMargin;
+    const qreal x = (parentW - widgetWidth) / 2.0;
+    const qreal y = parentH - widgetHeight - MdSnackbarTokens::kHostMargin;
     m_restingGeometry =
         QRect(int(x), int(y), int(std::ceil(widgetWidth)), widgetHeight);
-    m_current->setGeometry(m_restingGeometry);
+    // Host covers only the snackbar strip, not the whole parent. A full-window
+    // native HWND becomes the Win32 hit target and swallows every real mouse
+    // click under it (QApplication::widgetAt still reports the control below,
+    // so synthetic events work while real input looks frozen).
+    setGeometry(m_restingGeometry);
+    m_current->setGeometry(0, 0, m_restingGeometry.width(), m_restingGeometry.height());
 }
 
 void MdSnackbarHost::startTransition(Phase phase)
@@ -209,14 +223,14 @@ void MdSnackbarHost::onTransitionTick()
     if (m_current) {
         // A child widget has no window opacity; the snackbar's paintOpacity
         // is applied inside the style, and the scale animates the geometry
-        // around the resting rect.
+        // around the resting rect (host-local coordinates).
         m_current->setPaintOpacity(m_opacity);
         const QPointF center = m_restingGeometry.center();
         QRect scaled = m_restingGeometry;
         scaled.setSize(QSize(int(std::round(m_restingGeometry.width() * m_scale)),
                              int(std::round(m_restingGeometry.height() * m_scale))));
         scaled.moveCenter(center.toPoint());
-        m_current->setGeometry(scaled);
+        m_current->setGeometry(scaled.translated(-m_restingGeometry.topLeft()));
     }
 }
 

@@ -169,6 +169,38 @@ private slots:
         QVERIFY(!select.isPopupVisible());
     }
 
+    void popupHideWithoutRequestCloseResyncs()
+    {
+        // Qt dismisses a Qt::Popup on outside click / Esc with a bare hide()
+        // that never goes through requestClose(). MdSelect tracks popup state
+        // from closed(); without a hideEvent emission the flag stayed set and
+        // the next showPopup() was swallowed as a toggle-close (the "theme
+        // select will not open / UI is frozen" report).
+        MdSelect select;
+        select.addItems({QStringLiteral("Light"), QStringLiteral("Dark")});
+        select.resize(240, 56);
+        select.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&select));
+
+        select.showPopup();
+        QVERIFY(select.isPopupVisible());
+        QWidget *popup = QApplication::activePopupWidget();
+        QVERIFY(popup != nullptr);
+
+        // Simulate Qt's outside-click dismissal: hide without requestClose.
+        popup->hide();
+        QCoreApplication::processEvents();
+        QVERIFY2(!select.isPopupVisible(),
+                 "closed() was not emitted on a bare hide() — m_popupOpen stuck");
+
+        // The next activation must open, not swallow.
+        select.showPopup();
+        QVERIFY2(select.isPopupVisible(),
+                 "showPopup after a bare hide() was swallowed as a toggle-close");
+        select.hidePopup();
+        QVERIFY(!select.isPopupVisible());
+    }
+
     void keyboardOpensAndMoves()
     {
         MdSelect select;

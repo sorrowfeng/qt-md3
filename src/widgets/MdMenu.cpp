@@ -287,6 +287,10 @@ void MdMenu::init()
     // translucent popup (see MdPopup.h).
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
+    // A native popup must not drag its parent chain into native widgets —
+    // a full-window native ancestor (e.g. MdScaffold) becomes the Win32 hit
+    // target after the popup closes and can swallow real mouse input.
+    setAttribute(Qt::WA_DontCreateNativeAncestors, true);
     setWindowFlags(windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
     setFocusPolicy(Qt::StrongFocus);
 
@@ -471,8 +475,9 @@ void MdMenu::requestClose()
     m_openAlpha = 0.0;
     m_openElapsedOffsetMs = 0.0;
     setChildrenPaintedByMenu(false);
+    // hideEvent() emits closed() — keep a single emission on every hide path
+    // (outside click / Esc never go through requestClose at all).
     hide();
-    emit closed();
 }
 
 void MdMenu::closeAndAccept()
@@ -551,6 +556,17 @@ void MdMenu::showEvent(QShowEvent *event)
     QWidget::showEvent(event);
 }
 
+void MdMenu::hideEvent(QHideEvent *event)
+{
+    QWidget::hideEvent(event);
+    // Qt dismisses a Qt::Popup on outside click / Esc / focus loss with a bare
+    // hide(), which never goes through requestClose(). Hosts track popup-open
+    // state from closed() (MdSelect::m_popupOpen); without this the flag stays
+    // set and the next field click is swallowed as a toggle-close. Emit here
+    // for every hide path; requestClose() itself no longer emits.
+    emit closed();
+}
+
 void MdMenu::onOpenTick()
 {
     // Compose's pair: scale on the fast spatial spring, alpha on fast
@@ -594,8 +610,8 @@ void MdMenu::onOpenTick()
             }
             update();
         } else {
+            // hideEvent() emits closed().
             hide();
-            emit closed();
         }
     }
     update();

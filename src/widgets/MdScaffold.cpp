@@ -7,6 +7,10 @@
 #include <QtGui/QPainter>
 #include <QtGui/QResizeEvent>
 
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
+#endif
+
 namespace md {
 
 namespace {
@@ -36,6 +40,9 @@ void MdScaffold::init()
 {
     setFocusPolicy(Qt::NoFocus);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    // Descendants (popups, hosts) must not drag this full-window container
+    // into native-widget land — its HWND would swallow Win32 mouse hits.
+    setAttribute(Qt::WA_DontCreateNativeAncestors, true);
     m_fabMargin = kDefaultFabMargin;
     MdStyleBase::connectThemeUpdate(this, &MdScaffold::onThemeChanged);
 }
@@ -269,6 +276,21 @@ void MdScaffold::changeEvent(QEvent *event)
     if (event->type() == QEvent::LayoutDirectionChange) {
         layoutSlots();
     }
+#ifdef Q_OS_WIN
+    if (event->type() == QEvent::WinIdChange) {
+        // A descendant (or a popup owned through this window) can force the
+        // scaffold native. A full-window native HWND then becomes the Win32
+        // hit target and swallows real mouse input even though
+        // QApplication::widgetAt still reports the control underneath.
+        // WS_EX_TRANSPARENT passes the hit to the parent HWND, where Qt
+        // hit-tests the real widget tree.
+        if (internalWinId()) {
+            HWND hwnd = reinterpret_cast<HWND>(internalWinId());
+            const LONG_PTR ex = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+            SetWindowLongPtr(hwnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+        }
+    }
+#endif
 }
 
 void MdScaffold::onThemeChanged()

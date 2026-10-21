@@ -373,6 +373,35 @@ void dumpWin32At(QTextStream &log, const QString &tag, const QPoint &globalPos)
     }
     if (mainHwnd) {
         logLine(log, QStringLiteral("  mainWinId=%1").arg(quintptr(mainHwnd), 0, 16));
+        // Native child HWNDs under the main window: a full-window native child
+        // becomes the Win32 hit target after a popup closes and can swallow
+        // real mouse input even when Qt widgetAt reports the right widget.
+        struct ChildCtx {
+            QTextStream *log;
+            HWND main;
+        } childCtx{&log, mainHwnd};
+        EnumChildWindows(mainHwnd, [](HWND h, LPARAM lp) -> BOOL {
+            auto *ctx = reinterpret_cast<ChildCtx *>(lp);
+            if (h == ctx->main) {
+                return TRUE;
+            }
+            wchar_t c[256] = {};
+            wchar_t t[256] = {};
+            GetClassNameW(h, c, 256);
+            GetWindowTextW(h, t, 256);
+            RECT rc{};
+            GetWindowRect(h, &rc);
+            QWidget *asWidget = QWidget::find(reinterpret_cast<WId>(h));
+            logLine(*ctx->log,
+                    QStringLiteral("  CHILD hwnd=%1 class='%2' title='%3' rect=(%4,%5)-(%6,%7) visible=%8 qwidget=%9")
+                        .arg(quintptr(h), 0, 16)
+                        .arg(QString::fromWCharArray(c), QString::fromWCharArray(t))
+                        .arg(rc.left).arg(rc.top).arg(rc.right).arg(rc.bottom)
+                        .arg(int(IsWindowVisible(h)))
+                        .arg(asWidget ? QString::fromUtf8(asWidget->metaObject()->className())
+                                      : QStringLiteral("(none)")));
+            return TRUE;
+        }, reinterpret_cast<LPARAM>(&childCtx));
         for (HWND h = GetTopWindow(nullptr); h; h = GetWindow(h, GW_HWNDNEXT)) {
             if (h == mainHwnd) {
                 break;
@@ -915,13 +944,106 @@ int runDriveReal(MusicPlayerWindow &window, const QString &logPath)
             dumpWin32At(log, QStringLiteral("after-dead-combo-reopen"), fieldPt2);
         } else {
             pass(QStringLiteral("Theme combobox re-opened"));
-            // Escape it closed via a click on the field again.
-            realClickAt(fieldPt2);
+            // Dismiss via an outside click (Qt hide() without requestClose).
+            // This is the path that used to leave MdSelect::m_popupOpen stuck
+            // and swallow the next field click.
+            const QPoint outside = window.mapToGlobal(QPoint(200, 20));
+            realClickAt(outside);
             realPump(300);
+            if (themeSelect->isPopupVisible()) {
+                fail(QStringLiteral("Theme popup still open after an outside click"));
+            } else {
+                pass(QStringLiteral("Theme popup closed on outside click"));
+            }
+            realClickAt(fieldPt2);
+            realPump(400);
+            if (!themeSelect->isPopupVisible()) {
+                fail(QStringLiteral("Theme combobox will not re-open after outside-click dismiss "
+                                    "— m_popupOpen stuck"));
+                dumpQtState(log, QStringLiteral("after-stuck-popup-flag"));
+            } else {
+                pass(QStringLiteral("Theme combobox re-opened after outside-click dismiss"));
+                realClickAt(fieldPt2);
+                realPump(300);
+            }
         }
     }
 
-    // --- 5. Probe hit-testing over the whole window ---
+    // --- 5. Avatar popover path (the control: this one always worked) ---
+    QAbstractButton *avatar = nullptr;
+    for (QAbstractButton *b : window.findChildren<QAbstractButton *>()) {
+        if (b->accessibleName() == QLatin1String("Account")
+            || b->toolTip() == QLatin1String("Account")) {
+            avatar = b;
+            break;
+        }
+    }
+    if (avatar && avatar->isVisible()) {
+        const md::ThemeMode beforeAvatar = md::MdTheme::instance().themeMode();
+        const QPoint avatarPt = avatar->mapToGlobal(avatar->rect().center());
+        logLine(log, QStringLiteral("clicking avatar at %1 widgetAt=%2")
+                         .arg(ptStr(avatarPt)).arg(hitName(avatarPt)));
+        realClickAt(avatarPt);
+        realPump(500);
+        QWidget *avatarPopup = QApplication::activePopupWidget();
+        if (!avatarPopup) {
+            fail(QStringLiteral("avatar menu did not open"));
+        } else {
+            pass(QStringLiteral("avatar menu opened"));
+            md::MdMenuItem *toggleItem = nullptr;
+            for (md::MdMenuItem *it : avatarPopup->findChildren<md::MdMenuItem *>()) {
+                if (it->text().contains(QLatin1String("Toggle"), Qt::CaseInsensitive)) {
+                    toggleItem = it;
+                    break;
+                }
+            }
+            if (!toggleItem) {
+                fail(QStringLiteral("no Toggle item in the avatar menu"));
+            } else {
+                // Wait out the open spring so the row is a real child again.
+                for (int i = 0; i < 40 && !toggleItem->isVisible(); ++i) {
+                    realPump(25);
+                }
+                const QPoint togglePt = toggleItem->mapToGlobal(toggleItem->rect().center());
+                realClickAt(togglePt);
+                realPump(500);
+                if (md::MdTheme::instance().themeMode() == beforeAvatar) {
+                    fail(QStringLiteral("avatar theme toggle did not switch the theme"));
+                } else {
+                    pass(QStringLiteral("avatar theme toggle switched the theme"));
+                }
+                if (QApplication::activePopupWidget() != nullptr) {
+                    fail(QStringLiteral("avatar menu still holds the grab after the toggle"));
+                } else {
+                    pass(QStringLiteral("avatar menu released the grab after the toggle"));
+                }
+                // Real click must land after the avatar path (this is the
+                // control that the user says always works).
+                if (hc) {
+                    if (QScrollArea *sa = settings->findChild<QScrollArea *>()) {
+                        sa->ensureWidgetVisible(hc);
+                        realPump(150);
+                    }
+                    const bool beforeHc = hc->isChecked();
+                    realClickAt(hc->mapToGlobal(hc->rect().center()));
+                    realPump(300);
+                    if (hc->isChecked() == beforeHc) {
+                        fail(QStringLiteral("click after avatar theme toggle was swallowed"));
+                    } else {
+                        pass(QStringLiteral("click after avatar theme toggle landed"));
+                        realClickAt(hc->mapToGlobal(hc->rect().center()));
+                        realPump(200);
+                    }
+                }
+                dumpWin32At(log, QStringLiteral("after-avatar-pick"),
+                            window.mapToGlobal(QPoint(200, 300)));
+            }
+        }
+    } else {
+        fail(QStringLiteral("avatar button not found"));
+    }
+
+    // --- 6. Probe hit-testing over the whole window ---
     int deadSpots = 0;
     int liveSpots = 0;
     for (int y = 40; y < window.height() - 20; y += 40) {

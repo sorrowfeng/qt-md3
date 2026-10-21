@@ -37,6 +37,10 @@ inline void showPopupWithoutFlash(QWidget *popup)
     // first composite.
     popup->setAttribute(Qt::WA_TranslucentBackground, true);
     popup->setAttribute(Qt::WA_NoSystemBackground, true);
+    // Keep the popup's native window from forcing native ancestors: a
+    // full-window native child HWND becomes the Win32 hit target and can
+    // swallow real mouse input after the popup closes.
+    popup->setAttribute(Qt::WA_DontCreateNativeAncestors, true);
     // Windows 11 draws a DWM drop shadow around every WS_POPUP. On a
     // frameless translucent surface that shadow reads as a black edge /
     // residue around the rounded corners (especially while the open scale is

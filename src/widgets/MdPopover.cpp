@@ -57,6 +57,7 @@ void MdPopover::init()
     // translucent popup (see MdPopup.h).
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
+    setAttribute(Qt::WA_DontCreateNativeAncestors, true);
     setWindowFlags(windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_Hover, true);
     setFocusPolicy(Qt::StrongFocus);
@@ -101,16 +102,21 @@ void MdPopover::setContentWidget(QWidget *content)
         return;
     }
     if (m_content) {
-        m_content->setParent(nullptr);
+        // Leave the old content parented and hide it. `setParent(nullptr)`
+        // used to turn it into a top-level widget (a stray native window
+        // whenever a popover was re-populated after it had been shown).
+        m_content->hide();
+        m_content->setParent(this);
     }
     m_content = content;
     if (m_content) {
         m_content->setParent(this);
         // The surface already paints the container. A default-styled child
         // would fill itself with QPalette::Window and punch an opaque slab
-        // (near-black in dark theme) through the rounded surface.
+        // (near-black in dark theme) through the rounded surface. Do NOT set
+        // WA_TranslucentBackground on a child — it is top-level-only and
+        // forces a native window that steals Win32 mouse hits.
         m_content->setAttribute(Qt::WA_NoSystemBackground, true);
-        m_content->setAttribute(Qt::WA_TranslucentBackground, true);
         m_content->setAutoFillBackground(false);
     }
     relayout();
