@@ -27,7 +27,13 @@ constexpr int kTransitionTickMs = 16;
 MdBottomSheetHost::MdBottomSheetHost(QWidget *parent)
     : QWidget(parent)
 {
-    setAttribute(Qt::WA_NoSystemBackground);
+    // Do NOT set WA_NoSystemBackground / WA_TranslucentBackground here: either
+    // forces a native child window covering the parent. After a Qt::Popup is
+    // dismissed that HWND is raised above the page and Win32 delivers every
+    // mouse hit to it — QApplication::widgetAt still reports the real control
+    // underneath (Qt skips the transparent host), so the app looks frozen
+    // while synthetic sendEvent still works. An idle host is simply hidden, so
+    // it has no HWND and cannot steal input at all.
     setFocusPolicy(Qt::StrongFocus);
     // An overlay never contributes to the parent's layout metrics: a
     // preferred policy would let show/hide reflow a QScrollArea page.

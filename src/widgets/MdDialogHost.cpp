@@ -29,10 +29,14 @@ constexpr qreal kEnterScaleStart = 0.8;
 MdDialogHost::MdDialogHost(QWidget *parent)
     : QWidget(parent)
 {
-    setAttribute(Qt::WA_NoSystemBackground);
-    // Idle, the host is a transparent overlay: a lazily-created host must
-    // never steal clicks from the page underneath. Scrim clicks only apply
-    // while the dialog is actually showing.
+    // Clicks pass through an idle overlay to the page underneath. Do NOT set
+    // WA_NoSystemBackground / WA_TranslucentBackground here: either forces a
+    // native child window covering the parent. After a Qt::Popup is dismissed
+    // that HWND is raised above the page and Win32 delivers every mouse hit to
+    // it — QApplication::widgetAt still reports the real control underneath
+    // (Qt skips the transparent host), so the app looks frozen while
+    // synthetic sendEvent still works. An idle host is simply hidden, so it
+    // has no HWND and cannot steal input at all.
     setAttribute(Qt::WA_TransparentForMouseEvents, true);
     setFocusPolicy(Qt::StrongFocus);
     if (parent) {
@@ -50,6 +54,10 @@ MdDialogHost::MdDialogHost(QWidget *parent)
     m_transitionTimer = new QTimer(this);
     m_transitionTimer->setInterval(kTransitionTickMs);
     connect(m_transitionTimer, &QTimer::timeout, this, &MdDialogHost::onTransitionTick);
+
+    // Idle overlay is not mapped; show() maps it only while a dialog is on
+    // screen.
+    hide();
 }
 
 MdDialogHost::~MdDialogHost() = default;
@@ -166,8 +174,10 @@ void MdDialogHost::onTransitionTick()
     update();
     if (settled && m_opacity <= 0.0) {
         m_dialog->hide();
-        // Idle again: go transparent so the page underneath keeps its clicks.
+        // Idle again: go transparent and unmap so the host cannot intercept
+        // Win32 mouse hits.
         setAttribute(Qt::WA_TransparentForMouseEvents, true);
+        hide();
     }
 }
 

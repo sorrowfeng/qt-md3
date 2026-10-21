@@ -27,11 +27,21 @@ constexpr qreal kEnterScaleStart = 0.8;
 MdSnackbarHost::MdSnackbarHost(QWidget *parent)
     : QWidget(parent)
 {
+    // Clicks pass through the overlay to the page underneath. Do NOT set
+    // WA_NoSystemBackground / WA_TranslucentBackground here: either forces a
+    // native child window covering the parent. After a Qt::Popup is dismissed
+    // that HWND is raised above the page and Win32 delivers every mouse hit to
+    // it — QApplication::widgetAt still reports the real control underneath
+    // (Qt skips the transparent host), so the app looks frozen while
+    // synthetic sendEvent still works. An idle host is simply hidden, so it
+    // has no HWND and cannot steal input at all.
     setAttribute(Qt::WA_TransparentForMouseEvents);
-    setAttribute(Qt::WA_NoSystemBackground);
     if (parent) {
         parent->installEventFilter(this);
     }
+    // Idle overlay is not mapped; showNext() shows it only while a snackbar
+    // is on screen.
+    hide();
     m_durationTimer = new QTimer(this);
     m_durationTimer->setSingleShot(true);
     connect(m_durationTimer, &QTimer::timeout, this, &MdSnackbarHost::onTimeout);
@@ -86,6 +96,8 @@ void MdSnackbarHost::showNext()
 {
     if (m_queue.isEmpty()) {
         m_current = nullptr;
+        // Idle: unmap the overlay so it cannot intercept Win32 mouse hits.
+        hide();
         emit allCleared();
         return;
     }
@@ -114,6 +126,10 @@ void MdSnackbarHost::showNext()
         scaled.moveCenter(centre.toPoint());
         m_current->setGeometry(scaled);
     }
+    // Map the host only while a snackbar exists. Size it to the snackbar
+    // strip rather than the whole parent so page controls stay hittable even
+    // with the overlay raised.
+    show();
     m_current->show();
     raise();
 
